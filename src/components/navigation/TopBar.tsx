@@ -33,11 +33,11 @@ export const TopBar: React.FC = () => {
       case 'dashboard':
         return ['Talent Operations', 'Executive Dashboard'];
       case 'jobs':
-        return ['Requisitions', 'Active Openings'];
+        return ['Job Posting', 'All Job Postings'];
       case 'job-new':
-        return ['Requisitions', 'Create Requisition'];
+        return ['Job Posting', 'New Job Posting'];
       case 'job-detail':
-        return ['Requisitions', 'Requisition Details'];
+        return ['Job Posting', 'Job Posting Dossier'];
       case 'applicants':
         return ['Talent Pool', 'Candidate Roster'];
       case 'applicant-new':
@@ -127,7 +127,7 @@ export const TopBar: React.FC = () => {
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#292633] dark:text-[#F8F7FB] hover:bg-[#F1EBFA] dark:hover:bg-[#312845] hover:text-[#6941C6] transition-colors"
               >
                 <Briefcase className="w-4 h-4 text-[#6941C6]" />
-                <span>New Requisition</span>
+                <span>New Job Posting</span>
               </button>
 
               <button

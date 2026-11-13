@@ -56,7 +56,7 @@ export const Sidebar: React.FC = () => {
         {
           groupTitle: 'WORKFORCE OPERATIONS',
           items: [
-            { id: 'jobs', label: 'All Requisitions', icon: Briefcase },
+            { id: 'jobs', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Applicant Pool', icon: Users },
             { id: 'pipeline', label: 'Recruitment Funnel', icon: Kanban },
             { id: 'clients', label: 'Enterprise Clients', icon: Building2 },
@@ -87,7 +87,7 @@ export const Sidebar: React.FC = () => {
         {
           groupTitle: 'PIPELINE MANAGEMENT',
           items: [
-            { id: 'jobs', label: 'Assigned Requisitions', icon: Briefcase },
+            { id: 'jobs', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Candidate Roster', icon: Users },
             { id: 'interviews', label: 'Interview Oversight', icon: Calendar },
             { id: 'clients', label: 'Account Portfolio', icon: Building2 },
@@ -118,7 +118,7 @@ export const Sidebar: React.FC = () => {
       {
         groupTitle: 'ACTIVE SOURCING',
         items: [
-          { id: 'jobs', label: 'My Open Jobs', icon: Briefcase },
+          { id: 'jobs', label: 'Job Posting', icon: Briefcase },
           { id: 'applicants', label: 'Candidates', icon: Users },
           { id: 'applicant-new', label: 'Fast Resume Parse', icon: UserPlus },
           { id: 'submissions', label: 'Client Submissions', icon: Send },

@@ -92,7 +92,7 @@ export const GlobalSearchModal: React.FC = () => {
         <div className="max-h-96 overflow-y-auto p-4 space-y-4">
           {!query && (
             <div className="py-8 text-center text-xs text-[#5F5972] dark:text-[#B9B2CE]">
-              <p>Type keywords to search across candidates, open requisitions, and accounts.</p>
+              <p>Type keywords to search across candidates, job postings, and accounts.</p>
               <div className="mt-3 flex justify-center gap-2">
                 <span
                   onClick={() => setQuery('Rust')}
@@ -155,7 +155,7 @@ export const GlobalSearchModal: React.FC = () => {
           {filteredJobs.length > 0 && (
             <div>
               <div className="text-[11px] font-mono tracking-wider text-[#8E88A2] uppercase mb-2">
-                Open Requisitions ({filteredJobs.length})
+                Job Postings ({filteredJobs.length})
               </div>
               <div className="space-y-1">
                 {filteredJobs.map((j) => (

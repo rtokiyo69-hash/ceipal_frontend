@@ -11,8 +11,8 @@ export interface User {
   phone?: string;
 }
 
-export type JobStatus = 'Open' | 'Sourcing' | 'In Review' | 'Closed' | 'On Hold';
-export type JobType = 'Full-Time' | 'Contract' | 'C2C' | 'Remote' | 'Hybrid' | 'On-Site';
+export type JobStatus = 'Open' | 'Active' | 'Sourcing' | 'In Review' | 'Closed' | 'On Hold';
+export type JobType = 'Full-Time' | 'Contract' | 'C2H' | 'C2C' | 'Remote' | 'Hybrid' | 'On-Site' | 'Part-Time';
 export type Priority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
 export interface Job {
@@ -31,11 +31,50 @@ export interface Job {
   createdDate: string;
   openings: number;
   applicantsCount: number;
-  billRate: number; // USD per hour or annual
+  billRate: number; // USD/INR per hour or annual
   payRate: number;
   skills: string[];
   experienceRequired: string;
   description: string;
+
+  // Authentic Ceipal ATS Fields
+  clientJobId?: string;
+  facility?: string;
+  currency?: string;
+  rateType?: 'Hourly' | 'Yearly' | 'Monthly' | 'Daily';
+  startDate?: string;
+  endDate?: string;
+  category?: string;
+  skillType?: string;
+  respondBy?: string;
+  remoteJob?: 'Yes' | 'No' | 'Hybrid';
+  states?: string;
+  duration?: string;
+  clientManager?: string;
+  turnaroundTime?: number;
+  turnaroundUnit?: 'In Days' | 'In Hours';
+  address?: string;
+  noticePeriod?: string;
+  industry?: string;
+  degree?: string;
+  minExperience?: number;
+  maxExperience?: number;
+  primarySkills?: string[];
+  secondarySkills?: string[];
+  maxSubmissions?: number;
+  salesManager?: string;
+  recruitmentManager?: string;
+  accountManager?: string;
+  assignedTo?: string;
+  comments?: string;
+  additionalNotifications?: string;
+  careerPortalPublishedDate?: string;
+  postJobOnCareerPortal?: boolean;
+  secondarySalesManager?: string;
+  secondaryRecruitmentManager?: string;
+  costCenter?: string;
+  departmentCode?: string;
+  poNumber?: string;
 }
 
 export type PipelineStage = 
