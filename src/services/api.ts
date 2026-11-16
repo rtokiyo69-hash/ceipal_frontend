@@ -9,7 +9,9 @@ import {
   Placement,
   TaskItem,
   ActivityLog,
-  PipelineStage
+  PipelineStage,
+  JobDocument,
+  JobNote
 } from '../types';
 import {
   INITIAL_USERS,
@@ -58,6 +60,46 @@ function setStorage<T>(key: string, value: T): void {
 // Simulates network delay (100-250ms)
 const delay = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function openJobDocumentDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('talentember-job-documents', 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('documents', { keyPath: 'id' });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Unable to open job document storage.'));
+  });
+}
+
+function saveJobDocuments(files: File[]): Promise<JobDocument[]> {
+  if (files.length === 0) return Promise.resolve([]);
+
+  return openJobDocumentDatabase().then((database) => new Promise((resolve, reject) => {
+    const transaction = database.transaction('documents', 'readwrite');
+    const documents = files.map((file) => ({
+      id: `jobdoc-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name: file.name,
+      type: file.type || 'application/octet-stream',
+      size: file.size,
+      file
+    }));
+
+    documents.forEach((document) => transaction.objectStore('documents').put(document));
+    transaction.oncomplete = () => {
+      database.close();
+      resolve(documents.map(({ file: _file, ...document }) => document));
+    };
+    transaction.onerror = () => {
+      database.close();
+      reject(transaction.error || new Error('Unable to save job documents.'));
+    };
+    transaction.onabort = () => {
+      database.close();
+      reject(transaction.error || new Error('Job document storage was interrupted.'));
+    };
+  }));
+}
+
 export const ApiService = {
   // Authentication & Users
   async getCurrentUser(): Promise<User> {
@@ -87,15 +129,20 @@ export const ApiService = {
     return jobs.find((j) => j.id === id);
   },
 
-  async createJob(jobData: Omit<Job, 'id' | 'code' | 'createdDate' | 'applicantsCount'>): Promise<Job> {
+  async createJob(
+    jobData: Omit<Job, 'id' | 'code' | 'createdDate' | 'applicantsCount' | 'documents'>,
+    documentFiles: File[] = []
+  ): Promise<Job> {
     await delay(200);
     const jobs = await this.getJobs();
+    const documents = await saveJobDocuments(documentFiles);
     const newJob: Job = {
       ...jobData,
       id: `job-${Date.now()}`,
       code: `JOB-2026-0${jobs.length + 86}`,
       createdDate: new Date().toISOString().split('T')[0],
-      applicantsCount: 0
+      applicantsCount: 0,
+      documents
     };
     const updated = [newJob, ...jobs];
     setStorage(STORAGE_KEYS.JOBS, updated);
@@ -109,6 +156,22 @@ export const ApiService = {
     });
 
     return newJob;
+  },
+
+  async getJobDocument(id: string): Promise<Blob | undefined> {
+    const database = await openJobDocumentDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction('documents', 'readonly');
+      const request = transaction.objectStore('documents').get(id);
+      request.onsuccess = () => {
+        database.close();
+        resolve(request.result?.file as Blob | undefined);
+      };
+      request.onerror = () => {
+        database.close();
+        reject(request.error || new Error('Unable to retrieve job document.'));
+      };
+    });
   },
 
   async updateJob(id: string, updates: Partial<Job>): Promise<Job> {
@@ -316,6 +379,99 @@ export const ApiService = {
     if (item) {
       item.approvalStatus = approvalStatus;
       setStorage(STORAGE_KEYS.SUBMISSIONS, submissions);
+    }
+  },
+
+  async updateSubmissionStatus(id: string, status: string, comments?: string): Promise<Submission | null> {
+    await delay(140);
+    const submissions = await this.getSubmissions();
+    const index = submissions.findIndex((s) => s.id === id);
+    if (index === -1) return null;
+    const item = { ...submissions[index], status };
+    submissions[index] = item;
+    setStorage(STORAGE_KEYS.SUBMISSIONS, submissions);
+
+    if (comments) {
+      await this.logActivity({
+        user: item.recruiter || 'Ganesh Godse',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
+        action: `updated submission status to "${status}" for`,
+        target: `${item.applicantName} (${comments})`,
+        type: 'submission'
+      });
+    }
+
+    return item;
+  },
+
+  async createSubmission(submissionData: Partial<Submission>): Promise<Submission> {
+    await delay(150);
+    const submissions = await this.getSubmissions();
+    const newSubmission: Submission = {
+      id: `sub-${Date.now()}`,
+      submissionId: `${Math.floor(40000 + Math.random() * 20000)}`,
+      applicantId: submissionData.applicantId || '',
+      applicantName: submissionData.applicantName || 'Candidate',
+      jobId: submissionData.jobId || '',
+      jobTitle: submissionData.jobTitle || 'Requisition',
+      client: submissionData.client || '',
+      recruiter: submissionData.recruiter || 'Ganesh Godse',
+      submittedDate: new Date().toLocaleString(),
+      billRate: submissionData.billRate || 0,
+      payRate: submissionData.payRate || 0,
+      status: submissionData.status || 'Waiting for Evaluation by Internal Reviewer',
+      approvalStatus: submissionData.approvalStatus || 'Pending Review'
+    };
+    const updated = [newSubmission, ...submissions];
+    setStorage(STORAGE_KEYS.SUBMISSIONS, updated);
+    return newSubmission;
+  },
+
+  async addJobNote(jobId: string, noteData: Omit<JobNote, 'id'>): Promise<JobNote> {
+    await delay(100);
+    const jobs = await this.getJobs();
+    const job = jobs.find((j) => j.id === jobId);
+    const newNote: JobNote = {
+      id: `jnote-${Date.now()}`,
+      author: noteData.author,
+      text: noteData.text,
+      date: noteData.date || new Date().toLocaleString(),
+      category: noteData.category || 'Job Posting'
+    };
+    if (job) {
+      job.notes = [newNote, ...(job.notes || [])];
+      setStorage(STORAGE_KEYS.JOBS, jobs);
+    }
+    return newNote;
+  },
+
+  async deleteJobNote(jobId: string, noteId: string): Promise<void> {
+    await delay(100);
+    const jobs = await this.getJobs();
+    const job = jobs.find((j) => j.id === jobId);
+    if (job && job.notes) {
+      job.notes = job.notes.filter((n) => n.id !== noteId);
+      setStorage(STORAGE_KEYS.JOBS, jobs);
+    }
+  },
+
+  async addJobDocument(jobId: string, doc: JobDocument): Promise<void> {
+    await delay(100);
+    const jobs = await this.getJobs();
+    const job = jobs.find((j) => j.id === jobId);
+    if (job) {
+      job.documents = [...(job.documents || []), doc];
+      setStorage(STORAGE_KEYS.JOBS, jobs);
+    }
+  },
+
+  async deleteJobDocument(jobId: string, docId: string): Promise<void> {
+    await delay(100);
+    const jobs = await this.getJobs();
+    const job = jobs.find((j) => j.id === jobId);
+    if (job && job.documents) {
+      job.documents = job.documents.filter((d) => d.id !== docId);
+      setStorage(STORAGE_KEYS.JOBS, jobs);
     }
   },
 

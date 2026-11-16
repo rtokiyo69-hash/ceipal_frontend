@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Briefcase,
-  Sparkles,
   FileText,
   Copy,
   Plus,
@@ -21,7 +20,44 @@ import {
   Bold,
   Italic,
   List,
-  ListOrdered
+  ListOrdered,
+  Underline,
+  Upload,
+  Eye,
+  Mail,
+  Check,
+  HelpCircle,
+  SlidersHorizontal,
+  Globe,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Strikethrough,
+  Link2,
+  Type,
+  Undo2,
+  Redo2,
+  Minus,
+  Highlighter,
+  RemoveFormatting,
+  Table,
+  Image,
+  ExternalLink,
+  Scissors,
+  Search,
+  Quote,
+  Indent,
+  Outdent,
+  Subscript,
+  Superscript,
+  Code2,
+  CheckSquare,
+  RefreshCw,
+  Anchor,
+  Sparkles,
+  Unlink,
+  FileCode
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -40,6 +76,186 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   const [rawJdText, setRawJdText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeFormSection, setActiveFormSection] = useState<'all' | 'details' | 'skills' | 'org' | 'description' | 'custom'>('all');
+  const [descriptionRevision, setDescriptionRevision] = useState(0);
+  const [documents, setDocuments] = useState<File[]>([]);
+  const [documentCategories, setDocumentCategories] = useState<Record<string, string>>({});
+  const descriptionEditorRef = useRef<HTMLDivElement>(null);
+
+  // Ceipal Clean CKEditor State (matching user's Ceipal screenshot)
+  const [selectedFont, setSelectedFont] = useState('Arial');
+  const [selectedFontSize, setSelectedFontSize] = useState('13px');
+  const [selectedFormat, setSelectedFormat] = useState('Normal');
+  const [selectedStyle, setSelectedStyle] = useState('Styles');
+  const [isSourceMode, setIsSourceMode] = useState(false);
+  const [editorTextColor, setEditorTextColor] = useState('#202B37');
+  const [editorHighlightColor, setEditorHighlightColor] = useState('#FFFF00');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [showTableInput, setShowTableInput] = useState(false);
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
+
+  // Ceipal Documents: EXACTLY 3 options (Local Drive, Dropbox, Box - matching user's Ceipal screenshot)
+  const [documentSources, setDocumentSources] = useState<Record<string, 'Local Drive' | 'Dropbox' | 'Box'>>({});
+  const [activeDocModal, setActiveDocModal] = useState<'dropbox' | 'box' | null>(null);
+  const [dropboxSelectedFiles, setDropboxSelectedFiles] = useState<string[]>([]);
+  const [boxSelectedFiles, setBoxSelectedFiles] = useState<string[]>([]);
+
+  // Structured Sections State
+  const [structOverview, setStructOverview] = useState('');
+  const [structResponsibilities, setStructResponsibilities] = useState<string[]>([
+    'Architect and implement scalable production services and RESTful APIs',
+    'Collaborate closely with cross-functional engineering, UX, and product squads',
+    'Ensure code quality through peer code reviews and automated testing'
+  ]);
+  const [newResponsibility, setNewResponsibility] = useState('');
+  const [structQualifications, setStructQualifications] = useState<string[]>([
+    'Proven professional engineering experience in modern software stacks',
+    'Strong knowledge of relational databases, query optimization, and transactions',
+    'Hands-on familiarity with Git, containerization (Docker), and CI/CD pipelines'
+  ]);
+  const [newQualification, setNewQualification] = useState('');
+  const [structBenefits, setStructBenefits] = useState('Comprehensive healthcare, competitive compensation, flexible hybrid schedule, and professional development stipend.');
+
+  // AI Copilot Generator State
+  const [aiTone, setAiTone] = useState<'enterprise' | 'modern' | 'executive' | 'specialist'>('enterprise');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  // Ceipal Feature: Public Job Details (Screenshot 200115 button "Add Public Job Details")
+  const [isPublicJdOpen, setIsPublicJdOpen] = useState(false);
+  const [publicJobDetails, setPublicJobDetails] = useState('');
+
+  // Ceipal Feature: Candidate Email Pitch Preview Modal (Screenshot 201120 / 201212)
+  const [isEmailPreviewOpen, setIsEmailPreviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (creationMode !== 'manual' || !descriptionEditorRef.current) return;
+
+    const parsedDescription = new DOMParser().parseFromString(description, 'text/html');
+    const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'UL', 'OL', 'LI', 'P', 'DIV', 'BR']);
+    const copySafeNodes = (node: Node): Node[] => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return [document.createTextNode(node.textContent || '')];
+      }
+      if (!(node instanceof Element)) return [];
+
+      const children = Array.from(node.childNodes).flatMap(copySafeNodes);
+      if (!allowedTags.has(node.tagName)) return children;
+
+      const safeElement = document.createElement(node.tagName.toLowerCase());
+      safeElement.append(...children);
+      return [safeElement];
+    };
+
+    descriptionEditorRef.current.replaceChildren(
+      ...Array.from(parsedDescription.body.childNodes).flatMap(copySafeNodes)
+    );
+  }, [creationMode, descriptionRevision]);
+
+  const applyDescription = (value: string) => {
+    setDescription(value);
+    setDescriptionRevision((revision) => revision + 1);
+  };
+
+  const formatDescription = (command: string) => {
+    const editor = descriptionEditorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    document.execCommand(command, false);
+    setDescription(editor.innerHTML);
+  };
+
+  const handleCompileStructured = () => {
+    const parts: string[] = [];
+    if (structOverview.trim()) {
+      parts.push(`<h3>Role Overview</h3>\n<p>${structOverview.trim()}</p>`);
+    }
+    if (structResponsibilities.length > 0) {
+      parts.push(`<h3>Key Responsibilities:</h3>\n<ul>\n${structResponsibilities.map((r) => `  <li>${r}</li>`).join('\n')}\n</ul>`);
+    }
+    if (structQualifications.length > 0) {
+      parts.push(`<h3>Required Skills &amp; Qualifications:</h3>\n<ul>\n${structQualifications.map((q) => `  <li>${q}</li>`).join('\n')}\n</ul>`);
+    }
+    if (structBenefits.trim()) {
+      parts.push(`<h3>Benefits &amp; Perks:</h3>\n<p>${structBenefits.trim()}</p>`);
+    }
+    const compiled = parts.join('\n\n');
+    applyDescription(compiled);
+  };
+
+  const handleAiGenerate = () => {
+    setIsAiGenerating(true);
+    setTimeout(() => {
+      const jobRole = title.trim() || 'Full Stack Engineer';
+      const primaryStr = primarySkills.length > 0 ? primarySkills.join(', ') : 'Python, React, PostgreSQL';
+      const expStr = `${minExperience} - ${maxExperience} Years`;
+      const generated = `<h3>${jobRole}</h3>
+<p><strong>Experience:</strong> ${expStr} | <strong>Location:</strong> ${location} (${remoteJob}) | <strong>Employment Type:</strong> ${type}</p>
+<p><strong>About the Role:</strong><br/>${businessUnit} is actively seeking a talented and proactive <strong>${jobRole}</strong> to join our high-growth engineering organization. In this position, you will design, build, and deploy mission-critical solutions using cutting-edge methodologies.</p>
+
+<h3>Key Responsibilities:</h3>
+<ul>
+  <li>Architect, implement, and maintain scalable applications utilizing <strong>${primaryStr}</strong>.</li>
+  <li>Collaborate closely with product managers, UI/UX designers, and backend architects to deliver end-to-end features.</li>
+  <li>Write clean, reusable, maintainable code with high test coverage and automated integration checks.</li>
+  <li>Analyze performance bottlenecks and optimize database queries for maximum throughput and reliability.</li>
+  <li>Participate in agile sprint ceremonies, technical design reviews, and code retrospectives.</li>
+</ul>
+
+<h3>Required Skills &amp; Qualifications:</h3>
+<ul>
+  <li>${expStr} of proven hands-on software development experience.</li>
+  <li>Core Technical Stack: <strong>${primaryStr}</strong>.</li>
+  <li>Solid grasp of database architecture (PostgreSQL / Relational / NoSQL) and query optimization.</li>
+  <li>Experience with version control (Git), Docker containers, and CI/CD automation pipelines.</li>
+  <li>Strong problem-solving capability and clear cross-functional communication skills.</li>
+</ul>
+
+<h3>Benefits &amp; Compensation:</h3>
+<p>${structBenefits}</p>
+<p><em>${businessUnit} is an Equal Opportunity Employer. All qualified applicants will receive consideration without regard to race, color, religion, sex, or national origin.</em></p>`;
+      applyDescription(generated);
+      setIsAiGenerating(false);
+    }, 500);
+  };
+
+  const handleLocalFilesUpload = (files: FileList | File[]) => {
+    const fileList = Array.from(files);
+    if (fileList.length === 0) return;
+    setDocuments(prev => [...prev, ...fileList.filter(f => !prev.some(p => p.name === f.name))]);
+    const updatedSources = { ...documentSources };
+    const updatedCats = { ...documentCategories };
+    fileList.forEach(f => {
+      updatedSources[f.name] = 'Local Drive';
+      if (!updatedCats[f.name]) {
+        updatedCats[f.name] = 'Client Job Spec (SOW)';
+      }
+    });
+    setDocumentSources(updatedSources);
+    setDocumentCategories(updatedCats);
+  };
+
+  const handleAttachCloudFiles = (sourceName: 'Dropbox' | 'Box', files: { name: string; size: number; type: string; category: string }[]) => {
+    const newFiles = files.map(f => {
+      const blob = new Blob([`Simulated document content for ${f.name} from ${sourceName}`], { type: f.type });
+      return new File([blob], f.name, { type: f.type, lastModified: Date.now() });
+    });
+    setDocuments(prev => [...prev, ...newFiles.filter(nf => !prev.some(p => p.name === nf.name))]);
+    const updatedSources = { ...documentSources };
+    const updatedCats = { ...documentCategories };
+    files.forEach(f => {
+      updatedSources[f.name] = sourceName;
+      updatedCats[f.name] = f.category;
+    });
+    setDocumentSources(updatedSources);
+    setDocumentCategories(updatedCats);
+    setActiveDocModal(null);
+    setDropboxSelectedFiles([]);
+    setBoxSelectedFiles([]);
+  };
 
   // Form State - Authentic Ceipal ATS Fields
   // Top level
@@ -212,7 +428,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     setBillRate(tpl.billRate);
     setPayRate(tpl.payRate);
     setType(tpl.type);
-    setDescription(tpl.description);
+    applyDescription(tpl.description);
   };
 
   // AI Parse Job Details (Faithful to Ceipal 5.2.3)
@@ -252,7 +468,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     setMaxExperience(extractedMax);
     setBillRate(extractedRate);
     setPayRate(Math.round(extractedRate * 0.75));
-    setDescription(rawJdText);
+    applyDescription(rawJdText);
     setCreationMode('manual');
   };
 
@@ -263,70 +479,80 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
       return;
     }
 
+    const descriptionText = descriptionEditorRef.current?.innerText.trim() || description.trim();
+    if (!descriptionText) {
+      alert('Job Description is required.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     const allSkills = Array.from(new Set([...primarySkills, ...secondarySkills]));
 
-    await ApiService.createJob({
-      title,
-      client,
-      clientId: 'cli-1',
-      businessUnit,
-      location,
-      type,
-      status,
-      priority,
-      openings: Number(openings),
-      billRate: Number(billRate),
-      payRate: Number(payRate),
-      experienceRequired: `${minExperience}-${maxExperience} Years`,
-      assignedRecruiter,
-      recruiterId: 'usr-3',
-      description,
-      skills: allSkills,
+    try {
+      await ApiService.createJob({
+        title,
+        client,
+        clientId: 'cli-1',
+        businessUnit,
+        location,
+        type,
+        status,
+        priority,
+        openings: Number(openings),
+        billRate: Number(billRate),
+        payRate: Number(payRate),
+        experienceRequired: `${minExperience}-${maxExperience} Years`,
+        assignedRecruiter,
+        recruiterId: 'usr-3',
+        description: descriptionEditorRef.current?.innerHTML || description,
+        skills: allSkills,
 
-      // Ceipal attributes
-      clientJobId,
-      facility,
-      currency,
-      rateType,
-      startDate,
-      endDate,
-      category,
-      skillType,
-      respondBy,
-      remoteJob,
-      states,
-      duration,
-      clientManager,
-      turnaroundTime,
-      turnaroundUnit,
-      address,
-      noticePeriod,
-      industry,
-      degree,
-      minExperience,
-      maxExperience,
-      primarySkills,
-      secondarySkills,
-      maxSubmissions,
-      salesManager,
-      recruitmentManager,
-      accountManager,
-      assignedTo,
-      comments,
-      additionalNotifications,
-      careerPortalPublishedDate,
-      postJobOnCareerPortal,
-      secondarySalesManager,
-      secondaryRecruitmentManager,
-      costCenter,
-      departmentCode,
-      poNumber
-    });
-
-    setIsSubmitting(false);
-    navigate('jobs');
+        // Ceipal attributes
+        clientJobId,
+        facility,
+        currency,
+        rateType,
+        startDate,
+        endDate,
+        category,
+        skillType,
+        respondBy,
+        remoteJob,
+        states,
+        duration,
+        clientManager,
+        turnaroundTime,
+        turnaroundUnit,
+        address,
+        noticePeriod,
+        industry,
+        degree,
+        minExperience,
+        maxExperience,
+        primarySkills,
+        secondarySkills,
+        maxSubmissions,
+        salesManager,
+        recruitmentManager,
+        accountManager,
+        assignedTo,
+        comments,
+        additionalNotifications,
+        careerPortalPublishedDate,
+        postJobOnCareerPortal,
+        secondarySalesManager,
+        secondaryRecruitmentManager,
+        costCenter,
+        departmentCode,
+        poNumber
+      }, documents);
+      navigate('jobs');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Unable to save the job posting.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1332,49 +1558,415 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             </div>
           )}
 
-          {/* SECTION 4: JOB DESCRIPTION & PUBLISHING (Ceipal Section 4) */}
+          {/* SECTION 4: JOB DESCRIPTION (CEIPAL EXACT REPLICA) */}
           {(activeFormSection === 'all' || activeFormSection === 'description') && (
-            <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-3xl p-6 shadow-xs space-y-5">
-              <div className="flex items-center gap-2 pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
-                <div className="w-8 h-8 rounded-lg bg-[#2F80E7]/10 text-[#2F80E7] flex items-center justify-center font-bold">
-                  4
+            <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl p-6 shadow-xs space-y-3">
+              <label className="block text-xs font-bold text-[#202B37] dark:text-white">
+                Job Description <span className="text-red-500">*</span>
+              </label>
+
+              {/* Ceipal CKEditor Container */}
+              <div className="border border-[#CBD5E1] dark:border-[#354A5C] rounded-md overflow-hidden bg-white dark:bg-[#162431] shadow-2xs">
+                {/* CKEditor Toolbar Row 1 */}
+                <div className="flex items-center justify-between flex-wrap gap-1 px-2.5 py-1.5 bg-[#F8FAFC] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] text-xs">
+                  <div className="flex items-center gap-0.5 flex-wrap text-[#475569] dark:text-[#CBD5E1]">
+                    {/* Clean / Magic wand */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Clean Format">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    </button>
+                    {/* Cut */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('cut')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Cut">
+                      <Scissors className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Copy */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('copy')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Copy">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Paste */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={async () => {
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        document.execCommand('insertText', false, text);
+                      } catch {
+                        /* fallback */
+                      }
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste">
+                      <FileText className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Paste from Word */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={async () => {
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        document.execCommand('insertText', false, text);
+                      } catch {
+                        /* fallback */
+                      }
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste from Word">
+                      <FileCode className="w-3.5 h-3.5 text-[#0061D5]" />
+                    </button>
+
+                    <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                    {/* Undo / Redo */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('undo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Undo">
+                      <Undo2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('redo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Redo">
+                      <Redo2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                    {/* Find */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                      const term = prompt('Find text in job description:');
+                      if (term && (window as any).find) (window as any).find(term);
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Find">
+                      <Search className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Replace */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                      const findStr = prompt('Text to find:');
+                      if (findStr) {
+                        const replaceStr = prompt('Replace with:') || '';
+                        applyDescription(description.replaceAll(findStr, replaceStr));
+                      }
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Replace">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Select All */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('selectAll')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Select All">
+                      <CheckSquare className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Remove Format */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Remove Format">
+                      <RemoveFormatting className="w-3.5 h-3.5 text-red-500" />
+                    </button>
+
+                    <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                    {/* Bold / Italic / Underline / Strike */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('bold')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-bold" title="Bold">
+                      <Bold className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('italic')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] italic" title="Italic">
+                      <Italic className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('underline')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] underline" title="Underline">
+                      <Underline className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('strikeThrough')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] line-through" title="Strikethrough">
+                      <Strikethrough className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Subscript / Superscript */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('subscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Subscript">
+                      <Subscript className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('superscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Superscript">
+                      <Superscript className="w-3.5 h-3.5" />
+                    </button>
+
+                    <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                    {/* Lists */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('insertOrderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Numbered List">
+                      <ListOrdered className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('insertUnorderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Bulleted List">
+                      <List className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Indent / Outdent */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('outdent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Decrease Indent">
+                      <Outdent className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('indent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Increase Indent">
+                      <Indent className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Blockquote */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('formatBlock', false, 'blockquote')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Blockquote">
+                      <Quote className="w-3.5 h-3.5" />
+                    </button>
+
+                    <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                    {/* Link */}
+                    <button type="button" onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Insert Link">
+                      <Link2 className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Unlink */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('unlink')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Unlink">
+                      <Unlink className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Anchor */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                      const name = prompt('Anchor name:');
+                      if (name) document.execCommand('insertHTML', false, `<a name="${name}"></a>`);
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Anchor">
+                      <Anchor className="w-3.5 h-3.5" />
+                    </button>
+
+                    <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                    {/* Image */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                      const url = prompt('Image URL:');
+                      if (url) document.execCommand('insertImage', false, url);
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Image">
+                      <Image className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Table */}
+                    <button type="button" onClick={() => setShowTableInput(!showTableInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Table">
+                      <Table className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Horizontal Rule */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertHorizontalRule')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Horizontal Rule">
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Special Character */}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertText', false, '©')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-serif text-xs font-bold" title="Special Character (Ω)">
+                      Ω
+                    </button>
+                  </div>
+
+                  {/* Source Mode Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsSourceMode(!isSourceMode)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors ${
+                      isSourceMode
+                        ? 'bg-[#2F80E7] text-white'
+                        : 'hover:bg-[#E2E8F0] dark:hover:bg-[#334155] text-[#475569] dark:text-[#CBD5E1]'
+                    }`}
+                    title="Toggle HTML Source Code View"
+                  >
+                    <Code2 className="w-3.5 h-3.5" />
+                    <span>Source</span>
+                  </button>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[#202B37] dark:text-white uppercase tracking-wider">
-                    Job Description &amp; Career Portal
-                  </h3>
-                  <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
-                    Complete job specification, candidate-facing outreach email, and public portal publishing
-                  </p>
+
+                {/* CKEditor Toolbar Row 2 */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F1F5F9] dark:bg-[#162431] border-b border-[#E2E8F0] dark:border-[#334155] text-xs flex-wrap">
+                  {/* Alignment */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyLeft')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Left">
+                    <AlignLeft className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyCenter')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Center">
+                    <AlignCenter className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyRight')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Right">
+                    <AlignRight className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyFull')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Justify">
+                    <AlignJustify className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Text Color A */}
+                  <div className="relative">
+                    <button type="button" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Text Color">
+                      <Type className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                      <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: editorTextColor }}></span>
+                    </button>
+                    {showColorPicker && (
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg shadow-xl p-2 z-50 grid grid-cols-7 gap-1 w-[160px]">
+                        {['#000000','#333333','#666666','#999999','#CCCCCC','#FFFFFF','#E05252','#D97706','#16A34A','#2563EB','#7C3AED','#DB2777','#1769AA','#0B4F89'].map((c) => (
+                          <button key={c} type="button" onClick={() => { setEditorTextColor(c); document.execCommand('foreColor', false, c); setShowColorPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Highlight Color */}
+                  <div className="relative">
+                    <button type="button" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Background Color">
+                      <Highlighter className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                      <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: editorHighlightColor }}></span>
+                    </button>
+                    {showHighlightPicker && (
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg shadow-xl p-2 z-50 grid grid-cols-6 gap-1 w-[140px]">
+                        {['#FFFF00','#00FF00','#00FFFF','#FF69B4','#FFA500','#FF6347','#E6E6FA','#98FB98','#87CEEB','#FFFFFF'].map((c) => (
+                          <button key={c} type="button" onClick={() => { setEditorHighlightColor(c); document.execCommand('hiliteColor', false, c); setShowHighlightPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Styles Dropdown */}
+                  <select
+                    value={selectedStyle}
+                    onChange={(e) => setSelectedStyle(e.target.value)}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="Styles">Styles</option>
+                    <option value="lead">Lead Paragraph</option>
+                    <option value="badge">Badge Tag</option>
+                    <option value="italic-title">Italic Title</option>
+                  </select>
+
+                  {/* Format Dropdown */}
+                  <select
+                    value={selectedFormat}
+                    onChange={(e) => {
+                      setSelectedFormat(e.target.value);
+                      const tag = e.target.value === 'Normal' ? 'P' : e.target.value === 'Heading 1' ? 'H1' : e.target.value === 'Heading 2' ? 'H2' : e.target.value === 'Heading 3' ? 'H3' : 'P';
+                      document.execCommand('formatBlock', false, tag);
+                    }}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="Normal">Format (Normal)</option>
+                    <option value="Heading 1">Heading 1</option>
+                    <option value="Heading 2">Heading 2</option>
+                    <option value="Heading 3">Heading 3</option>
+                    <option value="Formatted">Formatted</option>
+                  </select>
+
+                  {/* Font Dropdown */}
+                  <select
+                    value={selectedFont}
+                    onChange={(e) => {
+                      setSelectedFont(e.target.value);
+                      formatDescription('fontName');
+                    }}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="Arial">Font (Arial)</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Lucida Sans">Lucida Sans</option>
+                    <option value="Tahoma">Tahoma</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Trebuchet MS">Trebuchet MS</option>
+                    <option value="Verdana">Verdana</option>
+                  </select>
+
+                  {/* Size Dropdown */}
+                  <select
+                    value={selectedFontSize}
+                    onChange={(e) => {
+                      setSelectedFontSize(e.target.value);
+                      formatDescription('fontSize');
+                    }}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="1">Size (8)</option>
+                    <option value="2">9</option>
+                    <option value="2">10</option>
+                    <option value="3">11</option>
+                    <option value="3">12</option>
+                    <option value="4">14</option>
+                    <option value="5">16</option>
+                    <option value="5">18</option>
+                    <option value="6">20</option>
+                    <option value="6">24</option>
+                    <option value="7">28</option>
+                    <option value="7">36</option>
+                  </select>
                 </div>
+
+                {/* Popovers for Link & Table */}
+                {showLinkInput && (
+                  <div className="p-2.5 bg-[#F8FAFC] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-2 text-xs">
+                    <span className="text-[11px] font-semibold text-[#475569]">URL:</span>
+                    <input
+                      type="url"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="flex-1 px-2 py-1 bg-white dark:bg-[#162431] border border-[#CBD5E1] rounded text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (linkUrl.trim()) {
+                          document.execCommand('createLink', false, linkUrl.trim());
+                          setLinkUrl('');
+                          setShowLinkInput(false);
+                        }
+                      }}
+                      className="px-3 py-1 bg-[#2F80E7] text-white text-[11px] font-bold rounded"
+                    >
+                      Insert Link
+                    </button>
+                    <button type="button" onClick={() => setShowLinkInput(false)} className="text-[#64748B] text-xs">✕</button>
+                  </div>
+                )}
+
+                {showTableInput && (
+                  <div className="p-2.5 bg-[#F8FAFC] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-3 text-xs">
+                    <span className="text-[11px] font-semibold text-[#475569]">Table:</span>
+                    <label className="flex items-center gap-1 text-[11px]">
+                      <span>Rows:</span>
+                      <input type="number" min={1} max={10} value={tableRows} onChange={(e) => setTableRows(Number(e.target.value))} className="w-12 px-1 py-0.5 border rounded text-xs text-center" />
+                    </label>
+                    <label className="flex items-center gap-1 text-[11px]">
+                      <span>Cols:</span>
+                      <input type="number" min={1} max={8} value={tableCols} onChange={(e) => setTableCols(Number(e.target.value))} className="w-12 px-1 py-0.5 border rounded text-xs text-center" />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        let html = '<table style="border-collapse:collapse;width:100%;border:1px solid #CBD5E1;margin:8px 0"><thead><tr>';
+                        for (let c = 0; c < tableCols; c++) html += `<th style="border:1px solid #CBD5E1;padding:6px 10px;background:#F1F5F9;font-weight:bold;text-align:left;font-size:12px">Col ${c + 1}</th>`;
+                        html += '</tr></thead><tbody>';
+                        for (let r = 0; r < tableRows; r++) {
+                          html += '<tr>';
+                          for (let c = 0; c < tableCols; c++) html += `<td style="border:1px solid #CBD5E1;padding:6px 10px;font-size:12px">&nbsp;</td>`;
+                          html += '</tr>';
+                        }
+                        html += '</tbody></table>';
+                        document.execCommand('insertHTML', false, html);
+                        setShowTableInput(false);
+                      }}
+                      className="px-3 py-1 bg-[#2F80E7] text-white text-[11px] font-bold rounded"
+                    >
+                      Insert
+                    </button>
+                    <button type="button" onClick={() => setShowTableInput(false)} className="text-[#64748B] text-xs">✕</button>
+                  </div>
+                )}
+
+                {/* Editor Content Area */}
+                {isSourceMode ? (
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={12}
+                    className="w-full p-4 font-mono text-xs text-[#202B37] dark:text-white bg-white dark:bg-[#162431] focus:outline-none"
+                    placeholder="<p>Enter HTML source code here...</p>"
+                  />
+                ) : (
+                  <div
+                    ref={descriptionEditorRef}
+                    contentEditable
+                    suppressContentEditableWarning
+                    role="textbox"
+                    aria-label="Job Description"
+                    aria-multiline="true"
+                    onInput={(e) => setDescription(e.currentTarget.innerHTML)}
+                    data-placeholder="Enter job description..."
+                    className="min-h-[280px] w-full p-4 text-xs font-sans text-[#202B37] dark:text-white bg-white dark:bg-[#162431] focus:outline-none whitespace-pre-wrap leading-relaxed"
+                    style={{ fontFamily: selectedFont }}
+                  />
+                )}
               </div>
 
-              {/* Description Toolbar & Textarea */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-[#202B37] dark:text-[#F5F8FB]">
-                    Job Description *
-                  </label>
-                  <div className="flex items-center gap-1 p-1 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-lg">
-                    <button type="button" className="p-1 rounded hover:bg-white dark:hover:bg-[#1B2936] text-[#5E6B7A]" title="Bold"><Bold className="w-3.5 h-3.5" /></button>
-                    <button type="button" className="p-1 rounded hover:bg-white dark:hover:bg-[#1B2936] text-[#5E6B7A]" title="Italic"><Italic className="w-3.5 h-3.5" /></button>
-                    <button type="button" className="p-1 rounded hover:bg-white dark:hover:bg-[#1B2936] text-[#5E6B7A]" title="Bullet List"><List className="w-3.5 h-3.5" /></button>
-                    <button type="button" className="p-1 rounded hover:bg-white dark:hover:bg-[#1B2936] text-[#5E6B7A]" title="Numbered List"><ListOrdered className="w-3.5 h-3.5" /></button>
-                  </div>
-                </div>
-
-                <textarea
-                  rows={8}
-                  required
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Detailed scope of work, technical environment, deliverables, and role responsibilities..."
-                  className="w-full p-4 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl text-xs font-sans text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
-                />
+              {/* Bottom Left: Add Public Job Details Pill Button (Ceipal Exact as Screenshot 1) */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsPublicJdOpen(true)}
+                  className="px-3.5 py-1 rounded-full bg-[#52B72A] hover:bg-[#46A323] text-white text-[11px] font-bold shadow-xs inline-flex items-center gap-1 transition-colors"
+                >
+                  Add Public Job Details
+                </button>
               </div>
 
               {/* Career Portal Toggle & Secondary Managers */}
-              <div className="pt-2 border-t border-[#DCE6EF] dark:border-[#354A5C] grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-xs">
+              <div className="pt-3 border-t border-[#DCE6EF] dark:border-[#354A5C] grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-xs">
                 <div>
                   <label className="flex items-center gap-2 cursor-pointer font-bold text-[#202B37] dark:text-white">
                     <input
@@ -1458,6 +2050,448 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               </div>
             </div>
           </div>
+
+          {/* SECTION 6: DOCUMENTS (CEIPAL EXACT REPLICA: LOCAL DRIVE, DROPBOX, BOX) */}
+          <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-bold text-[#202B37] dark:text-white">
+              Documents
+            </h3>
+
+            {/* Exactly 3 Square Buttons matching Ceipal photo: Local Drive, Dropbox, Box */}
+            <div className="flex items-center gap-2">
+              {/* 1. Local Drive */}
+              <div className="relative group">
+                <label
+                  htmlFor="local-drive-upload"
+                  className="w-10 h-10 rounded border border-[#CBD5E1] dark:border-[#475569] bg-white dark:bg-[#1E293B] flex items-center justify-center cursor-pointer hover:border-[#94A3B8] hover:bg-[#F8FAFC] dark:hover:bg-[#334155] transition-all shadow-2xs"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                    <rect x="2.5" y="3.5" width="19" height="13" rx="1.5" stroke="#334155" strokeWidth="1.4" fill="#0084FF" />
+                    <path d="M4 4.5h8l-5 11H4z" fill="white" fillOpacity="0.25" />
+                    <path d="M12 16.5v3" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M8.5 19.5h7" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    id="local-drive-upload"
+                    type="file"
+                    multiple
+                    className="sr-only"
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        handleLocalFilesUpload(e.target.files);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </label>
+                {/* Tooltip: Local Drive */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#1E293B]"></div>
+                  <div className="bg-[#1E293B] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
+                    Local Drive
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Dropbox */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  onClick={() => setActiveDocModal('dropbox')}
+                  className="w-10 h-10 rounded border border-[#CBD5E1] dark:border-[#475569] bg-white dark:bg-[#1E293B] flex items-center justify-center cursor-pointer hover:border-[#94A3B8] hover:bg-[#F8FAFC] dark:hover:bg-[#334155] transition-all shadow-2xs"
+                >
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#0061FE]">
+                    <path d="M6.033 2.5 0 6.666l6.033 4.167 6.034-4.167L6.033 2.5zm11.934 0-6.034 4.166 6.034 4.167L24 6.666 17.967 2.5zM0 15l6.033 4.167 6.034-4.167-6.034-4.167L0 15zm17.967-4.167-6.034 4.167 6.034 4.167L24 15l-6.033-4.167zM6.033 20.25 12 16.146l5.967 4.104L12 24.354l-5.967-4.104z" />
+                  </svg>
+                </button>
+                {/* Tooltip: Dropbox */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#1E293B]"></div>
+                  <div className="bg-[#1E293B] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
+                    Dropbox
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Box */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  onClick={() => setActiveDocModal('box')}
+                  className="w-10 h-10 rounded border border-[#CBD5E1] dark:border-[#475569] bg-white dark:bg-[#1E293B] flex items-center justify-center cursor-pointer hover:border-[#94A3B8] hover:bg-[#F8FAFC] dark:hover:bg-[#334155] transition-all shadow-2xs"
+                >
+                  <span className="text-[#0061D5] font-black text-base tracking-tighter leading-none lowercase select-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                    box
+                  </span>
+                </button>
+                {/* Tooltip: Box */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#1E293B]"></div>
+                  <div className="bg-[#1E293B] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
+                    Box
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attached Documents List */}
+            {documents.length > 0 && (
+              <div className="space-y-2 pt-3 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+                <div className="flex items-center justify-between text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  <span className="font-bold text-[#202B37] dark:text-white">
+                    Attached Files ({documents.length})
+                  </span>
+                  <span>
+                    Total: {(documents.reduce((acc, d) => acc + d.size, 0) / 1024).toFixed(1)} KB
+                  </span>
+                </div>
+
+                <div className="divide-y divide-[#DCE6EF] dark:border-[#354A5C] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl overflow-hidden bg-white dark:bg-[#162431]">
+                  {documents.map((file, index) => {
+                    const src = documentSources[file.name] || 'Local Drive';
+                    return (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="p-2.5 flex items-center justify-between gap-3 text-xs hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B] transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <FileText className="w-4 h-4 text-[#1769AA] shrink-0" />
+                          <div className="min-w-0">
+                            <span className="font-semibold text-[#202B37] dark:text-white truncate block">
+                              {file.name}
+                            </span>
+                            <div className="flex items-center gap-2 text-[10px] text-[#7A8794]">
+                              <span>{(file.size / 1024).toFixed(0)} KB</span>
+                              <span>•</span>
+                              <span className="px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-800 font-medium">
+                                {src}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <select
+                            value={documentCategories[file.name] || 'Client Job Spec (SOW)'}
+                            onChange={(e) => {
+                              setDocumentCategories({
+                                ...documentCategories,
+                                [file.name]: e.target.value
+                              });
+                            }}
+                            className="px-2 py-1 bg-[#F5F8FB] dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded text-xs text-[#202B37] dark:text-white"
+                          >
+                            <option value="Client Job Spec (SOW)">Client Job Spec (SOW)</option>
+                            <option value="Assessment Rubric">Assessment Rubric</option>
+                            <option value="Rate Card / Agreement">Rate Card / Agreement</option>
+                            <option value="Candidate NDA">Candidate NDA</option>
+                            <option value="Technical Matrix">Technical Matrix</option>
+                            <option value="Right to Represent (RTR)">Right to Represent (RTR)</option>
+                            <option value="Other Attachment">Other Attachment</option>
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDocuments((current) => current.filter((_, fileIndex) => fileIndex !== index))
+                            }
+                            aria-label={`Remove ${file.name}`}
+                            className="p-1 text-[#7A8794] hover:text-[#E05252] rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropbox File Selection Modal */}
+          {activeDocModal === 'dropbox' && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+                  <div className="flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#0061FE]">
+                      <path d="M6.033 2.5 0 6.666l6.033 4.167 6.034-4.167L6.033 2.5zm11.934 0-6.034 4.166 6.034 4.167L24 6.666 17.967 2.5zM0 15l6.033 4.167 6.034-4.167-6.034-4.167L0 15zm17.967-4.167-6.034 4.167 6.034 4.167L24 15l-6.033-4.167zM6.033 20.25 12 16.146l5.967 4.104L12 24.354l-5.967-4.104z" />
+                    </svg>
+                    <h3 className="text-sm font-bold text-[#202B37] dark:text-white">
+                      Dropbox File Chooser
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDocModal(null); setDropboxSelectedFiles([]); }}
+                    className="text-[#7A8794] hover:text-[#202B37] p-1 text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  Select files from your Dropbox account to attach to this job:
+                </div>
+
+                <div className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl max-h-60 overflow-y-auto bg-[#F8FAFC] dark:bg-[#162431]">
+                  {[
+                    { name: `${client ? client.replace(/\s+/g, '_') : 'Client'}_Master_SOW_Spec.pdf`, size: 184320, type: 'application/pdf', category: 'Client Job Spec (SOW)' },
+                    { name: `${title ? title.replace(/\s+/g, '_') : 'Software_Eng'}_Technical_Matrix.xlsx`, size: 84992, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', category: 'Technical Matrix' },
+                    { name: 'Ampcus_Candidate_NDA_Standard.pdf', size: 98304, type: 'application/pdf', category: 'Candidate NDA' },
+                    { name: 'Technical_Assessment_Scoring_Rubric.pdf', size: 114688, type: 'application/pdf', category: 'Assessment Rubric' }
+                  ].map((f) => {
+                    const isSelected = dropboxSelectedFiles.includes(f.name);
+                    return (
+                      <div
+                        key={f.name}
+                        onClick={() => {
+                          if (isSelected) {
+                            setDropboxSelectedFiles(prev => prev.filter(n => n !== f.name));
+                          } else {
+                            setDropboxSelectedFiles(prev => [...prev, f.name]);
+                          }
+                        }}
+                        className={`p-3 flex items-center justify-between text-xs cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors ${
+                          isSelected ? 'bg-blue-50 dark:bg-blue-950/50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <input type="checkbox" checked={isSelected} readOnly className="rounded text-[#0061FE]" />
+                          <FileText className="w-4 h-4 text-[#0061FE]" />
+                          <div>
+                            <div className="font-semibold text-[#202B37] dark:text-white">{f.name}</div>
+                            <div className="text-[10px] text-[#7A8794]">{(f.size / 1024).toFixed(0)} KB • {f.category}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[11px] text-[#7A8794]">
+                    {dropboxSelectedFiles.length} file(s) selected
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setActiveDocModal(null); setDropboxSelectedFiles([]); }}
+                      className="px-3 py-1.5 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] text-xs font-semibold text-[#5E6B7A]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={dropboxSelectedFiles.length === 0}
+                      onClick={() => {
+                        const allDropboxFiles = [
+                          { name: `${client ? client.replace(/\s+/g, '_') : 'Client'}_Master_SOW_Spec.pdf`, size: 184320, type: 'application/pdf', category: 'Client Job Spec (SOW)' },
+                          { name: `${title ? title.replace(/\s+/g, '_') : 'Software_Eng'}_Technical_Matrix.xlsx`, size: 84992, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', category: 'Technical Matrix' },
+                          { name: 'Ampcus_Candidate_NDA_Standard.pdf', size: 98304, type: 'application/pdf', category: 'Candidate NDA' },
+                          { name: 'Technical_Assessment_Scoring_Rubric.pdf', size: 114688, type: 'application/pdf', category: 'Assessment Rubric' }
+                        ];
+                        const filesToAttach = allDropboxFiles.filter(f => dropboxSelectedFiles.includes(f.name));
+                        handleAttachCloudFiles('Dropbox', filesToAttach);
+                      }}
+                      className="px-4 py-1.5 rounded-lg bg-[#0061FE] hover:bg-[#0052D4] disabled:opacity-50 text-white text-xs font-bold transition-colors"
+                    >
+                      Attach Selected
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Box File Selection Modal */}
+          {activeDocModal === 'box' && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#0061D5] font-extrabold text-lg tracking-tight lowercase">
+                      box
+                    </span>
+                    <h3 className="text-sm font-bold text-[#202B37] dark:text-white">
+                      Box File Chooser
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveDocModal(null); setBoxSelectedFiles([]); }}
+                    className="text-[#7A8794] hover:text-[#202B37] p-1 text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  Select files from your Box enterprise repository:
+                </div>
+
+                <div className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl max-h-60 overflow-y-auto bg-[#F8FAFC] dark:bg-[#162431]">
+                  {[
+                    { name: `${client ? client.replace(/\s+/g, '_') : 'Enterprise'}_Staffing_Rate_Card.pdf`, size: 245760, type: 'application/pdf', category: 'Rate Card / Agreement' },
+                    { name: `${title ? title.replace(/\s+/g, '_') : 'Engineering'}_Requirement_Brief.docx`, size: 69632, type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', category: 'Client Job Spec (SOW)' },
+                    { name: 'Candidate_Right_To_Represent_RTR.pdf', size: 104448, type: 'application/pdf', category: 'Right to Represent (RTR)' },
+                    { name: 'Client_Service_Level_Agreement_SLA.pdf', size: 317440, type: 'application/pdf', category: 'Rate Card / Agreement' }
+                  ].map((f) => {
+                    const isSelected = boxSelectedFiles.includes(f.name);
+                    return (
+                      <div
+                        key={f.name}
+                        onClick={() => {
+                          if (isSelected) {
+                            setBoxSelectedFiles(prev => prev.filter(n => n !== f.name));
+                          } else {
+                            setBoxSelectedFiles(prev => [...prev, f.name]);
+                          }
+                        }}
+                        className={`p-3 flex items-center justify-between text-xs cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors ${
+                          isSelected ? 'bg-blue-50 dark:bg-blue-950/50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <input type="checkbox" checked={isSelected} readOnly className="rounded text-[#0061D5]" />
+                          <FileText className="w-4 h-4 text-[#0061D5]" />
+                          <div>
+                            <div className="font-semibold text-[#202B37] dark:text-white">{f.name}</div>
+                            <div className="text-[10px] text-[#7A8794]">{(f.size / 1024).toFixed(0)} KB • {f.category}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[11px] text-[#7A8794]">
+                    {boxSelectedFiles.length} file(s) selected
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setActiveDocModal(null); setBoxSelectedFiles([]); }}
+                      className="px-3 py-1.5 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] text-xs font-semibold text-[#5E6B7A]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={boxSelectedFiles.length === 0}
+                      onClick={() => {
+                        const allBoxFiles = [
+                          { name: `${client ? client.replace(/\s+/g, '_') : 'Enterprise'}_Staffing_Rate_Card.pdf`, size: 245760, type: 'application/pdf', category: 'Rate Card / Agreement' },
+                          { name: `${title ? title.replace(/\s+/g, '_') : 'Engineering'}_Requirement_Brief.docx`, size: 69632, type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', category: 'Client Job Spec (SOW)' },
+                          { name: 'Candidate_Right_To_Represent_RTR.pdf', size: 104448, type: 'application/pdf', category: 'Right to Represent (RTR)' },
+                          { name: 'Client_Service_Level_Agreement_SLA.pdf', size: 317440, type: 'application/pdf', category: 'Rate Card / Agreement' }
+                        ];
+                        const filesToAttach = allBoxFiles.filter(f => boxSelectedFiles.includes(f.name));
+                        handleAttachCloudFiles('Box', filesToAttach);
+                      }}
+                      className="px-4 py-1.5 rounded-lg bg-[#0061D5] hover:bg-[#004EB5] disabled:opacity-50 text-white text-xs font-bold transition-colors"
+                    >
+                      Attach Selected
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Ceipal Feature Modal: Public Job Details */}
+          {isPublicJdOpen && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-[#1769AA]" />
+                    <h3 className="text-base font-bold text-[#202B37] dark:text-white">
+                      Public Job Details (Career Portal Sanitized)
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublicJdOpen(false)}
+                    className="text-[#7A8794] hover:text-[#202B37] p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  Define public-facing role details without internal bill rates or confidential client names to show on candidate job portals.
+                </p>
+                <textarea
+                  rows={8}
+                  value={publicJobDetails || description.replace(/<[^>]*>/g, '')}
+                  onChange={(e) => setPublicJobDetails(e.target.value)}
+                  placeholder="Sanitized public job description..."
+                  className="w-full p-3 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs"
+                />
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPublicJdOpen(false)}
+                    className="px-4 py-2 bg-[#2F80E7] text-white font-bold rounded-xl text-xs"
+                  >
+                    Save Public Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Ceipal Feature Modal: Candidate Email Pitch Preview (Screenshot 201120 / 201212) */}
+          {isEmailPreviewOpen && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+              <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-[#1769AA]" />
+                    <h3 className="text-base font-bold text-[#202B37] dark:text-white">
+                      Ceipal Email Pitch Preview
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEmailPreviewOpen(false)}
+                    className="text-[#7A8794] hover:text-[#202B37] p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] rounded-xl space-y-1 text-xs">
+                  <div><strong>From:</strong> system ({assignedRecruiter.toLowerCase().replace(' ', '.')}@ampcustech.com)</div>
+                  <div><strong>Subject:</strong> Job Opportunity: {title || 'Software Engineer'} at {businessUnit} - {location}</div>
+                </div>
+
+                <div className="p-4 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs space-y-3 leading-relaxed">
+                  <p>Hello,</p>
+                  <p><strong>Candidate Summary:</strong> Attached profile under evaluation.</p>
+                  <p><strong>Job Description:</strong></p>
+                  <div
+                    className="p-3 bg-gray-50 dark:bg-[#162431] rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] text-xs whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: description || '<p>No description entered yet.</p>'
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEmailPreviewOpen(false)}
+                    className="px-4 py-2 bg-[#2F80E7] text-white font-bold rounded-xl text-xs"
+                  >
+                    Close Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer Submit Buttons */}
           <div className="flex items-center justify-between p-4 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs">

@@ -107,11 +107,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.03);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-darker);
@@ -119,4 +119,55 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Ceipal High-Density Table Scrollbars (Vertical & Horizontal) */
+.ceipal-table-scroll {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #79B5E5 #EAF4FC;
+}
+
+.ceipal-table-scroll::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.ceipal-table-scroll::-webkit-scrollbar-track {
+  background: #EDF4FA;
+  border-radius: 4px;
+}
+
+.ceipal-table-scroll::-webkit-scrollbar-thumb {
+  background: #9FC3E2;
+  border-radius: 4px;
+  border: 1.5px solid #EDF4FA;
+}
+
+.ceipal-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #1769AA;
+}
+
+.dark .ceipal-table-scroll {
+  scrollbar-color: #354A5C #162431;
+}
+
+.dark .ceipal-table-scroll::-webkit-scrollbar-track {
+  background: #162431;
+}
+
+.dark .ceipal-table-scroll::-webkit-scrollbar-thumb {
+  background: #354A5C;
+  border: 1.5px solid #162431;
+}
+
+.dark .ceipal-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #5AA4E2;
+}
+
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
 }

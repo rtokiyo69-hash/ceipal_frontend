@@ -116,6 +116,92 @@ export const INITIAL_CLIENTS: Client[] = [
 
 export const INITIAL_JOBS: Job[] = [
   {
+    id: 'job-12262',
+    code: 'AMP12262',
+    title: 'Demo Job Test',
+    client: 'ampcustech',
+    clientId: 'cli-amp',
+    clientJobId: 'AMP-REQ-12262',
+    businessUnit: 'Ampcus Tech Pvt Ltd.',
+    location: '[Pune, MH, 411001]',
+    states: 'Maharashtra',
+    type: 'Full-Time',
+    status: 'Active',
+    priority: 'Urgent',
+    assignedRecruiter: 'Ganesh Godse',
+    recruiterId: 'usr-ganesh',
+    createdDate: '10/11/2026 20:00:51',
+    openings: 1,
+    applicantsCount: 1,
+    billRate: 140,
+    payRate: 105,
+    currency: 'USD',
+    rateType: 'Hourly',
+    category: 'Non Niche',
+    skillType: 'IT',
+    respondBy: 'Open Until Filled',
+    remoteJob: 'No',
+    duration: '1 month 22 day(s)',
+    noticePeriod: '1 Month',
+    industry: 'Information Technology',
+    degree: "Bachelor's Degree",
+    minExperience: 2,
+    maxExperience: 5,
+    primarySkills: ['Python', 'ReactJS', 'PostgreSQL'],
+    secondarySkills: ['Django', 'FastAPI', 'Docker', 'AWS', 'Redis'],
+    skills: ['Python', 'ReactJS', 'PostgreSQL'],
+    maxSubmissions: 5,
+    salesManager: 'Sachin Wadeyar',
+    recruitmentManager: 'Sachin Wadeyar',
+    accountManager: 'Sachin Wadeyar',
+    assignedTo: 'Ganesh Godse',
+    careerPortalPublishedDate: '2026-11-10',
+    postJobOnCareerPortal: false,
+    experienceRequired: '2-5 Years',
+    costCenter: 'CC-TECH-901',
+    departmentCode: 'DEP-DIGITAL',
+    poNumber: 'PO-2026-441',
+    description: `Full Stack Developer – Python, React & PostgreSQL Experience: 2–5 Years Employment Type: Full-Time Location: Mumbai, India (Hybrid) Job Type: Permanent Department: Engineering / Software Development
+
+Job Summary:
+We are looking for a skilled Full Stack Developer with 2–5 years of experience in building scalable web applications using Python, React.js, and PostgreSQL. The ideal candidate should have hands-on experience in developing backend APIs, creating responsive frontend interfaces, designing and optimizing databases, and integrating third-party services.
+
+Key Responsibilities:
+• Develop and maintain backend applications using Python and frameworks such as Django, Flask, or FastAPI.
+• Build responsive and interactive user interfaces using React.js, JavaScript, HTML, and CSS.
+• Design, develop, and maintain RESTful APIs.
+• Work with PostgreSQL for database design, query optimization, and data management.
+• Integrate frontend applications with backend services and third-party APIs.
+• Write clean, reusable, maintainable, and well-documented code.
+• Identify and resolve application bugs, performance issues, and technical challenges.
+• Participate in code reviews and follow software development best practices.
+• Collaborate with cross-functional teams throughout the software development lifecycle.
+• Work with Git and CI/CD pipelines for version control and deployment.
+
+Required Skills & Qualifications:
+• Backend: 2–5 years of professional experience in Python development. Strong knowledge of Python programming and OOP concepts. Experience with Django, Flask, or FastAPI. Hands-on experience developing REST APIs.
+• Frontend: Good understanding of React.js and component-based architecture. Knowledge of JavaScript, HTML5, and CSS3. Experience with React Hooks, state management, and API integration.
+• Database: Strong knowledge of PostgreSQL. Experience with relational database design, joins, indexing, and query optimization. Understanding of database transactions and ORM frameworks.
+• Tools & Other Skills: Experience with Git and Git-based workflows. Familiarity with Docker and application deployment. Understanding of authentication mechanisms such as JWT and OAuth. Good problem-solving and debugging skills.
+
+Preferred Qualifications:
+• Experience with AWS, Azure, or other cloud platforms.
+• Familiarity with Redis and caching mechanisms.
+• Knowledge of automated testing frameworks such as Pytest and Jest.
+• Understanding of Agile/Scrum development methodologies.
+• Experience with CI/CD pipelines.
+
+Educational Qualification: Bachelor's degree in Computer Science, Information Technology, or a related field, or equivalent practical experience.
+Salary: As per industry standards and candidate experience.`,
+    documents: [
+      { id: 'jobdoc-1', name: 'Demo_User_Resume_Gibberish.pdf', type: 'application/pdf', size: 3481 },
+      { id: 'jobdoc-2', name: 'AMP12262_Job_Specification.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 28400 }
+    ],
+    notes: [
+      { id: 'jn-1', author: 'Ganesh Godse', text: 'Requisition initialized with Python, ReactJS and PostgreSQL criteria. Candidate pipeline ready for review.', date: '10/11/2026 20:00:51', category: 'Job Posting' }
+    ]
+  },
+  {
     id: 'job-1',
     code: 'AMP12237',
     title: 'Trading ops _DK',
@@ -388,6 +474,64 @@ export const INITIAL_JOBS: Job[] = [
 ];
 
 export const INITIAL_APPLICANTS: Applicant[] = [
+  {
+    id: 'app-demo',
+    applicantId: '164517',
+    name: 'Demo User',
+    email: 'ganeshgodsetemp@gmail.com',
+    phone: '+91 9423022606',
+    currentDesignation: 'Software Engineer',
+    location: 'Nashik, India',
+    experienceYears: 5.8,
+    skills: [
+      'Python (Programming Language)',
+      'PostgreSQL',
+      'Amazon Web Services',
+      'ReactJS',
+      'Fastapi',
+      'Amazon Elastic Compute Cloud',
+      'Amazon S3',
+      'Github',
+      'Retail Commerce',
+      'TypeScript',
+      'Amazon Relational Database Service',
+      'Restful APIs',
+      'Docker',
+      'Microsoft Excel',
+      'Audit Trail',
+      'Code Review',
+      'E-Commerce',
+      'Role-Based Access Control',
+      'Order Management',
+      'Dashboards',
+      'MySQL'
+    ],
+    source: 'LinkedIn',
+    status: 'Submitted',
+    assignedRecruiter: 'Ganesh Godse',
+    assignedJobId: 'job-12262',
+    assignedJobTitle: 'Demo Job Test',
+    matchScore: 35,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250',
+    isFavorite: false,
+    expectedSalary: 'INR - 0.00..',
+    noticePeriod: '15 Days',
+    summary: 'Full Stack Engineer with 5 years 10 months experience in Python, React, PostgreSQL, Docker and AWS cloud deployments.',
+    education: [
+      { degree: 'Computer Engineering', school: 'Savitribai Phule Pune University, Pune', year: '2017' }
+    ],
+    workHistory: [
+      { role: 'Software Engineer', company: 'Nimbus Retail Technologies', duration: 'March 1, 2023 - Present', summary: 'Designed and deployed RESTful microservices with FastAPI, React and PostgreSQL.' },
+      { role: 'Junior Software Developer', company: 'Acme Logistics Pvt Ltd', duration: 'July 1, 2021 - Feb 28, 2023', summary: 'Maintained order management tracking dashboards and logistics data pipelines.' }
+    ],
+    documents: [
+      { name: 'Demo_User_Resume_Gibberish.pdf', size: '3.4 KB', date: '10/11/2026', type: 'Resume' },
+      { name: 'Demo_User_Resume.pdf', size: '128 KB', date: '10/11/2026', type: 'Resume' }
+    ],
+    notes: [
+      { id: 'n-1', author: 'Ganesh Godse', text: 'Candidate profile created through manual creation. Good match for Python and PostgreSQL.', date: '10/11/2026 18:02:59' }
+    ]
+  },
   {
     id: 'app-1',
     applicantId: 'APP-9021',
@@ -665,6 +809,21 @@ export const INITIAL_INTERVIEWS: Interview[] = [
 ];
 
 export const INITIAL_SUBMISSIONS: Submission[] = [
+  {
+    id: 'sub-demo',
+    submissionId: '48148',
+    applicantId: 'app-demo',
+    applicantName: 'Demo User',
+    jobId: 'job-12262',
+    jobTitle: 'Demo Job Test',
+    client: 'ampcustech',
+    recruiter: 'Ganesh Godse',
+    submittedDate: '10/11/2026 20:10:42',
+    billRate: 140,
+    payRate: 105,
+    status: 'Waiting for Evaluation by Internal Reviewer',
+    approvalStatus: 'Pending Review'
+  },
   {
     id: 'sub-1',
     submissionId: 'SUB-8801',

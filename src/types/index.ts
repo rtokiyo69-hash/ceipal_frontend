@@ -15,6 +15,13 @@ export type JobStatus = 'Open' | 'Active' | 'Sourcing' | 'In Review' | 'Closed' 
 export type JobType = 'Full-Time' | 'Contract' | 'C2H' | 'C2C' | 'Remote' | 'Hybrid' | 'On-Site' | 'Part-Time';
 export type Priority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
+export interface JobDocument {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 export interface Job {
   id: string;
   code: string;
@@ -36,6 +43,7 @@ export interface Job {
   skills: string[];
   experienceRequired: string;
   description: string;
+  documents?: JobDocument[];
 
   // Authentic Ceipal ATS Fields
   clientJobId?: string;
@@ -75,6 +83,15 @@ export interface Job {
   costCenter?: string;
   departmentCode?: string;
   poNumber?: string;
+  notes?: JobNote[];
+}
+
+export interface JobNote {
+  id: string;
+  author: string;
+  text: string;
+  date: string;
+  category?: 'Job Posting' | 'Applicant Reference';
 }
 
 export type PipelineStage = 
@@ -175,8 +192,19 @@ export interface Submission {
   submittedDate: string;
   billRate: number;
   payRate: number;
-  status: 'Submitted to Client' | 'Client Review' | 'Interview Requested' | 'Client Rejected';
-  approvalStatus: 'Approved' | 'Pending Approval' | 'Revision Requested';
+  status:
+    | 'Submitted to Client'
+    | 'Client Review'
+    | 'Interview Requested'
+    | 'Client Rejected'
+    | 'Waiting for Evaluation by Internal Reviewer'
+    | 'Internal Disqualified'
+    | 'Placed'
+    | 'Offered'
+    | 'Not Joined'
+    | 'Interview Scheduled'
+    | (string & {});
+  approvalStatus: 'Approved' | 'Pending Approval' | 'Revision Requested' | 'Pending Review' | (string & {});
 }
 
 export interface Placement {
