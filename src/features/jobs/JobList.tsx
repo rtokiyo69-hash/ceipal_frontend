@@ -182,7 +182,7 @@ export const JobList: React.FC = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#402568] text-white border border-[#6941C6] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#0B4F89] text-white border border-[#1769AA] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -192,14 +192,14 @@ export const JobList: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#292633] dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white">
               Job Posting
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] border border-[#6941C6]/20">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/20">
               {filteredJobs.length} Active
             </span>
           </div>
-          <p className="text-xs text-[#5F5972] dark:text-[#B9B2CE] mt-0.5">
+          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-0.5">
             Manage open job postings, client requisitions, recruiter allocations, and submission pipelines
           </p>
         </div>
@@ -209,25 +209,25 @@ export const JobList: React.FC = () => {
           {/* Send Requirement Button (Ceipal Feature) */}
           <button
             onClick={() => openSendModal()}
-            className="px-3.5 py-2 bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] hover:bg-[#F1EBFA] hover:text-[#6941C6] rounded-xl text-xs font-semibold text-[#292633] dark:text-[#F8F7FB] transition-colors flex items-center gap-1.5 shadow-xs"
+            className="px-3.5 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] hover:text-[#1769AA] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <Send className="w-3.5 h-3.5 text-[#6941C6]" />
+            <Send className="w-3.5 h-3.5 text-[#1769AA]" />
             <span>Send Requirement</span>
           </button>
 
           {/* Export CSV Button */}
           <button
             onClick={handleExportCSV}
-            className="px-3.5 py-2 bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] hover:bg-[#F1EBFA] rounded-xl text-xs font-semibold text-[#292633] dark:text-[#F8F7FB] transition-colors flex items-center gap-1.5 shadow-xs"
+            className="px-3.5 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-[#8E88A2]" />
+            <Download className="w-3.5 h-3.5 text-[#7A8794]" />
             <span>Export CSV</span>
           </button>
 
           {/* Primary Action: + New Job Posting (Routes to 3-Way Ceipal Flow) */}
           <button
             onClick={() => navigate('job-new')}
-            className="px-4 py-2 bg-[#FF8243] hover:bg-[#E96F30] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#FF8243]/30 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>+ New</span>
@@ -236,17 +236,17 @@ export const JobList: React.FC = () => {
       </div>
 
       {/* Ceipal Quick View Tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-b border-[#E9E6EF] dark:border-[#383049]">
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-b border-[#DCE6EF] dark:border-[#354A5C]">
         <button
           onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             statusFilter === 'All' && priorityFilter === 'All'
-              ? 'text-[#6941C6] border-[#6941C6] bg-[#F1EBFA]/60 dark:bg-[#312845]/50'
-              : 'text-[#5F5972] dark:text-[#B9B2CE] border-transparent hover:text-[#292633] dark:hover:text-white'
+              ? 'text-[#1769AA] border-[#1769AA] bg-[#EAF4FC]/60 dark:bg-[#22384B]/50'
+              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           <span>All Jobs</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white dark:bg-[#221D2E] text-[#6941C6] border border-[#E9E6EF] font-mono">
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white dark:bg-[#1B2936] text-[#1769AA] border border-[#DCE6EF] font-mono">
             {jobs.length}
           </span>
         </button>
@@ -255,8 +255,8 @@ export const JobList: React.FC = () => {
           onClick={() => { setStatusFilter('Active'); setPriorityFilter('All'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             statusFilter === 'Active'
-              ? 'text-[#6941C6] border-[#6941C6] bg-[#F1EBFA]/60 dark:bg-[#312845]/50'
-              : 'text-[#5F5972] dark:text-[#B9B2CE] border-transparent hover:text-[#292633] dark:hover:text-white'
+              ? 'text-[#1769AA] border-[#1769AA] bg-[#EAF4FC]/60 dark:bg-[#22384B]/50'
+              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           <span>Active Postings</span>
@@ -267,11 +267,11 @@ export const JobList: React.FC = () => {
           onClick={() => { setPriorityFilter('Urgent'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             priorityFilter === 'Urgent'
-              ? 'text-[#FF8243] border-[#FF8243] bg-[#FF8243]/10'
-              : 'text-[#5F5972] dark:text-[#B9B2CE] border-transparent hover:text-[#292633] dark:hover:text-white'
+              ? 'text-[#2F80E7] border-[#2F80E7] bg-[#2F80E7]/10'
+              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
-          <Flame className="w-3.5 h-3.5 text-[#FF8243]" />
+          <Flame className="w-3.5 h-3.5 text-[#2F80E7]" />
           <span>Hot Priority</span>
         </button>
 
@@ -279,15 +279,15 @@ export const JobList: React.FC = () => {
           onClick={() => { setStatusFilter('Open'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             statusFilter === 'Open'
-              ? 'text-[#6941C6] border-[#6941C6] bg-[#F1EBFA]/60'
-              : 'text-[#5F5972] dark:text-[#B9B2CE] border-transparent hover:text-[#292633] dark:hover:text-white'
+              ? 'text-[#1769AA] border-[#1769AA] bg-[#EAF4FC]/60'
+              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           <span>Open Sourcing</span>
         </button>
 
-        <div className="ml-auto text-xs text-[#8E88A2] flex items-center gap-1">
-          <button className="px-2 py-1 hover:text-[#6941C6] flex items-center gap-1 transition-colors">
+        <div className="ml-auto text-xs text-[#7A8794] flex items-center gap-1">
+          <button className="px-2 py-1 hover:text-[#1769AA] flex items-center gap-1 transition-colors">
             <Plus className="w-3 h-3" />
             <span>Add View</span>
           </button>
@@ -295,24 +295,24 @@ export const JobList: React.FC = () => {
       </div>
 
       {/* Ceipal Filter and Specialized Search Bar */}
-      <div className="p-4 bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl shadow-xs space-y-3">
+      <div className="p-4 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search bar with Integrated Scope Dropdown (Exact Ceipal pattern) */}
-          <div className="flex items-center flex-1 max-w-2xl bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl overflow-hidden focus-within:border-[#6941C6] transition-colors">
-            <div className="relative border-r border-[#E9E6EF] dark:border-[#383049]">
+          <div className="flex items-center flex-1 max-w-2xl bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl overflow-hidden focus-within:border-[#1769AA] transition-colors">
+            <div className="relative border-r border-[#DCE6EF] dark:border-[#354A5C]">
               <select
                 value={searchScope}
                 onChange={(e) => setSearchScope(e.target.value)}
                 aria-label="Search Scope"
-                className="appearance-none bg-transparent pl-3 pr-8 py-2 text-xs font-semibold text-[#292633] dark:text-[#F8F7FB] focus:outline-none cursor-pointer"
+                className="appearance-none bg-transparent pl-3 pr-8 py-2 text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] focus:outline-none cursor-pointer"
               >
                 {searchScopes.map((scope) => (
-                  <option key={scope} value={scope} className="bg-white dark:bg-[#221D2E]">
+                  <option key={scope} value={scope} className="bg-white dark:bg-[#1B2936]">
                     {scope}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#8E88A2] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#7A8794] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             <div className="relative flex-1 flex items-center">
@@ -321,17 +321,17 @@ export const JobList: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={`Search by ${searchScope.toLowerCase()}...`}
-                className="w-full pl-3 pr-8 py-2 bg-transparent text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none placeholder-[#8E88A2]"
+                className="w-full pl-3 pr-8 py-2 bg-transparent text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none placeholder-[#7A8794]"
               />
               {search ? (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 text-[#8E88A2] hover:text-[#292633] dark:hover:text-white"
+                  className="absolute right-2.5 text-[#7A8794] hover:text-[#202B37] dark:hover:text-white"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               ) : (
-                <Search className="w-3.5 h-3.5 text-[#8E88A2] absolute right-2.5 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 text-[#7A8794] absolute right-2.5 pointer-events-none" />
               )}
             </div>
           </div>
@@ -339,12 +339,12 @@ export const JobList: React.FC = () => {
           {/* Quick Filters */}
           <div className="flex items-center gap-2.5 flex-wrap">
             {/* Status Dropdown */}
-            <div className="flex items-center gap-1.5 text-xs text-[#5F5972] dark:text-[#B9B2CE]">
-              <span className="text-[11px] font-medium text-[#8E88A2]">Status:</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+              <span className="text-[11px] font-medium text-[#7A8794]">Status:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl px-2.5 py-1.5 text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none focus:border-[#6941C6]"
+                className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1.5 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
               >
                 <option value="All">All Statuses</option>
                 <option value="Active">Active</option>
@@ -357,12 +357,12 @@ export const JobList: React.FC = () => {
             </div>
 
             {/* Priority Filter */}
-            <div className="flex items-center gap-1.5 text-xs text-[#5F5972] dark:text-[#B9B2CE]">
-              <span className="text-[11px] font-medium text-[#8E88A2]">Priority:</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+              <span className="text-[11px] font-medium text-[#7A8794]">Priority:</span>
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl px-2.5 py-1.5 text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none focus:border-[#6941C6]"
+                className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1.5 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
               >
                 <option value="All">All Priorities</option>
                 <option value="Urgent">Urgent</option>
@@ -373,12 +373,12 @@ export const JobList: React.FC = () => {
             </div>
 
             {/* Business Unit Filter */}
-            <div className="flex items-center gap-1.5 text-xs text-[#5F5972] dark:text-[#B9B2CE]">
-              <span className="text-[11px] font-medium text-[#8E88A2]">Unit:</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+              <span className="text-[11px] font-medium text-[#7A8794]">Unit:</span>
               <select
                 value={businessUnitFilter}
                 onChange={(e) => setBusinessUnitFilter(e.target.value)}
-                className="bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl px-2.5 py-1.5 text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none focus:border-[#6941C6]"
+                className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1.5 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
               >
                 <option value="All">All Units</option>
                 <option value="Ampcus Tech Pvt Ltd">Ampcus Tech Pvt Ltd</option>
@@ -394,8 +394,8 @@ export const JobList: React.FC = () => {
 
       {/* Bulk Action Bar (when rows selected) */}
       {selectedIds.length > 0 && (
-        <div className="p-3 bg-[#402568] text-white rounded-2xl flex items-center justify-between text-xs animate-in fade-in shadow-md">
-          <span className="font-mono text-[#F1EBFA] flex items-center gap-2">
+        <div className="p-3 bg-[#0B4F89] text-white rounded-2xl flex items-center justify-between text-xs animate-in fade-in shadow-md">
+          <span className="font-mono text-[#EAF4FC] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#8AC9A7] animate-pulse"></span>
             {selectedIds.length} job postings selected
           </span>
@@ -408,19 +408,19 @@ export const JobList: React.FC = () => {
             </button>
             <button
               onClick={() => handleBulkStatusChange('Sourcing')}
-              className="px-3 py-1 bg-[#6941C6] hover:bg-[#502E80] text-white font-bold rounded-lg transition-colors"
+              className="px-3 py-1 bg-[#1769AA] hover:bg-[#125B97] text-white font-bold rounded-lg transition-colors"
             >
               Mark Sourcing
             </button>
             <button
               onClick={() => handleBulkStatusChange('On Hold')}
-              className="px-3 py-1 bg-[#FF8243] hover:bg-[#E96F30] text-white font-bold rounded-lg transition-colors"
+              className="px-3 py-1 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-bold rounded-lg transition-colors"
             >
               Put On Hold
             </button>
             <button
               onClick={() => setSelectedIds([])}
-              className="px-2 py-1 text-[#D1C5E4] hover:text-white transition-colors"
+              className="px-2 py-1 text-[#D8E9F7] hover:text-white transition-colors"
             >
               Clear Selection
             </button>
@@ -429,18 +429,18 @@ export const JobList: React.FC = () => {
       )}
 
       {/* Ceipal-Style High Density Data Grid */}
-      <div className="bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#F8F7FB] dark:bg-[#1A1624] border-b border-[#E9E6EF] dark:border-[#383049] text-[#5F5972] dark:text-[#B9B2CE]">
+              <tr className="bg-[#F5F8FB] dark:bg-[#162431] border-b border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9]">
                 <th className="p-3 w-8 text-center">
                   <input
                     type="checkbox"
                     checked={selectedIds.length === filteredJobs.length && filteredJobs.length > 0}
                     onChange={handleSelectAll}
                     aria-label="Select all jobs"
-                    className="rounded border-[#E9E6EF] text-[#6941C6] focus:ring-[#6941C6]"
+                    className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
                   />
                 </th>
                 <th className="p-3 w-14 text-center font-semibold">Flags</th>
@@ -457,14 +457,14 @@ export const JobList: React.FC = () => {
                 <th className="p-3 font-semibold text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E9E6EF] dark:divide-[#383049]">
+            <tbody className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C]">
               {filteredJobs.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-12 text-center text-xs text-[#8E88A2]">
+                  <td colSpan={13} className="p-12 text-center text-xs text-[#7A8794]">
                     <div className="max-w-xs mx-auto space-y-2">
-                      <Briefcase className="w-8 h-8 text-[#8E88A2] mx-auto opacity-50" />
-                      <div className="font-semibold text-[#292633] dark:text-white">No job postings found</div>
-                      <p className="text-[11px] text-[#5F5972] dark:text-[#B9B2CE]">
+                      <Briefcase className="w-8 h-8 text-[#7A8794] mx-auto opacity-50" />
+                      <div className="font-semibold text-[#202B37] dark:text-white">No job postings found</div>
+                      <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
                         Try adjusting your search criteria or create a new job posting.
                       </p>
                     </div>
@@ -474,7 +474,7 @@ export const JobList: React.FC = () => {
                 filteredJobs.map((j) => (
                   <tr
                     key={j.id}
-                    className="hover:bg-[#F1EBFA]/50 dark:hover:bg-[#312845]/40 transition-colors group"
+                    className="hover:bg-[#EAF4FC]/50 dark:hover:bg-[#22384B]/40 transition-colors group"
                   >
                     {/* Checkbox */}
                     <td className="p-3 text-center">
@@ -483,7 +483,7 @@ export const JobList: React.FC = () => {
                         checked={selectedIds.includes(j.id)}
                         onChange={() => handleSelectOne(j.id)}
                         aria-label={`Select job ${j.code}`}
-                        className="rounded border-[#E9E6EF] text-[#6941C6] focus:ring-[#6941C6]"
+                        className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
                       />
                     </td>
 
@@ -492,14 +492,14 @@ export const JobList: React.FC = () => {
                       <div className="flex items-center justify-center gap-1.5">
                         {/* Hot / Priority indicator */}
                         {j.priority === 'Urgent' ? (
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#FF8243] inline-block shadow-xs shadow-[#FF8243]/50" title="Hot / Urgent Requisition"></span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#2F80E7] inline-block shadow-xs shadow-[#2F80E7]/50" title="Hot / Urgent Requisition"></span>
                         ) : (
                           <span className="w-2.5 h-2.5 rounded-full bg-[#8AC9A7] inline-block" title="Normal Active"></span>
                         )}
 
                         {/* Submission badge */}
                         <span
-                          className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] border border-[#6941C6]/30 font-mono"
+                          className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/30 font-mono"
                           title={`${j.applicantsCount || 0} Submissions`}
                         >
                           +{j.applicantsCount || 0}
@@ -509,9 +509,9 @@ export const JobList: React.FC = () => {
 
                     {/* Job Code */}
                     <td className="p-3">
-                      <div className="flex items-center gap-1 font-mono font-bold text-[#6941C6] dark:text-[#D1C5E4] hover:underline cursor-pointer"
+                      <div className="flex items-center gap-1 font-mono font-bold text-[#1769AA] dark:text-[#D8E9F7] hover:underline cursor-pointer"
                            onClick={() => navigate('job-detail', j.id)}>
-                        <Briefcase className="w-3 h-3 text-[#8E88A2]" />
+                        <Briefcase className="w-3 h-3 text-[#7A8794]" />
                         <span>{j.code}</span>
                       </div>
                     </td>
@@ -520,17 +520,17 @@ export const JobList: React.FC = () => {
                     <td className="p-3">
                       <div
                         onClick={() => navigate('job-detail', j.id)}
-                        className="font-bold text-[#292633] dark:text-white hover:text-[#6941C6] cursor-pointer transition-colors line-clamp-1"
+                        className="font-bold text-[#202B37] dark:text-white hover:text-[#1769AA] cursor-pointer transition-colors line-clamp-1"
                         title={j.title}
                       >
                         {j.title}
                       </div>
-                      <div className="flex items-center gap-2 text-[11px] text-[#8E88A2] mt-0.5">
+                      <div className="flex items-center gap-2 text-[11px] text-[#7A8794] mt-0.5">
                         <span>{j.type}</span>
                         {j.remoteJob && (
                           <>
                             <span>•</span>
-                            <span className="text-[#6941C6] font-medium">{j.remoteJob}</span>
+                            <span className="text-[#1769AA] font-medium">{j.remoteJob}</span>
                           </>
                         )}
                         {j.duration && (
@@ -543,16 +543,16 @@ export const JobList: React.FC = () => {
                     </td>
 
                     {/* Business Unit */}
-                    <td className="p-3 text-[#5F5972] dark:text-[#B9B2CE]">
-                      <div className="font-medium text-[#292633] dark:text-white truncate max-w-[160px]">
+                    <td className="p-3 text-[#5E6B7A] dark:text-[#B9CAD9]">
+                      <div className="font-medium text-[#202B37] dark:text-white truncate max-w-[160px]">
                         {j.businessUnit || 'Ampcus Tech Pvt Ltd'}
                       </div>
                     </td>
 
                     {/* Client */}
                     <td className="p-3">
-                      <div className="font-semibold text-[#292633] dark:text-white flex items-center gap-1">
-                        <Building2 className="w-3 h-3 text-[#8E88A2] flex-shrink-0" />
+                      <div className="font-semibold text-[#202B37] dark:text-white flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-[#7A8794] flex-shrink-0" />
                         <span className="truncate max-w-[140px]">{j.client}</span>
                       </div>
                     </td>
@@ -560,16 +560,16 @@ export const JobList: React.FC = () => {
                     {/* Client Job ID */}
                     <td className="p-3">
                       {j.clientJobId ? (
-                        <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#F8F7FB] dark:bg-[#1A1624] text-[#5F5972] dark:text-[#B9B2CE] border border-[#E9E6EF] dark:border-[#383049]">
+                        <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#F5F8FB] dark:bg-[#162431] text-[#5E6B7A] dark:text-[#B9CAD9] border border-[#DCE6EF] dark:border-[#354A5C]">
                           {j.clientJobId}
                         </span>
                       ) : (
-                        <span className="text-[#8E88A2] italic text-[11px]">—</span>
+                        <span className="text-[#7A8794] italic text-[11px]">—</span>
                       )}
                     </td>
 
                     {/* Location */}
-                    <td className="p-3 text-[#5F5972] dark:text-[#B9B2CE]">
+                    <td className="p-3 text-[#5E6B7A] dark:text-[#B9CAD9]">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-[#8AC9A7] flex-shrink-0" />
                         <span className="truncate max-w-[160px] font-mono text-[11px]">{j.location}</span>
@@ -577,7 +577,7 @@ export const JobList: React.FC = () => {
                     </td>
 
                     {/* States */}
-                    <td className="p-3 text-[#5F5972] dark:text-[#B9B2CE]">
+                    <td className="p-3 text-[#5E6B7A] dark:text-[#B9CAD9]">
                       <span className="truncate max-w-[130px] block" title={j.states || 'All States'}>
                         {j.states || 'All States'}
                       </span>
@@ -590,14 +590,14 @@ export const JobList: React.FC = () => {
                           j.status === 'Active' || j.status === 'Open'
                             ? 'bg-[#8AC9A7]/20 text-[#1E4D36] border-[#8AC9A7]/40 dark:text-[#8AC9A7]'
                             : j.status === 'Sourcing'
-                            ? 'bg-[#F1EBFA] text-[#6941C6] border-[#6941C6]/30 dark:bg-[#312845] dark:text-[#D1C5E4]'
+                            ? 'bg-[#EAF4FC] text-[#1769AA] border-[#1769AA]/30 dark:bg-[#22384B] dark:text-[#D8E9F7]'
                             : j.status === 'In Review'
-                            ? 'bg-[#FF8243]/15 text-[#FF8243] border-[#FF8243]/30'
+                            ? 'bg-[#2F80E7]/15 text-[#2F80E7] border-[#2F80E7]/30'
                             : 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#6941C6]'
+                          j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#1769AA]'
                         }`}></span>
                         {j.status}
                       </span>
@@ -605,18 +605,18 @@ export const JobList: React.FC = () => {
 
                     {/* Bill / Pay Rate */}
                     <td className="p-3 font-mono tabular-nums">
-                      <div className="font-bold text-[#292633] dark:text-white">
+                      <div className="font-bold text-[#202B37] dark:text-white">
                         {j.currency === 'INR' ? '₹' : '$'}{j.billRate}/{j.rateType === 'Yearly' ? 'yr' : 'hr'}
                       </div>
-                      <div className="text-[10px] text-[#5F5972] dark:text-[#B9B2CE]">
+                      <div className="text-[10px] text-[#5E6B7A] dark:text-[#B9CAD9]">
                         Pay: {j.currency === 'INR' ? '₹' : '$'}{j.payRate}/{j.rateType === 'Yearly' ? 'yr' : 'hr'}
                       </div>
                     </td>
 
                     {/* Assigned To */}
-                    <td className="p-3 text-[#5F5972] dark:text-[#B9B2CE]">
+                    <td className="p-3 text-[#5E6B7A] dark:text-[#B9CAD9]">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-[#6941C6]/15 text-[#6941C6] flex items-center justify-center font-bold text-[10px]">
+                        <div className="w-5 h-5 rounded-full bg-[#1769AA]/15 text-[#1769AA] flex items-center justify-center font-bold text-[10px]">
                           {(j.assignedTo || j.assignedRecruiter || 'R')[0]}
                         </div>
                         <span className="truncate max-w-[110px]">{j.assignedTo || j.assignedRecruiter}</span>
@@ -629,13 +629,13 @@ export const JobList: React.FC = () => {
                         <button
                           onClick={() => openSendModal(j)}
                           title="Send Requirement"
-                          className="p-1.5 text-[#5F5972] hover:text-[#6941C6] hover:bg-[#F1EBFA] dark:hover:bg-[#312845] rounded-lg transition-colors"
+                          className="p-1.5 text-[#5E6B7A] hover:text-[#1769AA] hover:bg-[#EAF4FC] dark:hover:bg-[#22384B] rounded-lg transition-colors"
                         >
                           <Send className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => navigate('job-detail', j.id)}
-                          className="px-2.5 py-1 text-xs text-[#6941C6] hover:text-[#502E80] hover:bg-[#F1EBFA] dark:hover:bg-[#312845] rounded-lg transition-colors font-semibold"
+                          className="px-2.5 py-1 text-xs text-[#1769AA] hover:text-[#125B97] hover:bg-[#EAF4FC] dark:hover:bg-[#22384B] rounded-lg transition-colors font-semibold"
                         >
                           View Dossier
                         </button>
@@ -649,35 +649,35 @@ export const JobList: React.FC = () => {
         </div>
 
         {/* Ceipal Pagination Footer Bar */}
-        <div className="p-3 bg-[#F8F7FB] dark:bg-[#1A1624] border-t border-[#E9E6EF] dark:border-[#383049] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#5F5972] dark:text-[#B9B2CE]">
+        <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] border-t border-[#DCE6EF] dark:border-[#354A5C] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
           <div className="flex items-center gap-2">
             <span>
-              Showing <strong className="text-[#292633] dark:text-white">1 - {filteredJobs.length}</strong> of{' '}
-              <strong className="text-[#292633] dark:text-white">11,779</strong> results
+              Showing <strong className="text-[#202B37] dark:text-white">1 - {filteredJobs.length}</strong> of{' '}
+              <strong className="text-[#202B37] dark:text-white">11,779</strong> results
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white disabled:opacity-50" disabled>
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white disabled:opacity-50" disabled>
               &laquo; First
             </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white disabled:opacity-50" disabled>
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white disabled:opacity-50" disabled>
               &lsaquo; Prev
             </button>
-            <button className="px-2.5 py-1 rounded-lg bg-[#6941C6] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white">2</button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white">3</button>
-            <span className="px-1 text-[#8E88A2]">...</span>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white">472</button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white">
+            <button className="px-2.5 py-1 rounded-lg bg-[#1769AA] text-white font-bold">1</button>
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white">2</button>
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white">3</button>
+            <span className="px-1 text-[#7A8794]">...</span>
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white">472</button>
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white">
               Next &rsaquo;
             </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E9E6EF] dark:border-[#383049] bg-white dark:bg-[#221D2E] hover:bg-[#F1EBFA] text-[#292633] dark:text-white">
+            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] hover:bg-[#EAF4FC] text-[#202B37] dark:text-white">
               Last &raquo;
             </button>
 
             <div className="ml-2 flex items-center gap-1">
-              <select aria-label="Items per page" className="bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-lg px-2 py-1 text-xs text-[#292633] dark:text-white focus:outline-none">
+              <select aria-label="Items per page" className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-lg px-2 py-1 text-xs text-[#202B37] dark:text-white focus:outline-none">
                 <option value="25">25 Per Page</option>
                 <option value="50">50 Per Page</option>
                 <option value="100">100 Per Page</option>
@@ -690,33 +690,33 @@ export const JobList: React.FC = () => {
       {/* Send Requirement Modal (Ceipal Feature) */}
       {isSendModalOpen && selectedJobForSend && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E9E6EF] dark:border-[#383049]">
+          <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
               <div className="flex items-center gap-2">
-                <Send className="w-5 h-5 text-[#6941C6]" />
-                <h3 className="text-base font-bold text-[#292633] dark:text-white">
+                <Send className="w-5 h-5 text-[#1769AA]" />
+                <h3 className="text-base font-bold text-[#202B37] dark:text-white">
                   Send Requirement to Vendors &amp; Network
                 </h3>
               </div>
               <button
                 onClick={() => setIsSendModalOpen(false)}
-                className="text-[#8E88A2] hover:text-[#292633] dark:hover:text-white p-1 rounded-lg"
+                className="text-[#7A8794] hover:text-[#202B37] dark:hover:text-white p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3 bg-[#F8F7FB] dark:bg-[#1A1624] rounded-xl space-y-1 text-xs">
-              <div className="font-bold text-[#6941C6] font-mono">{selectedJobForSend.code}</div>
-              <div className="font-bold text-[#292633] dark:text-white">{selectedJobForSend.title}</div>
-              <div className="text-[#5F5972] dark:text-[#B9B2CE]">
+            <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] rounded-xl space-y-1 text-xs">
+              <div className="font-bold text-[#1769AA] font-mono">{selectedJobForSend.code}</div>
+              <div className="font-bold text-[#202B37] dark:text-white">{selectedJobForSend.title}</div>
+              <div className="text-[#5E6B7A] dark:text-[#B9CAD9]">
                 Client: {selectedJobForSend.client} • Location: {selectedJobForSend.location}
               </div>
             </div>
 
             <form onSubmit={handleSendRequirement} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-[#292633] dark:text-white">
+                <label className="font-semibold text-[#202B37] dark:text-white">
                   Recipient Emails (comma-separated) *
                 </label>
                 <input
@@ -725,19 +725,19 @@ export const JobList: React.FC = () => {
                   value={recipientEmails}
                   onChange={(e) => setRecipientEmails(e.target.value)}
                   placeholder="vendor-network@ampcus.com, partners@recruiting.net"
-                  className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none focus:border-[#6941C6]"
+                  className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-[#292633] dark:text-white">
+                <label className="font-semibold text-[#202B37] dark:text-white">
                   Email Subject
                 </label>
                 <input
                   type="text"
                   readOnly
                   value={`[HOT REQ] ${selectedJobForSend.code}: ${selectedJobForSend.title} - ${selectedJobForSend.location}`}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-xs text-[#5F5972] dark:text-[#B9B2CE] focus:outline-none"
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#5E6B7A] dark:text-[#B9CAD9] focus:outline-none"
                 />
               </div>
 
@@ -745,13 +745,13 @@ export const JobList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsSendModalOpen(false)}
-                  className="px-4 py-2 border border-[#E9E6EF] dark:border-[#383049] text-[#5F5972] rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A1624]"
+                  className="px-4 py-2 border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] rounded-xl hover:bg-gray-50 dark:hover:bg-[#162431]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#FF8243] hover:bg-[#E96F30] text-white font-semibold rounded-xl flex items-center gap-1.5 shadow-xs shadow-[#FF8243]/30"
+                  className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-semibold rounded-xl flex items-center gap-1.5 shadow-xs shadow-[#2F80E7]/30"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Dispatch Requirement</span>

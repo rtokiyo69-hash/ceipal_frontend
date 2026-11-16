@@ -32,7 +32,8 @@ import { UserManagement } from './features/admin/UserManagement';
 import { PlatformSettings } from './features/settings/PlatformSettings';
 
 export default function App() {
-  const { currentRoute, isAuthenticated, isDark } = useAppStore();
+  const { currentRoute, isAuthenticated, isDark, currentUser } = useAppStore();
+  const isRecruiter = currentUser?.role === 'recruiter';
 
   useEffect(() => {
     if (isDark) {
@@ -65,7 +66,9 @@ export default function App() {
       case 'jobs':
         return <JobList />;
       case 'job-new':
-        return <JobCreate />;
+        return <JobCreate key="new-job" />;
+      case 'job-templates':
+        return <JobCreate key="job-templates" initialMode="template" />;
       case 'job-detail':
         return <JobDetail />;
       case 'applicants':
@@ -102,9 +105,8 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8F7FB] dark:bg-[#171421] text-[#292633] dark:text-[#F8F7FB]">
-      {/* Modern Obsidian Sidebar */}
-      <Sidebar />
+    <div className={`flex h-screen w-screen overflow-hidden bg-[#F5F8FB] dark:bg-[#111C26] text-[#202B37] dark:text-[#F5F8FB] ${isRecruiter ? 'recruiter-shell' : ''}`}>
+      {!isRecruiter && <Sidebar />}
 
       {/* Main Workspace Frame */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -112,8 +114,8 @@ export default function App() {
         <TopBar />
 
         {/* Viewport Content */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="max-w-7xl mx-auto">{renderCurrentView()}</div>
+        <main className={`flex-1 overflow-y-auto ${isRecruiter ? 'p-3 md:p-4' : 'p-6 md:p-8'}`}>
+          <div className={isRecruiter ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
         </main>
       </div>
 

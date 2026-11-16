@@ -10,6 +10,7 @@ export type AppRoute =
   | 'jobs'
   | 'job-new'
   | 'job-detail'
+  | 'job-templates'
   | 'applicants'
   | 'applicant-new'
   | 'applicant-detail'

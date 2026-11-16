@@ -81,7 +81,7 @@ export const ApplicantList: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#402568] text-white border border-[#6941C6] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#0B4F89] text-white border border-[#1769AA] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -90,10 +90,10 @@ export const ApplicantList: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#292633] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white">
             Talent Pool &amp; Candidates
           </h1>
-          <p className="text-xs text-[#5F5972] dark:text-[#B9B2CE]">
+          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
             Universal candidate roster with match scoring, resume dossiers, and pipeline assignment
           </p>
         </div>
@@ -101,16 +101,16 @@ export const ApplicantList: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportCSV}
-            className="px-3 py-2 bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] hover:bg-[#F1EBFA] rounded-xl text-xs font-semibold text-[#292633] dark:text-[#F8F7FB] transition-colors flex items-center gap-1.5 shadow-xs"
+            className="px-3 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-[#8E88A2]" />
+            <Download className="w-3.5 h-3.5 text-[#7A8794]" />
             <span>Export CSV</span>
           </button>
 
-          {/* Primary Action Button: Bright Orange #FF8243 */}
+          {/* Primary action */}
           <button
             onClick={() => navigate('applicant-new')}
-            className="px-4 py-2 bg-[#FF8243] hover:bg-[#E96F30] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#FF8243]/30 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2F80E7]/30 transition-colors flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Add Candidate</span>
@@ -118,27 +118,27 @@ export const ApplicantList: React.FC = () => {
         </div>
       </div>
 
-      {/* Search & Filter Toolbar: White #FFFFFF, Light Grey #E9E6EF */}
-      <div className="p-4 bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Search & Filter Toolbar: White #FFFFFF, Light Grey #DCE6EF */}
+      <div className="p-4 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E88A2]" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A8794]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search candidate name, skills (K8s, Rust, React), city..."
-            className="w-full pl-10 pr-4 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none focus:border-[#6941C6]"
+            className="w-full pl-10 pr-4 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
           />
         </div>
 
         {/* Stage Filter */}
-        <div className="flex items-center gap-1.5 text-xs text-[#5F5972] dark:text-[#B9B2CE] w-full md:w-auto">
-          <Filter className="w-3.5 h-3.5 text-[#6941C6]" />
+        <div className="flex items-center gap-1.5 text-xs text-[#5E6B7A] dark:text-[#B9CAD9] w-full md:w-auto">
+          <Filter className="w-3.5 h-3.5 text-[#1769AA]" />
           <span>Stage:</span>
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value)}
-            className="bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl px-2.5 py-1 text-xs text-[#292633] dark:text-[#F8F7FB] focus:outline-none focus:border-[#6941C6]"
+            className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
           >
             <option value="All">All Stages</option>
             <option value="New">New</option>
@@ -152,12 +152,12 @@ export const ApplicantList: React.FC = () => {
         </div>
       </div>
 
-      {/* Candidate Table: White #FFFFFF card, Light Grey #E9E6EF borders */}
-      <div className="bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl shadow-xs overflow-hidden">
+      {/* Candidate Table: White #FFFFFF card, Light Grey #DCE6EF borders */}
+      <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#F8F7FB] dark:bg-[#1A1624] border-b border-[#E9E6EF] dark:border-[#383049] text-[#5F5972] dark:text-[#B9B2CE]">
+              <tr className="bg-[#F5F8FB] dark:bg-[#162431] border-b border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9]">
                 <th className="p-3.5 w-10 text-center">★</th>
                 <th className="p-3.5 font-semibold">Candidate Dossier</th>
                 <th className="p-3.5 font-semibold">Current Role &amp; Location</th>
@@ -169,10 +169,10 @@ export const ApplicantList: React.FC = () => {
                 <th className="p-3.5 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E9E6EF] dark:divide-[#383049]">
+            <tbody className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C]">
               {filteredApplicants.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-xs text-[#8E88A2]">
+                  <td colSpan={9} className="p-8 text-center text-xs text-[#7A8794]">
                     No candidates matched your search criteria.
                   </td>
                 </tr>
@@ -180,13 +180,13 @@ export const ApplicantList: React.FC = () => {
                 filteredApplicants.map((a) => (
                   <tr
                     key={a.id}
-                    className="hover:bg-[#F1EBFA]/50 dark:hover:bg-[#312845]/40 transition-colors"
+                    className="hover:bg-[#EAF4FC]/50 dark:hover:bg-[#22384B]/40 transition-colors"
                   >
                     <td className="p-3.5 text-center">
                       <button
                         onClick={(e) => handleToggleFavorite(a.id, e)}
                         className={`transition-colors ${
-                          a.isFavorite ? 'text-[#FF8243]' : 'text-[#8E88A2] hover:text-[#FF8243]'
+                          a.isFavorite ? 'text-[#2F80E7]' : 'text-[#7A8794] hover:text-[#2F80E7]'
                         }`}
                       >
                         <Star className={`w-4 h-4 ${a.isFavorite ? 'fill-current' : ''}`} />
@@ -198,24 +198,24 @@ export const ApplicantList: React.FC = () => {
                         <img
                           src={a.avatar}
                           alt={a.name}
-                          className="w-9 h-9 rounded-full object-cover ring-1 ring-[#E9E6EF]"
+                          className="w-9 h-9 rounded-full object-cover ring-1 ring-[#DCE6EF]"
                         />
                         <div>
                           <div
                             onClick={() => navigate('applicant-detail', a.id)}
-                            className="font-bold text-[#292633] dark:text-white hover:text-[#6941C6] cursor-pointer transition-colors"
+                            className="font-bold text-[#202B37] dark:text-white hover:text-[#1769AA] cursor-pointer transition-colors"
                           >
                             {a.name}
                           </div>
-                          <div className="font-mono text-[11px] text-[#8E88A2]">{a.applicantId}</div>
+                          <div className="font-mono text-[11px] text-[#7A8794]">{a.applicantId}</div>
                         </div>
                       </div>
                     </td>
 
                     <td className="p-3.5">
-                      <div className="font-medium text-[#292633] dark:text-white">{a.currentDesignation}</div>
-                      <div className="text-[11px] text-[#5F5972] dark:text-[#B9B2CE] flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-[#8E88A2]" />
+                      <div className="font-medium text-[#202B37] dark:text-white">{a.currentDesignation}</div>
+                      <div className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9] flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-[#7A8794]" />
                         <span>{a.location}</span>
                       </div>
                     </td>
@@ -225,25 +225,25 @@ export const ApplicantList: React.FC = () => {
                         {a.skills.slice(0, 3).map((sk) => (
                           <span
                             key={sk}
-                            className="px-2 py-0.5 bg-[#F1EBFA] dark:bg-[#312845] border border-[#E9E6EF] dark:border-[#4A4061] rounded text-[10px] font-mono text-[#6941C6] dark:text-[#D1C5E4]"
+                            className="px-2 py-0.5 bg-[#EAF4FC] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] rounded text-[10px] font-mono text-[#1769AA] dark:text-[#D8E9F7]"
                           >
                             {sk}
                           </span>
                         ))}
                         {a.skills.length > 3 && (
-                          <span className="text-[10px] font-mono text-[#8E88A2]">
+                          <span className="text-[10px] font-mono text-[#7A8794]">
                             +{a.skills.length - 3}
                           </span>
                         )}
                       </div>
                     </td>
 
-                    <td className="p-3.5 font-mono tabular-nums font-semibold text-[#292633] dark:text-white">
+                    <td className="p-3.5 font-mono tabular-nums font-semibold text-[#202B37] dark:text-white">
                       {a.experienceYears} Yrs
                     </td>
 
                     <td className="p-3.5">
-                      <span className="inline-block px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-[#F8F7FB] dark:bg-[#312845] border border-[#E9E6EF] dark:border-[#4A4061] text-[#5F5972] dark:text-[#D1C5E4]">
+                      <span className="inline-block px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-[#F5F8FB] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] text-[#5E6B7A] dark:text-[#D8E9F7]">
                         {a.status}
                       </span>
                     </td>
@@ -255,20 +255,20 @@ export const ApplicantList: React.FC = () => {
                       </span>
                     </td>
 
-                    <td className="p-3.5 text-[#5F5972] dark:text-[#B9B2CE]">{a.assignedRecruiter}</td>
+                    <td className="p-3.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{a.assignedRecruiter}</td>
 
                     <td className="p-3.5 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setQuickResumePreview(a)}
-                          className="p-1.5 text-[#8E88A2] hover:text-[#6941C6] rounded-lg transition-colors"
+                          className="p-1.5 text-[#7A8794] hover:text-[#1769AA] rounded-lg transition-colors"
                           title="Quick Resume Preview"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => navigate('applicant-detail', a.id)}
-                          className="px-2.5 py-1 text-xs font-semibold text-[#6941C6] hover:text-[#502E80] hover:bg-[#F1EBFA] dark:hover:bg-[#312845] rounded-lg transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold text-[#1769AA] hover:text-[#125B97] hover:bg-[#EAF4FC] dark:hover:bg-[#22384B] rounded-lg transition-colors"
                         >
                           Dossier →
                         </button>
@@ -285,41 +285,41 @@ export const ApplicantList: React.FC = () => {
       {/* Quick Resume Preview Modal */}
       {quickResumePreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E9E6EF] dark:border-[#383049]">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
               <div className="flex items-center gap-3">
                 <img
                   src={quickResumePreview.avatar}
                   alt={quickResumePreview.name}
-                  className="w-10 h-10 rounded-full object-cover ring-1 ring-[#E9E6EF]"
+                  className="w-10 h-10 rounded-full object-cover ring-1 ring-[#DCE6EF]"
                 />
                 <div>
-                  <h3 className="text-base font-bold text-[#292633] dark:text-white">
+                  <h3 className="text-base font-bold text-[#202B37] dark:text-white">
                     {quickResumePreview.name}
                   </h3>
-                  <div className="text-xs text-[#5F5972] dark:text-[#B9B2CE]">
+                  <div className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
                     {quickResumePreview.currentDesignation} · {quickResumePreview.location}
                   </div>
                 </div>
               </div>
-              <button onClick={() => setQuickResumePreview(null)} className="text-[#8E88A2] hover:text-[#292633] dark:hover:text-white">
+              <button onClick={() => setQuickResumePreview(null)} className="text-[#7A8794] hover:text-[#202B37] dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 bg-[#F8F7FB] dark:bg-[#1A1624] rounded-xl border border-[#E9E6EF] dark:border-[#383049]">
-                <div className="font-semibold text-[#292633] dark:text-white mb-1">Executive Summary</div>
-                <p className="text-[#5F5972] dark:text-[#B9B2CE] leading-relaxed">{quickResumePreview.summary}</p>
+              <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] rounded-xl border border-[#DCE6EF] dark:border-[#354A5C]">
+                <div className="font-semibold text-[#202B37] dark:text-white mb-1">Executive Summary</div>
+                <p className="text-[#5E6B7A] dark:text-[#B9CAD9] leading-relaxed">{quickResumePreview.summary}</p>
               </div>
 
               <div>
-                <div className="font-semibold text-[#292633] dark:text-white mb-2">Technical Skills</div>
+                <div className="font-semibold text-[#202B37] dark:text-white mb-2">Technical Skills</div>
                 <div className="flex flex-wrap gap-1.5">
                   {quickResumePreview.skills.map((sk) => (
                     <span
                       key={sk}
-                      className="px-2.5 py-1 bg-[#F1EBFA] dark:bg-[#312845] border border-[#E9E6EF] dark:border-[#4A4061] rounded-lg font-mono text-[#6941C6] dark:text-[#D1C5E4]"
+                      className="px-2.5 py-1 bg-[#EAF4FC] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] rounded-lg font-mono text-[#1769AA] dark:text-[#D8E9F7]"
                     >
                       {sk}
                     </span>
@@ -330,7 +330,7 @@ export const ApplicantList: React.FC = () => {
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   onClick={() => setQuickResumePreview(null)}
-                  className="px-3.5 py-1.5 border border-[#E9E6EF] dark:border-[#383049] text-[#5F5972] dark:text-[#B9B2CE] rounded-xl hover:bg-[#F8F7FB]"
+                  className="px-3.5 py-1.5 border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] rounded-xl hover:bg-[#F5F8FB]"
                 >
                   Close
                 </button>
@@ -339,7 +339,7 @@ export const ApplicantList: React.FC = () => {
                     navigate('applicant-detail', quickResumePreview.id);
                     setQuickResumePreview(null);
                   }}
-                  className="px-4 py-1.5 bg-[#FF8243] hover:bg-[#E96F30] text-white font-semibold rounded-xl shadow-xs"
+                  className="px-4 py-1.5 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-semibold rounded-xl shadow-xs"
                 >
                   Open Full Candidate Dossier
                 </button>

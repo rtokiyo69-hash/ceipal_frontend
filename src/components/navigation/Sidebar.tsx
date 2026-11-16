@@ -140,12 +140,12 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`relative flex flex-col bg-[#402568] text-white border-r border-[#351E57] transition-all duration-200 select-none z-30 shrink-0 ${
+      className={`relative flex flex-col bg-[#0B4F89] text-white border-r border-[#083F70] transition-all duration-200 select-none z-30 shrink-0 ${
         collapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-5 border-b border-[#351E57]">
+      <div className="h-16 flex items-center justify-between px-5 border-b border-[#083F70]">
         <div
           onClick={() => navigate('dashboard')}
           className="cursor-pointer flex items-center overflow-hidden"
@@ -155,7 +155,7 @@ export const Sidebar: React.FC = () => {
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-md text-[#D1C5E4] hover:text-white hover:bg-[#4E2E7D] transition-colors"
+          className="p-1 rounded-md text-[#D8E9F7] hover:text-white hover:bg-[#1A659E] transition-colors"
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -167,7 +167,7 @@ export const Sidebar: React.FC = () => {
         {navGroups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
             {!collapsed && (
-              <div className="px-3 pb-1 text-[10px] font-mono tracking-wider text-[#D1C5E4]/80 uppercase font-semibold">
+              <div className="px-3 pb-1 text-[10px] font-mono tracking-wider text-[#D8E9F7]/80 uppercase font-semibold">
                 {group.groupTitle}
               </div>
             )}
@@ -186,18 +186,18 @@ export const Sidebar: React.FC = () => {
                   title={collapsed ? item.label : undefined}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-[#6941C6] text-white font-semibold shadow-sm shadow-[#6941C6]/40'
-                      : 'text-[#D1C5E4] hover:bg-[#4E2E7D] hover:text-white'
+                      ? 'bg-[#1769AA] text-white font-semibold shadow-sm shadow-[#1769AA]/40'
+                      : 'text-[#D8E9F7] hover:bg-[#1A659E] hover:text-white'
                   } ${collapsed ? 'justify-center' : ''}`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#D1C5E4]'}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#D8E9F7]'}`} />
                   {!collapsed && (
                     <span className="flex-1 text-left truncate">{item.label}</span>
                   )}
                   {!collapsed && item.badge && (
                     <span
                       className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-[#FF8243] text-white'
+                        isActive ? 'bg-white/20 text-white' : 'bg-[#2F80E7] text-white'
                       }`}
                     >
                       {item.badge}
@@ -211,22 +211,22 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Role Switcher Drawer (Demo Convenience) */}
-      <div className="p-3 border-t border-[#351E57] bg-[#331C54]">
+      <div className="p-3 border-t border-[#083F70] bg-[#331C54]">
         {!collapsed && (
           <div className="mb-2">
             <button
               onClick={() => setRoleSwitcherOpen(!roleSwitcherOpen)}
-              className="w-full flex items-center justify-between text-xs text-[#F1EBFA] hover:text-white px-2.5 py-1.5 rounded-lg bg-[#3E2365] border border-[#4E2E7D] transition-colors"
+              className="w-full flex items-center justify-between text-xs text-[#EAF4FC] hover:text-white px-2.5 py-1.5 rounded-lg bg-[#3E2365] border border-[#1A659E] transition-colors"
             >
               <span className="flex items-center gap-1.5 font-mono">
-                <UserCheck className="w-3.5 h-3.5 text-[#FF8243]" />
+                <UserCheck className="w-3.5 h-3.5 text-[#2F80E7]" />
                 Switch Persona
               </span>
               <span>{roleSwitcherOpen ? '▲' : '▼'}</span>
             </button>
 
             {roleSwitcherOpen && (
-              <div className="mt-1.5 p-1 bg-[#402568] border border-[#4E2E7D] rounded-lg space-y-1 text-xs shadow-xl">
+              <div className="mt-1.5 p-1 bg-[#0B4F89] border border-[#1A659E] rounded-lg space-y-1 text-xs shadow-xl">
                 {(['super_admin', 'manager', 'recruiter'] as UserRole[]).map((r) => (
                   <button
                     key={r}
@@ -235,7 +235,7 @@ export const Sidebar: React.FC = () => {
                       setRoleSwitcherOpen(false);
                     }}
                     className={`w-full text-left px-2 py-1 rounded-md capitalize transition-colors ${
-                      role === r ? 'bg-[#6941C6] text-white font-medium' : 'text-[#D1C5E4] hover:bg-[#4E2E7D]'
+                      role === r ? 'bg-[#1769AA] text-white font-medium' : 'text-[#D8E9F7] hover:bg-[#1A659E]'
                     }`}
                   >
                     {r.replace('_', ' ')}
@@ -251,12 +251,12 @@ export const Sidebar: React.FC = () => {
           <img
             src={currentUser?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250'}
             alt={currentUser?.name}
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#FF8243]"
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#2F80E7]"
           />
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-white truncate">{currentUser?.name}</div>
-              <div className="text-[11px] text-[#D1C5E4] capitalize truncate">
+              <div className="text-[11px] text-[#D8E9F7] capitalize truncate">
                 {role.replace('_', ' ')}
               </div>
             </div>
@@ -264,7 +264,7 @@ export const Sidebar: React.FC = () => {
           {!collapsed && (
             <button
               onClick={logout}
-              className="p-1.5 text-[#D1C5E4] hover:text-[#FF8243] hover:bg-[#4E2E7D] rounded transition-colors"
+              className="p-1.5 text-[#D8E9F7] hover:text-[#2F80E7] hover:bg-[#1A659E] rounded transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

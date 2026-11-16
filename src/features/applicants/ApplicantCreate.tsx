@@ -86,26 +86,26 @@ export const ApplicantCreate: React.FC = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('applicants')}
-          className="p-2 rounded-xl border border-[#E9E6EF] dark:border-[#383049] hover:bg-[#F1EBFA] dark:hover:bg-[#312845] transition-colors"
+          className="p-2 rounded-xl border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] dark:hover:bg-[#22384B] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 text-[#5F5972] dark:text-[#B9B2CE]" />
+          <ArrowLeft className="w-4 h-4 text-[#5E6B7A] dark:text-[#B9CAD9]" />
         </button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#292633] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#202B37] dark:text-white">
             Add Candidate to Talent Pool
           </h1>
-          <p className="text-xs text-[#5F5972] dark:text-[#B9B2CE]">
+          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
             Extract profile data from resumes, cloud drives, or manual onboarding
           </p>
         </div>
       </div>
 
-      {/* 6 Creation Methods: Soft Lavender #F1EBFA selected */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-1.5 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl text-xs font-semibold">
+      {/* Applicant creation methods */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-1.5 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl text-xs font-semibold">
         <button
           onClick={() => setMethod('parse')}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
-            method === 'parse' ? 'bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] shadow-xs border border-[#E9E6EF] dark:border-[#4A4061]' : 'text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] dark:hover:text-white'
+            method === 'parse' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           1. Parse Resume
@@ -113,7 +113,7 @@ export const ApplicantCreate: React.FC = () => {
         <button
           onClick={() => setMethod('manual')}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
-            method === 'manual' ? 'bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] shadow-xs border border-[#E9E6EF] dark:border-[#4A4061]' : 'text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] dark:hover:text-white'
+            method === 'manual' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           2. Manual Entry
@@ -124,7 +124,7 @@ export const ApplicantCreate: React.FC = () => {
             handleSimulateResumeDrop();
           }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
-            method === 'dropbox' ? 'bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] shadow-xs border border-[#E9E6EF] dark:border-[#4A4061]' : 'text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] dark:hover:text-white'
+            method === 'dropbox' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           3. Dropbox
@@ -135,7 +135,7 @@ export const ApplicantCreate: React.FC = () => {
             handleSimulateResumeDrop();
           }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
-            method === 'box' ? 'bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] shadow-xs border border-[#E9E6EF] dark:border-[#4A4061]' : 'text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] dark:hover:text-white'
+            method === 'box' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           4. Box
@@ -146,7 +146,7 @@ export const ApplicantCreate: React.FC = () => {
             handleSimulateResumeDrop();
           }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
-            method === 'onedrive' ? 'bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] shadow-xs border border-[#E9E6EF] dark:border-[#4A4061]' : 'text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] dark:hover:text-white'
+            method === 'onedrive' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           5. OneDrive
@@ -157,7 +157,7 @@ export const ApplicantCreate: React.FC = () => {
             handleSimulateResumeDrop();
           }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
-            method === 'bulk' ? 'bg-[#F1EBFA] dark:bg-[#312845] text-[#6941C6] dark:text-[#D1C5E4] shadow-xs border border-[#E9E6EF] dark:border-[#4A4061]' : 'text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] dark:hover:text-white'
+            method === 'bulk' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
         >
           6. Bulk Parsing
@@ -168,13 +168,13 @@ export const ApplicantCreate: React.FC = () => {
       {(method === 'parse' || method === 'bulk') && !parseUploaded && (
         <div
           onClick={handleSimulateResumeDrop}
-          className="p-8 border-2 border-dashed border-[#6941C6]/40 hover:border-[#6941C6] bg-[#F1EBFA]/50 dark:bg-[#312845]/30 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
+          className="p-8 border-2 border-dashed border-[#1769AA]/40 hover:border-[#1769AA] bg-[#EAF4FC]/50 dark:bg-[#22384B]/30 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
         >
-          <UploadCloud className="w-10 h-10 text-[#6941C6] mx-auto group-hover:scale-110 transition-transform" />
-          <div className="text-sm font-bold text-[#292633] dark:text-white">
+          <UploadCloud className="w-10 h-10 text-[#1769AA] mx-auto group-hover:scale-110 transition-transform" />
+          <div className="text-sm font-bold text-[#202B37] dark:text-white">
             Click to Simulate Resume Upload &amp; Deep Parsing
           </div>
-          <p className="text-xs text-[#5F5972] dark:text-[#B9B2CE] max-w-md mx-auto">
+          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] max-w-md mx-auto">
             Supports PDF, DOCX, TXT. Our semantic extractor automatically populates candidate experience, contact details, and skill tags.
           </p>
         </div>
@@ -189,102 +189,102 @@ export const ApplicantCreate: React.FC = () => {
           </span>
           <button
             onClick={() => setParseUploaded(false)}
-            className="text-xs underline hover:text-[#292633] dark:hover:text-white"
+            className="text-xs underline hover:text-[#202B37] dark:hover:text-white"
           >
             Reset
           </button>
         </div>
       )}
 
-      {/* Form: White #FFFFFF card, Light Grey #E9E6EF border */}
-      <form onSubmit={handleSubmit} className="p-6 bg-white dark:bg-[#221D2E] border border-[#E9E6EF] dark:border-[#383049] rounded-2xl shadow-xs space-y-6">
+      {/* Form: White #FFFFFF card, Light Grey #DCE6EF border */}
+      <form onSubmit={handleSubmit} className="p-6 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs space-y-6">
         {/* Personal & Contact */}
         <div className="space-y-4">
-          <div className="text-xs font-mono font-bold text-[#6941C6] uppercase tracking-wider">
+          <div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">
             01. Personal &amp; Contact Details
           </div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
             <div>
-              <label className="block text-[#5F5972] dark:text-[#B9B2CE] mb-1 font-medium">Full Name</label>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Full Name</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Gaurav Nambiar"
-                className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-[#292633] dark:text-white font-semibold focus:outline-none focus:border-[#6941C6]"
+                className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white font-semibold focus:outline-none focus:border-[#1769AA]"
               />
             </div>
 
             <div>
-              <label className="block text-[#5F5972] dark:text-[#B9B2CE] mb-1 font-medium">Email Address</label>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Email Address</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@domain.com"
-                className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-[#292633] dark:text-white focus:outline-none focus:border-[#6941C6]"
+                className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
               />
             </div>
 
             <div>
-              <label className="block text-[#5F5972] dark:text-[#B9B2CE] mb-1 font-medium">Mobile Number</label>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Mobile Number</label>
               <input
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+1 (555) 000-0000"
-                className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-[#292633] dark:text-white focus:outline-none focus:border-[#6941C6]"
+                className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
               />
             </div>
           </div>
         </div>
 
         {/* Professional Details */}
-        <div className="space-y-4 pt-4 border-t border-[#E9E6EF] dark:border-[#383049]">
-          <div className="text-xs font-mono font-bold text-[#6941C6] uppercase tracking-wider">
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">
             02. Professional Experience &amp; Location
           </div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
             <div>
-              <label className="block text-[#5F5972] dark:text-[#B9B2CE] mb-1 font-medium">Current Designation</label>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Current Designation</label>
               <input
                 type="text"
                 required
                 value={currentDesignation}
                 onChange={(e) => setCurrentDesignation(e.target.value)}
                 placeholder="e.g. Lead Systems Architect"
-                className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-[#292633] dark:text-white font-semibold focus:outline-none focus:border-[#6941C6]"
+                className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white font-semibold focus:outline-none focus:border-[#1769AA]"
               />
             </div>
 
             <div>
-              <label className="block text-[#5F5972] dark:text-[#B9B2CE] mb-1 font-medium">Location</label>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Location</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="City, Country"
-                className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-[#292633] dark:text-white focus:outline-none focus:border-[#6941C6]"
+                className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
               />
             </div>
 
             <div>
-              <label className="block text-[#5F5972] dark:text-[#B9B2CE] mb-1 font-medium">Years of Experience</label>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Years of Experience</label>
               <input
                 type="number"
                 value={experienceYears}
                 onChange={(e) => setExperienceYears(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl font-mono text-[#292633] dark:text-white focus:outline-none focus:border-[#6941C6]"
+                className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl font-mono text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
               />
             </div>
           </div>
         </div>
 
         {/* Skills */}
-        <div className="space-y-4 pt-4 border-t border-[#E9E6EF] dark:border-[#383049]">
-          <div className="text-xs font-mono font-bold text-[#6941C6] uppercase tracking-wider">
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">
             03. Core Competencies &amp; Skills
           </div>
           <div className="space-y-3 text-xs">
@@ -295,12 +295,12 @@ export const ApplicantCreate: React.FC = () => {
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={handleAddSkill}
                 placeholder="Add skill and press Enter"
-                className="flex-1 px-3 py-2 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-[#292633] dark:text-white focus:outline-none focus:border-[#6941C6]"
+                className="flex-1 px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
               />
               <button
                 type="button"
                 onClick={handleAddSkill}
-                className="px-4 py-2 bg-[#402568] hover:bg-[#4E2E7D] text-white rounded-xl transition-colors font-medium"
+                className="px-4 py-2 bg-[#0B4F89] hover:bg-[#1A659E] text-white rounded-xl transition-colors font-medium"
               >
                 Add
               </button>
@@ -310,12 +310,12 @@ export const ApplicantCreate: React.FC = () => {
               {skills.map((sk) => (
                 <span
                   key={sk}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F1EBFA] dark:bg-[#312845] border border-[#E9E6EF] dark:border-[#4A4061] rounded-lg font-mono text-xs text-[#6941C6] dark:text-[#D1C5E4]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#EAF4FC] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] rounded-lg font-mono text-xs text-[#1769AA] dark:text-[#D8E9F7]"
                 >
                   <span>{sk}</span>
                   <X
                     onClick={() => handleRemoveSkill(sk)}
-                    className="w-3.5 h-3.5 text-[#8E88A2] hover:text-rose-500 cursor-pointer transition-colors"
+                    className="w-3.5 h-3.5 text-[#7A8794] hover:text-rose-500 cursor-pointer transition-colors"
                   />
                 </span>
               ))}
@@ -324,8 +324,8 @@ export const ApplicantCreate: React.FC = () => {
         </div>
 
         {/* Executive Summary */}
-        <div className="space-y-4 pt-4 border-t border-[#E9E6EF] dark:border-[#383049]">
-          <div className="text-xs font-mono font-bold text-[#6941C6] uppercase tracking-wider">
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">
             04. Executive Summary
           </div>
           <textarea
@@ -333,25 +333,25 @@ export const ApplicantCreate: React.FC = () => {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             placeholder="Candidate profile summary, notable project highlights..."
-            className="w-full p-3 bg-[#F8F7FB] dark:bg-[#1A1624] border border-[#E9E6EF] dark:border-[#383049] rounded-xl text-xs text-[#292633] dark:text-white focus:outline-none focus:border-[#6941C6]"
+            className="w-full p-3 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
           />
         </div>
 
         {/* Submit */}
-        <div className="pt-4 border-t border-[#E9E6EF] dark:border-[#383049] flex items-center justify-between">
+        <div className="pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C] flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate('applicants')}
-            className="px-4 py-2 border border-[#E9E6EF] dark:border-[#383049] text-[#5F5972] dark:text-[#B9B2CE] hover:text-[#292633] rounded-xl text-xs font-medium"
+            className="px-4 py-2 border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] rounded-xl text-xs font-medium"
           >
             Cancel
           </button>
 
-          {/* Primary Action Button: Bright Orange #FF8243 */}
+          {/* Primary action */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2.5 bg-[#FF8243] hover:bg-[#E96F30] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#FF8243]/30 transition-all"
+            className="px-5 py-2.5 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2F80E7]/30 transition-all"
           >
             {isSubmitting ? 'Importing Candidate...' : 'Save & Onboard Candidate'}
           </button>
