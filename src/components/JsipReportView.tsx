@@ -8,7 +8,9 @@ import {
   Search, 
   Users, 
   CheckCircle2, 
-  Eye
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { 
   Recruiter, 
@@ -27,11 +29,13 @@ import { ActiveJobsTable } from './ActiveJobsTable';
 interface JsipReportViewProps {
   onInspectCandidate?: (candidateId: string) => void;
   onShowToast: (message: string) => void;
+  dashboardPreview?: boolean;
 }
 
 export const JsipReportView: React.FC<JsipReportViewProps> = ({
   onInspectCandidate,
-  onShowToast
+  onShowToast,
+  dashboardPreview = false
 }) => {
   const dateFilter: DateRangeFilter = {
     preset: 'month_to_date',
@@ -61,6 +65,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
   // Modals state
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedRecruiterRow, setSelectedRecruiterRow] = useState<JsipRecruiterRow | null>(null);
+  const [showAllRecruiters, setShowAllRecruiters] = useState(false);
 
   // Handle Refresh
   const handleRefresh = () => {
@@ -168,6 +173,8 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
       }
     );
   }, [displayedRows]);
+  const isCompactPreview = dashboardPreview && !showAllRecruiters;
+  const visibleRows = isCompactPreview ? displayedRows.slice(0, 5) : displayedRows;
 
   // Sort toggle handler
   const handleSort = (field: SortField) => {
@@ -228,7 +235,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
   };
 
   return (
-    <div className={`space-y-6 transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 overflow-y-auto bg-[#F5F8FB] p-6 dark:bg-[#111C26]' : ''}`}>
+    <div className={`space-y-5 transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 overflow-y-auto bg-[#F5F8FB] p-6 dark:bg-[#111C26]' : ''}`}>
       {/* Report Controls Card */}
       {/* Report Controls Bar */}
       <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[#DCE6EF] bg-white p-4 sm:p-5 md:flex-row md:items-center dark:border-[#354A5C] dark:bg-[#1B2936]">
@@ -304,11 +311,11 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
       </div>
 
       {/* 2-Column Side-by-Side: JSIP Recruiter Performance (Half) + Confirmations (Half) */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch w-full">
+      <div className="grid w-full grid-cols-1 items-start gap-5 lg:grid-cols-2">
         {/* Left Column: JSIP Recruiter Performance Report */}
-        <div className="flex h-[590px] max-h-[590px] min-h-[590px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936]">
+        <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'}`}>
           {/* Header */}
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#DCE6EF] bg-[#F5F8FB] p-4 sm:p-5 dark:border-[#354A5C] dark:bg-[#162431]">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#DCE6EF] bg-white p-3 sm:p-4 dark:border-[#354A5C] dark:bg-[#1B2936]">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">
                 <Users className="w-4 h-4" />
@@ -320,26 +327,28 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                     {displayedRows.length} Recruiters
                   </span>
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
-                  <span>Submissions, client activity, interviews & placements.</span>
-                  {displayedRows.length > 7 && (
-                    <span className="text-cyan-600 dark:text-cyan-400 font-medium">
-                      (7 lines visible · scroll for all {displayedRows.length})
-                    </span>
-                  )}
-                </p>
+                {!isCompactPreview && <p className="text-[11px] text-slate-500 dark:text-slate-400">Submissions, client activity, interviews & placements.</p>}
               </div>
+              {dashboardPreview && displayedRows.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllRecruiters(value => !value)}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#1769AA] transition hover:bg-[#EAF4FC] dark:text-[#8CBCE8] dark:hover:bg-[#22384B]"
+                >
+                  {showAllRecruiters ? 'Show less' : 'View all'}
+                  {showAllRecruiters ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Table Viewport - Intact Height with Smooth Scrolling */}
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 w-full scroll-smooth">
-            <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[620px]">
+          <div className={`w-full overflow-x-auto ${isCompactPreview ? '' : 'min-h-0 flex-1 overflow-y-auto scroll-smooth'}`}>
+            <table className={`w-full border-separate border-spacing-0 text-left text-xs ${isCompactPreview ? 'min-w-[420px]' : 'min-w-[620px]'}`}>
               <colgroup>
                 <col className="w-[30%] min-w-[180px]" />
                 <col className="w-[11%] min-w-[65px]" />
-                <col className="w-[12%] min-w-[70px]" />
-                <col className="w-[11%] min-w-[65px]" />
+                <col className={isCompactPreview ? 'hidden' : 'w-[12%] min-w-[70px]'} />
+                <col className={isCompactPreview ? 'hidden' : 'w-[11%] min-w-[65px]'} />
                 <col className="w-[11%] min-w-[65px]" />
                 <col className="w-[13%] min-w-[75px]" />
                 <col className="w-[12%] min-w-[70px]" />
@@ -373,7 +382,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 3: # Client Submissions */}
                   <th
                     onClick={() => handleSort('clientSubmissions')}
-                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3"
+                    className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3`}
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span># Client</span>
@@ -384,7 +393,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 4: # Interviews */}
                   <th
                     onClick={() => handleSort('interviews')}
-                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3"
+                    className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3`}
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span># Int</span>
@@ -423,7 +432,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
 
               {/* Table Body */}
               <tbody>
-                {displayedRows.length === 0 ? (
+                {                displayedRows.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-400 border-b border-slate-200/40 dark:border-slate-800/60">
                       <div className="space-y-1">
@@ -435,7 +444,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                     </td>
                   </tr>
                 ) : (
-                  displayedRows.map((row) => (
+                  visibleRows.map((row) => (
                     <tr
                       key={row.recruiter.id}
                       onClick={() => setSelectedRecruiterRow(row)}
@@ -465,12 +474,12 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                       </td>
 
                       {/* # Client Submissions */}
-                      <td className="py-2.5 px-2 sm:px-3 text-right font-mono font-bold text-teal-600 dark:text-teal-400 tabular-nums text-xs sm:text-sm border-b border-slate-200/40 dark:border-slate-800/60">
+                      <td className={`${isCompactPreview ? 'hidden' : ''} py-2.5 px-2 sm:px-3 text-right font-mono font-bold text-teal-600 dark:text-teal-400 tabular-nums text-xs sm:text-sm border-b border-slate-200/40 dark:border-slate-800/60`}>
                         {row.clientSubmissions}
                       </td>
 
                       {/* # Interviews */}
-                      <td className="py-2.5 px-2 sm:px-3 text-right font-mono font-bold text-sky-600 dark:text-sky-400 tabular-nums text-xs sm:text-sm border-b border-slate-200/40 dark:border-slate-800/60">
+                      <td className={`${isCompactPreview ? 'hidden' : ''} py-2.5 px-2 sm:px-3 text-right font-mono font-bold text-sky-600 dark:text-sky-400 tabular-nums text-xs sm:text-sm border-b border-slate-200/40 dark:border-slate-800/60`}>
                         {row.interviews}
                       </td>
 
@@ -502,7 +511,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
               </tbody>
 
               {/* Consolidated Summary Section (Totals Row at Bottom) */}
-              <tfoot className="text-slate-900 dark:text-white font-bold text-xs">
+              <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-900 dark:text-white font-bold text-xs`}>
                 <tr className="h-[44px]">
                   <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] text-xs tracking-wide sm:px-4 dark:bg-[#162431]">
                     <div className="flex items-center gap-1.5">
@@ -579,16 +588,17 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
         <ConfirmationsTable
           onInspectCandidate={onInspectCandidate}
           onShowToast={onShowToast}
+          dashboardPreview={dashboardPreview}
         />
       </div>
 
       {/* Row 2: Two Interactive Side-by-Side Tables: Notes-Messages-Tasks + Active Jobs */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch w-full">
+      <div className="grid w-full grid-cols-1 items-start gap-5 lg:grid-cols-2">
         {/* Table 1: Notes – Messages – Tasks */}
-        <NotesTasksMessagesTable onShowToast={onShowToast} />
+        <NotesTasksMessagesTable onShowToast={onShowToast} dashboardPreview={dashboardPreview} />
 
         {/* Table 2: Active Jobs – All */}
-        <ActiveJobsTable onShowToast={onShowToast} />
+        <ActiveJobsTable onShowToast={onShowToast} dashboardPreview={dashboardPreview} />
       </div>
 
       {/* Export Confirmation Modal */}

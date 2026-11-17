@@ -12,7 +12,9 @@ import {
   Eye,
   CheckCircle2,
   X,
-  Filter
+  Filter,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { RECRUITERS } from '../data/mockJsipData';
 import { RAW_RECRUITER_ACTIVITIES } from '../data/mockDashboardTablesData';
@@ -20,10 +22,12 @@ import { NotesTasksDateFilter, ActivityDetailRecord } from '../types/dashboardTa
 
 interface NotesTasksMessagesTableProps {
   onShowToast: (message: string) => void;
+  dashboardPreview?: boolean;
 }
 
 export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = ({
-  onShowToast
+  onShowToast,
+  dashboardPreview = false
 }) => {
   // Independent Date Filter (Default: 'this_week')
   const [dateFilter, setDateFilter] = useState<NotesTasksDateFilter>('this_week');
@@ -40,6 +44,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
 
   // Selected recruiter for detail breakdown drawer/modal
   const [selectedRecruiterId, setSelectedRecruiterId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   // Handle Refresh
   const handleRefresh = () => {
@@ -134,13 +139,15 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
     if (!selectedRecruiterId) return null;
     return recruiterRows.find(r => r.recruiter.id === selectedRecruiterId) || null;
   }, [selectedRecruiterId, recruiterRows]);
+  const isCompactPreview = dashboardPreview && !showAll;
+  const visibleRows = isCompactPreview ? displayedRows.slice(0, 5) : displayedRows;
 
   return (
-    <div className={`flex h-[590px] max-h-[590px] min-h-[590px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm transition-all duration-300 dark:border-[#354A5C] dark:bg-[#1B2936] ${
+    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm transition-all duration-300 dark:border-[#354A5C] dark:bg-[#1B2936] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'} ${
       isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#F5F8FB] p-2 dark:bg-[#111C26]' : ''
     }`}>
       {/* Table Header Controls */}
-      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#DCE6EF] bg-[#F5F8FB] p-4 sm:flex-row sm:items-center sm:p-5 dark:border-[#354A5C] dark:bg-[#162431]">
+      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#DCE6EF] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#354A5C] dark:bg-[#1B2936]">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">
             <CheckSquare className="w-4 h-4" />
@@ -152,19 +159,22 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
                 {displayedRows.length} Recruiters
               </span>
             </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
-              <span>Recruiter-wise communication and pipeline tasks.</span>
-              {displayedRows.length > 7 && (
-                <span className="text-cyan-600 dark:text-cyan-400 font-medium">
-                  (7 lines visible · scroll for all {displayedRows.length})
-                </span>
-              )}
-            </p>
+            {!isCompactPreview && <p className="text-[11px] text-slate-500 dark:text-slate-400">Recruiter-wise communication and pipeline tasks.</p>}
           </div>
         </div>
 
         {/* Right Controls: Date Filter, Search, Refresh, Expand */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {dashboardPreview && displayedRows.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(value => !value)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#1769AA] transition hover:bg-[#EAF4FC] dark:text-[#8CBCE8] dark:hover:bg-[#22384B]"
+            >
+              {showAll ? 'Show less' : 'View all'}
+              {showAll ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+          )}
           {/* Independent Date Filter Dropdown (Default: This Week) */}
           <div className="flex items-center gap-1.5 bg-white/70 dark:bg-slate-900/70 border border-slate-300/60 dark:border-cyan-500/25 rounded-xl px-2.5 py-1.5 shadow-xs">
             <Calendar className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
@@ -223,14 +233,14 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
       </div>
 
       {/* Table Body Viewport - Intact Height with Smooth Scrolling */}
-      <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 w-full scroll-smooth">
-        <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[580px]">
+      <div className={`w-full overflow-x-auto ${isCompactPreview ? '' : 'min-h-0 flex-1 overflow-y-auto scroll-smooth'}`}>
+        <table className={`w-full border-separate border-spacing-0 text-left text-xs ${isCompactPreview ? 'min-w-[420px]' : 'min-w-[580px]'}`}>
           <colgroup>
             <col className="w-[34%] min-w-[190px]" />
             <col className="w-[20%] min-w-[110px]" />
             <col className="w-[20%] min-w-[110px]" />
             <col className="w-[16%] min-w-[90px]" />
-            <col className="w-[10%] min-w-[70px]" />
+            <col className={isCompactPreview ? 'hidden' : 'w-[10%] min-w-[70px]'} />
           </colgroup>
 
           {/* Sticky Table Header */}
@@ -284,7 +294,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
               </th>
 
               {/* Column 5: Actions */}
-              <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right dark:border-[#354A5C] dark:bg-[#162431]">
+              <th className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right dark:border-[#354A5C] dark:bg-[#162431]`}>
                 <span>Audit</span>
               </th>
             </tr>
@@ -299,11 +309,11 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
                 </td>
               </tr>
             ) : (
-              displayedRows.map((row) => (
+              visibleRows.map((row) => (
                 <tr
                   key={row.recruiter.id}
                   onClick={() => setSelectedRecruiterId(row.recruiter.id)}
-                  className="h-[52px] max-h-[52px] hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-colors group cursor-pointer"
+                  className={`${isCompactPreview ? 'h-12' : 'h-[52px] max-h-[52px]'} hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-colors group cursor-pointer`}
                 >
                   {/* User Name */}
                   <td className="py-2.5 px-3.5 sm:px-4 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60">
@@ -345,7 +355,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
                   </td>
 
                   {/* Actions / View Audit */}
-                  <td className="py-2.5 px-3 text-right whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60" onClick={(e) => e.stopPropagation()}>
+                  <td className={`${isCompactPreview ? 'hidden' : ''} py-2.5 px-3 text-right whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60`} onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setSelectedRecruiterId(row.recruiter.id)}
                       className="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-500/10 border border-cyan-400/20 transition-all flex items-center gap-1 ml-auto"
@@ -361,7 +371,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
           </tbody>
 
           {/* Sticky Totals Footer */}
-          <tfoot className="text-slate-900 dark:text-white font-bold text-xs">
+          <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-900 dark:text-white font-bold text-xs`}>
             <tr className="h-[44px]">
               <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#162431]">
                 <div className="flex items-center gap-1.5">
@@ -387,7 +397,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
       </div>
 
       {/* Bottom Summary Strip */}
-      <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-[#DCE6EF] bg-[#F5F8FB] p-3 text-center sm:p-4 dark:border-[#354A5C] dark:bg-[#162431]">
+      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#DCE6EF] bg-[#F5F8FB] p-3 text-center sm:p-4 dark:border-[#354A5C] dark:bg-[#162431]`}>
         <div className="space-y-0.5">
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             Total Notes Logged

@@ -507,7 +507,11 @@ export const RecruiterDashboard: React.FC = () => {
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           >
-            <JsipReportView onInspectCandidate={inspectReportCandidate} onShowToast={setToastMessage} />
+            <JsipReportView
+              onInspectCandidate={inspectReportCandidate}
+              onShowToast={setToastMessage}
+              dashboardPreview
+            />
           </motion.div>
         )}
       </div>
