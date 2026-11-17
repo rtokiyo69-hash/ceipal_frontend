@@ -207,6 +207,7 @@ export const ApiService = {
     await delay(220);
     const applicants = await this.getApplicants();
     const newApplicant: Applicant = {
+      ...applicantData,
       id: `app-${Date.now()}`,
       applicantId: `APP-90${applicants.length + 28}`,
       name: applicantData.name || 'New Candidate',
@@ -219,6 +220,9 @@ export const ApiService = {
       source: applicantData.source || 'Direct Career Portal',
       status: (applicantData.status as PipelineStage) || 'New',
       assignedRecruiter: applicantData.assignedRecruiter || 'Priya Sharma',
+      createdBy: applicantData.createdBy || applicantData.assignedRecruiter || 'Priya Sharma',
+      createdOn: applicantData.createdOn || new Date().toLocaleString(),
+      createdDate: applicantData.createdDate || new Date().toISOString().slice(0, 10),
       assignedJobId: applicantData.assignedJobId,
       assignedJobTitle: applicantData.assignedJobTitle,
       matchScore: applicantData.matchScore || Math.floor(Math.random() * 20 + 80),
