@@ -386,6 +386,44 @@ export const ApiService = {
     }
   },
 
+  async updateSubmissionScore(id: string, score: number): Promise<Submission> {
+    if (!Number.isFinite(score) || score < 0 || score > 100) {
+      throw new Error('Submission score must be between 0 and 100.');
+    }
+    await delay(120);
+    const submissions = await this.getSubmissions();
+    const index = submissions.findIndex((submission) => submission.id === id);
+    if (index === -1) throw new Error('Submission not found.');
+    const updated = { ...submissions[index], score };
+    submissions[index] = updated;
+    setStorage(STORAGE_KEYS.SUBMISSIONS, submissions);
+    return updated;
+  },
+
+  async addSubmissionNote(id: string, note: NonNullable<Submission['notes']>[number]): Promise<Submission> {
+    await delay(120);
+    const submissions = await this.getSubmissions();
+    const index = submissions.findIndex((submission) => submission.id === id);
+    if (index === -1) throw new Error('Submission not found.');
+    const updated = { ...submissions[index], notes: [note, ...(submissions[index].notes || [])] };
+    submissions[index] = updated;
+    setStorage(STORAGE_KEYS.SUBMISSIONS, submissions);
+    return updated;
+  },
+
+  async addSubmissionToGroup(id: string, group: string): Promise<Submission> {
+    await delay(120);
+    const submissions = await this.getSubmissions();
+    const index = submissions.findIndex((submission) => submission.id === id);
+    if (index === -1) throw new Error('Submission not found.');
+    const groups = new Set(submissions[index].groups || []);
+    groups.add(group);
+    const updated = { ...submissions[index], groups: Array.from(groups) };
+    submissions[index] = updated;
+    setStorage(STORAGE_KEYS.SUBMISSIONS, submissions);
+    return updated;
+  },
+
   async updateSubmissionStatus(id: string, status: string, comments?: string): Promise<Submission | null> {
     await delay(140);
     const submissions = await this.getSubmissions();
@@ -489,6 +527,17 @@ export const ApiService = {
   async getTasks(): Promise<TaskItem[]> {
     await delay(120);
     return getStorage<TaskItem[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+  },
+
+  async createTask(taskData: Omit<TaskItem, 'id'>): Promise<TaskItem> {
+    await delay(120);
+    const tasks = await this.getTasks();
+    const newTask: TaskItem = {
+      ...taskData,
+      id: `tsk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    };
+    setStorage(STORAGE_KEYS.TASKS, [newTask, ...tasks]);
+    return newTask;
   },
 
   async toggleTaskStatus(id: string): Promise<void> {

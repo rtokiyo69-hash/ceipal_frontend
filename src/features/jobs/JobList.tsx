@@ -20,7 +20,7 @@ import {
   Share2,
   X,
   UserCheck,
-  Flame,
+  Zap,
   ArrowUpDown,
   ExternalLink,
   ChevronRight,
@@ -32,11 +32,108 @@ import {
   User,
   Shield,
   HelpCircle,
-  RotateCcw
+  RotateCcw,
+  Paperclip
 } from 'lucide-react';
 import { useAppStore, getJobDetailUrl } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Job, JobStatus, Priority, Applicant, Submission } from '../../types';
+import { Job, JobStatus, Priority, Applicant, Submission, JobNote, Interview } from '../../types';
+import { EmailRichTextEditor } from '../../components/common/EmailRichTextEditor';
+
+type BulkJobAction =
+  | 'notes'
+  | 'folder'
+  | 'status'
+  | 'macro'
+  | 'bench-consultant'
+  | 'priority'
+  | 'rollover'
+  | 'mail-merge-limit'
+  | 'publish-campuses';
+
+type SubmissionAction =
+  | 'score'
+  | 'note'
+  | 'email'
+  | 'submit-client'
+  | 'group'
+  | 'schedule-interview'
+  | 'other-job'
+  | 'task'
+  | 'request-details';
+
+interface SubmissionActionForm {
+  score: string;
+  note: string;
+  recipients: string;
+  subject: string;
+  emailBody: string;
+  group: string;
+  date: string;
+  time: string;
+  interviewer: string;
+  interviewType: Interview['type'];
+  meetingLink: string;
+  otherJobId: string;
+  taskTitle: string;
+  dueDate: string;
+  requestMessage: string;
+}
+
+const SUBMISSION_ACTIONS: { id: SubmissionAction; label: string }[] = [
+  { id: 'score', label: 'Submission Score' },
+  { id: 'note', label: 'Add Note' },
+  { id: 'email', label: 'Send Email' },
+  { id: 'submit-client', label: 'Submit To Client' },
+  { id: 'group', label: 'Add to Group' },
+  { id: 'schedule-interview', label: 'Schedule Interview' },
+  { id: 'other-job', label: 'Submit To Other Job' },
+  { id: 'task', label: 'Add Task' },
+  { id: 'request-details', label: 'Request More Details' }
+];
+
+const SUBMISSION_GROUPS = ['Shortlist', 'Priority Candidates', 'Client Review', 'Interview Pipeline'];
+
+const JOB_STATUSES: JobStatus[] = ['Open', 'Active', 'Sourcing', 'In Review', 'Closed', 'On Hold'];
+const JOB_PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
+const BULK_JOB_ACTIONS: { id: BulkJobAction; label: string }[] = [
+  { id: 'notes', label: 'Add Notes' },
+  { id: 'folder', label: 'Add to Folder' },
+  { id: 'status', label: 'Change Status' },
+  { id: 'macro', label: 'Macro' },
+  { id: 'bench-consultant', label: 'Send Job to Bench Consultant' },
+  { id: 'priority', label: 'Change Priority' },
+  { id: 'rollover', label: 'Rollover' },
+  { id: 'mail-merge-limit', label: 'Set Mail Merge Limit' },
+  { id: 'publish-campuses', label: 'Publish to Campuses' }
+];
+const EMAIL_JOB_FIELDS = [
+  'Job Title',
+  'Job Code',
+  'Client',
+  'Location',
+  'Job Type',
+  'Status',
+  'Priority',
+  'Experience',
+  'Skills',
+  'Bill Rate'
+];
+const EMAIL_THEMES = [
+  { id: 'plain', name: 'Plain', accent: '#64748B', background: '#FFFFFF' },
+  { id: 'classic-blue', name: 'Classic Blue', accent: '#2F80E7', background: '#F3F8FF' },
+  { id: 'ocean', name: 'Ocean', accent: '#0E7490', background: '#ECFEFF' },
+  { id: 'sunset', name: 'Sunset', accent: '#EA580C', background: '#FFF7ED' },
+  { id: 'forest', name: 'Forest', accent: '#15803D', background: '#F0FDF4' },
+  { id: 'rose', name: 'Rose', accent: '#BE123C', background: '#FFF1F2' },
+  { id: 'amber', name: 'Amber', accent: '#B45309', background: '#FFFBEB' },
+  { id: 'violet', name: 'Violet', accent: '#7C3AED', background: '#F5F3FF' },
+  { id: 'slate', name: 'Slate', accent: '#334155', background: '#F8FAFC' },
+  { id: 'teal', name: 'Teal', accent: '#0F766E', background: '#F0FDFA' }
+];
+
+const escapeHtml = (value: string): string =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 export type JobColumnKey =
   | 'code'
@@ -128,7 +225,7 @@ const getJobColumnValue = (job: Job, key: JobColumnKey): string => {
 };
 
 export const JobList: React.FC = () => {
-  const { navigate, currentRoute } = useAppStore();
+  const { navigate, currentRoute, currentUser } = useAppStore();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -151,7 +248,28 @@ export const JobList: React.FC = () => {
   const [sortBy, setSortBy] = useState<{ key: JobColumnKey; direction: 'asc' | 'desc' } | null>(null);
 
   // Expanded In-Line Submissions Rows (Ceipal Screenshot 202134)
-  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set(['job-12262']));
+  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
+  const [selectedSubmissionIds, setSelectedSubmissionIds] = useState<string[]>([]);
+  const [submissionAction, setSubmissionAction] = useState<SubmissionAction | null>(null);
+  const [submissionActionTargetIds, setSubmissionActionTargetIds] = useState<string[]>([]);
+  const [isApplyingSubmissionAction, setIsApplyingSubmissionAction] = useState(false);
+  const [submissionActionForm, setSubmissionActionForm] = useState<SubmissionActionForm>({
+    score: '',
+    note: '',
+    recipients: '',
+    subject: '',
+    emailBody: '',
+    group: SUBMISSION_GROUPS[0],
+    date: new Date().toISOString().slice(0, 10),
+    time: '10:00',
+    interviewer: '',
+    interviewType: 'Technical Screen',
+    meetingLink: '',
+    otherJobId: '',
+    taskTitle: '',
+    dueDate: new Date().toISOString().slice(0, 10),
+    requestMessage: ''
+  });
 
   // Column Visibility Customization (Ceipal Screenshot 202359)
   const [visibleColumns, setVisibleColumns] = useState<JobColumnKey[]>(
@@ -163,11 +281,32 @@ export const JobList: React.FC = () => {
   // Row selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<BulkJobAction | null>(null);
+  const [bulkActionValue, setBulkActionValue] = useState('');
+  const actionMenuRef = useRef<HTMLDivElement>(null);
 
   // Send Requirement modal
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
-  const [selectedJobForSend, setSelectedJobForSend] = useState<Job | null>(null);
+  const [selectedJobsForSend, setSelectedJobsForSend] = useState<Job[]>([]);
+  const [fromEmail, setFromEmail] = useState('');
+  const [replyToEmail, setReplyToEmail] = useState('');
   const [recipientEmails, setRecipientEmails] = useState('');
+  const [additionalRecipients, setAdditionalRecipients] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
+  const [emailTemplate, setEmailTemplate] = useState('');
+  const [emailSalutation, setEmailSalutation] = useState('');
+  const [emailColumns, setEmailColumns] = useState<string[]>(['Job Title', 'Job Code', 'Location']);
+  const [isEmailColumnsOpen, setIsEmailColumnsOpen] = useState(false);
+  const [emailTheme, setEmailTheme] = useState('classic-blue');
+  const [customEmailColor, setCustomEmailColor] = useState('#2F80E7');
+  const [isEmailThemeOpen, setIsEmailThemeOpen] = useState(false);
+  const [isScheduleMode, setIsScheduleMode] = useState(false);
+  const [scheduleDateTime, setScheduleDateTime] = useState('');
+  const [emailEditorResetKey, setEmailEditorResetKey] = useState(0);
+  const sendIntentRef = useRef<'send' | 'schedule'>('send');
 
   // Close filter popover on click outside
   useEffect(() => {
@@ -177,6 +316,9 @@ export const JobList: React.FC = () => {
         !filterPopoverRef.current.contains(e.target as Node)
       ) {
         setActiveFilterCol(null);
+      }
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
+        setIsBulkActionsOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -332,15 +474,184 @@ export const JobList: React.FC = () => {
 
   // Toggle row expansion for inline submissions
   const toggleRowExpansion = (jobId: string) => {
-    setExpandedJobIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(jobId)) {
+    if (expandedJobIds.has(jobId)) {
+      setExpandedJobIds((prev) => {
+        const next = new Set(prev);
         next.delete(jobId);
-      } else {
-        next.add(jobId);
-      }
-      return next;
+        return next;
+      });
+      const jobSubmissionIds = submissions.filter((submission) => submission.jobId === jobId).map((submission) => submission.id);
+      setSelectedSubmissionIds((prev) => prev.filter((id) => !jobSubmissionIds.includes(id)));
+      setSubmissionAction(null);
+      return;
+    }
+
+    setExpandedJobIds((prev) => new Set(prev).add(jobId));
+  };
+
+  const toggleSubmissionSelection = (submissionId: string) => {
+    setSelectedSubmissionIds((prev) =>
+      prev.includes(submissionId) ? prev.filter((id) => id !== submissionId) : [...prev, submissionId]
+    );
+  };
+
+  const openSubmissionAction = (action: SubmissionAction, selectedRows: Submission[], job: Job) => {
+    const firstSubmission = selectedRows[0];
+    if (!firstSubmission) return;
+    const firstApplicant = applicants.find((applicant) => applicant.id === firstSubmission.applicantId);
+    const today = new Date().toISOString().slice(0, 10);
+    const otherJob = jobs.find((candidateJob) => candidateJob.id !== job.id);
+
+    setSubmissionActionTargetIds(selectedRows.map((submission) => submission.id));
+    setSubmissionActionForm({
+      score: String(firstSubmission.score ?? firstApplicant?.matchScore ?? 0),
+      note: '',
+      recipients: selectedRows
+        .map((submission) => applicants.find((applicant) => applicant.id === submission.applicantId)?.email)
+        .filter((email): email is string => Boolean(email))
+        .join(', '),
+      subject: `Candidate submission: ${firstSubmission.applicantName}`,
+      emailBody: `Hello,\n\nPlease review the selected candidate submission for ${job.title}.\n\nRegards,\n${currentUser?.name || 'NexusTalent'}`,
+      group: firstSubmission.groups?.[0] || SUBMISSION_GROUPS[0],
+      date: today,
+      time: '10:00',
+      interviewer: job.clientManager || 'Hiring Manager',
+      interviewType: 'Technical Screen',
+      meetingLink: '',
+      otherJobId: otherJob?.id || '',
+      taskTitle: `Follow up with ${firstSubmission.applicantName} for ${job.title}`,
+      dueDate: today,
+      requestMessage: ''
     });
+    setSubmissionAction(action);
+  };
+
+  const applySubmissionAction = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const targets = submissions.filter((submission) => submissionActionTargetIds.includes(submission.id));
+    if (!submissionAction || targets.length === 0) {
+      showToast('Select at least one submission before choosing an action.');
+      return;
+    }
+
+    setIsApplyingSubmissionAction(true);
+    try {
+      switch (submissionAction) {
+        case 'score':
+          for (const submission of targets) {
+            await ApiService.updateSubmissionScore(submission.id, Number(submissionActionForm.score));
+          }
+          setSubmissions(await ApiService.getSubmissions());
+          showToast(`Submission score saved for ${targets.length} candidate${targets.length === 1 ? '' : 's'}.`);
+          break;
+        case 'note':
+          for (const submission of targets) {
+            await ApiService.addSubmissionNote(submission.id, {
+              id: `note-${Date.now()}-${submission.id}`,
+              author: currentUser?.name || 'Recruiter',
+              text: submissionActionForm.note.trim(),
+              date: new Date().toLocaleString()
+            });
+          }
+          setSubmissions(await ApiService.getSubmissions());
+          showToast(`Note added to ${targets.length} submission${targets.length === 1 ? '' : 's'}.`);
+          break;
+        case 'email': {
+          const mailto = `mailto:${encodeURIComponent(submissionActionForm.recipients)}?subject=${encodeURIComponent(submissionActionForm.subject)}&body=${encodeURIComponent(submissionActionForm.emailBody)}`;
+          window.location.href = mailto;
+          showToast('Email draft opened. NexusTalent does not send emails directly.');
+          break;
+        }
+        case 'submit-client':
+          for (const submission of targets) {
+            const updated = await ApiService.updateSubmissionStatus(submission.id, 'Submitted to Client');
+            if (!updated) throw new Error(`Submission ${submission.submissionId} could not be found.`);
+          }
+          setSubmissions(await ApiService.getSubmissions());
+          showToast(`${targets.length} submission${targets.length === 1 ? '' : 's'} marked as submitted to client.`);
+          break;
+        case 'group':
+          for (const submission of targets) {
+            await ApiService.addSubmissionToGroup(submission.id, submissionActionForm.group);
+          }
+          setSubmissions(await ApiService.getSubmissions());
+          showToast(`${targets.length} submission${targets.length === 1 ? '' : 's'} added to ${submissionActionForm.group}.`);
+          break;
+        case 'schedule-interview':
+          for (const submission of targets) {
+            await ApiService.scheduleInterview({
+              applicantId: submission.applicantId,
+              applicantName: submission.applicantName,
+              jobId: submission.jobId,
+              jobTitle: submission.jobTitle,
+              client: submission.client,
+              interviewer: submissionActionForm.interviewer.trim(),
+              date: submissionActionForm.date,
+              time: submissionActionForm.time,
+              type: submissionActionForm.interviewType,
+              status: 'Scheduled',
+              meetingLink: submissionActionForm.meetingLink.trim()
+            });
+          }
+          showToast(`Interview scheduled for ${targets.length} candidate${targets.length === 1 ? '' : 's'}.`);
+          break;
+        case 'other-job': {
+          const targetJob = jobs.find((job) => job.id === submissionActionForm.otherJobId);
+          if (!targetJob) throw new Error('Choose a valid job for the submission.');
+          for (const submission of targets) {
+            await ApiService.createSubmission({
+              applicantId: submission.applicantId,
+              applicantName: submission.applicantName,
+              jobId: targetJob.id,
+              jobTitle: targetJob.title,
+              client: targetJob.client,
+              recruiter: currentUser?.name || submission.recruiter,
+              billRate: targetJob.billRate,
+              payRate: targetJob.payRate,
+              status: 'Waiting for Evaluation by Internal Reviewer',
+              approvalStatus: 'Pending Review'
+            });
+          }
+          setSubmissions(await ApiService.getSubmissions());
+          showToast(`${targets.length} candidate${targets.length === 1 ? '' : 's'} submitted to ${targetJob.title}.`);
+          break;
+        }
+        case 'task':
+          for (const submission of targets) {
+            await ApiService.createTask({
+              title: submissionActionForm.taskTitle.trim() || `Follow up with ${submission.applicantName}`,
+              dueDate: submissionActionForm.dueDate,
+              priority: 'Medium',
+              assignedTo: currentUser?.name || submission.recruiter,
+              status: 'Pending',
+              category: 'Client Review'
+            });
+          }
+          showToast(`Task added for ${targets.length} selected submission${targets.length === 1 ? '' : 's'}.`);
+          break;
+        case 'request-details':
+          for (const submission of targets) {
+            const updated = await ApiService.updateSubmissionStatus(
+              submission.id,
+              'Request More Details',
+              submissionActionForm.requestMessage.trim()
+            );
+            if (!updated) throw new Error(`Submission ${submission.submissionId} could not be found.`);
+          }
+          setSubmissions(await ApiService.getSubmissions());
+          showToast(`More details requested for ${targets.length} submission${targets.length === 1 ? '' : 's'}.`);
+          break;
+      }
+
+      setSelectedSubmissionIds((prev) => prev.filter((id) => !submissionActionTargetIds.includes(id)));
+      setSubmissionAction(null);
+      setSubmissionActionTargetIds([]);
+    } catch (error) {
+      console.error(`Unable to apply submission action "${submissionAction}":`, error);
+      showToast(error instanceof Error ? error.message : 'Unable to apply the selected submission action.');
+    } finally {
+      setIsApplyingSubmissionAction(false);
+    }
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -355,6 +666,97 @@ export const JobList: React.FC = () => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+  };
+
+  const openBulkJobAction = (action: BulkJobAction) => {
+    setBulkAction(action);
+    setBulkActionValue(
+      action === 'status' ? 'Active' :
+      action === 'priority' ? 'High' :
+      action === 'macro' ? 'Set Active' : ''
+    );
+    setIsBulkActionsOpen(false);
+  };
+
+  const applyBulkJobAction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkAction || !bulkActionValue.trim()) return;
+
+    const jobsToUpdate = jobs.filter((job) => selectedIds.includes(job.id));
+    const updatedJobs: Job[] = [];
+
+    try {
+      for (const job of jobsToUpdate) {
+        let updates: Partial<Job>;
+        switch (bulkAction) {
+          case 'notes': {
+            const note: JobNote = {
+              id: `note-${Date.now()}-${job.id}`,
+              author: currentUser?.name || 'Current User',
+              text: bulkActionValue.trim(),
+              date: new Date().toISOString().split('T')[0],
+              category: 'Job Posting'
+            };
+            updates = { notes: [...(job.notes || []), note] };
+            break;
+          }
+          case 'folder':
+            updates = { folder: bulkActionValue.trim() };
+            break;
+          case 'status':
+            updates = { status: bulkActionValue as JobStatus };
+            break;
+          case 'macro':
+            updates = bulkActionValue === 'Set Active'
+              ? { status: 'Active' }
+              : bulkActionValue === 'Mark High Priority'
+                ? { priority: 'High' }
+                : { status: 'Closed' };
+            break;
+          case 'bench-consultant':
+            updates = { benchConsultant: bulkActionValue.trim(), assignedTo: bulkActionValue.trim() };
+            break;
+          case 'priority':
+            updates = { priority: bulkActionValue as Priority };
+            break;
+          case 'rollover':
+            updates = { status: 'Active', endDate: bulkActionValue };
+            break;
+          case 'mail-merge-limit': {
+            const limit = Number(bulkActionValue);
+            if (!Number.isInteger(limit) || limit < 0) {
+              showToast('Enter a whole number of 0 or greater for the mail merge limit.');
+              return;
+            }
+            updates = { mailMergeLimit: limit };
+            break;
+          }
+          case 'publish-campuses': {
+            const campuses = bulkActionValue.split(',').map((campus) => campus.trim()).filter(Boolean);
+            if (campuses.length === 0) {
+              showToast('Enter at least one campus to publish to.');
+              return;
+            }
+            updates = { publishedCampuses: campuses, postJobOnCareerPortal: true };
+            break;
+          }
+        }
+        updatedJobs.push(await ApiService.updateJob(job.id, updates));
+      }
+
+      const updatedById = new Map(updatedJobs.map((job) => [job.id, job]));
+      setJobs((currentJobs) => currentJobs.map((job) => updatedById.get(job.id) || job));
+      setSelectedIds([]);
+      setBulkAction(null);
+      setBulkActionValue('');
+      showToast(`${BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label} applied to ${updatedJobs.length} job${updatedJobs.length === 1 ? '' : 's'}.`);
+    } catch (error) {
+      console.error('Failed to apply bulk job action:', error);
+      const updatedById = new Map(updatedJobs.map((job) => [job.id, job]));
+      setJobs((currentJobs) => currentJobs.map((job) => updatedById.get(job.id) || job));
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      showToast(`Action applied to ${updatedJobs.length} of ${jobsToUpdate.length} jobs. ${message}`);
+    }
   };
 
   const handleExportCSV = () => {
@@ -379,19 +781,141 @@ export const JobList: React.FC = () => {
   };
 
   const openSendModal = (job?: Job) => {
-    setSelectedJobForSend(job || filteredJobs[0] || null);
+    const jobsToSend = job
+      ? [job]
+      : selectedIds.length > 0
+        ? jobs.filter((item) => selectedIds.includes(item.id))
+        : filteredJobs.slice(0, 1);
+    if (jobsToSend.length === 0) {
+      showToast('Select at least one job to send.');
+      return;
+    }
+
+    const sender = currentUser?.email || 'recruiting@ampcus.com';
+    setSelectedJobsForSend(jobsToSend);
+    setFromEmail(sender);
+    setReplyToEmail(sender);
+    setRecipientEmails('');
+    setAdditionalRecipients('');
+    setEmailSubject(
+      jobsToSend.length === 1
+        ? `Job Requirement: ${jobsToSend[0].title}`
+        : `Job Requirements: ${jobsToSend.length} positions`
+    );
+    setEmailBody('<p>Hi [FirstName]</p><p>Please review the job requirement details below.</p>');
+    setEmailEditorResetKey((key) => key + 1);
+    setEmailAttachments([]);
+    setEmailTemplate('');
+    setEmailSalutation('Hi [FirstName]');
+    setEmailColumns(['Job Title', 'Job Code', 'Location']);
+    setEmailTheme('classic-blue');
+    setIsEmailColumnsOpen(false);
+    setIsEmailThemeOpen(false);
+    setIsScheduleMode(false);
+    setScheduleDateTime('');
+    sendIntentRef.current = 'send';
     setIsSendModalOpen(true);
+  };
+
+  const closeSendModal = () => {
+    setIsSendModalOpen(false);
+    setSelectedJobsForSend([]);
+    setRecipientEmails('');
+    setAdditionalRecipients('');
+    setEmailAttachments([]);
+    setIsScheduleMode(false);
+  };
+
+  const getEmailFieldValue = (job: Job, field: string): string => {
+    switch (field) {
+      case 'Job Title': return job.title;
+      case 'Job Code': return job.code;
+      case 'Client': return job.client;
+      case 'Location': return job.location;
+      case 'Job Type': return job.type;
+      case 'Status': return job.status;
+      case 'Priority': return job.priority;
+      case 'Experience': return job.experienceRequired;
+      case 'Skills': return job.skills.join(', ');
+      case 'Bill Rate': return `${job.currency === 'INR' ? '₹' : '$'}${job.billRate} / ${job.rateType === 'Yearly' ? 'yr' : 'hr'}`;
+      default: return '';
+    }
+  };
+
+  const insertJobPositions = () => {
+    if (emailColumns.length === 0) {
+      showToast('Select at least one job detail column to add positions.');
+      return;
+    }
+    const positionDetails = selectedJobsForSend.map((job) => (
+      `<div><h3>${escapeHtml(job.title)}</h3><ul>${emailColumns.map((field) =>
+        `<li><strong>${escapeHtml(field)}:</strong> ${escapeHtml(getEmailFieldValue(job, field))}</li>`
+      ).join('')}</ul></div>`
+    )).join('');
+    setEmailBody((current) => `${current}<p><br></p>${positionDetails}`);
+    setEmailEditorResetKey((key) => key + 1);
+  };
+
+  const handleTemplateChange = (template: string) => {
+    setEmailTemplate(template);
+    if (template === 'Standard Requirement') {
+      setEmailSubject(`Job Requirement: ${selectedJobsForSend.map((job) => job.title).join(', ')}`);
+      setEmailBody(`<p>${escapeHtml(emailSalutation)}</p><p>Please review the job requirement details below.</p>`);
+    } else if (template === 'Urgent Requirement') {
+      setEmailSubject(`Urgent Job Requirement: ${selectedJobsForSend.map((job) => job.title).join(', ')}`);
+      setEmailBody(`<p>${escapeHtml(emailSalutation)}</p><p>We have an urgent requirement and would appreciate your prompt review.</p>`);
+    } else if (template === 'Contract Position') {
+      setEmailSubject(`Contract Opportunity: ${selectedJobsForSend.map((job) => job.title).join(', ')}`);
+      setEmailBody(`<p>${escapeHtml(emailSalutation)}</p><p>Please review this contract opportunity and share qualified candidates.</p>`);
+    }
+    setEmailEditorResetKey((key) => key + 1);
+  };
+
+  const finishSendRequirement = (scheduled: boolean) => {
+    const recipients = `${recipientEmails},${additionalRecipients}`
+      .split(/[;,]/)
+      .map((email) => email.trim())
+      .filter(Boolean);
+    if (recipients.length === 0) {
+      showToast('Add at least one recipient email address.');
+      return;
+    }
+    const invalidEmail = recipients.find((email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    if (invalidEmail) {
+      showToast(`Enter a valid email address: ${invalidEmail}`);
+      return;
+    }
+    if (scheduled) {
+      const scheduledTime = new Date(scheduleDateTime).getTime();
+      if (!scheduleDateTime || !Number.isFinite(scheduledTime) || scheduledTime <= Date.now()) {
+        showToast('Choose a future date and time to schedule this requirement.');
+        return;
+      }
+    }
+
+    const deliveryNotice = 'Email delivery is not connected in this app.';
+    showToast(
+      scheduled
+        ? `Schedule details prepared for ${new Date(scheduleDateTime).toLocaleString()}. ${deliveryNotice}`
+        : `Requirement email prepared for ${recipients.length} recipient${recipients.length === 1 ? '' : 's'}. ${deliveryNotice}`
+    );
+    closeSendModal();
   };
 
   const handleSendRequirement = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recipientEmails.trim()) {
-      showToast('Please enter at least one recipient email.');
+    const scheduled = sendIntentRef.current === 'schedule';
+    sendIntentRef.current = 'send';
+    finishSendRequirement(scheduled);
+  };
+
+  const handleScheduleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!isScheduleMode) {
+      e.preventDefault();
+      setIsScheduleMode(true);
       return;
     }
-    setIsSendModalOpen(false);
-    setRecipientEmails('');
-    showToast(`Job Requirement dispatched successfully to ${recipientEmails}!`);
+    sendIntentRef.current = 'schedule';
   };
 
   // Click on job to open in new tab
@@ -498,18 +1022,6 @@ export const JobList: React.FC = () => {
         >
           <span>Active Postings</span>
           <span className="w-2 h-2 rounded-full bg-[#8AC9A7]"></span>
-        </button>
-
-        <button
-          onClick={() => { setPriorityFilter('Urgent'); }}
-          className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
-            priorityFilter === 'Urgent'
-              ? 'text-[#2F80E7] border-[#2F80E7] bg-[#2F80E7]/10'
-              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5 text-[#2F80E7]" />
-          <span>Hot Priority</span>
         </button>
 
         <button
@@ -654,6 +1166,46 @@ export const JobList: React.FC = () => {
           Showing {filteredJobs.length} of {jobs.length} postings
         </span>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3">
+          <div className="relative" ref={actionMenuRef}>
+            <button
+              type="button"
+              onClick={() => setIsBulkActionsOpen((open) => !open)}
+              aria-expanded={isBulkActionsOpen}
+              className="inline-flex items-center gap-2 rounded-md bg-[#2F80E7] px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#216BC4]"
+            >
+              ACTIONS
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isBulkActionsOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isBulkActionsOpen && (
+              <div className="absolute left-0 top-full z-40 mt-1 grid w-[min(32rem,90vw)] grid-cols-1 gap-1 rounded-xl border border-[#DCE6EF] bg-white p-2 shadow-xl dark:border-[#354A5C] dark:bg-[#1B2936] sm:grid-cols-2">
+                {BULK_JOB_ACTIONS.map((action) => (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => openBulkJobAction(action.id)}
+                    className="rounded-lg px-3 py-2 text-left text-xs font-medium text-[#465466] transition-colors hover:bg-[#EAF4FC] hover:text-[#1769AA] dark:text-[#D8E9F7] dark:hover:bg-[#22384B]"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <span className="text-xs font-medium text-[#5E6B7A] dark:text-[#B9CAD9]">
+            {selectedIds.length} job{selectedIds.length === 1 ? '' : 's'} selected
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedIds([])}
+            className="text-xs font-semibold text-[#1769AA] hover:underline"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
 
       {/* Ceipal-Style High Density Data Grid with DUAL Scrollbars */}
       <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs overflow-hidden relative">
@@ -890,7 +1442,10 @@ export const JobList: React.FC = () => {
                 filteredJobs.map((j) => {
                   const isExpanded = expandedJobIds.has(j.id);
                   const jobSubmissions = submissions.filter((s) => s.jobId === j.id);
-                  const countSubmissions = jobSubmissions.length || (j.id === 'job-12262' ? 1 : 0);
+                  const countSubmissions = jobSubmissions.length;
+                  const selectedJobSubmissions = jobSubmissions.filter((submission) =>
+                    selectedSubmissionIds.includes(submission.id)
+                  );
 
                   return (
                     <React.Fragment key={j.id}>
@@ -912,19 +1467,36 @@ export const JobList: React.FC = () => {
 
                         {/* 2. Ceipal Expand Submissions Button [+ 1] */}
                         <td className="sticky left-[40px] z-10 p-2.5 text-center bg-white dark:bg-[#1B2936] group-hover:bg-[#EAF4FC] dark:group-hover:bg-[#22384B] border-r border-[#DCE6EF]/50">
-                          <button
-                            type="button"
-                            onClick={() => toggleRowExpansion(j.id)}
-                            className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-0.5 mx-auto ${
-                              isExpanded
-                                ? 'bg-[#1769AA] text-white shadow-xs'
-                                : 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/30 hover:bg-[#1769AA] hover:text-white'
-                            }`}
-                            title={isExpanded ? 'Collapse submissions' : 'Expand applicant submissions'}
-                          >
-                            <span>{isExpanded ? '−' : '+'}</span>
-                            <span>{countSubmissions}</span>
-                          </button>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span
+                              className={`inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
+                                j.priority === 'Low'
+                                  ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400'
+                                  : j.priority === 'Medium'
+                                  ? 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400'
+                                  : 'bg-rose-50 text-rose-600 dark:bg-rose-400/10 dark:text-rose-400'
+                              }`}
+                              aria-label={`${j.priority || 'Medium'} priority`}
+                              title={`${j.priority || 'Medium'} priority`}
+                            >
+                              <Zap className="h-3 w-3" fill="currentColor" aria-hidden="true" />
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => toggleRowExpansion(j.id)}
+                              aria-expanded={isExpanded}
+                              aria-label={`${isExpanded ? 'Collapse' : 'Expand'} submissions for ${j.code} (${countSubmissions})`}
+                              className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-0.5 ${
+                                isExpanded
+                                  ? 'bg-[#1769AA] text-white shadow-xs'
+                                  : 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/30 hover:bg-[#1769AA] hover:text-white'
+                              }`}
+                              title={isExpanded ? 'Collapse submissions' : 'Expand applicant submissions'}
+                            >
+                              <span>{isExpanded ? '−' : '+'}</span>
+                              <span>{countSubmissions}</span>
+                            </button>
+                          </div>
                         </td>
 
                         {/* Visible Data Columns */}
@@ -1089,6 +1661,28 @@ export const JobList: React.FC = () => {
                                 </div>
                               </div>
 
+                              {selectedJobSubmissions.length > 0 && (
+                                <div
+                                  role="toolbar"
+                                  aria-label="Selected submission actions"
+                                  className="flex items-center gap-1 overflow-x-auto border-b border-[#DCE6EF] pb-2 text-[11px] dark:border-[#354A5C]"
+                                >
+                                  {SUBMISSION_ACTIONS.map((action) => (
+                                    <button
+                                      key={action.id}
+                                      type="button"
+                                      onClick={() => openSubmissionAction(action.id, selectedJobSubmissions, j)}
+                                      className="shrink-0 border-r border-[#DCE6EF] px-2 text-[#1769AA] hover:text-[#0B4F89] hover:underline last:border-r-0 dark:border-[#354A5C] dark:text-[#8CBCE8]"
+                                    >
+                                      {action.label}
+                                    </button>
+                                  ))}
+                                  <span className="ml-auto shrink-0 text-[10px] text-[#7A8794]">
+                                    {selectedJobSubmissions.length} selected
+                                  </span>
+                                </div>
+                              )}
+
                               {/* Ceipal Submissions Quick Filter Strip */}
                               <div className="flex items-center gap-2 overflow-x-auto text-xs text-[#5E6B7A] dark:text-[#B9CAD9] pb-1">
                                 <div className="relative min-w-[200px]">
@@ -1110,7 +1704,18 @@ export const JobList: React.FC = () => {
                                   <thead className="bg-[#F5F8FB] dark:bg-[#162431] border-b border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9]">
                                     <tr>
                                       <th className="p-2.5 w-8 text-center">
-                                        <input type="checkbox" className="rounded" />
+                                        <input
+                                          type="checkbox"
+                                          checked={jobSubmissions.length > 0 && jobSubmissions.every((submission) => selectedSubmissionIds.includes(submission.id))}
+                                          onChange={(event) => {
+                                            const jobSubmissionIds = jobSubmissions.map((submission) => submission.id);
+                                            setSelectedSubmissionIds((previous) => event.target.checked
+                                              ? Array.from(new Set([...previous, ...jobSubmissionIds]))
+                                              : previous.filter((id) => !jobSubmissionIds.includes(id)));
+                                          }}
+                                          aria-label={`Select all submissions for ${j.code}`}
+                                          className="rounded"
+                                        />
                                       </th>
                                       <th className="p-2.5 font-semibold">Submission ID</th>
                                       <th className="p-2.5 font-semibold">Applicant Name</th>
@@ -1128,141 +1733,82 @@ export const JobList: React.FC = () => {
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C]">
-                                    {/* Default authentic Ceipal Demo User submission from screenshot */}
-                                    <tr className="hover:bg-[#EAF4FC]/40 transition-colors">
-                                      <td className="p-2.5 text-center">
-                                        <input type="checkbox" className="rounded" />
-                                      </td>
-                                      <td className="p-2.5 font-mono font-bold text-[#1769AA]">
-                                        48148
-                                      </td>
-                                      <td className="p-2.5">
-                                        <div
-                                          onClick={() => navigate('applicant-detail', 'app-demo')}
-                                          className="font-bold text-[#202B37] dark:text-white hover:underline cursor-pointer flex items-center gap-1.5"
+                                    {jobSubmissions.length === 0 ? (
+                                      <tr>
+                                        <td colSpan={14} className="p-8 text-center text-xs text-[#7A8794]">
+                                          No candidate submissions are linked to this job yet.
+                                        </td>
+                                      </tr>
+                                    ) : jobSubmissions.map((submission) => {
+                                      const applicant = applicants.find((candidate) => candidate.id === submission.applicantId);
+                                      const isSelected = selectedSubmissionIds.includes(submission.id);
+                                      return (
+                                        <tr
+                                          key={submission.id}
+                                          className={`transition-colors ${isSelected ? 'bg-[#FFFDD0] dark:bg-amber-950/30' : 'hover:bg-[#EAF4FC]/40 dark:hover:bg-[#22384B]/40'}`}
                                         >
-                                          <span>Demo User</span>
-                                          <span className="text-[10px] px-1 bg-blue-100 text-blue-700 rounded">Verified</span>
-                                        </div>
-                                      </td>
-                                      <td className="p-2.5 font-mono text-[#1769AA]">
-                                        +91 9423022606
-                                      </td>
-                                      <td className="p-2.5">
-                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                                          Waiting for Evaluation by Internal Reviewer
-                                        </span>
-                                      </td>
-                                      <td className="p-2.5 font-mono font-bold text-[#1769AA]">
-                                        35%
-                                      </td>
-                                      <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
-                                        Nashik, India
-                                      </td>
-                                      <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
-                                        5 Years 10 Months
-                                      </td>
-                                      <td className="p-2.5">
-                                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px]">
-                                          Naukri
-                                        </span>
-                                      </td>
-                                      <td className="p-2.5 text-center">
-                                        <button
-                                          onClick={() => showToast('Displaying Resume for Demo User')}
-                                          className="p-1 text-[#1769AA] hover:bg-[#EAF4FC] rounded"
-                                          title="View Resume"
-                                        >
-                                          <FileText className="w-4 h-4 mx-auto" />
-                                        </button>
-                                      </td>
-                                      <td className="p-2.5 font-mono text-[#5E6B7A]">
-                                        15 Days
-                                      </td>
-                                      <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
-                                        Ganesh Godse
-                                      </td>
-                                      <td className="p-2.5 font-mono text-[11px] text-[#7A8794]">
-                                        10/11/2026 20:10:42
-                                      </td>
-                                      <td className="p-2.5 text-right">
-                                        <button
-                                          onClick={() => navigate('applicant-detail', 'app-demo')}
-                                          className="px-2.5 py-1 text-xs text-[#1769AA] hover:bg-[#EAF4FC] rounded-lg font-semibold"
-                                        >
-                                          Review Profile
-                                        </button>
-                                      </td>
-                                    </tr>
-
-                                    {/* Additional matching applicants for this job */}
-                                    {applicants
-                                      .filter((a) => a.assignedJobId === j.id && a.id !== 'app-demo')
-                                      .map((a, idx) => (
-                                        <tr key={a.id} className="hover:bg-[#EAF4FC]/40 transition-colors">
                                           <td className="p-2.5 text-center">
-                                            <input type="checkbox" className="rounded" />
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              onChange={() => toggleSubmissionSelection(submission.id)}
+                                              aria-label={`Select submission ${submission.submissionId} for ${submission.applicantName}`}
+                                              className="rounded"
+                                            />
                                           </td>
-                                          <td className="p-2.5 font-mono font-bold text-[#1769AA]">
-                                            4815{idx + 1}
-                                          </td>
+                                          <td className="p-2.5 font-mono font-bold text-[#1769AA]">{submission.submissionId}</td>
                                           <td className="p-2.5">
-                                            <div
-                                              onClick={() => navigate('applicant-detail', a.id)}
-                                              className="font-bold text-[#202B37] dark:text-white hover:underline cursor-pointer"
-                                            >
-                                              {a.name}
-                                            </div>
-                                          </td>
-                                          <td className="p-2.5 font-mono text-[#1769AA]">
-                                            {a.phone}
-                                          </td>
-                                          <td className="p-2.5">
-                                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-[#1769AA] border border-blue-200">
-                                              {a.status}
-                                            </span>
-                                          </td>
-                                          <td className="p-2.5 font-mono font-bold text-[#276749]">
-                                            {a.matchScore}%
-                                          </td>
-                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
-                                            {a.location}
-                                          </td>
-                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
-                                            {a.experienceYears} Years
-                                          </td>
-                                          <td className="p-2.5">
-                                            <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-[10px]">
-                                              {a.source}
-                                            </span>
-                                          </td>
-                                          <td className="p-2.5 text-center">
                                             <button
-                                              onClick={() => showToast(`Resume opened for ${a.name}`)}
-                                              className="p-1 text-[#1769AA] hover:bg-[#EAF4FC] rounded"
+                                              type="button"
+                                              onClick={() => navigate('applicant-detail', submission.applicantId)}
+                                              className="font-bold text-left text-[#202B37] hover:underline dark:text-white"
                                             >
-                                              <FileText className="w-4 h-4 mx-auto" />
+                                              {submission.applicantName}
                                             </button>
                                           </td>
-                                          <td className="p-2.5 font-mono text-[#5E6B7A]">
-                                            {a.noticePeriod || '30 Days'}
+                                          <td className="p-2.5 font-mono text-[#1769AA]">{applicant?.phone || '—'}</td>
+                                          <td className="p-2.5">
+                                            <span className="inline-block max-w-[220px] truncate rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-[#1769AA]" title={submission.status}>
+                                              {submission.status}
+                                            </span>
                                           </td>
+                                          <td className="p-2.5 font-mono font-bold text-[#1769AA]">
+                                            {submission.score ?? applicant?.matchScore ?? '—'}{submission.score !== undefined || applicant ? '%' : ''}
+                                          </td>
+                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{applicant?.location || '—'}</td>
                                           <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
-                                            {a.assignedRecruiter}
+                                            {applicant ? `${applicant.experienceYears} Years` : '—'}
                                           </td>
-                                          <td className="p-2.5 font-mono text-[11px] text-[#7A8794]">
-                                            10/11/2026 18:00
+                                          <td className="p-2.5">
+                                            <span className="rounded border border-gray-200 bg-gray-100 px-2 py-0.5 text-[10px] text-gray-700">
+                                              {applicant?.source || '—'}
+                                            </span>
                                           </td>
+                                          <td className="p-2.5 text-center">
+                                            <button
+                                              type="button"
+                                              onClick={() => showToast(applicant?.documents?.length ? `Resume opened for ${submission.applicantName}` : `No resume is available for ${submission.applicantName}.`)}
+                                              className="rounded p-1 text-[#1769AA] hover:bg-[#EAF4FC]"
+                                              title="View Resume"
+                                            >
+                                              <FileText className="mx-auto h-4 w-4" />
+                                            </button>
+                                          </td>
+                                          <td className="p-2.5 font-mono text-[#5E6B7A]">{applicant?.noticePeriod || '—'}</td>
+                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{submission.recruiter}</td>
+                                          <td className="p-2.5 font-mono text-[11px] text-[#7A8794]">{submission.submittedDate}</td>
                                           <td className="p-2.5 text-right">
                                             <button
-                                              onClick={() => navigate('applicant-detail', a.id)}
-                                              className="px-2.5 py-1 text-xs text-[#1769AA] hover:bg-[#EAF4FC] rounded-lg font-semibold"
+                                              type="button"
+                                              onClick={() => navigate('applicant-detail', submission.applicantId)}
+                                              className="rounded-lg px-2.5 py-1 text-xs font-semibold text-[#1769AA] hover:bg-[#EAF4FC]"
                                             >
                                               Review Profile
                                             </button>
                                           </td>
                                         </tr>
-                                      ))}
+                                      );
+                                    })}
                                   </tbody>
                                 </table>
                               </div>
@@ -1424,65 +1970,680 @@ export const JobList: React.FC = () => {
         </div>
       )}
 
-      {/* Send Requirement Modal */}
-      {isSendModalOpen && selectedJobForSend && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
-              <div className="flex items-center gap-2">
-                <Send className="w-5 h-5 text-[#1769AA]" />
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white">
-                  Send Requirement to Vendors &amp; Network
+      {submissionAction && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="submission-action-title"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#DCE6EF] bg-white p-6 shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]"
+          >
+            <div className="mb-4 flex items-start justify-between gap-4 border-b border-[#DCE6EF] pb-3 dark:border-[#354A5C]">
+              <div>
+                <h3 id="submission-action-title" className="text-base font-bold text-[#202B37] dark:text-white">
+                  {SUBMISSION_ACTIONS.find((action) => action.id === submissionAction)?.label}
                 </h3>
+                <p className="mt-1 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  {submissionActionTargetIds.length} selected submission{submissionActionTargetIds.length === 1 ? '' : 's'}
+                </p>
               </div>
               <button
-                onClick={() => setIsSendModalOpen(false)}
-                className="text-[#7A8794] hover:text-[#202B37] dark:hover:text-white p-1 rounded-lg"
+                type="button"
+                onClick={() => { setSubmissionAction(null); setSubmissionActionTargetIds([]); }}
+                aria-label="Close submission action"
+                className="rounded-lg p-1 text-[#7A8794] hover:bg-[#F5F8FB] dark:hover:bg-[#162431]"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] rounded-xl space-y-1 text-xs">
-              <div className="font-bold text-[#1769AA] font-mono">{selectedJobForSend.code}</div>
-              <div className="font-bold text-[#202B37] dark:text-white">{selectedJobForSend.title}</div>
-              <div className="text-[#5E6B7A] dark:text-[#B9CAD9]">
-                Client: {selectedJobForSend.client} • Location: {selectedJobForSend.location}
-              </div>
-            </div>
-
-            <form onSubmit={handleSendRequirement} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="font-semibold text-[#202B37] dark:text-white">
-                  Recipient Emails (comma-separated) *
+            <form onSubmit={applySubmissionAction} className="space-y-4 text-xs">
+              {submissionAction === 'score' && (
+                <label className="block space-y-1">
+                  <span className="font-semibold text-[#202B37] dark:text-white">Submission score (0-100)</span>
+                  <input
+                    type="number" min="0" max="100" step="1" required
+                    value={submissionActionForm.score}
+                    onChange={(event) => setSubmissionActionForm((form) => ({ ...form, score: event.target.value }))}
+                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  />
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={recipientEmails}
-                  onChange={(e) => setRecipientEmails(e.target.value)}
-                  placeholder="vendor-network@ampcus.com, partners@recruiting.net"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
-                />
-              </div>
+              )}
+              {submissionAction === 'note' && (
+                <label className="block space-y-1">
+                  <span className="font-semibold text-[#202B37] dark:text-white">Note</span>
+                  <textarea
+                    required rows={4} value={submissionActionForm.note}
+                    onChange={(event) => setSubmissionActionForm((form) => ({ ...form, note: event.target.value }))}
+                    placeholder="Add a note to the selected candidate profiles..."
+                    className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  />
+                </label>
+              )}
+              {submissionAction === 'email' && (
+                <>
+                  <label className="block space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">To</span>
+                    <input
+                      type="text" required value={submissionActionForm.recipients}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, recipients: event.target.value }))}
+                      placeholder="candidate@example.com"
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <label className="block space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Subject</span>
+                    <input
+                      type="text" required value={submissionActionForm.subject}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, subject: event.target.value }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <label className="block space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Message</span>
+                    <textarea
+                      required rows={5} value={submissionActionForm.emailBody}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, emailBody: event.target.value }))}
+                      className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <p className="text-[11px] text-[#7A8794]">This opens a draft in your default email app. NexusTalent does not send emails directly.</p>
+                </>
+              )}
+              {submissionAction === 'submit-client' && (
+                <p className="text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  Mark the selected submissions as <strong>Submitted to Client</strong>?
+                </p>
+              )}
+              {submissionAction === 'group' && (
+                <label className="block space-y-1">
+                  <span className="font-semibold text-[#202B37] dark:text-white">Candidate group</span>
+                  <select
+                    value={submissionActionForm.group}
+                    onChange={(event) => setSubmissionActionForm((form) => ({ ...form, group: event.target.value }))}
+                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    {SUBMISSION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
+                  </select>
+                </label>
+              )}
+              {submissionAction === 'schedule-interview' && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Interview date</span>
+                    <input
+                      type="date" required value={submissionActionForm.date}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, date: event.target.value }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Time</span>
+                    <input
+                      type="time" required value={submissionActionForm.time}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, time: event.target.value }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Interviewer</span>
+                    <input
+                      required value={submissionActionForm.interviewer}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, interviewer: event.target.value }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Interview type</span>
+                    <select
+                      value={submissionActionForm.interviewType}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, interviewType: event.target.value as Interview['type'] }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    >
+                      <option>Technical Screen</option>
+                      <option>Architecture Deep-Dive</option>
+                      <option>Hiring Manager</option>
+                      <option>Culture &amp; Exec</option>
+                    </select>
+                  </label>
+                  <label className="space-y-1 sm:col-span-2">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Meeting link (optional)</span>
+                    <input
+                      type="url" value={submissionActionForm.meetingLink}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, meetingLink: event.target.value }))}
+                      placeholder="https://"
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                </div>
+              )}
+              {submissionAction === 'other-job' && (
+                <label className="block space-y-1">
+                  <span className="font-semibold text-[#202B37] dark:text-white">Target job</span>
+                  <select
+                    required value={submissionActionForm.otherJobId}
+                    onChange={(event) => setSubmissionActionForm((form) => ({ ...form, otherJobId: event.target.value }))}
+                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    {jobs.filter((job) => !submissions
+                      .filter((submission) => submissionActionTargetIds.includes(submission.id))
+                      .some((submission) => submission.jobId === job.id)
+                    ).map((job) => <option key={job.id} value={job.id}>{job.code} — {job.title}</option>)}
+                  </select>
+                </label>
+              )}
+              {submissionAction === 'task' && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1 sm:col-span-2">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Task</span>
+                    <input
+                      required value={submissionActionForm.taskTitle}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, taskTitle: event.target.value }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="font-semibold text-[#202B37] dark:text-white">Due date</span>
+                    <input
+                      type="date" required value={submissionActionForm.dueDate}
+                      onChange={(event) => setSubmissionActionForm((form) => ({ ...form, dueDate: event.target.value }))}
+                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    />
+                  </label>
+                </div>
+              )}
+              {submissionAction === 'request-details' && (
+                <label className="block space-y-1">
+                  <span className="font-semibold text-[#202B37] dark:text-white">Details requested</span>
+                  <textarea
+                    required rows={4} value={submissionActionForm.requestMessage}
+                    onChange={(event) => setSubmissionActionForm((form) => ({ ...form, requestMessage: event.target.value }))}
+                    placeholder="Describe the information needed..."
+                    className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  />
+                </label>
+              )}
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 border-t border-[#DCE6EF] pt-3 dark:border-[#354A5C]">
                 <button
-                  type="button"
-                  onClick={() => setIsSendModalOpen(false)}
-                  className="px-4 py-2 border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] rounded-xl hover:bg-gray-50 dark:hover:bg-[#162431]"
+                  type="button" disabled={isApplyingSubmissionAction}
+                  onClick={() => { setSubmissionAction(null); setSubmissionActionTargetIds([]); }}
+                  className="rounded-xl border border-[#DCE6EF] px-4 py-2 text-xs font-semibold text-[#5E6B7A] hover:bg-[#F5F8FB] disabled:opacity-50 dark:border-[#354A5C] dark:text-[#B9CAD9]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-semibold rounded-xl flex items-center gap-1.5 shadow-xs shadow-[#2F80E7]/30"
+                  disabled={isApplyingSubmissionAction || (submissionAction === 'other-job' && !submissionActionForm.otherJobId)}
+                  className="rounded-xl bg-[#1769AA] px-4 py-2 text-xs font-bold text-white hover:bg-[#0B4F89] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Dispatch Requirement</span>
+                  {isApplyingSubmissionAction ? 'Working...' :
+                    submissionAction === 'email' ? 'Open Email Draft' :
+                    submissionAction === 'score' ? 'Save Score' :
+                    submissionAction === 'submit-client' ? 'Submit' :
+                    submissionAction === 'schedule-interview' ? 'Schedule Interview' :
+                    submissionAction === 'other-job' ? 'Submit to Job' :
+                    submissionAction === 'request-details' ? 'Request Details' :
+                    submissionAction === 'task' ? 'Add Task' :
+                    submissionAction === 'group' ? 'Add to Group' : 'Save Note'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {bulkAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-job-action-title"
+            className="w-full max-w-lg space-y-4 rounded-2xl border border-[#DCE6EF] bg-white p-6 shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]"
+          >
+            <div className="flex items-center justify-between border-b border-[#DCE6EF] pb-3 dark:border-[#354A5C]">
+              <div>
+                <h3 id="bulk-job-action-title" className="text-base font-bold text-[#202B37] dark:text-white">
+                  {BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label}
+                </h3>
+                <p className="mt-1 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  Apply to {selectedIds.length} selected job{selectedIds.length === 1 ? '' : 's'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBulkAction(null)}
+                aria-label="Close action dialog"
+                className="rounded-lg p-1 text-[#7A8794] hover:bg-[#F5F8FB] hover:text-[#202B37] dark:hover:bg-[#162431] dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={applyBulkJobAction} className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label htmlFor="bulk-job-action-value" className="font-semibold text-[#202B37] dark:text-white">
+                  {bulkAction === 'notes' ? 'Note' :
+                    bulkAction === 'folder' ? 'Folder name' :
+                    bulkAction === 'status' ? 'New status' :
+                    bulkAction === 'macro' ? 'Choose a macro' :
+                    bulkAction === 'bench-consultant' ? 'Bench consultant' :
+                    bulkAction === 'priority' ? 'New priority' :
+                    bulkAction === 'rollover' ? 'New end date' :
+                    bulkAction === 'mail-merge-limit' ? 'Mail merge limit' :
+                    'Campus names (comma-separated)'}
+                </label>
+
+                {bulkAction === 'notes' ? (
+                  <textarea
+                    id="bulk-job-action-value"
+                    required
+                    rows={4}
+                    value={bulkActionValue}
+                    onChange={(e) => setBulkActionValue(e.target.value)}
+                    placeholder="Add a note to the selected jobs..."
+                    className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs text-[#202B37] focus:border-[#1769AA] focus:outline-none dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  />
+                ) : bulkAction === 'status' || bulkAction === 'priority' || bulkAction === 'macro' ? (
+                  <select
+                    id="bulk-job-action-value"
+                    required
+                    value={bulkActionValue}
+                    onChange={(e) => setBulkActionValue(e.target.value)}
+                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs text-[#202B37] focus:border-[#1769AA] focus:outline-none dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    {bulkAction === 'status' ? JOB_STATUSES.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    )) : bulkAction === 'priority' ? JOB_PRIORITIES.map((priority) => (
+                      <option key={priority} value={priority}>{priority}</option>
+                    )) : (
+                      <>
+                        <option value="Set Active">Set Active</option>
+                        <option value="Mark High Priority">Mark High Priority</option>
+                        <option value="Close Job">Close Job</option>
+                      </>
+                    )}
+                  </select>
+                ) : (
+                  <input
+                    id="bulk-job-action-value"
+                    required
+                    type={bulkAction === 'rollover' ? 'date' : bulkAction === 'mail-merge-limit' ? 'number' : 'text'}
+                    min={bulkAction === 'mail-merge-limit' ? 0 : undefined}
+                    step={bulkAction === 'mail-merge-limit' ? 1 : undefined}
+                    value={bulkActionValue}
+                    onChange={(e) => setBulkActionValue(e.target.value)}
+                    placeholder={
+                      bulkAction === 'folder' ? 'e.g. Q4 priority roles' :
+                      bulkAction === 'bench-consultant' ? 'Enter consultant name' :
+                      bulkAction === 'publish-campuses' ? 'e.g. New York, London' : undefined
+                    }
+                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs text-[#202B37] focus:border-[#1769AA] focus:outline-none dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  />
+                )}
+              </div>
+
+              {bulkAction === 'rollover' && (
+                <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  The selected jobs will be set to Active and updated with this end date.
+                </p>
+              )}
+              {bulkAction === 'publish-campuses' && (
+                <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
+                  This enables career portal publishing and saves the campus list on each job.
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkAction(null)}
+                  className="rounded-xl border border-[#DCE6EF] px-4 py-2 text-xs font-semibold text-[#5E6B7A] hover:bg-[#F5F8FB] dark:border-[#354A5C] dark:text-[#B9CAD9] dark:hover:bg-[#162431]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#2F80E7] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#216BC4]"
+                >
+                  Apply to selected jobs
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Send Requirement Modal */}
+      {isSendModalOpen && selectedJobsForSend.length > 0 && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#EAEAEA] p-3 dark:bg-[#101923] sm:p-5">
+          <div className="mx-auto grid min-h-full max-w-[1600px] grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <form
+              onSubmit={handleSendRequirement}
+              className="space-y-0 border border-[#D5D5D5] bg-white text-xs text-[#465466] shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-[#D8E9F7]"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#E5E5E5] px-4 py-3 dark:border-[#354A5C]">
+                <div className="flex min-w-[280px] flex-1 items-center gap-3">
+                  <h2 className="text-base font-medium text-[#315D88] dark:text-[#D8E9F7]">Send Requirement</h2>
+                  <span className="rounded-full bg-[#EAF4FC] px-2 py-1 text-[10px] font-semibold text-[#1769AA] dark:bg-[#22384B] dark:text-[#D8E9F7]">
+                    {selectedJobsForSend.length} position{selectedJobsForSend.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="submit"
+                    onClick={() => { sendIntentRef.current = 'send'; }}
+                    className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#286FE0]"
+                  >
+                    Send
+                  </button>
+                  <button
+                    type="submit"
+                    onClick={handleScheduleClick}
+                    className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#286FE0]"
+                  >
+                    Schedule
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeSendModal}
+                    className="rounded-sm border border-[#C9C9C9] bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#555] hover:bg-[#EFEFEF] dark:border-[#354A5C] dark:bg-[#162431] dark:text-[#D8E9F7]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <div className="grid w-full grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-[55px_minmax(180px,280px)] sm:items-center">
+                  <label htmlFor="requirement-from" className="text-[10px] text-[#687786] dark:text-[#B9CAD9]">From</label>
+                  <select
+                    id="requirement-from"
+                    value={fromEmail}
+                    onChange={(e) => setFromEmail(e.target.value)}
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    <option value={currentUser?.email || 'recruiting@ampcus.com'}>
+                      System ({currentUser?.name || 'Recruiter'} &lt;{currentUser?.email || 'recruiting@ampcus.com'}&gt;)
+                    </option>
+                    <option value="jobs@ampcus.com">Recruiting Team &lt;jobs@ampcus.com&gt;</option>
+                  </select>
+                  <label htmlFor="requirement-reply-to" className="text-[10px] text-[#687786] dark:text-[#B9CAD9]">Reply To</label>
+                  <select
+                    id="requirement-reply-to"
+                    value={replyToEmail}
+                    onChange={(e) => setReplyToEmail(e.target.value)}
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    <option value={currentUser?.email || 'recruiting@ampcus.com'}>
+                      {currentUser?.email || 'recruiting@ampcus.com'}
+                    </option>
+                    <option value="jobs@ampcus.com">jobs@ampcus.com</option>
+                  </select>
+                </div>
+              </div>
+
+              {isScheduleMode && (
+                <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E5E5] bg-[#F7FAFF] px-4 py-2.5 dark:border-[#354A5C] dark:bg-[#162431]">
+                  <Calendar className="h-4 w-4 text-[#4387F5]" />
+                  <label htmlFor="requirement-schedule" className="font-semibold">Schedule date &amp; time</label>
+                  <input
+                    id="requirement-schedule"
+                    type="datetime-local"
+                    required
+                    min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                    value={scheduleDateTime}
+                    onChange={(e) => setScheduleDateTime(e.target.value)}
+                    className="rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white"
+                  />
+                  <span className="text-[10px] text-[#687786] dark:text-[#B9CAD9]">
+                    Choose a future time, then click Schedule again.
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3 border-b border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+                <label htmlFor="requirement-recipients" className="w-32 flex-shrink-0 pt-1 text-[10px] text-[#687786] dark:text-[#B9CAD9]">
+                  Recipients *
+                </label>
+                <input
+                  id="requirement-recipients"
+                  type="text"
+                  required
+                  value={recipientEmails}
+                  onChange={(e) => setRecipientEmails(e.target.value)}
+                  placeholder="Click here to add recipient(s)"
+                  className="min-w-0 flex-1 border-0 bg-transparent py-1 text-[11px] text-[#334155] outline-none placeholder:text-[#A6A6A6] dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setRecipientEmails(''); setAdditionalRecipients(''); }}
+                  className="text-[10px] font-medium text-[#4387F5] hover:underline"
+                >
+                  Reset
+                </button>
+              </div>
+              <div className="border-b border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+                <label htmlFor="requirement-additional-recipients" className="sr-only">Additional recipients</label>
+                <input
+                  id="requirement-additional-recipients"
+                  type="text"
+                  value={additionalRecipients}
+                  onChange={(e) => setAdditionalRecipients(e.target.value)}
+                  placeholder="Additional recipients, separate emails with commas (sent as CC/BCC)"
+                  className="w-full border-0 bg-transparent py-1 text-[10px] text-[#687786] outline-none placeholder:text-[#A6A6A6] dark:text-[#D8E9F7]"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 border-b border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+                <label htmlFor="requirement-subject" className="w-32 flex-shrink-0 text-[10px] text-[#687786] dark:text-[#B9CAD9]">Subject *</label>
+                <input
+                  id="requirement-subject"
+                  type="text"
+                  required
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="min-w-0 flex-1 border-0 bg-transparent py-1 text-[11px] text-[#334155] outline-none dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={insertJobPositions}
+                  className="whitespace-nowrap text-[10px] font-medium text-[#4387F5] hover:underline"
+                >
+                  Add Positions
+                </button>
+              </div>
+
+              <EmailRichTextEditor
+                value={emailBody}
+                resetKey={emailEditorResetKey}
+                accentColor={customEmailColor}
+                onChange={setEmailBody}
+                onError={showToast}
+              />
+
+              <div className="flex flex-col gap-2 border-t border-[#E5E5E5] px-3 py-3 dark:border-[#354A5C] sm:flex-row sm:items-center">
+                <label className="flex items-center gap-2 text-[10px] font-semibold text-[#687786] dark:text-[#B9CAD9]">
+                  <Paperclip className="h-3.5 w-3.5" />
+                  Attachment
+                  <input
+                    type="file"
+                    multiple
+                    onChange={(e) => setEmailAttachments(Array.from(e.target.files || []))}
+                    className="max-w-[250px] text-[10px] font-normal"
+                  />
+                </label>
+                {emailAttachments.length > 0 && (
+                  <div className="flex min-w-0 flex-wrap gap-1">
+                    {emailAttachments.map((file, index) => (
+                      <span key={`${file.name}-${index}`} className="max-w-[180px] truncate rounded bg-[#F1F5F9] px-2 py-1 text-[10px] dark:bg-[#22384B]" title={file.name}>
+                        {file.name}
+                      </span>
+                    ))}
+                    <button type="button" onClick={() => setEmailAttachments([])} className="text-[10px] text-[#4387F5] hover:underline">Clear</button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+                <span className="text-[10px] text-[#687786] dark:text-[#B9CAD9]">
+                  Email delivery is not connected in this app; send and schedule actions prepare the message only.
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="submit"
+                    onClick={() => { sendIntentRef.current = 'send'; }}
+                    className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#286FE0]"
+                  >
+                    Send
+                  </button>
+                  <button
+                    type="submit"
+                    onClick={handleScheduleClick}
+                    className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#286FE0]"
+                  >
+                    Schedule
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeSendModal}
+                    className="rounded-sm border border-[#C9C9C9] bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#555] hover:bg-[#EFEFEF] dark:border-[#354A5C] dark:bg-[#162431] dark:text-[#D8E9F7]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <aside className="border border-[#D5D5D5] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936]">
+              <div className="border-b border-[#E5E5E5] px-4 py-3 dark:border-[#354A5C]">
+                <h3 className="text-sm font-medium text-[#315D88] dark:text-[#D8E9F7]">Customize Email Body</h3>
+              </div>
+              <div className="space-y-4 p-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] text-[#687786] dark:text-[#B9CAD9]">Columns</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsEmailColumnsOpen((open) => !open)}
+                    aria-expanded={isEmailColumnsOpen}
+                    className="flex w-full items-center justify-between rounded-sm border border-[#D8D8D8] bg-white px-2.5 py-1.5 text-left text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    <span>{emailColumns.length} selected</span>
+                    <ChevronDown className={`h-3 w-3 transition-transform ${isEmailColumnsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isEmailColumnsOpen && (
+                    <div className="max-h-44 space-y-1 overflow-y-auto rounded-sm border border-[#D8D8D8] p-2 dark:border-[#354A5C]">
+                      {EMAIL_JOB_FIELDS.map((field) => (
+                        <label key={field} className="flex items-center gap-2 py-1 text-[10px]">
+                          <input
+                            type="checkbox"
+                            checked={emailColumns.includes(field)}
+                            onChange={(e) => setEmailColumns((columns) =>
+                              e.target.checked ? [...columns, field] : columns.filter((column) => column !== field)
+                            )}
+                          />
+                          {field}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="requirement-template" className="block text-[10px] text-[#687786] dark:text-[#B9CAD9]">Select Template</label>
+                  <select
+                    id="requirement-template"
+                    value={emailTemplate}
+                    onChange={(e) => handleTemplateChange(e.target.value)}
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    <option value="">-- Select Template --</option>
+                    <option value="Standard Requirement">Standard Requirement</option>
+                    <option value="Urgent Requirement">Urgent Requirement</option>
+                    <option value="Contract Position">Contract Position</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="requirement-salutation" className="block text-[10px] text-[#687786] dark:text-[#B9CAD9]">Salutation</label>
+                  <select
+                    id="requirement-salutation"
+                    value={emailSalutation}
+                    onChange={(e) => {
+                      const nextSalutation = e.target.value;
+                      setEmailSalutation(nextSalutation);
+                      setEmailBody((body) => {
+                                        const content = body.replace(/^<p>(?:Hello,|Dear Hiring Team,|Hi,|Greetings,|Hi \[FirstName\]|Hello \[FirstName\]|Hi \[FirstName\] \[LastName\]|Hello \[FirstName\] \[LastName\]|Dear \[FirstName\] \[LastName\])<\/p>/i, '');
+                        return `<p>${escapeHtml(nextSalutation)}</p>${content}`;
+                      });
+                      setEmailEditorResetKey((key) => key + 1);
+                    }}
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                  >
+                    <option value="">Select</option>
+                    <option value="Hi [FirstName]">Hi [FirstName]</option>
+                    <option value="Hello [FirstName]">Hello [FirstName]</option>
+                    <option value="Hi [FirstName] [LastName]">Hi [FirstName] [LastName]</option>
+                    <option value="Hello [FirstName] [LastName]">Hello [FirstName] [LastName]</option>
+                    <option value="Dear [FirstName] [LastName]">Dear [FirstName] [LastName]</option>
+                    <option value="Hello,">Hello,</option>
+                    <option value="Dear Hiring Team,">Dear Hiring Team,</option>
+                    <option value="Hi,">Hi,</option>
+                    <option value="Greetings,">Greetings,</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="block text-[10px] text-[#687786] dark:text-[#B9CAD9]">Themes</span>
+                  <div className="grid max-h-64 grid-cols-2 gap-2 overflow-y-auto pr-1">
+                    {EMAIL_THEMES.map((theme) => (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => { setEmailTheme(theme.id); setCustomEmailColor(theme.accent); }}
+                        aria-label={`${theme.name} email theme`}
+                        aria-pressed={emailTheme === theme.id}
+                        className={`rounded border p-1 text-left transition-shadow ${emailTheme === theme.id ? 'border-[#2F80E7] ring-1 ring-[#2F80E7]' : 'border-[#D8D8D8] hover:border-[#94A3B8] dark:border-[#354A5C]'}`}
+                      >
+                        <span className="block overflow-hidden rounded-sm border border-[#E5E5E5] dark:border-[#475569]" style={{ backgroundColor: theme.background }}>
+                          <span className="block h-1.5" style={{ backgroundColor: theme.accent }} />
+                          <span className="block space-y-1 p-1.5">
+                            <span className="block h-1 w-3/4 rounded" style={{ backgroundColor: theme.accent, opacity: 0.75 }} />
+                            <span className="block h-1 w-full rounded bg-slate-200" />
+                            <span className="block h-1 w-2/3 rounded bg-slate-200" />
+                          </span>
+                        </span>
+                        <span className="mt-1 block truncate text-[9px] text-[#5E6B7A] dark:text-[#B9CAD9]">{theme.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-[#E5E5E5] pt-3 dark:border-[#354A5C]">
+                  <button
+                    type="button"
+                    onClick={() => setIsEmailThemeOpen((open) => !open)}
+                    aria-expanded={isEmailThemeOpen}
+                    className="flex w-full items-center justify-between text-[10px] font-medium text-[#4387F5]"
+                  >
+                    Customize Theme
+                    <ChevronDown className={`h-3 w-3 transition-transform ${isEmailThemeOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isEmailThemeOpen && (
+                    <label className="mt-3 flex items-center justify-between text-[10px] text-[#687786] dark:text-[#B9CAD9]">
+                      Accent color
+                      <input
+                        type="color"
+                        value={customEmailColor}
+                        onChange={(e) => { setCustomEmailColor(e.target.value); setEmailTheme('custom'); }}
+                        className="h-7 w-10 cursor-pointer border-0 bg-transparent p-0"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+              <div className="border-t border-[#E5E5E5] px-4 py-3 text-[10px] text-[#687786] dark:border-[#354A5C] dark:text-[#B9CAD9]">
+                Message includes {selectedJobsForSend.length} selected job position{selectedJobsForSend.length === 1 ? '' : 's'}.
+              </div>
+            </aside>
           </div>
         </div>
       )}
