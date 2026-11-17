@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   UserPlus,
   UploadCloud,
@@ -8,7 +8,40 @@ import {
   ArrowLeft,
   Sparkles,
   Layers,
-  FolderOpen
+  FolderOpen,
+  Scissors,
+  Copy,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Subscript,
+  Superscript,
+  ListOrdered,
+  List,
+  Outdent,
+  Indent,
+  Quote,
+  Link2,
+  Unlink,
+  Anchor,
+  Image,
+  Table,
+  Minus,
+  Code2,
+  CheckSquare,
+  RefreshCw,
+  Search,
+  RemoveFormatting,
+  FileCode,
+  Type,
+  Highlighter,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Undo2,
+  Redo2
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
