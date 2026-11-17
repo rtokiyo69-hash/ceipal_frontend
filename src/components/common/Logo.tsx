@@ -23,18 +23,18 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', collaps
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       {/* Hex prism brand mark */}
       <div className={`relative ${iconSizes[size]} flex items-center justify-center shrink-0`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#1769AA] via-[#4C9BE0] to-[#2F80E7] rounded-xl rotate-6 opacity-95 shadow-md shadow-[#1769AA]/30 group-hover:rotate-12 transition-transform" />
-        <div className="absolute inset-0.5 bg-[#0B4F89] rounded-[10px] flex items-center justify-center">
-          <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#2F80E7] to-[#A8D4F5] rounded-sm" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#2B2D42] via-[#8D99AE] to-[#2B2D42] rounded-xl rotate-6 opacity-95 shadow-md shadow-[#2B2D42]/30 group-hover:rotate-12 transition-transform" />
+        <div className="absolute inset-0.5 bg-[#2B2D42] rounded-[10px] flex items-center justify-center">
+          <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#8D99AE] to-[#EDF2F4] rounded-sm" />
         </div>
       </div>
 
       {!collapsed && (
         <div className="flex items-baseline tracking-tight">
           <span className={`font-display font-extrabold text-white ${textSizes[size]}`}>
-            Scout
+            ATS
           </span>
-          <span className="w-1.5 h-1.5 bg-[#2F80E7] rounded-full ml-1" />
+          <span className="w-1.5 h-1.5 bg-[#2B2D42] rounded-full ml-1" />
         </div>
       )}
     </div>

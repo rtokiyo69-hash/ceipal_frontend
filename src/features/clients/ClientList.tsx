@@ -70,7 +70,7 @@ export const ClientList: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#0B4F89] text-white border border-[#1769AA] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -79,17 +79,17 @@ export const ClientList: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#2B2D42] dark:text-white">
             Enterprise Client Accounts
           </h1>
-          <p className="text-xs text-[#6B7785]">
+          <p className="text-xs text-[#8D99AE]">
             Manage client billing SLAs, open requisitions, account managers, and placements
           </p>
         </div>
 
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5"
+          className="px-4 py-2 bg-[#2B2D42] hover:bg-[#222336] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2B2D42]/30 transition-all flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" />
           <span>Add Enterprise Client</span>
@@ -97,15 +97,15 @@ export const ClientList: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="p-4 bg-white dark:bg-[#1E1B29] border border-[#DCE6EF] dark:border-slate-800 rounded-2xl shadow-xs">
+      <div className="p-4 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-xs">
         <div className="relative max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7785]" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D99AE]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search enterprise clients, industries, headquarters..."
-            className="w-full pl-10 pr-4 py-2 bg-[#F5F8FB] dark:bg-slate-800/80 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-xs text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA] focus:ring-1 focus:ring-[#1769AA]"
+            className="w-full pl-10 pr-4 py-2 bg-[#EDF2F4] dark:bg-slate-800/80 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-xs text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
           />
         </div>
       </div>
@@ -115,38 +115,38 @@ export const ClientList: React.FC = () => {
         {filtered.map((c) => (
           <div
             key={c.id}
-            className="p-6 bg-white dark:bg-[#1E1B29] border border-[#DCE6EF] dark:border-slate-800 rounded-2xl shadow-xs space-y-4 hover:border-[#1769AA] dark:hover:border-[#1769AA] transition-all"
+            className="p-6 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-xs space-y-4 hover:border-[#2B2D42] dark:hover:border-[#2B2D42] transition-all"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-xs font-mono text-[#1769AA] dark:text-[#8CBCE8] font-semibold">{c.clientId}</div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white mt-0.5">
+                <div className="text-xs font-mono text-[#2B2D42] dark:text-[#8D99AE] font-semibold">{c.clientId}</div>
+                <h3 className="text-base font-bold text-[#2B2D42] dark:text-white mt-0.5">
                   {c.name}
                 </h3>
-                <div className="text-xs text-[#6B7785]">{c.industry}</div>
+                <div className="text-xs text-[#8D99AE]">{c.industry}</div>
               </div>
 
-              <span className="px-2.5 py-1 bg-[#EAF4FC] dark:bg-[#1769AA]/20 border border-[#DCE6EF] dark:border-[#1769AA]/30 text-[#1769AA] dark:text-[#D8E9F7] rounded-lg text-[11px] font-mono font-medium">
+              <span className="px-2.5 py-1 bg-[#EDF2F4] dark:bg-[#2B2D42]/20 border border-[#D7DCE5] dark:border-[#2B2D42]/30 text-[#2B2D42] dark:text-[#EDF2F4] rounded-lg text-[11px] font-mono font-medium">
                 {c.tier}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-[#DCE6EF] dark:border-slate-800">
-              <div className="flex items-center gap-2 text-[#6B7785]">
-                <MapPin className="w-3.5 h-3.5 text-[#1769AA]" />
+            <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-[#D7DCE5] dark:border-slate-800">
+              <div className="flex items-center gap-2 text-[#8D99AE]">
+                <MapPin className="w-3.5 h-3.5 text-[#2B2D42]" />
                 <span className="truncate">{c.location}</span>
               </div>
-              <div className="flex items-center gap-2 text-[#6B7785]">
-                <Mail className="w-3.5 h-3.5 text-[#2F80E7]" />
+              <div className="flex items-center gap-2 text-[#8D99AE]">
+                <Mail className="w-3.5 h-3.5 text-[#2B2D42]" />
                 <span className="truncate">{c.contactEmail}</span>
               </div>
             </div>
 
             {/* Performance Strip */}
-            <div className="p-3 bg-[#F5F8FB] dark:bg-slate-800/60 rounded-xl flex items-center justify-between text-xs border border-[#DCE6EF] dark:border-slate-750">
-              <div className="flex items-center gap-1.5 text-[#202B37] dark:text-slate-200">
-                <Briefcase className="w-3.5 h-3.5 text-[#1769AA]" />
-                <span className="font-bold font-mono text-[#1769AA] dark:text-[#8CBCE8]">{c.activeJobs}</span> Open Requisitions
+            <div className="p-3 bg-[#EDF2F4] dark:bg-slate-800/60 rounded-xl flex items-center justify-between text-xs border border-[#D7DCE5] dark:border-slate-750">
+              <div className="flex items-center gap-1.5 text-[#2B2D42] dark:text-slate-200">
+                <Briefcase className="w-3.5 h-3.5 text-[#2B2D42]" />
+                <span className="font-bold font-mono text-[#2B2D42] dark:text-[#8D99AE]">{c.activeJobs}</span> Open Requisitions
               </div>
               <div className="flex items-center gap-1.5 text-[#2E7D5B] dark:text-[#8AC9A7]">
                 <Award className="w-3.5 h-3.5 text-[#8AC9A7]" />
@@ -155,10 +155,10 @@ export const ClientList: React.FC = () => {
             </div>
 
             <div className="pt-1 flex items-center justify-between text-xs">
-              <span className="text-[#6B7785]">Lead: {c.accountManager}</span>
+              <span className="text-[#8D99AE]">Lead: {c.accountManager}</span>
               <button
                 onClick={() => navigate('jobs')}
-                className="text-[#1769AA] hover:text-[#0B4F89] dark:text-[#8CBCE8] dark:hover:text-white font-semibold transition-colors"
+                className="text-[#2B2D42] hover:text-[#2B2D42] dark:text-[#8D99AE] dark:hover:text-white font-semibold transition-colors"
               >
                 View Requisitions →
               </button>
@@ -170,59 +170,59 @@ export const ClientList: React.FC = () => {
       {/* Create Client Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-[#1E1B29] border border-[#DCE6EF] dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-[#202B37] dark:text-white">
+              <h3 className="text-base font-bold text-[#2B2D42] dark:text-white">
                 Register Enterprise Client
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-[#6B7785] hover:text-[#202B37] dark:hover:text-white">
+              <button onClick={() => setModalOpen(false)} className="text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateClient} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">Client Legal Name</label>
+                <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Client Legal Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Apex Global Systems Inc."
-                  className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA] focus:ring-1 focus:ring-[#1769AA]"
+                  className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">Industry Domain</label>
+                <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Industry Domain</label>
                 <input
                   type="text"
                   required
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA] focus:ring-1 focus:ring-[#1769AA]"
+                  className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">Contact Person</label>
+                  <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Contact Person</label>
                   <input
                     type="text"
                     required
                     value={contactPerson}
                     onChange={(e) => setContactPerson(e.target.value)}
                     placeholder="David Vance"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA] focus:ring-1 focus:ring-[#1769AA]"
+                    className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">SLA Partnership Tier</label>
+                  <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">SLA Partnership Tier</label>
                   <select
                     value={tier}
                     onChange={(e) => setTier(e.target.value as Client['tier'])}
-                    className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
+                    className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
                   >
                     <option value="Enterprise Platinum">Enterprise Platinum</option>
                     <option value="Strategic Partner">Strategic Partner</option>
@@ -232,14 +232,14 @@ export const ClientList: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">Contact Email</label>
+                <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Contact Email</label>
                 <input
                   type="email"
                   required
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="contact@company.com"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA] focus:ring-1 focus:ring-[#1769AA]"
+                  className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
                 />
               </div>
 
@@ -247,13 +247,13 @@ export const ClientList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-3.5 py-2 border border-[#DCE6EF] dark:border-slate-700 text-[#6B7785] hover:text-[#202B37] dark:text-slate-300 rounded-xl hover:bg-[#F5F8FB] dark:hover:bg-slate-800 transition-colors"
+                  className="px-3.5 py-2 border border-[#D7DCE5] dark:border-slate-700 text-[#8D99AE] hover:text-[#2B2D42] dark:text-slate-300 rounded-xl hover:bg-[#EDF2F4] dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-semibold rounded-xl shadow-xs transition-colors"
+                  className="px-4 py-2 bg-[#2B2D42] hover:bg-[#222336] text-white font-semibold rounded-xl shadow-xs transition-colors"
                 >
                   Register Account
                 </button>

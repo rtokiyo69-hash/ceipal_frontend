@@ -98,9 +98,9 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
   };
 
   return (
-    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'}`}>
+    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#D7DCE5] bg-white shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'}`}>
       {/* Table Top Controls Header */}
-      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#DCE6EF] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#354A5C] dark:bg-[#1B2936]">
+      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#D7DCE5] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#45485E] dark:bg-[#2B2D42]">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-teal-500/15 text-teal-600 dark:text-teal-300">
             <FileCheck2 className="w-4 h-4" />
@@ -122,7 +122,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
             <button
               type="button"
               onClick={() => setShowAll(value => !value)}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#1769AA] transition hover:bg-[#EAF4FC] dark:text-[#8CBCE8] dark:hover:bg-[#22384B]"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#2B2D42] transition hover:bg-[#EDF2F4] dark:text-[#8D99AE] dark:hover:bg-[#36384F]"
             >
               {showAll ? 'Show less' : 'View all'}
               {showAll ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -171,7 +171,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
             <tr className="h-[42px]">
               <th
                 onClick={() => handleSort('candidate')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center gap-1">
                   <span>Candidate & Role</span>
@@ -181,7 +181,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
 
               <th
                 onClick={() => handleSort('client')}
-                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300`}
+                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300`}
               >
                 <div className="flex items-center gap-1">
                   <span>Client / Recruiter</span>
@@ -191,7 +191,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
 
               <th
                 onClick={() => handleSort('type')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Type</span>
@@ -201,7 +201,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
 
               <th
                 onClick={() => handleSort('status')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Status</span>
@@ -209,7 +209,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
                 </div>
               </th>
 
-              <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 text-right dark:border-[#354A5C] dark:bg-[#162431]">
+              <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 text-right dark:border-[#45485E] dark:bg-[#36384F]">
                 <span>Action</span>
               </th>
             </tr>
@@ -309,19 +309,19 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
           {/* Sticky Totals Footer */}
           <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-800 dark:text-slate-100 font-bold text-xs`}>
             <tr className="h-[44px]">
-              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 font-['Outfit'] dark:bg-[#162431]">
+              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 font-['Outfit'] dark:bg-[#36384F]">
                 <span>TOTAL CONFIRMATIONS</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-xs text-slate-700 dark:bg-[#162431] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-xs text-slate-700 dark:bg-[#36384F] dark:text-slate-300">
                 <span>{confirmations.length} records</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-teal-600 dark:bg-[#162431] dark:text-teal-400">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-teal-600 dark:bg-[#36384F] dark:text-teal-400">
                 {totals.placements} Hired
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-emerald-600 dark:bg-[#162431] dark:text-emerald-400">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-emerald-600 dark:bg-[#36384F] dark:text-emerald-400">
                 {totals.verified} Verified
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#162431] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#36384F] dark:text-slate-300">
                 <span>Live Audit</span>
               </td>
             </tr>
@@ -330,7 +330,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
       </div>
 
       {/* Mini Metric Strip at Bottom of Confirmations Table */}
-      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#DCE6EF] bg-[#F5F8FB] p-3 text-center text-xs dark:border-[#354A5C] dark:bg-[#162431]`}>
+      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#D7DCE5] bg-[#EDF2F4] p-3 text-center text-xs dark:border-[#45485E] dark:bg-[#36384F]`}>
         <div>
           <span className="text-[10px] uppercase text-slate-400 block font-semibold">Placements</span>
           <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">

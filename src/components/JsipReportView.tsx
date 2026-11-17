@@ -235,10 +235,10 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
   };
 
   return (
-    <div className={`space-y-5 transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 overflow-y-auto bg-[#F5F8FB] p-6 dark:bg-[#111C26]' : ''}`}>
+    <div className={`space-y-5 transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 overflow-y-auto bg-[#EDF2F4] p-6 dark:bg-[#202234]' : ''}`}>
       {/* Report Controls Card */}
       {/* Report Controls Bar */}
-      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[#DCE6EF] bg-white p-4 sm:p-5 md:flex-row md:items-center dark:border-[#354A5C] dark:bg-[#1B2936]">
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[#D7DCE5] bg-white p-4 sm:p-5 md:flex-row md:items-center dark:border-[#45485E] dark:bg-[#2B2D42]">
         {/* Left: Pod Selector & Recruiter Search */}
         <div className="flex flex-wrap items-center gap-3">
           <select
@@ -313,9 +313,9 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
       {/* 2-Column Side-by-Side: JSIP Recruiter Performance (Half) + Confirmations (Half) */}
       <div className="grid w-full grid-cols-1 items-start gap-5 lg:grid-cols-2">
         {/* Left Column: JSIP Recruiter Performance Report */}
-        <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'}`}>
+        <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#D7DCE5] bg-white shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'}`}>
           {/* Header */}
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#DCE6EF] bg-white p-3 sm:p-4 dark:border-[#354A5C] dark:bg-[#1B2936]">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D7DCE5] bg-white p-3 sm:p-4 dark:border-[#45485E] dark:bg-[#2B2D42]">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">
                 <Users className="w-4 h-4" />
@@ -333,7 +333,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAllRecruiters(value => !value)}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#1769AA] transition hover:bg-[#EAF4FC] dark:text-[#8CBCE8] dark:hover:bg-[#22384B]"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#2B2D42] transition hover:bg-[#EDF2F4] dark:text-[#8D99AE] dark:hover:bg-[#36384F]"
                 >
                   {showAllRecruiters ? 'Show less' : 'View all'}
                   {showAllRecruiters ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -360,7 +360,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 1: User Name */}
                   <th
                     onClick={() => handleSort('name')}
-                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-4"
+                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-4"
                   >
                     <div className="flex items-center gap-1">
                       <span>User Name</span>
@@ -371,7 +371,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 2: # Submissions */}
                   <th
                     onClick={() => handleSort('submissions')}
-                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3"
+                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-3"
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span># Subs</span>
@@ -382,7 +382,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 3: # Client Submissions */}
                   <th
                     onClick={() => handleSort('clientSubmissions')}
-                    className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3`}
+                    className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-3`}
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span># Client</span>
@@ -393,7 +393,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 4: # Interviews */}
                   <th
                     onClick={() => handleSort('interviews')}
-                    className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3`}
+                    className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-3`}
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span># Int</span>
@@ -404,7 +404,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 5: # Hires */}
                   <th
                     onClick={() => handleSort('hires')}
-                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3"
+                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-3"
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span># Hires</span>
@@ -415,7 +415,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   {/* Column 6: Conversion Rate % */}
                   <th
                     onClick={() => handleSort('conversion')}
-                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-3"
+                    className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-2 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-3"
                   >
                     <div className="flex items-center justify-end gap-1">
                       <span>Rate</span>
@@ -424,7 +424,7 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
                   </th>
 
                   {/* Column 7: Actions */}
-                  <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right dark:border-[#354A5C] dark:bg-[#162431]">
+                  <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right dark:border-[#45485E] dark:bg-[#36384F]">
                     <span>Log</span>
                   </th>
                 </tr>
@@ -513,30 +513,30 @@ export const JsipReportView: React.FC<JsipReportViewProps> = ({
               {/* Consolidated Summary Section (Totals Row at Bottom) */}
               <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-900 dark:text-white font-bold text-xs`}>
                 <tr className="h-[44px]">
-                  <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] text-xs tracking-wide sm:px-4 dark:bg-[#162431]">
+                  <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] text-xs tracking-wide sm:px-4 dark:bg-[#36384F]">
                     <div className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
                       <span>TOTAL ({displayedRows.length})</span>
                     </div>
                   </td>
-                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-cyan-600 sm:px-3 sm:text-sm dark:bg-[#162431] dark:text-cyan-300">
+                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-cyan-600 sm:px-3 sm:text-sm dark:bg-[#36384F] dark:text-cyan-300">
                     {dynamicTotals.totalSubmissions}
                   </td>
-                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-teal-600 sm:px-3 sm:text-sm dark:bg-[#162431] dark:text-teal-300">
+                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-teal-600 sm:px-3 sm:text-sm dark:bg-[#36384F] dark:text-teal-300">
                     {dynamicTotals.totalClientSubmissions}
                   </td>
-                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-sky-600 sm:px-3 sm:text-sm dark:bg-[#162431] dark:text-sky-300">
+                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-sky-600 sm:px-3 sm:text-sm dark:bg-[#36384F] dark:text-sky-300">
                     {dynamicTotals.totalInterviews}
                   </td>
-                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-emerald-600 sm:px-3 sm:text-sm dark:bg-[#162431] dark:text-emerald-300">
+                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-emerald-600 sm:px-3 sm:text-sm dark:bg-[#36384F] dark:text-emerald-300">
                     {dynamicTotals.totalHires}
                   </td>
-                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-emerald-600 sm:px-3 dark:bg-[#162431] dark:text-emerald-300">
+                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-2 py-2.5 text-right font-mono text-xs tabular-nums text-emerald-600 sm:px-3 dark:bg-[#36384F] dark:text-emerald-300">
                     {dynamicTotals.totalSubmissions > 0
                       ? ((dynamicTotals.totalHires / dynamicTotals.totalSubmissions) * 100).toFixed(1)
                       : '0.0'}%
                   </td>
-                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#162431] dark:text-slate-300">
+                  <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#36384F] dark:text-slate-300">
                     <span>Verified</span>
                   </td>
                 </tr>
