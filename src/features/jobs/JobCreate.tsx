@@ -558,42 +558,45 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in">
       {/* Top Header & Navigation Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DCE6EF] dark:border-[#354A5C] pb-4">
-        <div className="flex items-center gap-3">
+      {creationMode === 'select' ? (
+        <div className="flex items-center justify-between pb-2">
           <button
-            onClick={() => {
-              if (creationMode !== 'select') {
-                setCreationMode('select');
-              } else {
-                navigate('jobs');
-              }
-            }}
-            className="p-2 rounded-xl bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#1769AA] hover:bg-[#EAF4FC] transition-colors"
-            title="Back"
+            onClick={() => navigate('jobs')}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white hover:bg-slate-50 dark:hover:bg-[#22384B] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Job Postings</span>
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EAF4FC] dark:bg-[#083F70] text-[#1769AA] dark:text-[#D8E9F7]">
-                Job Posting Management
-              </span>
-              <span className="text-xs font-mono font-bold text-[#7A8794]">
-                {code}
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white mt-0.5">
-              {creationMode === 'select' && 'New Job Posting'}
-              {creationMode === 'manual' && 'Manual Job Creation'}
-              {creationMode === 'template' && 'Job Template Blueprint'}
-              {creationMode === 'parse' && 'Parse Job Details'}
-            </h1>
-          </div>
         </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DCE6EF] dark:border-[#354A5C] pb-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCreationMode('select')}
+              className="p-2 rounded-xl bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#1769AA] hover:bg-[#EAF4FC] transition-colors"
+              title="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EAF4FC] dark:bg-[#083F70] text-[#1769AA] dark:text-[#D8E9F7]">
+                  Job Posting Management
+                </span>
+                <span className="text-xs font-mono font-bold text-[#7A8794]">
+                  {code}
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white mt-0.5">
+                {creationMode === 'manual' && 'Manual Job Creation'}
+                {creationMode === 'template' && 'Job Template Blueprint'}
+                {creationMode === 'parse' && 'Parse Job Details'}
+              </h1>
+            </div>
+          </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {creationMode !== 'select' && (
+          {/* Action Controls */}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setCreationMode('select')}
@@ -601,106 +604,224 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             >
               Switch Method
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => navigate('jobs')}
-            className="px-3.5 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#5E6B7A] dark:text-[#B9CAD9] hover:bg-slate-100 transition-colors"
-          >
-            Cancel
-          </button>
-          {creationMode === 'manual' && (
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="px-5 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              type="button"
+              onClick={() => navigate('jobs')}
+              className="px-3.5 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#5E6B7A] dark:text-[#B9CAD9] hover:bg-slate-100 transition-colors"
             >
-              <Save className="w-4 h-4" />
-              <span>{isSubmitting ? 'Publishing...' : 'Save & Publish'}</span>
+              Cancel
             </button>
-          )}
+            {creationMode === 'manual' && (
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="px-5 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSubmitting ? 'Publishing...' : 'Save & Publish'}</span>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================================= */}
-      {/* 1. CEIPAL 3-METHOD SELECTION SCREEN (media_1794558512745_31ee4c3d.png) */}
+      {/* 1. CEIPAL 3-METHOD SELECTION SCREEN (media_1794837670723_c70a8d91.png) */}
       {/* ========================================================================= */}
       {creationMode === 'select' && (
-        <div className="p-8 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-3xl shadow-xs text-center space-y-8">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-display font-bold text-[#202B37] dark:text-white">
-              Create New Job
-            </h2>
-            <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-1">
-              Select one of the 3 standard Ceipal ingestion pathways to initiate a new job requisition.
-            </p>
-          </div>
+        <div className="py-12 sm:py-20 flex flex-col items-center justify-center text-center space-y-12 animate-in fade-in zoom-in-95 duration-300">
+          {/* Main Title matching Screenshot */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#111827] dark:text-white tracking-tight">
+            Create a New Job
+          </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+          {/* 3 Glassmorphism Cards with Hover Zoom Effects */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 md:gap-14 w-full max-w-4xl px-4">
             {/* 1. Manual Creation */}
             <div
               onClick={() => setCreationMode('manual')}
-              className="p-6 rounded-2xl border-2 border-[#DCE6EF] dark:border-[#354A5C] hover:border-[#1769AA] bg-[#F5F8FB] dark:bg-[#162431] hover:bg-white dark:hover:bg-[#1B2936] hover:shadow-xl hover:shadow-[#1769AA]/10 transition-all cursor-pointer group flex flex-col justify-between"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1B2936]/50 hover:bg-white/80 dark:hover:bg-[#1B2936]/80 border border-white/80 dark:border-white/10 hover:border-blue-400/50 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 w-64 h-64 select-none"
             >
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#1769AA]/10 text-[#1769AA] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                  <FileText className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white group-hover:text-[#1769AA] transition-colors">
-                  5.2.1 Manual Creation
-                </h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-2 leading-relaxed">
-                  Complete manual specification form with facility codes, client billing, rate cards, skills, and managerial allocations.
-                </p>
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 rounded-3xl bg-radial from-blue-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+              {/* Icon 1: Manual Creation (Exact Screenshot Replica) */}
+              <div className="relative transform group-hover:scale-105 transition-transform duration-300">
+                <svg viewBox="0 0 140 140" className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl" fill="none">
+                  <defs>
+                    <filter id="card-shadow-1" x="-10%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.12" />
+                    </filter>
+                    <filter id="pencil-shadow" x="-20%" y="-20%" width="150%" height="150%">
+                      <feDropShadow dx="2" dy="5" stdDeviation="4" floodOpacity="0.2" />
+                    </filter>
+                    <linearGradient id="sheet-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFFFFF" />
+                      <stop offset="100%" stopColor="#F8FAFC" />
+                    </linearGradient>
+                    <linearGradient id="pencil-body" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FB923C" />
+                      <stop offset="100%" stopColor="#EA580C" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Back sheet layer for depth */}
+                  <rect x="22" y="18" width="76" height="96" rx="18" fill="#E0F2FE" />
+                  
+                  {/* Front sheet with shadow */}
+                  <g filter="url(#card-shadow-1)">
+                    <rect x="26" y="22" width="74" height="92" rx="16" fill="url(#sheet-grad)" stroke="#E2E8F0" strokeWidth="1.5" />
+                    <rect x="38" y="38" width="36" height="8" rx="4" fill="#1E293B" />
+                    <rect x="38" y="54" width="30" height="6" rx="3" fill="#38BDF8" />
+                    <rect x="38" y="68" width="22" height="6" rx="3" fill="#38BDF8" />
+                  </g>
+
+                  {/* 3D Pencil across page */}
+                  <g transform="translate(74, 48) rotate(45)" filter="url(#pencil-shadow)">
+                    {/* Pencil eraser */}
+                    <path d="M-6 -26 h12 a6 6 0 0 1 6 6 v6 h-24 v-6 a6 6 0 0 1 6 -6 z" fill="#0D9488" />
+                    {/* Ferrule collar */}
+                    <rect x="-12" y="-14" width="24" height="6" rx="1" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
+                    {/* Pencil Body (Orange) */}
+                    <rect x="-12" y="-8" width="24" height="34" rx="2" fill="url(#pencil-body)" />
+                    {/* Highlight reflection stripe on pencil */}
+                    <rect x="-6" y="-8" width="4" height="34" fill="#FED7AA" fillOpacity="0.6" />
+                    {/* Wooden sharpened cone */}
+                    <path d="M-12 26 L0 46 L12 26 Z" fill="#FDE68A" />
+                    {/* Graphite lead tip */}
+                    <path d="M-4 39 L0 46 L4 39 Z" fill="#1E293B" />
+                  </g>
+                </svg>
               </div>
-              <div className="mt-6 flex items-center text-xs font-bold text-[#1769AA] group-hover:translate-x-1 transition-transform">
-                <span>Start Manual Entry</span>
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
+
+              {/* Ground diffuse shadow */}
+              <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-blue-500/30 transition-all duration-300" />
+
+              {/* Label */}
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-[#1769AA] dark:group-hover:text-[#60A5FA] tracking-tight transition-colors text-center">
+                Manual Creation
+              </h3>
             </div>
 
-            {/* 2. Job Template */}
+            {/* 2. Use Job Template */}
             <div
               onClick={() => setCreationMode('template')}
-              className="p-6 rounded-2xl border-2 border-[#DCE6EF] dark:border-[#354A5C] hover:border-[#1769AA] bg-[#F5F8FB] dark:bg-[#162431] hover:bg-white dark:hover:bg-[#1B2936] hover:shadow-xl hover:shadow-[#1769AA]/10 transition-all cursor-pointer group flex flex-col justify-between"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1B2936]/50 hover:bg-white/80 dark:hover:bg-[#1B2936]/80 border border-white/80 dark:border-white/10 hover:border-teal-400/50 shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 w-64 h-64 select-none"
             >
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#1769AA]/10 text-[#1769AA] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                  <Copy className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white group-hover:text-[#1769AA] transition-colors">
-                  5.2.2 Job Template
-                </h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-2 leading-relaxed">
-                  1-Click pre-fill from tested industry requisition blueprints (Software Developer, Cloud Architect, Full Stack, SRE).
-                </p>
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 rounded-3xl bg-radial from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+              {/* Icon 2: Use Job Template (Exact Screenshot Replica) */}
+              <div className="relative transform group-hover:scale-105 transition-transform duration-300">
+                <svg viewBox="0 0 140 140" className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl" fill="none">
+                  <defs>
+                    <filter id="card-shadow-2" x="-10%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.12" />
+                    </filter>
+                    <filter id="badge-shadow" x="-20%" y="-20%" width="150%" height="150%">
+                      <feDropShadow dx="1" dy="4" stdDeviation="4" floodOpacity="0.25" />
+                    </filter>
+                    <linearGradient id="badge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#14B8A6" />
+                      <stop offset="100%" stopColor="#0F766E" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Back sheet tilted */}
+                  <rect x="18" y="24" width="76" height="94" rx="18" fill="#E0F2FE" transform="rotate(-6 56 71)" />
+
+                  {/* Front sheet with shadow */}
+                  <g filter="url(#card-shadow-2)">
+                    <rect x="28" y="22" width="76" height="94" rx="16" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1.5" />
+                    
+                    {/* Dark top header bar */}
+                    <rect x="40" y="38" width="40" height="9" rx="4.5" fill="#1E293B" />
+                    
+                    {/* Two colorful content blocks */}
+                    <rect x="40" y="54" width="22" height="20" rx="5" fill="#FFEDD5" stroke="#FED7AA" strokeWidth="1" />
+                    <rect x="66" y="54" width="22" height="20" rx="5" fill="#CCFBF1" stroke="#99F6E4" strokeWidth="1" />
+                    
+                    {/* Bottom content lines */}
+                    <rect x="40" y="82" width="48" height="5" rx="2.5" fill="#E2E8F0" />
+                    <rect x="40" y="92" width="30" height="4" rx="2" fill="#F1F5F9" />
+                  </g>
+
+                  {/* Top-Right Green Checkmark Badge */}
+                  <g filter="url(#badge-shadow)">
+                    <circle cx="98" cy="36" r="16" fill="url(#badge-grad)" stroke="#FFFFFF" strokeWidth="2.5" />
+                    <path d="M92 36.5 L96.5 41 L105 31.5" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </g>
+                </svg>
               </div>
-              <div className="mt-6 flex items-center text-xs font-bold text-[#1769AA] group-hover:translate-x-1 transition-transform">
-                <span>Browse Templates</span>
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
+
+              {/* Ground diffuse shadow */}
+              <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-teal-500/30 transition-all duration-300" />
+
+              {/* Label */}
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 tracking-tight transition-colors text-center">
+                Use Job Template
+              </h3>
             </div>
 
             {/* 3. Parse Job Details */}
             <div
               onClick={() => setCreationMode('parse')}
-              className="p-6 rounded-2xl border-2 border-[#DCE6EF] dark:border-[#354A5C] hover:border-[#2F80E7] bg-[#F5F8FB] dark:bg-[#162431] hover:bg-white dark:hover:bg-[#1B2936] hover:shadow-xl hover:shadow-[#2F80E7]/10 transition-all cursor-pointer group flex flex-col justify-between"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1B2936]/50 hover:bg-white/80 dark:hover:bg-[#1B2936]/80 border border-white/80 dark:border-white/10 hover:border-orange-400/50 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 w-64 h-64 select-none"
             >
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#2F80E7]/10 text-[#2F80E7] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white group-hover:text-[#2F80E7] transition-colors">
-                  5.2.3 Parse Job Details
-                </h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-2 leading-relaxed">
-                  Paste raw client requirement emails or copy-pasted briefs. Automatically extracts title, tech stack, experience, and rates.
-                </p>
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 rounded-3xl bg-radial from-orange-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+              {/* Icon 3: Parse Job Details (Exact Screenshot Replica) */}
+              <div className="relative transform group-hover:scale-105 transition-transform duration-300">
+                <svg viewBox="0 0 140 140" className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl" fill="none">
+                  <defs>
+                    <filter id="card-shadow-3" x="-10%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.12" />
+                    </filter>
+                    <filter id="orange-badge-shadow" x="-20%" y="-20%" width="150%" height="150%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.25" />
+                    </filter>
+                    <linearGradient id="orange-badge" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FB923C" />
+                      <stop offset="100%" stopColor="#EA580C" />
+                    </linearGradient>
+                    <linearGradient id="glass-card" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFFFFF" />
+                      <stop offset="100%" stopColor="#F1F5F9" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Outer glass container / backing */}
+                  <rect x="22" y="24" width="96" height="96" rx="22" fill="#E0F2FE" fillOpacity="0.6" stroke="#BAE6FD" strokeWidth="1.5" />
+
+                  {/* Inner translucent sheet with shadow */}
+                  <g filter="url(#card-shadow-3)">
+                    <rect x="26" y="28" width="88" height="88" rx="18" fill="url(#glass-card)" stroke="#FFFFFF" strokeWidth="1.5" />
+
+                    {/* Top Orange Upload Badge with Arrow */}
+                    <g filter="url(#orange-badge-shadow)">
+                      <rect x="49" y="18" width="42" height="42" rx="12" fill="url(#orange-badge)" />
+                      {/* Upward Arrow */}
+                      <path d="M70 44 V28 M64 34 L70 28 L76 34" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </g>
+
+                    {/* Bottom Dark Navy Card */}
+                    <rect x="38" y="66" width="64" height="42" rx="12" fill="#1E293B" />
+                    {/* Data chips / lines inside dark card */}
+                    <rect x="46" y="76" width="34" height="4.5" rx="2.25" fill="#2DD4BF" />
+                    <rect x="46" y="85" width="48" height="4.5" rx="2.25" fill="#38BDF8" />
+                    <rect x="46" y="94" width="24" height="4.5" rx="2.25" fill="#2DD4BF" />
+                  </g>
+                </svg>
               </div>
-              <div className="mt-6 flex items-center text-xs font-bold text-[#2F80E7] group-hover:translate-x-1 transition-transform">
-                <span>Paste &amp; Parse</span>
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
+
+              {/* Ground diffuse shadow */}
+              <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-orange-500/30 transition-all duration-300" />
+
+              {/* Label */}
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight transition-colors text-center">
+                Parse Job Details
+              </h3>
             </div>
           </div>
         </div>
