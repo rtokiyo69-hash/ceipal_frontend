@@ -84,6 +84,10 @@ export interface Job {
   departmentCode?: string;
   poNumber?: string;
   notes?: JobNote[];
+  folder?: string;
+  benchConsultant?: string;
+  mailMergeLimit?: number;
+  publishedCampuses?: string[];
 }
 
 export interface JobNote {
@@ -205,6 +209,9 @@ export interface Submission {
     | 'Interview Scheduled'
     | (string & {});
   approvalStatus: 'Approved' | 'Pending Approval' | 'Revision Requested' | 'Pending Review' | (string & {});
+  score?: number;
+  groups?: string[];
+  notes?: { id: string; author: string; text: string; date: string }[];
 }
 
 export interface Placement {
