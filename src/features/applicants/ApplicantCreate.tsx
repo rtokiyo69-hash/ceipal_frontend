@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   UserPlus,
   UploadCloud,
@@ -8,7 +8,40 @@ import {
   ArrowLeft,
   Sparkles,
   Layers,
-  FolderOpen
+  FolderOpen,
+  Scissors,
+  Copy,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Subscript,
+  Superscript,
+  ListOrdered,
+  List,
+  Outdent,
+  Indent,
+  Quote,
+  Link2,
+  Unlink,
+  Anchor,
+  Image,
+  Table,
+  Minus,
+  Code2,
+  CheckSquare,
+  RefreshCw,
+  Search,
+  RemoveFormatting,
+  FileCode,
+  Type,
+  Highlighter,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Undo2,
+  Redo2
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -16,7 +49,9 @@ import { PipelineStage } from '../../types';
 
 export const ApplicantCreate: React.FC = () => {
   const { navigate } = useAppStore();
-  const [method, setMethod] = useState<'parse' | 'manual' | 'dropbox' | 'box' | 'onedrive' | 'bulk'>('parse');
+  const [method, setMethod] = useState<'parse' | 'manual' | 'dropbox' | 'box' | 'onedrive' | 'bulk' | null>(null);
+  const [cloudSource, setCloudSource] = useState('');
+  const [selectedResumeFile, setSelectedResumeFile] = useState('');
 
   // Form Fields
   const [name, setName] = useState('');
@@ -31,6 +66,15 @@ export const ApplicantCreate: React.FC = () => {
   const [summary, setSummary] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [parseUploaded, setParseUploaded] = useState(false);
+  const [profileFields, setProfileFields] = useState<Record<string, string>>({ country: 'India' });
+  const [certifications, setCertifications] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [educationRows, setEducationRows] = useState([{ degree: '', school: '', year: '' }]);
+  const [employerRows, setEmployerRows] = useState([{ company: '', title: '', location: '', from: '', to: '', summary: '' }]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
+  const [certInput, setCertInput] = useState('');
+  const [languageInput, setLanguageInput] = useState('');
+  const updateProfileField = (key: string, value: string) => setProfileFields((prev) => ({ ...prev, [key]: value }));
 
   // Resume Parsing Simulation
   const handleSimulateResumeDrop = () => {
@@ -71,6 +115,42 @@ export const ApplicantCreate: React.FC = () => {
       source,
       skills,
       summary,
+      middleName: profileFields.middleName,
+      legalName: profileFields.legalName,
+      alternateEmail: profileFields.alternateEmail,
+      homePhone: profileFields.homePhone,
+      workPhone: profileFields.workPhone,
+      dateOfBirth: profileFields.dateOfBirth,
+      linkedinUrl: profileFields.linkedinUrl,
+      portfolioUrl: profileFields.portfolioUrl,
+      workAuthorization: profileFields.workAuthorization,
+      address: profileFields.address,
+      country: profileFields.country,
+      state: profileFields.state,
+      zipCode: profileFields.zipCode,
+      relevantExperience: Number(profileFields.relevantExperience) || undefined,
+      referredBy: profileFields.referredBy,
+      applicantGroup: profileFields.applicantGroup,
+      currentCompany: profileFields.currentCompany,
+      currentCTC: profileFields.currentCTC,
+      expectedCTC: profileFields.expectedCTC,
+      currency: profileFields.currency || 'INR',
+      noticePeriod: profileFields.noticePeriod,
+      passportNumber: profileFields.passportNumber,
+      preferredShift: profileFields.preferredShift,
+      willingToRelocate: profileFields.willingToRelocate === 'Yes',
+      primarySkills: profileFields.primarySkills?.split(',').map((s) => s.trim()).filter(Boolean) || [],
+      technology: profileFields.technology,
+      industry: profileFields.industry,
+      referenceId: profileFields.referenceId,
+      applicantRemarks: profileFields.applicantRemarks,
+      customFields: profileFields,
+      gdprApproved: profileFields.gdprApproved === 'Yes',
+      educationDetails: educationRows.filter((r) => r.degree || r.school || r.year),
+      certifications,
+      languages,
+      employerDetails: employerRows.filter((r) => r.company || r.title),
+      documents: uploadedDocuments.map((doc) => ({ name: doc, size: 'Local file', date: new Date().toISOString().slice(0, 10), type: 'Applicant Document' })),
       status: 'New',
       matchScore: Math.floor(Math.random() * 12 + 88),
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'
@@ -79,6 +159,27 @@ export const ApplicantCreate: React.FC = () => {
     setIsSubmitting(false);
     navigate('applicants');
   };
+
+  if (!method) {
+    const choices = [
+      { label: 'Parse Resume', method: 'parse' as const, color: 'bg-[#22A6DC]', icon: <UploadCloud className="h-6 w-6" /> },
+      { label: 'Manual Creation', method: 'manual' as const, color: 'bg-[#70BF28]', icon: <UserPlus className="h-6 w-6" /> },
+      { label: 'Drop Box', method: 'dropbox' as const, color: 'bg-[#647D8B]', icon: <FolderOpen className="h-6 w-6" /> },
+      { label: 'Box', method: 'box' as const, color: 'bg-[#A17AC5]', icon: <FolderOpen className="h-6 w-6" /> },
+      { label: 'OneDrive', method: 'onedrive' as const, color: 'bg-[#1251B5]', icon: <FolderOpen className="h-6 w-6" /> },
+      { label: 'Bulk Parsing', method: 'bulk' as const, color: 'bg-[#E77BB1]', icon: <UploadCloud className="h-6 w-6" /> }
+    ];
+    return <div className="relative flex min-h-[calc(100vh-128px)] flex-col items-center bg-[#EDF2F6] px-4 py-12 dark:bg-[#111C26]">
+      <button onClick={() => navigate('applicants')} className="absolute right-4 top-4 rounded-lg border border-[#DCE6EF] bg-white px-3 py-1.5 text-xs font-medium text-[#5E6B7A] hover:bg-[#F7F9FC] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-[#B9CAD9]">Cancel</button>
+      <h1 className="mt-2 text-xl font-medium text-[#384553] dark:text-white">Add Applicant</h1>
+      <div className="mt-9 grid w-full max-w-[505px] grid-cols-2 justify-items-center gap-x-2 gap-y-2 sm:grid-cols-4">
+        {choices.map((choice, index) => <button key={choice.method} onClick={() => { setMethod(choice.method); setCloudSource(['dropbox', 'box', 'onedrive'].includes(choice.method) ? choice.label : ''); }} className={`flex h-[68px] w-[120px] flex-col items-center justify-center gap-1 rounded-sm text-white shadow-sm transition hover:-translate-y-0.5 hover:brightness-105 ${choice.color} ${index === 4 ? 'sm:col-start-2' : index === 5 ? 'sm:col-start-3' : ''}`}>
+          {choice.icon}<span className="text-[10px] font-medium">{choice.label}</span>
+        </button>)}
+      </div>
+      <p className="mt-4 flex items-center gap-1 text-[10px] text-[#8A98A8]"><span className="flex h-3 w-3 items-center justify-center rounded-full bg-[#4899E0] text-[8px] font-bold text-white">i</span> Save time by importing your information automatically</p>
+    </div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -98,12 +199,13 @@ export const ApplicantCreate: React.FC = () => {
             Extract profile data from resumes, cloud drives, or manual onboarding
           </p>
         </div>
+        <button type="button" onClick={() => { setMethod(null); setCloudSource(''); }} className="ml-auto rounded-lg border border-[#DCE6EF] bg-white px-3 py-2 text-xs font-semibold text-[#526173] hover:bg-[#F5F8FB] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white">Change method</button>
       </div>
 
       {/* Applicant creation methods */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-1.5 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl text-xs font-semibold">
+      <div className="hidden">
         <button
-          onClick={() => setMethod('parse')}
+          onClick={() => { setMethod('parse'); setCloudSource(''); }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
             method === 'parse' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
@@ -111,7 +213,7 @@ export const ApplicantCreate: React.FC = () => {
           1. Parse Resume
         </button>
         <button
-          onClick={() => setMethod('manual')}
+          onClick={() => { setMethod('manual'); setCloudSource(''); }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
             method === 'manual' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
@@ -119,10 +221,7 @@ export const ApplicantCreate: React.FC = () => {
           2. Manual Entry
         </button>
         <button
-          onClick={() => {
-            setMethod('dropbox');
-            handleSimulateResumeDrop();
-          }}
+          onClick={() => { setMethod('dropbox'); setCloudSource('Dropbox'); }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
             method === 'dropbox' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
@@ -130,10 +229,7 @@ export const ApplicantCreate: React.FC = () => {
           3. Dropbox
         </button>
         <button
-          onClick={() => {
-            setMethod('box');
-            handleSimulateResumeDrop();
-          }}
+          onClick={() => { setMethod('box'); setCloudSource('Box'); }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
             method === 'box' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
@@ -141,10 +237,7 @@ export const ApplicantCreate: React.FC = () => {
           4. Box
         </button>
         <button
-          onClick={() => {
-            setMethod('onedrive');
-            handleSimulateResumeDrop();
-          }}
+          onClick={() => { setMethod('onedrive'); setCloudSource('OneDrive'); }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
             method === 'onedrive' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
           }`}
@@ -154,7 +247,7 @@ export const ApplicantCreate: React.FC = () => {
         <button
           onClick={() => {
             setMethod('bulk');
-            handleSimulateResumeDrop();
+            setCloudSource('');
           }}
           className={`py-2 px-1 rounded-xl transition-all truncate ${
             method === 'bulk' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'
@@ -162,23 +255,24 @@ export const ApplicantCreate: React.FC = () => {
         >
           6. Bulk Parsing
         </button>
+        <button
+          onClick={() => { setMethod('dropbox'); setCloudSource('Dropbox'); }}
+          className={`py-2 px-1 rounded-xl transition-all truncate ${method === 'dropbox' ? 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] shadow-xs border border-[#DCE6EF] dark:border-[#4D6274]' : 'text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37] dark:hover:text-white'}`}
+        >7. Google Drive</button>
       </div>
 
       {/* Parse Dropzone Banner */}
       {(method === 'parse' || method === 'bulk') && !parseUploaded && (
-        <div
-          onClick={handleSimulateResumeDrop}
-          className="p-8 border-2 border-dashed border-[#1769AA]/40 hover:border-[#1769AA] bg-[#EAF4FC]/50 dark:bg-[#22384B]/30 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
-        >
-          <UploadCloud className="w-10 h-10 text-[#1769AA] mx-auto group-hover:scale-110 transition-transform" />
-          <div className="text-sm font-bold text-[#202B37] dark:text-white">
-            Click to Simulate Resume Upload &amp; Deep Parsing
-          </div>
-          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] max-w-md mx-auto">
-            Supports PDF, DOCX, TXT. Our semantic extractor automatically populates candidate experience, contact details, and skill tags.
-          </p>
+        <div className="p-6 border-2 border-dashed border-[#1769AA]/40 bg-[#EAF4FC]/50 dark:bg-[#22384B]/30 rounded-2xl text-center space-y-3">
+          <UploadCloud className="w-9 h-9 text-[#1769AA] mx-auto" />
+          <div className="text-sm font-bold text-[#202B37] dark:text-white">{method === 'bulk' ? 'Bulk Resume Import' : 'Upload a Resume'}</div>
+          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] max-w-md mx-auto">Select PDF, DOCX, or TXT resume files. This frontend preview records the selected filenames; resume extraction requires a parser service.</p>
+          <input type="file" multiple={method === 'bulk'} accept=".pdf,.doc,.docx,.txt,.rtf" onChange={(e) => { const files = Array.from(e.target.files || []); setSelectedResumeFile(files.map((f) => f.name).join(', ')); setUploadedDocuments((prev) => [...new Set([...prev, ...files.map((f) => f.name)])]); }} className="mx-auto block max-w-sm text-xs" />
+          {selectedResumeFile && <div className="text-[11px] text-[#1769AA]">Selected: {selectedResumeFile}</div>}
+          <button type="button" onClick={handleSimulateResumeDrop} className="rounded-lg bg-[#2F80E7] px-3 py-2 text-xs font-semibold text-white">Load sample parsed profile</button>
         </div>
       )}
+      {cloudSource && <div className="rounded-2xl border border-[#DCE6EF] bg-white p-5 dark:border-[#354A5C] dark:bg-[#1B2936]"><div className="flex items-start gap-3"><FolderOpen className="h-7 w-7 text-[#2F80E7]" /><div><div className="font-bold text-[#202B37] dark:text-white">Import from {cloudSource}</div><p className="mt-1 text-xs text-[#6D7988]">Cloud account authorization is not configured in this frontend. You can select the resume file from your device to continue the applicant workflow.</p></div></div><input type="file" accept=".pdf,.doc,.docx,.txt,.rtf" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setSelectedResumeFile(file.name); setUploadedDocuments((prev) => [...new Set([...prev, file.name])]); } }} className="mt-4 block text-xs" />{selectedResumeFile && <div className="mt-2 text-[11px] text-[#1769AA]">Selected: {selectedResumeFile}</div>}<button type="button" onClick={handleSimulateResumeDrop} className="mt-3 rounded-lg border border-[#DCE6EF] px-3 py-2 text-xs font-semibold text-[#1769AA] dark:border-[#354A5C]">Load sample parsed profile</button></div>}
 
       {/* Mint #8AC9A7 success banner */}
       {parseUploaded && (
@@ -335,6 +429,53 @@ export const ApplicantCreate: React.FC = () => {
             placeholder="Candidate profile summary, notable project highlights..."
             className="w-full p-3 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
           />
+        </div>
+
+        {/* Additional fields from the reference applicant profile workflow */}
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">05. Personal Details &amp; Work Authorization</div>
+          <div className="grid sm:grid-cols-3 gap-4 text-xs">
+            {[
+              ['Middle Name', 'middleName'], ['Legal Name', 'legalName'], ['Alternate Email', 'alternateEmail'],
+              ['Home Phone Number', 'homePhone'], ['Work Phone Number', 'workPhone'], ['Date of Birth', 'dateOfBirth', 'date'],
+              ['LinkedIn Profile URL', 'linkedinUrl'], ['Portfolio / Social URL', 'portfolioUrl'], ['Work Authorization', 'workAuthorization'],
+              ['Street Address', 'address'], ['Country', 'country'], ['State / Province', 'state'], ['ZIP / Postal Code', 'zipCode'],
+              ['Relevant Experience (years)', 'relevantExperience', 'number'], ['Referred By', 'referredBy'], ['Applicant Group', 'applicantGroup'],
+              ['Current Company', 'currentCompany'], ['Current CTC', 'currentCTC'], ['Expected CTC', 'expectedCTC'],
+              ['Notice Period', 'noticePeriod'], ['PAN / Tax ID', 'panNumber'], ['Aadhaar Number', 'aadhaarNumber'], ['Passport Number', 'passportNumber'],
+              ['Marital Status', 'maritalStatus'], ['Nationality', 'nationality'], ['Preferred Shift', 'preferredShift'],
+              ['Gender', 'gender'], ['Race / Ethnicity', 'raceEthnicity'], ['Veteran Status', 'veteranStatus'], ['Disability', 'disability'],
+              ['Technology', 'technology'], ['Industry', 'industry'], ['Reference ID', 'referenceId']
+            ].map(([label, key, type]) => <div key={key}>
+              <label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">{label}</label>
+              <input type={type || 'text'} value={profileFields[key] || ''} onChange={(e) => updateProfileField(key, e.target.value)} className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]" />
+            </div>)}
+            <div><label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Willing to Relocate</label><select value={profileFields.willingToRelocate || 'Yes'} onChange={(e) => updateProfileField('willingToRelocate', e.target.value)} className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl"><option>Yes</option><option>No</option></select></div>
+            <div><label className="block text-[#5E6B7A] dark:text-[#B9CAD9] mb-1 font-medium">Currency</label><select value={profileFields.currency || 'INR'} onChange={(e) => updateProfileField('currency', e.target.value)} className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl"><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div>
+          </div>
+          <label className="block text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">Primary Skills (comma separated)<input value={profileFields.primarySkills || ''} onChange={(e) => updateProfileField('primarySkills', e.target.value)} placeholder="Java, React, AWS" className="mt-1 w-full px-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white" /></label>
+          <label className="block text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">Applicant Remarks<textarea rows={2} value={profileFields.applicantRemarks || ''} onChange={(e) => updateProfileField('applicantRemarks', e.target.value)} className="mt-1 w-full p-3 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-[#202B37] dark:text-white" /></label>
+          <label className="flex items-start gap-2 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]"><input type="checkbox" checked={profileFields.gdprApproved === 'Yes'} onChange={(e) => updateProfileField('gdprApproved', e.target.checked ? 'Yes' : 'No')} /> GDPR approved consent recorded</label>
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">06. Documents</div>
+          <div className="rounded-xl border border-dashed border-[#AFCBE4] bg-[#F7FBFF] p-4 text-xs dark:bg-[#162431]"><label className="font-semibold text-[#344252] dark:text-white">Upload resume and supporting documents</label><input type="file" multiple accept=".pdf,.doc,.docx,.txt,.rtf" onChange={(e) => setUploadedDocuments(Array.from(e.target.files || []).map((f) => f.name))} className="mt-2 block w-full text-xs" />{uploadedDocuments.length > 0 && <div className="mt-2 text-[#1769AA]">{uploadedDocuments.join(' · ')}</div>}<p className="mt-1 text-[10px] text-[#7B8794]">Files are listed in this browser demo; no server upload is configured.</p></div>
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="flex items-center justify-between"><div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">07. Education Details</div><button type="button" onClick={() => setEducationRows([...educationRows, { degree: '', school: '', year: '' }])} className="text-xs font-semibold text-[#1769AA]">+ Add Education</button></div>
+          {educationRows.map((row, i) => <div key={i} className="grid sm:grid-cols-3 gap-3"><input aria-label="Degree" placeholder="Degree / qualification" value={row.degree} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, degree: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><input aria-label="School" placeholder="School / institution" value={row.school} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, school: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><input aria-label="Graduation year" placeholder="Graduation year" value={row.year} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, year: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /></div>)}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="space-y-3"><div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">08. Certifications</div><div className="flex gap-2"><input value={certInput} onChange={(e) => setCertInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (certInput.trim()) setCertifications([...certifications, certInput.trim()]); setCertInput(''); } }} placeholder="Add certification" className="min-w-0 flex-1 px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><button type="button" onClick={() => { if (certInput.trim()) setCertifications([...certifications, certInput.trim()]); setCertInput(''); }} className="rounded-xl bg-[#0B4F89] px-3 text-xs text-white">Add</button></div><div className="flex flex-wrap gap-1">{certifications.map((item) => <button key={item} type="button" onClick={() => setCertifications(certifications.filter((x) => x !== item))} className="rounded bg-[#EAF4FC] px-2 py-1 text-[10px] text-[#1769AA]">{item} ×</button>)}</div></div>
+          <div className="space-y-3"><div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">09. Languages</div><div className="flex gap-2"><input value={languageInput} onChange={(e) => setLanguageInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (languageInput.trim()) setLanguages([...languages, languageInput.trim()]); setLanguageInput(''); } }} placeholder="Add language" className="min-w-0 flex-1 px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><button type="button" onClick={() => { if (languageInput.trim()) setLanguages([...languages, languageInput.trim()]); setLanguageInput(''); }} className="rounded-xl bg-[#0B4F89] px-3 text-xs text-white">Add</button></div><div className="flex flex-wrap gap-1">{languages.map((item) => <button key={item} type="button" onClick={() => setLanguages(languages.filter((x) => x !== item))} className="rounded bg-[#EAF4FC] px-2 py-1 text-[10px] text-[#1769AA]">{item} ×</button>)}</div></div>
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="flex items-center justify-between"><div className="text-xs font-mono font-bold text-[#1769AA] uppercase tracking-wider">10. Work Experience &amp; Employer Details</div><button type="button" onClick={() => setEmployerRows([...employerRows, { company: '', title: '', location: '', from: '', to: '', summary: '' }])} className="text-xs font-semibold text-[#1769AA]">+ Add Employer</button></div>
+          {employerRows.map((row, i) => <div key={i} className="grid sm:grid-cols-3 gap-3 rounded-xl border border-[#DCE6EF] p-3"><input aria-label="Employer" placeholder="Company" value={row.company} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, company: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><input aria-label="Role" placeholder="Role / title" value={row.title} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, title: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><input aria-label="Employer location" placeholder="Location" value={row.location} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, location: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><input aria-label="Start date" type="month" value={row.from} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, from: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><input aria-label="End date" type="month" value={row.to} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, to: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /><textarea aria-label="Role summary" placeholder="Responsibilities / achievements" value={row.summary} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, summary: e.target.value } : r))} className="px-3 py-2 bg-[#F5F8FB] border border-[#DCE6EF] rounded-xl text-xs" /></div>)}
         </div>
 
         {/* Submit */}

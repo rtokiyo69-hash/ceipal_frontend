@@ -207,6 +207,7 @@ export const ApiService = {
     await delay(220);
     const applicants = await this.getApplicants();
     const newApplicant: Applicant = {
+      ...applicantData,
       id: `app-${Date.now()}`,
       applicantId: `APP-90${applicants.length + 28}`,
       name: applicantData.name || 'New Candidate',
@@ -219,17 +220,20 @@ export const ApiService = {
       source: applicantData.source || 'Direct Career Portal',
       status: (applicantData.status as PipelineStage) || 'New',
       assignedRecruiter: applicantData.assignedRecruiter || 'Priya Sharma',
+      createdBy: applicantData.createdBy || applicantData.assignedRecruiter || 'Priya Sharma',
+      createdOn: applicantData.createdOn || new Date().toLocaleString(),
+      createdDate: applicantData.createdDate || new Date().toISOString().slice(0, 10),
       assignedJobId: applicantData.assignedJobId,
       assignedJobTitle: applicantData.assignedJobTitle,
       matchScore: applicantData.matchScore || Math.floor(Math.random() * 20 + 80),
       avatar: applicantData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250',
       isFavorite: false,
-      summary: applicantData.summary || 'Profile parsed and imported into NexusTalent ATS repository.',
+      summary: applicantData.summary || 'Profile parsed and imported into Scout ATS repository.',
       documents: applicantData.documents || [
         { name: `${(applicantData.name || 'Candidate').replace(/\s+/g, '_')}_Resume.pdf`, size: '1.2 MB', date: new Date().toISOString().split('T')[0], type: 'Resume' }
       ],
       notes: [
-        { id: `nt-${Date.now()}`, author: 'NexusTalent AI Parser', text: 'Resume extracted with high confidence. Key skills matched to active open requisitions.', date: 'Just now' }
+        { id: `nt-${Date.now()}`, author: 'Scout AI Parser', text: 'Resume extracted with high confidence. Key skills matched to active open requisitions.', date: 'Just now' }
       ]
     };
 

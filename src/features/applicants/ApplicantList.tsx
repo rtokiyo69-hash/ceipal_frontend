@@ -1,353 +1,431 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Users,
-  Search,
-  Filter,
-  Plus,
-  Star,
-  Download,
-  Eye,
-  ChevronRight,
-  MapPin,
-  Briefcase,
-  FileText,
-  CheckCircle,
-  X
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Search, Filter, Plus, Star, Download, Eye, CheckCircle, X, SlidersHorizontal, Upload, FolderPlus, BookmarkPlus, Ticket, Users, LayoutGrid, ListFilter, ArrowRight, FileSpreadsheet, Settings, GripVertical, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Menu, Home, IdCard } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, PipelineStage } from '../../types';
 
+type DialogKind = 'advanced' | 'import' | 'view' | 'folder' | 'ticket' | 'columns' | null;
+type FilterRule = { id: string; field: string; operator: string; value: string };
+type AdvancedTerm = FilterRule & { join: 'AND' | 'OR' };
+type AdvancedCriteria = { keywords: string; jobTitle: string; country: string; state: string; city: string; exclude: string; excludeJobTitle: string; includeWithoutCountry: boolean; recentJobTitle: boolean; locationMode: 'selected' | 'radius'; radius: string; applicantStatus: string; source: string; recruiter: string; workAuthorization: string; minExperience: string; maxExperience: string; applicantId: string; email: string; phone: string; terms: AdvancedTerm[] };
+const emptyAdvancedCriteria: AdvancedCriteria = { keywords: '', jobTitle: '', country: '', state: '', city: '', exclude: '', excludeJobTitle: '', includeWithoutCountry: false, recentJobTitle: false, locationMode: 'selected', radius: '25', applicantStatus: '', source: '', recruiter: '', workAuthorization: '', minExperience: '', maxExperience: '', applicantId: '', email: '', phone: '', terms: [] };
+const filterOperators = ['Equals', 'Not Equals', 'Is Null', 'Is Not Null', 'Contains', 'Not Contains', 'Starts With', 'Ends With'];
+const allApplicantColumns = ['Applicant ID', 'Applicant Name', 'Email Address', 'Mobile Number', 'City', 'Source', 'State', 'Applicant Status', 'Current Title/Designation', 'Ownership', 'Work Authorization', 'Created By', 'Created On', 'Created date', 'Key Skills', 'Experience', 'Match Score', 'Current Company', 'Expected CTC', 'Notice Period', 'Applicant Group', 'Alternate Email', 'Alternate Mobile Number', 'Date of Birth', 'Gender', 'Nationality', 'Marital Status', 'Current Address', 'Permanent Address', 'Postal Code', 'Country', 'Total Experience', 'Relevant Experience', 'Highest Qualification', 'Degree', 'Specialization', 'University/Institute', 'Graduation Year', 'Certifications', 'Languages', 'LinkedIn Profile', 'Portfolio / Website', 'GitHub Profile', 'Previous Company', 'Current CTC', 'Availability', 'Preferred Location', 'Preferred Work Mode', 'Employment Type', 'Visa Status', 'Work Permit Expiry', 'Willing to Relocate', 'Current Employer', 'Department', 'Industry', 'Functional Area', 'Secondary Skills', 'Applicant Type', 'Candidate Source Details', 'Campaign', 'Referral Name', 'Vendor', 'Last Contacted On', 'Last Activity', 'Last Modified By', 'Last Modified On', 'Resume Name', 'Resume Updated On', 'GDPR Consent Date', 'GDPR Consent Status', 'Diversity', 'Disability Status', 'Veteran Status', 'Rating', 'Years in Current Role', 'Preferred Salary'];
+const filterFields = ['Applicant ID', 'Applicant Name', 'Last Name as per Aadhaar', 'Email Address', 'Mobile Number', 'LinkedIn Profile URL', 'Work Authorization', 'City', 'State', 'Country', 'Source', 'Skills', 'Experience', 'Applicant Status', 'Gender', 'Race/Ethnicity', 'Veteran Status', 'Disability', 'Created By', 'Created On', ...allApplicantColumns].filter((field, index, fields) => fields.indexOf(field) === index);
+const defaultApplicantColumns = allApplicantColumns.slice(0, 14);
+const stages: PipelineStage[] = ['New', 'Screening', 'Submitted', 'Interview', 'Selected', 'Offered', 'Hired', 'Rejected'];
+const fieldClass = 'w-full rounded-lg border border-[#DCE6EF] bg-white px-3 py-2 text-xs text-[#202B37] outline-none focus:border-[#2F80E7] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white';
+const buttonClass = 'inline-flex items-center gap-1.5 rounded-lg border border-[#DCE6EF] bg-white px-3 py-2 text-xs font-semibold text-[#344252] shadow-sm hover:bg-[#F5F8FB] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white dark:hover:bg-[#22384B]';
+
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = []; let row: string[] = []; let cell = ''; let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"' && text[i + 1] === '"' && quoted) { cell += '"'; i++; }
+    else if (ch === '"') quoted = !quoted;
+    else if (ch === ',' && !quoted) { row.push(cell.trim()); cell = ''; }
+    else if ((ch === '\n' || ch === '\r') && !quoted) { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); return rows;
+}
+
 export const ApplicantList: React.FC = () => {
-  const { navigate } = useAppStore();
+  const { navigate, currentUser } = useAppStore();
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState<string>('All');
+  const [searchField, setSearchField] = useState('Search Any');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [stageFilter, setStageFilter] = useState('All');
+  const [experienceFilter, setExperienceFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [skillFilter, setSkillFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('All');
+  const [recruiterFilter, setRecruiterFilter] = useState('All');
   const [quickResumePreview, setQuickResumePreview] = useState<Applicant | null>(null);
+  const [dialog, setDialog] = useState<DialogKind>(null);
+  const [sidePanel, setSidePanel] = useState<'edit-filters' | 'quick-filters' | 'edit-columns' | null>(null);
+  const [filterRules, setFilterRules] = useState<FilterRule[]>(() => JSON.parse(localStorage.getItem('ats_applicant_filter_rules') || '[]'));
+  const [draftRules, setDraftRules] = useState<FilterRule[]>([]);
+  const [quickFilters, setQuickFilters] = useState<string[]>([]);
+  const [draftQuickFilters, setDraftQuickFilters] = useState<string[]>([]);
+  const [businessUnitFilter, setBusinessUnitFilter] = useState(() => localStorage.getItem('ats_applicant_business_unit_filter') || 'All Business Units');
+  const [draftBusinessUnit, setDraftBusinessUnit] = useState('All Business Units');
+  const [draftGdprApproved, setDraftGdprApproved] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [savedViews, setSavedViews] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_views') || '["All Applicants","My Applicants","Favorites"]'));
+  const [viewConfigs, setViewConfigs] = useState<Record<string, { stage?: string; location?: string; experience?: string; skill?: string; source?: string; recruiter?: string; columns?: string[]; filters?: FilterRule[]; businessUnit?: string; gdprApproved?: boolean }>>(() => JSON.parse(localStorage.getItem('ats_applicant_view_configs') || '{}'));
+  const [folders, setFolders] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_folders') || '["All Profiles"]'));
+  const [folderConfigs, setFolderConfigs] = useState<Record<string, { columns: string[]; businessUnit: string }>>(() => JSON.parse(localStorage.getItem('ats_applicant_folder_configs') || '{}'));
+  const [activeView, setActiveView] = useState(() => localStorage.getItem('ats_default_applicant_view') || 'All Applicants');
+  const [folderFilter, setFolderFilter] = useState('All Profiles');
+  const [addViewMenuOpen, setAddViewMenuOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [advancedMenuOpen, setAdvancedMenuOpen] = useState(false);
+  const [advancedProvider, setAdvancedProvider] = useState('Internal DB');
+  const [advancedTab, setAdvancedTab] = useState<'options' | 'exclude'>('options');
+  const [advancedDraft, setAdvancedDraft] = useState<AdvancedCriteria>(() => JSON.parse(localStorage.getItem('ats_applicant_advanced_criteria') || JSON.stringify(emptyAdvancedCriteria)));
+  const [advancedCriteria, setAdvancedCriteria] = useState<AdvancedCriteria>(() => JSON.parse(localStorage.getItem('ats_applicant_advanced_criteria') || JSON.stringify(emptyAdvancedCriteria)));
+  const [advancedHistory, setAdvancedHistory] = useState<AdvancedCriteria[]>(() => JSON.parse(localStorage.getItem('ats_applicant_advanced_history') || '[]'));
+  const [savedAdvancedSearches, setSavedAdvancedSearches] = useState<{ name: string; criteria: AdvancedCriteria }[]>(() => JSON.parse(localStorage.getItem('ats_applicant_saved_searches') || '[]'));
+  const [savedSearchName, setSavedSearchName] = useState('');
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [makeViewDefault, setMakeViewDefault] = useState(false);
+  const [viewColumnsDraft, setViewColumnsDraft] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_columns') || JSON.stringify(defaultApplicantColumns)));
+  const [viewRulesDraft, setViewRulesDraft] = useState<FilterRule[]>([]);
+  const [viewBusinessUnit, setViewBusinessUnit] = useState('All Business Units');
+  const [viewGdprApproved, setViewGdprApproved] = useState(false);
+  const [gdprApprovedFilter, setGdprApprovedFilter] = useState(false);
+  const [ticketTitle, setTicketTitle] = useState('');
+  const [ticketType, setTicketType] = useState('Candidate follow-up');
+  const [ticketPriority, setTicketPriority] = useState('Low');
+  const [ticketDescription, setTicketDescription] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [importStep, setImportStep] = useState<'upload' | 'preview'>('upload');
+  const [importBusinessUnit, setImportBusinessUnit] = useState('Ampcus Tech Pvt Ltd.');
+  const [importError, setImportError] = useState('');
+  const [importRows, setImportRows] = useState<Partial<Applicant>[]>([]);
+  const [duplicatePolicy, setDuplicatePolicy] = useState<'Skip' | 'Overwrite'>('Skip');
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    const stored = JSON.parse(localStorage.getItem('ats_applicant_columns') || 'null') as string[] | null;
+    if (!stored) return defaultApplicantColumns;
+    const legacy: Record<string, string[]> = { 'Role & Location': ['Current Title/Designation', 'City'], Stage: ['Applicant Status'], Recruiter: ['Ownership'] };
+    const migrated = stored.flatMap((column) => legacy[column] || [column]).filter((column) => allApplicantColumns.includes(column));
+    return migrated.length ? migrated : defaultApplicantColumns;
+  });
+  const [columnDraft, setColumnDraft] = useState<string[]>([]);
+  const [columnsExpanded, setColumnsExpanded] = useState(false);
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+  const [bulkAction, setBulkAction] = useState('');
+  const [bulkValue, setBulkValue] = useState('');
 
+  useEffect(() => { ApiService.getApplicants().then(setApplicants); }, []);
   useEffect(() => {
-    ApiService.getApplicants().then(setApplicants);
-  }, []);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
+    if (folderFilter !== 'All Profiles') return;
+    const config = viewConfigs[activeView];
+    if (!config) return;
+    setStageFilter(config.stage || 'All'); setLocationFilter(config.location || ''); setExperienceFilter(config.experience || '');
+    setSkillFilter(config.skill || ''); setSourceFilter(config.source || 'All'); setRecruiterFilter(config.recruiter || 'All');
+    setVisibleColumns(config.columns || defaultApplicantColumns); setFilterRules(config.filters || []);
+    setBusinessUnitFilter(config.businessUnit || 'All Business Units'); setGdprApprovedFilter(!!config.gdprApproved);
+  }, [activeView, viewConfigs, folderFilter]);
+  const showToast = (msg: string) => { setToastMessage(msg); window.setTimeout(() => setToastMessage(null), 3000); };
   const handleToggleFavorite = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const isFav = await ApiService.toggleFavorite(id);
-    setApplicants((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, isFavorite: isFav } : a))
-    );
+    e.stopPropagation(); const isFav = await ApiService.toggleFavorite(id);
+    setApplicants((prev) => prev.map((a) => a.id === id ? { ...a, isFavorite: isFav } : a));
     showToast(isFav ? 'Added candidate to Favorites' : 'Removed from Favorites');
   };
-
-  const handleExportCSV = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      ['ID,Name,Email,Designation,Experience,Status,MatchScore,Recruiter']
-        .concat(
-          filteredApplicants.map(
-            (a) =>
-              `"${a.applicantId}","${a.name}","${a.email}","${a.currentDesignation}","${a.experienceYears} Yrs","${a.status}","${a.matchScore}%","${a.assignedRecruiter}"`
-          )
-        )
-        .join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `NexusTalent_Applicants_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast(`Exported ${filteredApplicants.length} candidates to CSV.`);
+  const filteredApplicants = useMemo(() => applicants.filter((a) => {
+    const q = search.trim().toLowerCase();
+    const searchValues: string[] = searchField === 'Search Any' ? [a.name, a.applicantId, a.email, a.phone, a.currentDesignation, a.location, a.assignedRecruiter, a.source, a.status, ...a.skills] : [({ 'Applicant ID': a.applicantId, 'Applicant Name': a.name, 'Email Address': a.email, 'Mobile Number': a.phone, City: a.location.split(',')[0], Source: a.source, State: a.state || a.customFields?.state || '', 'Applicant Status': a.status, 'Current Title/Designation': a.currentDesignation, Ownership: a.assignedRecruiter, 'Work Authorization': a.workAuthorization || a.customFields?.workAuthorization || '' } as Record<string, string>)[searchField] || a.customFields?.[searchField] || ''];
+    const matchesSearch = !q || searchValues.some((v) => v?.toLowerCase().includes(q));
+    const matchesStage = stageFilter === 'All' || a.status === stageFilter;
+    const matchesExperience = !experienceFilter || (experienceFilter === '10+' ? a.experienceYears >= 10 : a.experienceYears >= Number(experienceFilter));
+    const matchesLocation = !locationFilter || a.location.toLowerCase().includes(locationFilter.toLowerCase());
+    const matchesSkill = !skillFilter || a.skills.some((skill) => skill.toLowerCase().includes(skillFilter.toLowerCase()));
+    const matchesSource = sourceFilter === 'All' || a.source === sourceFilter;
+    const matchesRecruiter = recruiterFilter === 'All' || a.assignedRecruiter === recruiterFilter;
+    const matchesView = activeView === 'Favorites' ? !!a.isFavorite : activeView === 'My Applicants' ? a.assignedRecruiter === (currentUser?.name || 'Priya Sharma') : true;
+    const membership = JSON.parse(localStorage.getItem('ats_applicant_folder_memberships') || '{}') as Record<string, string[]>;
+    const matchesFolder = folderFilter === 'All Profiles' || (membership[folderFilter] || []).includes(a.id);
+    const matchesQuick = (!quickFilters.includes('Favorites') || !!a.isFavorite) && (!quickFilters.includes('High Match') || a.matchScore >= 90) && (!quickFilters.includes('Has Resume') || !!a.documents?.some((doc) => /resume|cv/i.test(doc.name))) && (!quickFilters.includes('New Applicants') || a.status === 'New');
+    const hasGdprConsent = a.gdprApproved === true || ['yes', 'true', 'approved'].includes((a.customFields?.gdprApproved || '').toLowerCase());
+    const valueFor = (field: string): string => ({
+      'Applicant ID': a.applicantId, 'Applicant Name': a.name, 'Email Address': a.email, 'Mobile Number': a.phone,
+      City: a.location.split(',')[0], Source: a.source, State: a.state || a.customFields?.state || '',
+      'Applicant Status': a.status, 'Current Title/Designation': a.currentDesignation, Ownership: a.assignedRecruiter,
+      'Work Authorization': a.workAuthorization || a.customFields?.workAuthorization || '', Skills: a.skills.join(', '),
+      'Years of Experience': String(a.experienceYears), Experience: String(a.experienceYears), 'Business Unit': currentUser?.businessUnit || ''
+    }[field] || a.customFields?.[field] || '');
+    const matchesRules = filterRules.every((rule) => {
+      if (!rule.field || !rule.operator) return true;
+      const actual = valueFor(rule.field).toLowerCase();
+      if (rule.operator === 'Is Null') return !actual;
+      if (rule.operator === 'Is Not Null') return !!actual;
+      if (!rule.value.trim()) return true;
+      const expected = rule.value.trim().toLowerCase();
+      if (rule.operator === 'Equals' || rule.operator === 'Is') return actual === expected;
+      if (rule.operator === 'Not Equals' || rule.operator === 'Is not') return actual !== expected;
+      if (rule.operator === 'Starts With' || rule.operator === 'Starts with') return actual.startsWith(expected);
+      if (rule.operator === 'Ends With') return actual.endsWith(expected);
+      if (rule.operator === 'Not Contains' || rule.operator === 'Does not contain') return !actual.includes(expected);
+      if (rule.operator === 'Greater than') return Number(actual) > Number(expected);
+      if (rule.operator === 'Less than') return Number(actual) < Number(expected);
+      return actual.includes(expected);
+    });
+    const advancedText = [a.name, a.applicantId, a.email, a.phone, a.currentDesignation, a.location, a.assignedRecruiter, a.source, a.status, ...a.skills].join(' ').toLowerCase();
+    const advancedKeywords = advancedCriteria.keywords.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const excludedKeywords = advancedCriteria.exclude.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const advancedLocation = a.location.toLowerCase();
+    const applicantCountry = (a.customFields?.country || (a.location.includes(',') ? a.location.split(',').slice(-1)[0] : '')).toLowerCase().trim();
+    const applicantState = (a.state || a.customFields?.state || '').toLowerCase();
+    const hasCountry = !!applicantCountry;
+    const matchesAdvancedLocation = (!advancedCriteria.country || applicantCountry.includes(advancedCriteria.country.toLowerCase()) || (advancedCriteria.includeWithoutCountry && !hasCountry)) && (!advancedCriteria.state || applicantState.includes(advancedCriteria.state.toLowerCase()) || advancedLocation.includes(advancedCriteria.state.toLowerCase())) && (!advancedCriteria.city || advancedLocation.split(',')[0].includes(advancedCriteria.city.toLowerCase()));
+    const termMatches = (term: AdvancedTerm) => {
+      if (!term.field || !term.operator) return true;
+      const actual = valueFor(term.field).toLowerCase(); const expected = term.value.trim().toLowerCase();
+      if (term.operator === 'Is Null') return !actual;
+      if (term.operator === 'Is Not Null') return !!actual;
+      if (!expected) return true;
+      if (term.operator === 'Equals') return actual === expected;
+      if (term.operator === 'Not Equals') return actual !== expected;
+      if (term.operator === 'Not Contains') return !actual.includes(expected);
+      if (term.operator === 'Starts With') return actual.startsWith(expected);
+      if (term.operator === 'Ends With') return actual.endsWith(expected);
+      return actual.includes(expected);
+    };
+    const matchesAdvancedTerms = advancedCriteria.terms.reduce((result, term, index) => index === 0 ? termMatches(term) : term.join === 'OR' ? result || termMatches(term) : result && termMatches(term), true);
+    const matchedTitle = (advancedCriteria.recentJobTitle ? a.workHistory?.[0]?.role || a.currentDesignation : a.currentDesignation).toLowerCase();
+    const matchesAdvanced = advancedKeywords.every((word) => advancedText.includes(word)) && (!advancedCriteria.jobTitle || matchedTitle.includes(advancedCriteria.jobTitle.toLowerCase())) && (!advancedCriteria.excludeJobTitle || !matchedTitle.includes(advancedCriteria.excludeJobTitle.toLowerCase())) && matchesAdvancedLocation && !excludedKeywords.some((word) => advancedText.includes(word)) && (!advancedCriteria.applicantStatus || a.status === advancedCriteria.applicantStatus) && (!advancedCriteria.source || a.source === advancedCriteria.source) && (!advancedCriteria.recruiter || a.assignedRecruiter === advancedCriteria.recruiter) && (!advancedCriteria.workAuthorization || (a.workAuthorization || a.customFields?.workAuthorization || '').toLowerCase().includes(advancedCriteria.workAuthorization.toLowerCase())) && (!advancedCriteria.minExperience || a.experienceYears >= Number(advancedCriteria.minExperience)) && (!advancedCriteria.maxExperience || a.experienceYears <= Number(advancedCriteria.maxExperience)) && (!advancedCriteria.applicantId || a.applicantId.toLowerCase().includes(advancedCriteria.applicantId.toLowerCase())) && (!advancedCriteria.email || a.email.toLowerCase().includes(advancedCriteria.email.toLowerCase())) && (!advancedCriteria.phone || a.phone.toLowerCase().includes(advancedCriteria.phone.toLowerCase())) && matchesAdvancedTerms;
+    const matchesUnit = businessUnitFilter === 'All Business Units' || businessUnitFilter === (currentUser?.businessUnit || '') || businessUnitFilter === 'Ampcus Tech Pvt Ltd.';
+    return matchesSearch && matchesStage && matchesExperience && matchesLocation && matchesSkill && matchesSource && matchesRecruiter && matchesView && matchesFolder && matchesQuick && matchesRules && matchesAdvanced && matchesUnit && (!gdprApprovedFilter || hasGdprConsent);
+  }), [applicants, search, searchField, stageFilter, experienceFilter, locationFilter, skillFilter, sourceFilter, recruiterFilter, activeView, folderFilter, currentUser?.name, currentUser?.businessUnit, quickFilters, filterRules, businessUnitFilter, gdprApprovedFilter, advancedCriteria]);
+  useEffect(() => { setCurrentPage(1); }, [search, searchField, stageFilter, experienceFilter, locationFilter, skillFilter, sourceFilter, recruiterFilter, activeView, folderFilter, quickFilters, filterRules, businessUnitFilter, gdprApprovedFilter]);
+  const pageCount = Math.max(1, Math.ceil(filteredApplicants.length / pageSize));
+  const pageStart = filteredApplicants.length ? (currentPage - 1) * pageSize + 1 : 0;
+  const pageEnd = Math.min(currentPage * pageSize, filteredApplicants.length);
+  const visibleApplicants = filteredApplicants.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const advancedCriteriaCount = [advancedCriteria.keywords, advancedCriteria.jobTitle, advancedCriteria.country, advancedCriteria.state, advancedCriteria.city, advancedCriteria.exclude, advancedCriteria.excludeJobTitle, advancedCriteria.applicantStatus, advancedCriteria.source, advancedCriteria.recruiter, advancedCriteria.workAuthorization, advancedCriteria.minExperience, advancedCriteria.maxExperience, advancedCriteria.applicantId, advancedCriteria.email, advancedCriteria.phone].filter(Boolean).length + advancedCriteria.terms.filter((term) => term.field && term.operator && (['Is Null', 'Is Not Null'].includes(term.operator) || term.value.trim())).length + (advancedCriteria.includeWithoutCountry ? 1 : 0);
+  const hasAdvancedCriteria = advancedCriteriaCount > 0;
+  const toggleSelected = (id: string) => setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  const openApplicantColumnFilter = (column: string) => {
+    const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column;
+    const existing = filterRules.filter((rule) => rule.field === field);
+    setDraftRules(existing.length ? existing.map((rule) => ({ ...rule })) : [...filterRules.map((rule) => ({ ...rule })), { id: `column-filter-${Date.now()}`, field, operator: 'Contains', value: '' }]);
+    setDraftBusinessUnit(businessUnitFilter); setDraftGdprApproved(gdprApprovedFilter); setSidePanel('edit-filters');
+  };
+  const saveViewOrFolder = () => {
+    const value = nameInput.trim(); if (!value) return;
+    if (dialog === 'view') { const next = [...new Set([...savedViews, value])]; setSavedViews(next); localStorage.setItem('ats_applicant_views', JSON.stringify(next)); const rules = viewRulesDraft.filter((rule) => rule.field && rule.operator && (['Is Null', 'Is Not Null'].includes(rule.operator) || rule.value.trim())); const configs = { ...viewConfigs, [value]: { stage: stageFilter, location: locationFilter, experience: experienceFilter, skill: skillFilter, source: sourceFilter, recruiter: recruiterFilter, columns: viewColumnsDraft, filters: rules, businessUnit: viewBusinessUnit, gdprApproved: viewGdprApproved } }; setViewConfigs(configs); localStorage.setItem('ats_applicant_view_configs', JSON.stringify(configs)); setActiveView(value); setFolderFilter('All Profiles'); setFilterRules(rules); setBusinessUnitFilter(viewBusinessUnit); setGdprApprovedFilter(viewGdprApproved); setVisibleColumns(viewColumnsDraft); localStorage.setItem('ats_applicant_filter_rules', JSON.stringify(rules)); localStorage.setItem('ats_applicant_business_unit_filter', viewBusinessUnit); localStorage.setItem('ats_applicant_columns', JSON.stringify(viewColumnsDraft)); if (makeViewDefault) localStorage.setItem('ats_default_applicant_view', value); setMakeViewDefault(false); }
+    if (dialog === 'folder') { const next = [...new Set([...folders, value])]; const configs = { ...folderConfigs, [value]: { columns: viewColumnsDraft, businessUnit: viewBusinessUnit } }; setFolders(next); setFolderConfigs(configs); localStorage.setItem('ats_applicant_folders', JSON.stringify(next)); localStorage.setItem('ats_applicant_folder_configs', JSON.stringify(configs)); setFolderFilter(value); setActiveView('All Applicants'); setVisibleColumns(viewColumnsDraft); setBusinessUnitFilter(viewBusinessUnit); localStorage.setItem('ats_applicant_columns', JSON.stringify(viewColumnsDraft)); localStorage.setItem('ats_applicant_business_unit_filter', viewBusinessUnit); }
+    setNameInput(''); setDialog(null); showToast(dialog === 'view' ? 'Applicant view saved.' : 'Folder created.');
+  };
+  const modalTitle = dialog === 'advanced' ? 'Advanced Applicant Search' : dialog === 'import' ? 'Import Applicants' : dialog === 'view' ? 'Create View' : dialog === 'folder' ? 'Create Folder' : dialog === 'columns' ? 'Configure Applicant Columns' : 'Create Ticket';
+  const filterOptions = (field: string) => {
+    if (field === 'Applicant Status') return stages;
+    if (field === 'Source') return ['LinkedIn', 'Direct Career Portal', 'Referral', 'Vendor Partner', 'GitHub'];
+    if (field === 'Ownership') return Array.from(new Set(applicants.map((a) => a.assignedRecruiter).filter(Boolean)));
+    if (field === 'City') return Array.from(new Set(applicants.map((a) => a.location.split(',')[0].trim()).filter(Boolean)));
+    if (field === 'State') return Array.from(new Set(applicants.map((a) => a.state || a.customFields?.state || '').filter(Boolean)));
+    if (field === 'Work Authorization') return Array.from(new Set(applicants.map((a) => a.workAuthorization || a.customFields?.workAuthorization || '').filter(Boolean)));
+    if (field === 'Business Unit') return currentUser?.businessUnit ? [currentUser.businessUnit] : [];
+    return [];
+  };
+  const renderApplicantColumn = (column: string, applicant: Applicant): React.ReactNode => {
+    switch (column) {
+      case 'Applicant ID': return <span className="font-mono text-[10px] text-[#1769AA]">{applicant.applicantId}</span>;
+      case 'Applicant Name': return <div className="flex items-center gap-1.5"><button onClick={() => navigate('applicant-detail', applicant.id)} className="font-semibold text-[#1769AA] hover:underline">{applicant.name}</button><button aria-label={`Open ${applicant.name} dossier`} title="Open applicant dossier" onClick={() => navigate('applicant-detail', applicant.id)} className="text-[#6682B2] hover:text-[#1769AA]"><IdCard className="h-3.5 w-3.5" /></button></div>;
+      case 'Email Address': return <a href={`mailto:${applicant.email}`} className="text-[#1769AA] hover:underline">{applicant.email || '—'}</a>;
+      case 'Mobile Number': return <a href={`tel:${applicant.phone}`} className="text-[#1769AA] hover:underline">{applicant.phone || '—'}</a>;
+      case 'City': return applicant.location || '—';
+      case 'Source': return applicant.source || '—';
+      case 'State': return applicant.state || applicant.customFields?.state || '—';
+      case 'Applicant Status': return <span className="rounded-full border border-[#DCE6EF] bg-[#F7F9FC] px-2.5 py-1 text-[10px] text-[#526173] dark:border-[#354A5C] dark:bg-[#22384B] dark:text-[#D8E9F7]">{applicant.status}</span>;
+      case 'Current Title/Designation': return applicant.currentDesignation || '—';
+      case 'Ownership': return applicant.assignedRecruiter || '—';
+      case 'Work Authorization': return applicant.workAuthorization || applicant.customFields?.workAuthorization || '—';
+      case 'Created By': return applicant.createdBy || applicant.assignedRecruiter || '—';
+      case 'Created On': return applicant.createdOn || '—';
+      case 'Created date': return applicant.createdDate || '—';
+      case 'Key Skills': return <div className="flex max-w-56 flex-wrap gap-1">{applicant.skills.slice(0, 3).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-1.5 py-0.5 font-mono text-[9px] text-[#1769AA]">{skill}</span>)}</div>;
+      case 'Experience': return <span className="font-mono font-semibold">{applicant.experienceYears} yrs</span>;
+      case 'Match Score': return <span className="rounded border border-[#8AC9A7]/50 bg-[#8AC9A7]/15 px-2 py-1 font-mono font-bold text-[#276749]">{applicant.matchScore}%</span>;
+      case 'Current Company': return applicant.currentCompany || '—';
+      case 'Expected CTC': return applicant.expectedCTC || applicant.expectedSalary || '—';
+      case 'Notice Period': return applicant.noticePeriod || '—';
+      case 'Applicant Group': return applicant.applicantGroup || '—';
+      default: return applicant.customFields?.[column] || '—';
+    }
   };
 
-  const filteredApplicants = applicants.filter((a) => {
-    const matchesSearch =
-      a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a.currentDesignation.toLowerCase().includes(search.toLowerCase()) ||
-      a.skills.some((s) => s.toLowerCase().includes(search.toLowerCase())) ||
-      a.location.toLowerCase().includes(search.toLowerCase());
+  const updateAdvancedDraft = (patch: Partial<AdvancedCriteria>) => setAdvancedDraft((criteria) => ({ ...criteria, ...patch }));
+  const runAdvancedSearch = (criteria = advancedDraft) => {
+    setAdvancedCriteria(criteria); setAdvancedDraft(criteria); setSearch(''); localStorage.setItem('ats_applicant_advanced_criteria', JSON.stringify(criteria));
+    const history = [criteria, ...advancedHistory.filter((item) => JSON.stringify(item) !== JSON.stringify(criteria))].slice(0, 8);
+    setAdvancedHistory(history); localStorage.setItem('ats_applicant_advanced_history', JSON.stringify(history)); setCurrentPage(1); setDialog(null);
+    showToast('Advanced search applied to the applicant list.');
+  };
+  const resetAdvancedSearch = () => { const empty = { ...emptyAdvancedCriteria, terms: [] }; setAdvancedDraft(empty); setAdvancedCriteria(empty); localStorage.setItem('ats_applicant_advanced_criteria', JSON.stringify(empty)); };
+  const saveAdvancedSearch = () => {
+    const name = savedSearchName.trim(); if (!name) return;
+    const saved = [{ name, criteria: advancedDraft }, ...savedAdvancedSearches.filter((item) => item.name !== name)].slice(0, 12);
+    setSavedAdvancedSearches(saved); localStorage.setItem('ats_applicant_saved_searches', JSON.stringify(saved)); setSavedSearchName(''); showToast('Search saved in this browser.');
+  };
+  const handleApplicantFile = (file?: File) => {
+    setFileName(file?.name || ''); setImportRows([]); setImportError('');
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) { setImportError('This frontend import preview currently reads CSV files. Please choose a CSV file to continue.'); return; }
+    const reader = new FileReader();
+    reader.onerror = () => setImportError('The selected file could not be read.');
+    reader.onload = () => {
+      const table = parseCSV(String(reader.result || ''));
+      const headers = (table.shift() || []).map((header) => header.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      const col = (...names: string[]) => headers.findIndex((header) => names.includes(header));
+      const at = (cells: string[], index: number) => index >= 0 ? cells[index] || '' : '';
+      const mapped = table.map((cells) => {
+        const name = at(cells, col('name', 'fullname', 'applicantname', 'candidatename'));
+        const skillText = at(cells, col('skills', 'keyskills', 'technicalskills'));
+        return { name, email: at(cells, col('email', 'emailaddress')), phone: at(cells, col('phone', 'mobile', 'mobilenumber', 'phonenumber')), currentDesignation: at(cells, col('designation', 'currentdesignation', 'title', 'currentrole')), location: at(cells, col('location', 'city')), experienceYears: Number(at(cells, col('experience', 'experienceyears', 'yearsofexperience'))) || 0, skills: skillText.split(/[;|]/).map((skill) => skill.trim()).filter(Boolean), source: 'Direct Career Portal' as const, status: 'New' as const, matchScore: 80, customFields: { businessUnit: importBusinessUnit } };
+      }).filter((applicant) => applicant.name);
+      if (!mapped.length) { setImportError('No applicant rows were found. Check that the CSV has a Name or Applicant Name column.'); return; }
+      setImportRows(mapped);
+    };
+    reader.readAsText(file);
+  };
+  const completeApplicantImport = async () => {
+    let rows = await ApiService.getApplicants(); let added = 0; let skipped = 0;
+    for (const row of importRows) {
+      const match = row.email ? rows.find((item) => item.email.toLowerCase() === row.email?.toLowerCase()) : undefined;
+      if (match && duplicatePolicy === 'Skip') { skipped++; continue; }
+      if (match && duplicatePolicy === 'Overwrite') {
+        const updated = await ApiService.updateApplicant(match.id, { ...row, customFields: { ...row.customFields, businessUnit: importBusinessUnit } });
+        rows = rows.map((item) => item.id === match.id ? updated : item); added++; continue;
+      }
+      const created = await ApiService.createApplicant({ ...row, customFields: { ...row.customFields, businessUnit: importBusinessUnit } }); rows = [created, ...rows]; added++;
+    }
+    setApplicants(rows); setImportRows([]); setFileName(''); setImportStep('upload'); setDialog(null);
+    showToast(`Imported ${added} applicants${skipped ? ` · skipped ${skipped} duplicates` : ''}.`);
+  };
 
-    const matchesStage = stageFilter === 'All' || a.status === stageFilter;
+  return <div className="space-y-3">
+    {toastMessage && <div className="fixed right-6 top-20 z-[70] flex items-center gap-2 rounded-xl border border-[#1769AA] bg-[#0B4F89] px-4 py-2.5 text-xs text-white shadow-xl"><CheckCircle className="h-4 w-4 text-[#8AC9A7]" />{toastMessage}</div>}
+    <div className="flex flex-nowrap items-center gap-3 border-b border-[#DCE6EF] pb-2 dark:border-[#354A5C]">
+      <select aria-label="Applicant views and folders" value={folderFilter !== 'All Profiles' ? `folder:${folderFilter}` : `view:${activeView}`} onChange={(e) => { const value = e.target.value; if (value.startsWith('folder:')) { const folder = value.slice(7); const config = folderConfigs[folder]; setFolderFilter(folder); setActiveView('All Applicants'); setStageFilter('All'); setLocationFilter(''); setExperienceFilter(''); setSkillFilter(''); setSourceFilter('All'); setRecruiterFilter('All'); setFilterRules([]); setQuickFilters([]); setGdprApprovedFilter(false); if (config) { setVisibleColumns(config.columns); setBusinessUnitFilter(config.businessUnit); } else { setBusinessUnitFilter('All Business Units'); } } else { const view = value.slice(5); setFolderFilter('All Profiles'); setActiveView(view); const config = viewConfigs[view]; if (config) { setStageFilter(config.stage || 'All'); setLocationFilter(config.location || ''); setExperienceFilter(config.experience || ''); setSkillFilter(config.skill || ''); setSourceFilter(config.source || 'All'); setRecruiterFilter(config.recruiter || 'All'); setVisibleColumns(config.columns || defaultApplicantColumns); setFilterRules(config.filters || []); setBusinessUnitFilter(config.businessUnit || 'All Business Units'); setGdprApprovedFilter(!!config.gdprApproved); } else { setStageFilter('All'); setLocationFilter(''); setExperienceFilter(''); setSkillFilter(''); setSourceFilter('All'); setRecruiterFilter('All'); setFilterRules([]); setBusinessUnitFilter('All Business Units'); setGdprApprovedFilter(false); } } }} className="w-28 rounded-md border border-[#DCE6EF] bg-white px-3 py-1.5 text-xs text-[#344252] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white">
+        <optgroup label="Views">{savedViews.map((view) => <option key={`view-${view}`} value={`view:${view}`}>{view === 'All Applicants' ? 'All Profiles' : view}</option>)}</optgroup>
+        {folders.filter((folder) => folder !== 'All Profiles').length > 0 && <optgroup label="Applicant Folders">{folders.filter((folder) => folder !== 'All Profiles').map((folder) => <option key={`folder-${folder}`} value={`folder:${folder}`}>{folder}</option>)}</optgroup>}
+      </select>
+      <div className="relative"><button onClick={() => setAddViewMenuOpen((open) => !open)} className="flex items-center gap-1 rounded-md px-2 py-2 text-xs font-semibold text-[#1769AA] hover:bg-[#EAF4FC] dark:text-[#79B5E5] dark:hover:bg-[#22384B]"><Plus className="h-3.5 w-3.5" /> Add View</button>{addViewMenuOpen && <div className="absolute left-0 top-full z-40 mt-1 flex min-w-64 rounded-md border border-[#DCE6EF] bg-white p-1 shadow-xl dark:border-[#354A5C] dark:bg-[#1B2936]"><button onClick={() => { setAddViewMenuOpen(false); setNameInput(''); setViewColumnsDraft([...visibleColumns]); setViewRulesDraft(filterRules.map((rule) => ({ ...rule }))); setViewBusinessUnit(businessUnitFilter === 'All Business Units' ? (currentUser?.businessUnit || 'All Business Units') : businessUnitFilter); setViewGdprApproved(gdprApprovedFilter); setMakeViewDefault(false); setDialog('view'); }} className="flex-1 px-3 py-2 text-xs text-[#1769AA] hover:bg-[#F2F6FA] dark:hover:bg-[#22384B]">Create View</button><span className="my-1 w-px bg-[#DCE6EF] dark:bg-[#354A5C]" /><button onClick={() => { setAddViewMenuOpen(false); setNameInput(''); setViewColumnsDraft([...visibleColumns]); setViewBusinessUnit(businessUnitFilter === 'All Business Units' ? (currentUser?.businessUnit || 'All Business Units') : businessUnitFilter); setDialog('folder'); }} className="flex-1 px-3 py-2 text-xs text-[#1769AA] hover:bg-[#F2F6FA] dark:hover:bg-[#22384B]">Create Folder</button></div>}</div>
+      <div className="ml-auto flex shrink-0 items-center gap-2"><div className="relative"><button onClick={() => setSettingsMenuOpen((open) => !open)} title="Applicant settings" aria-label="Applicant settings" className="inline-flex items-center gap-1 rounded-md border border-[#DCE6EF] bg-white px-2.5 py-2 text-[#344252] shadow-sm hover:bg-[#F5F8FB] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white"><Settings className="h-4 w-4" /><ChevronDown className="h-3 w-3" /></button>{settingsMenuOpen && <div className="absolute right-0 top-full z-40 mt-1 min-w-40 rounded-md border border-[#DCE6EF] bg-white py-1 shadow-xl dark:border-[#354A5C] dark:bg-[#1B2936]"><button onClick={() => { setAdvancedDraft({ ...advancedCriteria, terms: advancedCriteria.terms.map((term) => ({ ...term })) }); setAdvancedTab('options'); setSettingsMenuOpen(false); setDialog('advanced'); }} className="block w-full px-3 py-2 text-left text-xs text-[#344252] hover:bg-[#F5F8FB] dark:text-white dark:hover:bg-[#22384B]">Advanced Search</button><button onClick={() => { setSettingsMenuOpen(false); setFileName(''); setImportRows([]); setImportError(''); setImportStep('upload'); setDialog('import'); }} className="block w-full px-3 py-2 text-left text-xs text-[#344252] hover:bg-[#F5F8FB] dark:text-white dark:hover:bg-[#22384B]">Import</button></div>}</div><button onClick={() => navigate('applicant-new')} className="inline-flex items-center gap-1.5 rounded-md bg-[#2F80E7] px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#216BC4]"><Plus className="h-4 w-4" /> New</button></div>
+    </div>
 
-    return matchesSearch && matchesStage;
-  });
-
-  return (
-    <div className="space-y-6">
-      {/* Toast */}
-      {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#0B4F89] text-white border border-[#1769AA] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
-          <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
-          <span>{toastMessage}</span>
+    <div className="w-full">
+      <div className="flex flex-row items-center gap-3">
+        <div className="flex h-8 w-[318px] max-w-full shrink-0 items-center">
+          <select aria-label="Search field" value={searchField} onChange={(e) => setSearchField(e.target.value)} className="w-28 shrink-0 rounded-l-md border border-r-0 border-[#DCE6EF] bg-white px-2.5 py-1.5 text-xs text-[#344252] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"><option>Search Any</option>{['Applicant ID', 'Applicant Name', 'Email Address', 'Mobile Number', 'City', 'Source', 'State', 'Applicant Status', 'Current Title/Designation', 'Ownership', 'Work Authorization'].map((field) => <option key={field}>{field}</option>)}</select>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && setSearch(search.trim())} placeholder="" aria-label="Search applicants" className="min-w-0 flex-1 rounded-none border border-[#DCE6EF] bg-white px-3 py-1.5 text-xs text-[#344252] outline-none focus:border-[#2F80E7] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white" />
+          <button aria-label="Search applicants" onClick={() => setSearch(search.trim())} className="rounded-r-md border border-[#DCE6EF] bg-white px-2 py-1.5 text-[#344252] hover:bg-[#F5F8FB] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white"><Search className="h-4 w-4" /></button>
         </div>
-      )}
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white">
-            Talent Pool &amp; Candidates
-          </h1>
-          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
-            Universal candidate roster with match scoring, resume dossiers, and pipeline assignment
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleExportCSV}
-            className="px-3 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
-          >
-            <Download className="w-3.5 h-3.5 text-[#7A8794]" />
-            <span>Export CSV</span>
-          </button>
-
-          {/* Primary action */}
-          <button
-            onClick={() => navigate('applicant-new')}
-            className="px-4 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2F80E7]/30 transition-colors flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Candidate</span>
-          </button>
-        </div>
+        <div className="ml-auto flex items-center justify-end gap-2"><button onClick={() => { setDraftRules(filterRules.length ? filterRules.map((rule) => ({ ...rule })) : [{ id: `filter-${Date.now()}`, field: '', operator: '', value: '' }]); setDraftBusinessUnit(businessUnitFilter); setDraftGdprApproved(gdprApprovedFilter); setSidePanel('edit-filters'); }} title="Edit filters" aria-label="Edit filters" className="rounded-md border border-[#DCE6EF] bg-white p-1.5 text-[#2F80E7] hover:bg-[#EAF4FC] dark:border-[#354A5C] dark:bg-[#1B2936]"><SlidersHorizontal className="h-4 w-4" /></button><button onClick={() => { setColumnDraft([...visibleColumns]); setColumnsExpanded(false); setSidePanel('edit-columns'); }} title="Edit columns" aria-label="Edit columns" className="rounded-md border border-[#DCE6EF] bg-white p-1.5 text-[#2F80E7] hover:bg-[#EAF4FC] dark:border-[#354A5C] dark:bg-[#1B2936]"><Filter className="h-4 w-4" /></button></div>
       </div>
+    </div>
 
-      {/* Search & Filter Toolbar: White #FFFFFF, Light Grey #DCE6EF */}
-      <div className="p-4 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A8794]" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search candidate name, skills (K8s, Rust, React), city..."
-            className="w-full pl-10 pr-4 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
-          />
+    {selected.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#B7D6F5] bg-[#EAF4FC] px-3 py-2 text-xs dark:border-[#315A7A] dark:bg-[#173248]"><span className="font-semibold text-[#1769AA]">{selected.length} applicants selected</span><div className="flex flex-wrap gap-2"><select aria-label="Bulk action" value={bulkAction} onChange={(e) => { setBulkAction(e.target.value); setBulkValue(''); }} className="rounded-lg border border-[#DCE6EF] bg-white px-2.5 py-2 text-xs dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white"><option value="">Choose action…</option><option>Add to Folder</option><option>Assign to Job</option><option>Change Stage</option><option>Send Email</option><option>Add to Group</option><option>Download Resumes</option><option>Remove from list</option></select>{bulkAction && <><input value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} placeholder={bulkAction === 'Change Stage' ? 'Select stage' : 'Enter value / choose destination'} list="bulk-action-options" className="rounded-lg border border-[#DCE6EF] bg-white px-2.5 py-2 text-xs dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white" />{bulkAction === 'Change Stage' && <datalist id="bulk-action-options">{stages.map((s) => <option key={s} value={s} />)}</datalist>}<button onClick={async () => { if (!bulkValue && bulkAction !== 'Download Resumes' && bulkAction !== 'Remove from list') return; if (bulkAction === 'Change Stage') { await Promise.all(selected.map((id) => ApiService.updateApplicantStage(id, bulkValue as PipelineStage))); setApplicants((rows) => rows.map((a) => selected.includes(a.id) ? { ...a, status: bulkValue as PipelineStage } : a)); } if (bulkAction === 'Add to Folder') { const map = JSON.parse(localStorage.getItem('ats_applicant_folder_memberships') || '{}') as Record<string, string[]>; map[bulkValue] = [...new Set([...(map[bulkValue] || []), ...selected])]; localStorage.setItem('ats_applicant_folder_memberships', JSON.stringify(map)); } if (bulkAction === 'Assign to Job') { const next = applicants.map((a) => selected.includes(a.id) ? { ...a, assignedJobTitle: bulkValue } : a); await Promise.all(next.filter((a) => selected.includes(a.id)).map((a) => ApiService.updateApplicant(a.id, { assignedJobTitle: bulkValue }))); setApplicants(next); } if (bulkAction === 'Add to Group') { const next = applicants.map((a) => selected.includes(a.id) ? { ...a, applicantGroup: bulkValue } : a); await Promise.all(next.filter((a) => selected.includes(a.id)).map((a) => ApiService.updateApplicant(a.id, { applicantGroup: bulkValue }))); setApplicants(next); } if (bulkAction === 'Remove from list') { setApplicants((rows) => rows.filter((a) => !selected.includes(a.id))); } if (bulkAction === 'Download Resumes') { const chosen = applicants.filter((a) => selected.includes(a.id)); const content = chosen.map((a) => `${a.name}\n${a.currentDesignation}\n${a.email}\n${a.skills.join(', ')}`).join('\n\n---\n\n'); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' })); link.download = 'applicant-resume-summary.txt'; link.click(); URL.revokeObjectURL(link.href); } if (bulkAction === 'Send Email') { const mails = applicants.filter((a) => selected.includes(a.id)).map((a) => a.email).filter(Boolean).join(';'); window.location.href = `mailto:?bcc=${encodeURIComponent(mails)}&subject=${encodeURIComponent(bulkValue)}`; } setSelected([]); showToast(`${bulkAction} completed for selected applicants.`); setBulkAction(''); }} className="rounded-lg bg-[#2F80E7] px-3 py-2 font-semibold text-white">Apply</button></>}<button onClick={() => { setSelected([]); setBulkAction(''); }} className="rounded-lg px-2 py-1 text-[#697789] hover:bg-white"><X className="h-4 w-4" /></button></div></div>}
+
+    <div className="overflow-hidden rounded-xl border border-[#DCE6EF] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936]">
+      <div className="overflow-x-auto"><table className="w-full min-w-[1100px] border-collapse text-left text-xs">
+        <thead><tr className="border-b border-[#DCE6EF] bg-[#E8F1F4] text-[10px] uppercase tracking-wide text-[#718096] dark:border-[#354A5C] dark:bg-[#162431]">
+          <th className="w-10 px-3 py-3 text-center"><input type="checkbox" aria-label="Select visible applicants" checked={visibleApplicants.length > 0 && visibleApplicants.every((a) => selected.includes(a.id))} onChange={(e) => setSelected(e.target.checked ? [...new Set([...selected, ...visibleApplicants.map((a) => a.id)])] : selected.filter((id) => !visibleApplicants.some((a) => a.id === id)))} /></th>
+          <th className="w-10 px-2 py-3 text-center"><Star className="mx-auto h-3.5 w-3.5" /></th>
+          <th className="w-10 px-2 py-3" />
+          {visibleColumns.map((column) => { const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column; const active = filterRules.some((rule) => rule.field === field && rule.value.trim()); return <th key={column} className="whitespace-nowrap px-3 py-3"><div className="flex items-center gap-1.5">{column}<button aria-label={`Filter by ${column}`} title={`Filter by ${column}`} onClick={() => openApplicantColumnFilter(column)} className={`rounded p-0.5 ${active ? 'text-[#2F80E7]' : 'text-[#6F8DA7] hover:text-[#2F80E7]'}`}><Filter className="h-3.5 w-3.5 fill-current/10" /></button></div></th>; })}
+          <th className="px-3 py-3 text-right">Actions</th>
+        </tr></thead>
+        <tbody className="divide-y divide-[#E7EDF3] dark:divide-[#354A5C]">
+          {filteredApplicants.length === 0 ? <tr><td colSpan={4 + visibleColumns.length} className="p-10 text-center text-xs text-[#7B8794]">No applicants match these filters. Try a different search or clear filters.</td></tr> : visibleApplicants.map((a) => <tr key={a.id} className="transition-colors odd:bg-white even:bg-[#F5F7F8] hover:bg-[#EDF5FA] dark:odd:bg-[#1B2936] dark:even:bg-[#1D2D3B] dark:hover:bg-[#22384B]">
+            <td className="px-3 py-3 text-center"><input type="checkbox" aria-label={`Select ${a.name}`} checked={selected.includes(a.id)} onChange={() => toggleSelected(a.id)} /></td>
+            <td className="px-2 py-3 text-center"><button aria-label={`${a.isFavorite ? 'Remove' : 'Add'} ${a.name} ${a.isFavorite ? 'from' : 'to'} favorites`} onClick={(e) => handleToggleFavorite(a.id, e)} className={a.isFavorite ? 'text-[#2F80E7]' : 'text-[#94A0AE] hover:text-[#2F80E7]'}><Star className={`h-4 w-4 ${a.isFavorite ? 'fill-current' : ''}`} /></button></td>
+            <td className="px-2 py-3 text-center"><button aria-label={`Show extra details for ${a.name}`} onClick={() => setQuickResumePreview(a)} className="rounded bg-[#3986F7] px-1 py-0.5 text-[9px] font-bold text-white">+{Math.max(1, a.documents?.length || 1)}</button></td>
+            {visibleColumns.map((column) => <td key={column} className="whitespace-nowrap px-3 py-3 text-[#344252] dark:text-[#D8E9F7]">{renderApplicantColumn(column, a)}</td>)}
+            <td className="px-3 py-3"><div className="flex items-center justify-end gap-1"><button onClick={() => setQuickResumePreview(a)} title="Quick resume preview" className="rounded-md p-1.5 text-[#7B8794] hover:bg-[#EAF4FC] hover:text-[#1769AA]"><Eye className="h-4 w-4" /></button><button onClick={() => navigate('applicant-detail', a.id)} className="rounded-md px-2 py-1.5 font-semibold text-[#1769AA] hover:bg-[#EAF4FC] dark:hover:bg-[#22384B]">Open dossier</button></div></td>
+          </tr>)}
+        </tbody>
+      </table></div>
+      <div className="flex flex-wrap items-center justify-center gap-2 border-t border-[#DCE6EF] px-4 py-2.5 text-[11px] text-[#344252] dark:border-[#354A5C] dark:text-[#D8E9F7]"><span className="mr-2 font-semibold">{pageStart} - {pageEnd} of {filteredApplicants.length}</span><button aria-label="First page" title="First page" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className="rounded p-1 text-[#718096] hover:bg-[#EAF4FC] disabled:opacity-40"><ChevronsLeft className="h-4 w-4" /></button><button aria-label="Previous page" title="Previous page" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded p-1 text-[#718096] hover:bg-[#EAF4FC] disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><span className="rounded bg-[#2F80E7] px-2.5 py-1 font-semibold text-white">{currentPage}</span><button aria-label="Next page" title="Next page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} className="rounded p-1 text-[#718096] hover:bg-[#EAF4FC] disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button><button aria-label="Last page" title="Last page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(pageCount)} className="rounded p-1 text-[#718096] hover:bg-[#EAF4FC] disabled:opacity-40"><ChevronsRight className="h-4 w-4" /></button><label className="ml-3 flex items-center gap-2 text-[10px] text-[#718096]">Per Page<select aria-label="Rows per page" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-[#DCE6EF] bg-white px-1.5 py-1 text-[#344252] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label></div>
+    </div>
+
+    {sidePanel && <div className="fixed inset-0 z-[65] bg-black/40" onClick={() => setSidePanel(null)}><aside onClick={(e) => e.stopPropagation()} className="absolute right-0 top-0 flex h-full w-full max-w-[410px] flex-col border-l border-[#DCE6EF] bg-white shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]">
+      <div className="flex items-center justify-between border-b border-[#E7EDF3] px-5 py-4 dark:border-[#354A5C]"><div><h2 className="font-semibold text-[#202B37] dark:text-white">{sidePanel === 'edit-filters' ? 'Edit Filters' : sidePanel === 'edit-columns' ? 'Edit Column' : 'Quick Filters'}</h2>{sidePanel !== 'edit-columns' && <p className="mt-1 text-[11px] text-[#7B8794]">Filter fields update the applicant list and result count.</p>}</div><button onClick={() => setSidePanel(null)} aria-label="Close panel" className="rounded-md p-1.5 text-[#7B8794] hover:bg-[#F5F8FB]"><X className="h-5 w-5" /></button></div>
+      {sidePanel === 'edit-columns' ? <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <details open={columnsExpanded} onToggle={(event) => setColumnsExpanded(event.currentTarget.open)} className="group rounded-md border border-[#DCE6EF] dark:border-[#354A5C]"><summary className="cursor-pointer list-none px-3 py-2 text-xs text-[#344252] dark:text-[#D8E9F7]">{columnDraft.length} of {allApplicantColumns.length} selected<ChevronDown className="float-right h-4 w-4 text-[#7B8794] transition-transform group-open:rotate-180" /></summary><div className="max-h-56 overflow-y-auto border-t border-[#E7EDF3] p-2 dark:border-[#354A5C]">{allApplicantColumns.map((column) => <label key={column} className="flex items-center gap-2 rounded px-2 py-1.5 text-xs text-[#344252] hover:bg-[#F5F8FB] dark:text-[#D8E9F7] dark:hover:bg-[#22384B]"><input type="checkbox" checked={columnDraft.includes(column)} onChange={(e) => setColumnDraft((cols) => e.target.checked ? [...cols, column] : cols.filter((item) => item !== column))} />{column}</label>)}</div></details>
+        <div><div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Selected Columns</div><div className="space-y-1.5">{columnDraft.map((column, index) => <div key={column} draggable onDragStart={() => setDraggedColumn(column)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (!draggedColumn || draggedColumn === column) return; setColumnDraft((cols) => { const next = [...cols]; const from = next.indexOf(draggedColumn); const to = next.indexOf(column); if (from < 0 || to < 0) return cols; next.splice(to, 0, ...next.splice(from, 1)); return next; }); setDraggedColumn(null); }} onDragEnd={() => setDraggedColumn(null)} className={`flex cursor-grab items-center gap-2 rounded border border-[#EDF0F4] bg-[#F0F1F3] px-2 py-2 text-xs text-[#344252] active:cursor-grabbing dark:border-[#354A5C] dark:bg-[#22384B] dark:text-white ${draggedColumn === column ? 'opacity-50' : ''}`}><GripVertical className="h-4 w-4 shrink-0 text-[#6682B2]" /><span className="flex-1">{column}</span><button aria-label={`Remove ${column}`} onClick={() => setColumnDraft((cols) => cols.filter((item) => item !== column))} className="px-1 text-[#8B929B] hover:text-[#D14D56]"><X className="h-4 w-4" /></button></div>)}{columnDraft.length === 0 && <p className="rounded bg-[#F7F9FC] p-3 text-[11px] text-[#7B8794]">Choose at least one column to show.</p>}</div></div>
+      </div> : sidePanel === 'edit-filters' ? <div className="flex-1 space-y-4 overflow-y-auto p-5">
+        <label className="block space-y-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#202B37] dark:text-[#D8E9F7]">Business Unit<select value={draftBusinessUnit} onChange={(e) => setDraftBusinessUnit(e.target.value)} className={`${fieldClass} rounded-none border-[#D4DCE5]`}><option value="All Business Units">All selected</option>{Array.from(new Set([currentUser?.businessUnit, 'Ampcus Tech Pvt Ltd.'].filter(Boolean))).map((unit) => <option key={unit}>{unit}</option>)}</select></label>
+        <div><div className="mb-2 text-[10px] font-medium text-[#202B37] dark:text-[#D8E9F7]">Pre-Defined Filters</div><label className="inline-flex items-center gap-2 rounded-md bg-[#E8EDFF] px-2 py-1.5 text-xs text-[#344252] dark:bg-[#22384B] dark:text-white"><input type="checkbox" checked={draftGdprApproved} onChange={(e) => setDraftGdprApproved(e.target.checked)} /> GDPR Approved Consent</label></div>
+        <div className="pt-6"><div className="mb-3 text-[10px] font-medium text-[#202B37] dark:text-[#D8E9F7]">Field Level Filters</div><div className="space-y-2">{draftRules.map((rule) => <div key={rule.id} className="grid grid-cols-[1.15fr_1fr_22px] items-start gap-2"><select aria-label="Filter field" value={rule.field} onChange={(e) => setDraftRules((rows) => rows.map((r) => r.id === rule.id ? { ...r, field: e.target.value, operator: '', value: '' } : r))} className={`${fieldClass} rounded-sm border-[#D4DCE5] px-2`}><option value="">Select</option>{filterFields.map((field) => <option key={field}>{field}</option>)}</select><div className="space-y-2"><select aria-label="Filter operator" value={rule.operator} onChange={(e) => setDraftRules((rows) => rows.map((r) => r.id === rule.id ? { ...r, operator: e.target.value, value: '' } : r))} className={`${fieldClass} rounded-sm border-[#D4DCE5] px-2`}><option value="">Select</option>{filterOperators.map((operator) => <option key={operator}>{operator}</option>)}</select>{rule.operator && !['Is Null', 'Is Not Null'].includes(rule.operator) && (filterOptions(rule.field).length > 0 ? <select aria-label="Filter value" value={rule.value} onChange={(e) => setDraftRules((rows) => rows.map((r) => r.id === rule.id ? { ...r, value: e.target.value } : r))} className={`${fieldClass} rounded-sm border-[#D4DCE5] px-2`}><option value="">Select value</option>{filterOptions(rule.field).map((value) => <option key={value}>{value}</option>)}</select> : <input aria-label="Filter value" type={rule.field === 'Experience' || rule.field === 'Years of Experience' ? 'number' : 'text'} value={rule.value} onChange={(e) => setDraftRules((rows) => rows.map((r) => r.id === rule.id ? { ...r, value: e.target.value } : r))} placeholder="Value" className={`${fieldClass} rounded-sm border-[#D4DCE5] px-2`} />)}</div><button aria-label="Remove filter" onClick={() => setDraftRules((rows) => rows.filter((r) => r.id !== rule.id))} className="mt-2 text-[#F04444]"><X className="h-3.5 w-3.5" /></button></div>)}</div><button onClick={() => setDraftRules((rows) => [...rows, { id: `filter-${Date.now()}-${rows.length}`, field: '', operator: '', value: '' }])} className="mt-5 block w-full text-right text-xs font-medium text-[#2F80E7]">Add Filter</button></div>
+      </div> : <div className="flex-1 space-y-2 overflow-y-auto p-5"><p className="mb-3 text-xs text-[#687789]">Turn on one or more common filters.</p>{[{ label: 'Favorites', description: 'Only starred applicants' }, { label: 'High Match', description: 'Match score 90% or higher' }, { label: 'Has Resume', description: 'Resume document is attached' }, { label: 'New Applicants', description: 'Applicants in New stage' }].map((item) => <label key={item.label} className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E1E7ED] p-3 hover:bg-[#F7F9FC] dark:border-[#354A5C] dark:hover:bg-[#22384B]"><input type="checkbox" checked={draftQuickFilters.includes(item.label)} onChange={(e) => setDraftQuickFilters((rows) => e.target.checked ? [...rows, item.label] : rows.filter((x) => x !== item.label))} /><span><span className="block text-xs font-semibold text-[#344252] dark:text-white">{item.label}</span><span className="mt-1 block text-[10px] text-[#7B8794]">{item.description}</span></span></label>)}</div>}
+      {sidePanel === 'edit-columns' ? <div className="flex justify-end gap-2 border-t border-[#E7EDF3] px-5 py-3 dark:border-[#354A5C]"><button onClick={() => setSidePanel(null)} className={buttonClass}>Cancel</button><button disabled={!columnDraft.length} onClick={() => { setVisibleColumns(columnDraft); localStorage.setItem('ats_applicant_columns', JSON.stringify(columnDraft)); setSidePanel(null); }} className="rounded-lg bg-[#2F80E7] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Apply</button></div> : <div className="flex items-center justify-between border-t border-[#E7EDF3] px-5 py-4 dark:border-[#354A5C]"><button onClick={() => { if (sidePanel === 'edit-filters') { setDraftRules([]); setDraftBusinessUnit('All Business Units'); setDraftGdprApproved(false); setFilterRules([]); setBusinessUnitFilter('All Business Units'); setGdprApprovedFilter(false); localStorage.removeItem('ats_applicant_filter_rules'); localStorage.removeItem('ats_applicant_business_unit_filter'); } else { setDraftQuickFilters([]); setQuickFilters([]); } }} className="text-xs font-semibold text-[#6D7988] hover:text-[#202B37]">Reset</button><div className="flex gap-2"><button onClick={() => setSidePanel(null)} className={buttonClass}>Cancel</button><button onClick={() => { if (sidePanel === 'edit-filters') { const activeRules = draftRules.filter((r) => r.field && (['Is Null', 'Is Not Null'].includes(r.operator) || r.value.trim())); setFilterRules(activeRules); setBusinessUnitFilter(draftBusinessUnit); setGdprApprovedFilter(draftGdprApproved); localStorage.setItem('ats_applicant_filter_rules', JSON.stringify(activeRules)); localStorage.setItem('ats_applicant_business_unit_filter', draftBusinessUnit); } else setQuickFilters(draftQuickFilters); setSidePanel(null); }} className="rounded-lg bg-[#2F80E7] px-4 py-2 text-xs font-semibold text-white">Apply</button></div></div>}
+    </aside></div>}
+
+    {quickResumePreview && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setQuickResumePreview(null)}><div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#DCE6EF] bg-white p-5 shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]" onClick={(e) => e.stopPropagation()}><div className="flex items-start justify-between border-b border-[#E7EDF3] pb-4 dark:border-[#354A5C]"><div className="flex items-center gap-3"><img src={quickResumePreview.avatar} alt="" className="h-11 w-11 rounded-full object-cover" /><div><h2 className="font-bold text-[#202B37] dark:text-white">{quickResumePreview.name}</h2><p className="mt-1 text-xs text-[#6D7988]">{quickResumePreview.currentDesignation} · {quickResumePreview.location}</p></div></div><button onClick={() => setQuickResumePreview(null)} aria-label="Close preview"><X className="h-5 w-5 text-[#7B8794]" /></button></div><div className="space-y-4 py-4 text-xs"><div><div className="mb-1 font-semibold">Executive Summary</div><p className="leading-relaxed text-[#687789]">{quickResumePreview.summary || 'No profile summary has been added.'}</p></div><div><div className="mb-2 font-semibold">Skills</div><div className="flex flex-wrap gap-1.5">{quickResumePreview.skills.map((skill) => <span key={skill} className="rounded-md border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#1769AA]">{skill}</span>)}</div></div><div className={`flex justify-end gap-2 border-t border-[#E7EDF3] pt-4 dark:border-[#354A5C]`}><button onClick={() => setQuickResumePreview(null)} className={buttonClass}>Close</button><button onClick={() => { navigate('applicant-detail', quickResumePreview.id); setQuickResumePreview(null); }} className="rounded-lg bg-[#2F80E7] px-3 py-2 text-xs font-semibold text-white">Open full dossier</button></div></div></div></div>}
+
+    {dialog === 'import' && <div className="fixed inset-x-0 bottom-0 top-[56px] z-[60] overflow-y-auto bg-[#EEF1F4] text-[#344252]">
+      <div className="flex items-center justify-between px-4 py-4"><h1 className="text-lg font-medium text-[#526173]">Import Applicant from spreadsheet</h1><div className="flex gap-1"><button onClick={() => setDialog(null)} title="Back to applicants" aria-label="Back to applicants" className="rounded border border-[#D5DDE5] bg-white p-2 text-[#536577] hover:bg-[#F7F9FB]"><ArrowRight className="h-4 w-4 rotate-180" /></button><button onClick={() => { const template = 'Name,Email,Phone,Designation,Location,Experience,Skills\n'; const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([template], { type: 'text/csv;charset=utf-8' })); link.download = 'Applicant_Import_Template.csv'; link.click(); URL.revokeObjectURL(link.href); }} title="Download import template" aria-label="Download import template" className="rounded border border-[#D5DDE5] bg-white p-2 text-[#536577] hover:bg-[#F7F9FB]"><Download className="h-4 w-4" /></button></div></div>
+      <section className="mx-4 mb-6 min-h-[540px] border border-[#E0E5EA] bg-white p-5 shadow-sm md:px-9 md:py-6">
+        {importStep === 'upload' ? <>
+          <div className="grid max-w-4xl grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-[125px_minmax(260px,330px)] sm:items-center">
+            <label htmlFor="applicant-import-file" className="text-xs text-[#687789]">Attachment</label><div><input id="applicant-import-file" type="file" accept=".csv,.xlsx,.xls" onChange={(e) => handleApplicantFile(e.target.files?.[0])} className="block w-full max-w-[330px] border border-[#D5DDE5] bg-[#FAFAFA] text-xs file:mr-2 file:border-0 file:bg-[#F4F4F4] file:px-3 file:py-2 file:text-xs file:text-[#425466]" />{fileName && <p className="mt-1 text-[11px] text-[#1769AA]">{fileName}{importRows.length ? ` · ${importRows.length} applicants ready` : ''}</p>}{importError && <p role="alert" className="mt-1 text-[11px] text-red-600">{importError}</p>}</div>
+            <label htmlFor="applicant-import-business-unit" className="text-xs text-[#687789]">Business Units</label><select id="applicant-import-business-unit" value={importBusinessUnit} onChange={(e) => setImportBusinessUnit(e.target.value)} className="w-full max-w-[330px] border border-[#CAD3DD] bg-white px-2 py-2 text-xs text-[#344252]"><option>Ampcus Tech Pvt Ltd.</option>{currentUser?.businessUnit && currentUser.businessUnit !== 'Ampcus Tech Pvt Ltd.' && <option>{currentUser.businessUnit}</option>}<option>All Business Units</option></select>
+            <span className="text-xs text-[#687789]">Duplicate Records</span><div className="flex flex-wrap gap-5 text-xs text-[#687789]">{(['Skip', 'Overwrite'] as const).map((policy) => <label key={policy} className="flex items-center gap-1.5"><input type="radio" checked={duplicatePolicy === policy} onChange={() => setDuplicatePolicy(policy)} />{policy}</label>)}</div>
+            <span /> <div className="flex gap-1"><button onClick={() => { if (!fileName) { setImportError('Choose an applicant file to continue.'); return; } if (!importRows.length) { setImportError('No parsed applicant rows are ready. Choose a CSV file with a Name column.'); return; } setImportStep('preview'); setImportError(''); }} className="rounded bg-[#3986F7] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#2877E8]">Next</button><button onClick={() => setDialog(null)} className="rounded bg-[#3986F7] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#2877E8]">Cancel</button></div>
+          </div>
+          <div className="mt-7 rounded-md border border-[#E6E6E6] bg-[#F7F7F7] px-4 py-5 text-[11px] leading-6 text-[#8793A0]"><div className="mb-1 font-semibold text-[#2488CF]">Supported Formats and Size</div><ul className="list-disc pl-5"><li>CSV and XLSX files can be selected. CSV files are parsed in the browser in this frontend demo.</li><li>For the CSV preview, include a header row with Name, Email, Phone, Designation, Location, Experience, and Skills.</li><li>File size cannot exceed 5MB.</li></ul><div className="mb-1 mt-2 font-semibold text-[#2488CF]">Please Note</div><ul className="list-disc pl-5"><li>Duplicate applicants are matched by email address.</li><li>The first row in the file must contain field names.</li><li>Skip ignores duplicate email addresses; Overwrite updates matching applicants.</li><li>Import preview and applicant data remain in this browser for this frontend demo.</li></ul></div>
+        </> : <>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><div className="text-sm font-semibold text-[#344252]">Review Applicant Import</div><div className="mt-1 text-xs text-[#7B8794]">{fileName} · {importRows.length} applicants · {duplicatePolicy} duplicate records</div></div><button onClick={() => setImportStep('upload')} className="rounded border border-[#D5DDE5] bg-white px-3 py-1.5 text-xs text-[#536577]">Back</button></div>
+          <div className="overflow-x-auto rounded border border-[#E4E8EC]"><table className="w-full min-w-[700px] border-collapse text-left text-xs"><thead className="bg-[#F6F8FA] text-[#687789]"><tr>{['Name', 'Email Address', 'Mobile Number', 'Designation', 'Location', 'Experience', 'Skills'].map((label) => <th key={label} className="border-b px-3 py-2.5 font-semibold">{label}</th>)}</tr></thead><tbody>{importRows.slice(0, 12).map((applicant, index) => <tr key={`${applicant.email}-${index}`} className="border-b last:border-0"><td className="px-3 py-2">{applicant.name}</td><td className="px-3 py-2">{applicant.email}</td><td className="px-3 py-2">{applicant.phone}</td><td className="px-3 py-2">{applicant.currentDesignation}</td><td className="px-3 py-2">{applicant.location}</td><td className="px-3 py-2">{applicant.experienceYears}</td><td className="px-3 py-2">{applicant.skills?.join(', ')}</td></tr>)}</tbody></table></div>{importRows.length > 12 && <p className="mt-2 text-[11px] text-[#7B8794]">Showing the first 12 of {importRows.length} applicants.</p>}
+          <div className="mt-5 flex justify-end gap-2"><button onClick={() => setDialog(null)} className="rounded border border-[#D5DDE5] bg-white px-3 py-2 text-xs text-[#536577]">Cancel</button><button onClick={completeApplicantImport} className="rounded bg-[#3986F7] px-4 py-2 text-xs font-semibold text-white">Import {importRows.length} Applicants</button></div>
+        </>}
+      </section>
+    </div>}
+    {dialog === 'advanced' && <div className="fixed inset-0 z-[80] overflow-y-auto bg-[#E9EEF3] text-[#17233D]">
+      <header className="sticky top-0 z-20 flex h-[50px] items-center bg-[#0966BF] px-3 text-white shadow-sm md:px-5">
+        <div className="relative mr-3"><button onClick={() => setAdvancedMenuOpen((open) => !open)} aria-label="Open navigation menu" aria-expanded={advancedMenuOpen} className="rounded p-1 hover:bg-white/10"><Menu className="h-5 w-5" /></button>{advancedMenuOpen && <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-b-md border border-[#DCE6EF] bg-white py-1 text-[#243449] shadow-xl">{[['JOB POSTING', 'jobs'], ['APPLICANTS', 'applicants'], ['CLIENT', 'clients'], ['JOB TEMPLATES', 'job-templates']].map(([label, route]) => <button key={route} onClick={() => { setAdvancedMenuOpen(false); setDialog(null); navigate(route as 'jobs' | 'applicants' | 'clients' | 'job-templates'); }} className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-[11px] font-medium hover:bg-[#F1F5F9]"><span className="w-3 text-center text-[#1769AA]">{route === 'jobs' ? '◈' : route === 'applicants' ? '♟' : route === 'clients' ? '♟' : '▤'}</span>{label}</button>)}</div>}</div>
+        <button onClick={() => setDialog(null)} aria-label="Return to applicants" className="mr-4 rounded p-1 hover:bg-white/10"><Home className="h-5 w-5" /></button>
+        <nav aria-label="Applicant search sources" className="flex h-full items-stretch gap-0.5">{['Internal DB', 'Monster', 'Integrated Search', 'Naukri'].map((provider) => <button key={provider} onClick={() => setAdvancedProvider(provider)} className={`border-b-[3px] px-3 text-xs font-medium transition-colors md:px-4 ${advancedProvider === provider ? 'border-white bg-white/10 text-white' : 'border-transparent text-white/85 hover:bg-white/10'}`}>{provider}</button>)}</nav>
+      </header>
+      <section className="bg-[#17275A] px-5 py-5 text-white md:px-10">
+        <div className="mx-auto max-w-[1500px]">
+          <div className="mb-5 flex items-center justify-between"><div className="text-xs font-semibold uppercase tracking-wide text-[#8ABEFF]">Applicant Search <span className="ml-2 font-normal normal-case text-white/65">· {advancedProvider}</span></div><button onClick={() => setDialog(null)} aria-label="Close advanced search" className="rounded-md p-1 text-white/80 hover:bg-white/10"><X className="h-5 w-5" /></button></div>
+          <div className="mb-5 flex gap-6 border-b border-white/20 text-xs"><button onClick={() => setAdvancedTab('options')} className={`border-b-2 px-1 pb-2 ${advancedTab === 'options' ? 'border-[#52A0FF] text-white' : 'border-transparent text-white/65'}`}>Search Options</button><button onClick={() => setAdvancedTab('exclude')} className={`border-b-2 px-1 pb-2 ${advancedTab === 'exclude' ? 'border-[#52A0FF] text-white' : 'border-transparent text-white/65'}`}>Exclude</button></div>
+          {advancedTab === 'options' ? <div className="space-y-4">
+            <div className="grid gap-px overflow-hidden rounded-md md:grid-cols-2"><label className="bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">Keywords<input value={advancedDraft.keywords} onChange={(e) => updateAdvancedDraft({ keywords: e.target.value })} placeholder="JavaScript, React, MongoDB" className="mt-1 w-full border-0 p-0 text-xs font-normal normal-case text-[#243449] outline-none placeholder:text-[#8895A5]" /></label><label className="bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">Job Title<input value={advancedDraft.jobTitle} onChange={(e) => updateAdvancedDraft({ jobTitle: e.target.value })} placeholder="Java Developer" className="mt-1 w-full border-0 p-0 text-xs font-normal normal-case text-[#243449] outline-none placeholder:text-[#8895A5]" /></label></div>
+            <button onClick={() => updateAdvancedDraft({ terms: [...advancedDraft.terms, { id: `advanced-term-${Date.now()}`, field: '', operator: '', value: '', join: advancedDraft.terms.length ? 'AND' : 'AND' }] })} className="text-xs font-semibold text-[#78B7FF] hover:text-white">+ STRING BUILDER</button>
+            {advancedDraft.terms.length > 0 && <div className="space-y-2">{advancedDraft.terms.map((term, index) => <div key={term.id} className="grid gap-2 sm:grid-cols-[90px_1.2fr_1fr_1fr_36px]"><select aria-label="String builder join" value={term.join} disabled={index === 0} onChange={(e) => updateAdvancedDraft({ terms: advancedDraft.terms.map((item) => item.id === term.id ? { ...item, join: e.target.value as 'AND' | 'OR' } : item) })} className="rounded-md border border-white/20 bg-[#24386F] px-2 py-2 text-xs text-white disabled:opacity-40"><option>AND</option><option>OR</option></select><select aria-label="String builder field" value={term.field} onChange={(e) => updateAdvancedDraft({ terms: advancedDraft.terms.map((item) => item.id === term.id ? { ...item, field: e.target.value, operator: '', value: '' } : item) })} className="rounded-md border border-white/20 bg-[#24386F] px-2 py-2 text-xs text-white"><option value="">Select Field</option>{filterFields.map((field) => <option key={field}>{field}</option>)}</select><select aria-label="String builder operator" value={term.operator} disabled={!term.field} onChange={(e) => updateAdvancedDraft({ terms: advancedDraft.terms.map((item) => item.id === term.id ? { ...item, operator: e.target.value } : item) })} className="rounded-md border border-white/20 bg-[#24386F] px-2 py-2 text-xs text-white disabled:opacity-50"><option value="">Select Operator</option>{filterOperators.map((operator) => <option key={operator}>{operator}</option>)}</select>{term.operator && !['Is Null', 'Is Not Null'].includes(term.operator) ? <input aria-label="String builder value" value={term.value} onChange={(e) => updateAdvancedDraft({ terms: advancedDraft.terms.map((item) => item.id === term.id ? { ...item, value: e.target.value } : item) })} placeholder="Value" className="rounded-md border border-white/20 bg-white px-3 py-2 text-xs text-[#243449]" /> : <div />}<button aria-label="Remove string builder rule" onClick={() => updateAdvancedDraft({ terms: advancedDraft.terms.filter((item) => item.id !== term.id) })} className="flex items-center justify-center rounded-md text-white/80 hover:bg-white/10"><X className="h-4 w-4" /></button></div>)}</div>}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-1 text-xs"><label className="flex items-center gap-2"><input type="radio" checked={advancedDraft.locationMode === 'selected'} onChange={() => updateAdvancedDraft({ locationMode: 'selected' })} /> Search Within Selected Locations</label><label className="flex items-center gap-2"><input type="radio" checked={advancedDraft.locationMode === 'radius'} onChange={() => updateAdvancedDraft({ locationMode: 'radius' })} /> Search Within Radius</label>{advancedDraft.locationMode === 'radius' && <label className="flex items-center gap-2">Miles<input type="number" min="1" value={advancedDraft.radius} onChange={(e) => updateAdvancedDraft({ radius: e.target.value })} className="w-20 rounded border border-white/30 bg-[#24386F] px-2 py-1.5 text-white" /></label>}<label className="ml-auto flex items-center gap-2"><input type="checkbox" checked={advancedDraft.recentJobTitle} onChange={(e) => updateAdvancedDraft({ recentJobTitle: e.target.checked })} /> Recent Job Title</label></div>
+            <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_150px]"><label className="rounded-md bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">Country<select value={advancedDraft.country} onChange={(e) => updateAdvancedDraft({ country: e.target.value })} className="mt-1 w-full border-0 bg-white p-0 text-xs font-normal normal-case text-[#243449] outline-none"><option value="">Any Country</option>{['India', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'United Arab Emirates'].map((country) => <option key={country}>{country}</option>)}</select></label><label className="rounded-md bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">State<select value={advancedDraft.state} onChange={(e) => updateAdvancedDraft({ state: e.target.value })} className="mt-1 w-full border-0 bg-white p-0 text-xs font-normal normal-case text-[#243449] outline-none"><option value="">Any State</option>{Array.from(new Set([...applicants.map((a) => a.state || a.customFields?.state || '').filter(Boolean), 'Maharashtra', 'Karnataka', 'Tamil Nadu', 'Delhi', 'California', 'New York'])).map((state) => <option key={state}>{state}</option>)}</select></label><label className="rounded-md bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">City<input list="advanced-applicant-cities" value={advancedDraft.city} onChange={(e) => updateAdvancedDraft({ city: e.target.value })} placeholder="Any City" className="mt-1 w-full border-0 p-0 text-xs font-normal normal-case text-[#243449] outline-none" /><datalist id="advanced-applicant-cities">{Array.from(new Set(applicants.map((a) => a.location.split(',')[0].trim()).filter(Boolean))).map((city) => <option key={city} value={city} />)}</datalist></label><div className="flex flex-col gap-2"><button onClick={() => { if (advancedProvider === 'Internal DB') runAdvancedSearch(); else showToast(`${advancedProvider} search is available as a frontend tab; external search is not connected.`); }} className="flex-1 rounded-md bg-[#3986F7] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2475E7]">SEARCH</button><button onClick={resetAdvancedSearch} className="rounded-md border border-white/35 px-5 py-1.5 text-xs text-white hover:bg-white/10">RESET</button></div></div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-8 gap-y-3"><button onClick={() => setShowAdvancedOptions((open) => !open)} className="text-left text-xs font-semibold text-[#78B7FF]">{showAdvancedOptions ? "- ADVANCED OPTIONS" : "+ ADVANCED OPTIONS"}</button><label className="flex items-center gap-2 text-[11px] text-white/90"><input type="checkbox" checked={advancedDraft.includeWithoutCountry} onChange={(e) => updateAdvancedDraft({ includeWithoutCountry: e.target.checked })} /> Include Applicants Without Country</label></div>
+            {showAdvancedOptions && <div className="mt-3 grid gap-2 rounded-md border border-white/15 bg-[#1D3068] p-3 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Applicant ID<input value={advancedDraft.applicantId} onChange={(e) => updateAdvancedDraft({ applicantId: e.target.value })} placeholder="Applicant ID" className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]" /></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Email Address<input value={advancedDraft.email} onChange={(e) => updateAdvancedDraft({ email: e.target.value })} placeholder="Email address" className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]" /></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Mobile Number<input value={advancedDraft.phone} onChange={(e) => updateAdvancedDraft({ phone: e.target.value })} placeholder="Mobile number" className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]" /></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Applicant Status<select value={advancedDraft.applicantStatus} onChange={(e) => updateAdvancedDraft({ applicantStatus: e.target.value })} className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]"><option value="">Any Status</option>{stages.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Source<select value={advancedDraft.source} onChange={(e) => updateAdvancedDraft({ source: e.target.value })} className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]"><option value="">Any Source</option>{["LinkedIn", "Direct Career Portal", "Referral", "Vendor Partner", "GitHub"].map((source) => <option key={source}>{source}</option>)}</select></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Ownership<select value={advancedDraft.recruiter} onChange={(e) => updateAdvancedDraft({ recruiter: e.target.value })} className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]"><option value="">Any Recruiter</option>{Array.from(new Set(applicants.map((a) => a.assignedRecruiter).filter(Boolean))).map((name) => <option key={name}>{name}</option>)}</select></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Work Authorization<input value={advancedDraft.workAuthorization} onChange={(e) => updateAdvancedDraft({ workAuthorization: e.target.value })} placeholder="e.g. Citizen" className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]" /></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Minimum Experience<input type="number" min="0" value={advancedDraft.minExperience} onChange={(e) => updateAdvancedDraft({ minExperience: e.target.value })} placeholder="Any" className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]" /></label>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-white/80">Maximum Experience<input type="number" min="0" value={advancedDraft.maxExperience} onChange={(e) => updateAdvancedDraft({ maxExperience: e.target.value })} placeholder="Any" className="mt-1 w-full rounded border border-white/20 bg-white px-2.5 py-2 text-xs font-normal normal-case text-[#243449]" /></label>
+            </div>}
+          </div> : <div className="grid gap-3 md:grid-cols-[1fr_1fr_150px]"><label className="rounded-md bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">Exclude Keywords<input value={advancedDraft.exclude} onChange={(e) => updateAdvancedDraft({ exclude: e.target.value })} placeholder="Terms to exclude from results" className="mt-1 w-full border-0 p-0 text-xs font-normal normal-case text-[#243449] outline-none" /></label><label className="rounded-md bg-white p-2 text-[10px] font-semibold uppercase tracking-wide text-[#1769AA]">Exclude Job Title<input value={advancedDraft.excludeJobTitle} onChange={(e) => updateAdvancedDraft({ excludeJobTitle: e.target.value })} placeholder="Job titles to exclude" className="mt-1 w-full border-0 p-0 text-xs font-normal normal-case text-[#243449] outline-none" /></label><button onClick={() => { if (advancedProvider === 'Internal DB') runAdvancedSearch(); else showToast(`${advancedProvider} search is available as a frontend tab; external search is not connected.`); }} className="rounded-md bg-[#3986F7] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2475E7]">SEARCH</button></div>}
         </div>
-
-        {/* Stage Filter */}
-        <div className="flex items-center gap-1.5 text-xs text-[#5E6B7A] dark:text-[#B9CAD9] w-full md:w-auto">
-          <Filter className="w-3.5 h-3.5 text-[#1769AA]" />
-          <span>Stage:</span>
-          <select
-            value={stageFilter}
-            onChange={(e) => setStageFilter(e.target.value)}
-            className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
-          >
-            <option value="All">All Stages</option>
-            <option value="New">New</option>
-            <option value="Screening">Screening</option>
-            <option value="Submitted">Submitted</option>
-            <option value="Interview">Interview</option>
-            <option value="Selected">Selected</option>
-            <option value="Offered">Offered</option>
-            <option value="Hired">Hired</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Candidate Table: White #FFFFFF card, Light Grey #DCE6EF borders */}
-      <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#F5F8FB] dark:bg-[#162431] border-b border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9]">
-                <th className="p-3.5 w-10 text-center">★</th>
-                <th className="p-3.5 font-semibold">Candidate Dossier</th>
-                <th className="p-3.5 font-semibold">Current Role &amp; Location</th>
-                <th className="p-3.5 font-semibold">Key Skills</th>
-                <th className="p-3.5 font-semibold">Experience</th>
-                <th className="p-3.5 font-semibold">Stage</th>
-                <th className="p-3.5 font-semibold">Match Score</th>
-                <th className="p-3.5 font-semibold">Recruiter</th>
-                <th className="p-3.5 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C]">
-              {filteredApplicants.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="p-8 text-center text-xs text-[#7A8794]">
-                    No candidates matched your search criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredApplicants.map((a) => (
-                  <tr
-                    key={a.id}
-                    className="hover:bg-[#EAF4FC]/50 dark:hover:bg-[#22384B]/40 transition-colors"
-                  >
-                    <td className="p-3.5 text-center">
-                      <button
-                        onClick={(e) => handleToggleFavorite(a.id, e)}
-                        className={`transition-colors ${
-                          a.isFavorite ? 'text-[#2F80E7]' : 'text-[#7A8794] hover:text-[#2F80E7]'
-                        }`}
-                      >
-                        <Star className={`w-4 h-4 ${a.isFavorite ? 'fill-current' : ''}`} />
-                      </button>
-                    </td>
-
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={a.avatar}
-                          alt={a.name}
-                          className="w-9 h-9 rounded-full object-cover ring-1 ring-[#DCE6EF]"
-                        />
-                        <div>
-                          <div
-                            onClick={() => navigate('applicant-detail', a.id)}
-                            className="font-bold text-[#202B37] dark:text-white hover:text-[#1769AA] cursor-pointer transition-colors"
-                          >
-                            {a.name}
-                          </div>
-                          <div className="font-mono text-[11px] text-[#7A8794]">{a.applicantId}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="p-3.5">
-                      <div className="font-medium text-[#202B37] dark:text-white">{a.currentDesignation}</div>
-                      <div className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9] flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-[#7A8794]" />
-                        <span>{a.location}</span>
-                      </div>
-                    </td>
-
-                    <td className="p-3.5">
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        {a.skills.slice(0, 3).map((sk) => (
-                          <span
-                            key={sk}
-                            className="px-2 py-0.5 bg-[#EAF4FC] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] rounded text-[10px] font-mono text-[#1769AA] dark:text-[#D8E9F7]"
-                          >
-                            {sk}
-                          </span>
-                        ))}
-                        {a.skills.length > 3 && (
-                          <span className="text-[10px] font-mono text-[#7A8794]">
-                            +{a.skills.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="p-3.5 font-mono tabular-nums font-semibold text-[#202B37] dark:text-white">
-                      {a.experienceYears} Yrs
-                    </td>
-
-                    <td className="p-3.5">
-                      <span className="inline-block px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-[#F5F8FB] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] text-[#5E6B7A] dark:text-[#D8E9F7]">
-                        {a.status}
-                      </span>
-                    </td>
-
-                    {/* Mint #8AC9A7 Match Score */}
-                    <td className="p-3.5">
-                      <span className="font-mono font-bold text-xs text-[#276749] dark:text-[#8AC9A7] bg-[#8AC9A7]/20 border border-[#8AC9A7]/40 px-2 py-0.5 rounded">
-                        {a.matchScore}%
-                      </span>
-                    </td>
-
-                    <td className="p-3.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{a.assignedRecruiter}</td>
-
-                    <td className="p-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => setQuickResumePreview(a)}
-                          className="p-1.5 text-[#7A8794] hover:text-[#1769AA] rounded-lg transition-colors"
-                          title="Quick Resume Preview"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => navigate('applicant-detail', a.id)}
-                          className="px-2.5 py-1 text-xs font-semibold text-[#1769AA] hover:text-[#125B97] hover:bg-[#EAF4FC] dark:hover:bg-[#22384B] rounded-lg transition-colors"
-                        >
-                          Dossier →
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Quick Resume Preview Modal */}
-      {quickResumePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
-              <div className="flex items-center gap-3">
-                <img
-                  src={quickResumePreview.avatar}
-                  alt={quickResumePreview.name}
-                  className="w-10 h-10 rounded-full object-cover ring-1 ring-[#DCE6EF]"
-                />
-                <div>
-                  <h3 className="text-base font-bold text-[#202B37] dark:text-white">
-                    {quickResumePreview.name}
-                  </h3>
-                  <div className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
-                    {quickResumePreview.currentDesignation} · {quickResumePreview.location}
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => setQuickResumePreview(null)} className="text-[#7A8794] hover:text-[#202B37] dark:hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] rounded-xl border border-[#DCE6EF] dark:border-[#354A5C]">
-                <div className="font-semibold text-[#202B37] dark:text-white mb-1">Executive Summary</div>
-                <p className="text-[#5E6B7A] dark:text-[#B9CAD9] leading-relaxed">{quickResumePreview.summary}</p>
-              </div>
-
-              <div>
-                <div className="font-semibold text-[#202B37] dark:text-white mb-2">Technical Skills</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {quickResumePreview.skills.map((sk) => (
-                    <span
-                      key={sk}
-                      className="px-2.5 py-1 bg-[#EAF4FC] dark:bg-[#22384B] border border-[#DCE6EF] dark:border-[#4D6274] rounded-lg font-mono text-[#1769AA] dark:text-[#D8E9F7]"
-                    >
-                      {sk}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  onClick={() => setQuickResumePreview(null)}
-                  className="px-3.5 py-1.5 border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] rounded-xl hover:bg-[#F5F8FB]"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    navigate('applicant-detail', quickResumePreview.id);
-                    setQuickResumePreview(null);
-                  }}
-                  className="px-4 py-1.5 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-semibold rounded-xl shadow-xs"
-                >
-                  Open Full Candidate Dossier
-                </button>
-              </div>
-            </div>
+      </section>
+      <section className="mx-auto grid max-w-[1500px] gap-8 px-5 py-6 md:grid-cols-2 md:px-10"><div><div className="mb-3 border-b-2 border-[#7B8794] pb-2 text-[11px] font-semibold uppercase tracking-wide">Recent History</div>{advancedHistory.length ? <ul className="space-y-2">{advancedHistory.map((criteria, index) => <li key={index}><button onClick={() => runAdvancedSearch(criteria)} className="text-left text-[11px] text-[#3986F7] hover:underline">{[criteria.keywords && `(${criteria.keywords})`, criteria.jobTitle && `Job Title contains (${criteria.jobTitle})`, criteria.city, criteria.state, criteria.country].filter(Boolean).join(' · ') || 'Applicant search'}<span className="ml-2 text-[#8A96A5]">Run search</span></button></li>)}</ul> : <p className="text-xs text-[#718096]">No recent searches.</p>}</div><div><div className="mb-3 flex items-center justify-between border-b-2 border-[#7B8794] pb-2"><div className="text-[11px] font-semibold uppercase tracking-wide">Saved History</div><div className="flex gap-1"><input value={savedSearchName} onChange={(e) => setSavedSearchName(e.target.value)} placeholder="Search name" className="w-28 rounded border border-[#DCE6EF] bg-white px-2 py-1 text-[10px]" /><button onClick={saveAdvancedSearch} disabled={!savedSearchName.trim()} className="rounded bg-[#3986F7] px-2 py-1 text-[10px] font-semibold text-white disabled:opacity-40">Save Search</button></div></div>{savedAdvancedSearches.length ? <ul className="space-y-2">{savedAdvancedSearches.map((item) => <li key={item.name} className="flex items-center justify-between gap-2"><button onClick={() => runAdvancedSearch(item.criteria)} className="text-left text-[11px] text-[#3986F7] hover:underline">{item.name}</button><button onClick={() => { const saved = savedAdvancedSearches.filter((entry) => entry.name !== item.name); setSavedAdvancedSearches(saved); localStorage.setItem('ats_applicant_saved_searches', JSON.stringify(saved)); }} className="text-[10px] text-[#8793A0] hover:text-red-600">Remove</button></li>)}</ul> : <p className="text-xs text-[#718096]">No saved searches.</p>}</div></section>
+    </div>}
+    {dialog && dialog !== 'advanced' && dialog !== 'import' && <div className={`fixed inset-0 z-[60] flex ${dialog === 'folder' ? 'justify-end' : 'items-center justify-center'} bg-black/45 ${dialog === 'folder' ? 'p-0' : 'p-4'}`} onClick={() => setDialog(null)}><div className={`flex w-full flex-col ${dialog === 'folder' ? 'h-full max-h-screen max-w-[380px] rounded-none' : `max-h-[92vh] ${dialog === 'view' ? 'max-w-5xl' : 'max-w-lg'} rounded-2xl`} overflow-hidden border border-[#DCE6EF] bg-white shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]`} onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between border-b border-[#E7EDF3] px-5 py-4 dark:border-[#354A5C]"><div><h2 className="font-bold text-[#202B37] dark:text-white">{modalTitle}</h2>{dialog !== 'folder' && <p className="mt-1 text-[11px] text-[#7B8794]">Applicant view configuration</p>}</div><button onClick={() => setDialog(null)} aria-label="Close"><X className="h-5 w-5 text-[#7B8794]" /></button></div><div className={`${dialog === 'folder' ? 'min-h-0 flex-1 overflow-y-auto' : 'max-h-[calc(92vh-140px)] overflow-y-auto'} p-5 text-xs`}>
+      {dialog === 'view' && <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-5 border-r border-[#E7EDF3] pr-0 lg:pr-6 dark:border-[#354A5C]">
+          <label className="block space-y-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Business Units<select value={viewBusinessUnit} onChange={(e) => setViewBusinessUnit(e.target.value)} className={fieldClass}><option>All Business Units</option>{currentUser?.businessUnit && <option>{currentUser.businessUnit}</option>}<option>Ampcus Tech Pvt Ltd.</option></select></label>
+          <div><div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Pre-Defined Filters</div><label className="inline-flex items-center gap-2 rounded-md bg-[#EAF1FF] px-2 py-1.5 text-xs text-[#344252] dark:bg-[#22384B] dark:text-white"><input type="checkbox" checked={viewGdprApproved} onChange={(e) => setViewGdprApproved(e.target.checked)} /> GDPR Approved Consent</label></div>
+          <div><div className="mb-2 flex items-center justify-between"><div className="text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Field Level Filters</div><button onClick={() => setViewRulesDraft((rows) => [...rows, { id: `view-filter-${Date.now()}`, field: '', operator: '', value: '' }])} className="text-xs font-medium text-[#2F80E7]">Add Filter</button></div>
+            <div className="space-y-2">{viewRulesDraft.map((rule) => <div key={rule.id} className="grid grid-cols-[1.1fr_.8fr_1fr_auto] gap-1.5"><select aria-label="View filter field" value={rule.field} onChange={(e) => setViewRulesDraft((rows) => rows.map((r) => r.id === rule.id ? { ...r, field: e.target.value, operator: '', value: '' } : r))} className={`${fieldClass} px-2`}><option value="">Select</option>{filterFields.map((field) => <option key={field}>{field}</option>)}</select><select aria-label="View filter operator" disabled={!rule.field} value={rule.operator} onChange={(e) => setViewRulesDraft((rows) => rows.map((r) => r.id === rule.id ? { ...r, operator: e.target.value } : r))} className={`${fieldClass} px-2`}><option value="">Select</option>{filterOperators.map((op) => <option key={op}>{op}</option>)}</select>{rule.operator && !['Is Null', 'Is Not Null'].includes(rule.operator) && <input aria-label="View filter value" value={rule.value} onChange={(e) => setViewRulesDraft((rows) => rows.map((r) => r.id === rule.id ? { ...r, value: e.target.value } : r))} placeholder="Value" className={`${fieldClass} px-2`} />}<button aria-label="Remove field filter" onClick={() => setViewRulesDraft((rows) => rows.filter((r) => r.id !== rule.id))} className="px-1 text-[#D14D56]"><X className="h-4 w-4" /></button></div>)}</div>
           </div>
         </div>
-      )}
-    </div>
-  );
+        <div className="space-y-4">
+          <div className="flex items-center gap-3"><label className="flex-1 space-y-1.5 text-xs font-medium text-[#526173]">Custom View Name<input autoFocus value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="Custom View Name" className={fieldClass} /></label><label className="mt-5 flex items-center gap-2 whitespace-nowrap text-xs text-[#6D7988]">Make Default<input type="checkbox" checked={makeViewDefault} onChange={(e) => setMakeViewDefault(e.target.checked)} /></label></div>
+          <details className="group rounded-md border border-[#DCE6EF] dark:border-[#354A5C]"><summary className="cursor-pointer list-none px-3 py-2.5 text-xs text-[#526173] dark:text-[#D8E9F7]">{viewColumnsDraft.length} of {allApplicantColumns.length} selected <ChevronRight className="float-right h-4 w-4 transition-transform group-open:rotate-90" /></summary><div className="max-h-48 overflow-y-auto border-t border-[#E7EDF3] p-2 dark:border-[#354A5C]"><div className="grid grid-cols-2 gap-1">{allApplicantColumns.map((column) => <label key={column} className="flex items-center gap-2 rounded px-2 py-1.5 text-[11px] text-[#526173] hover:bg-[#F5F8FB] dark:text-[#D8E9F7] dark:hover:bg-[#22384B]"><input type="checkbox" checked={viewColumnsDraft.includes(column)} onChange={(e) => setViewColumnsDraft((cols) => e.target.checked ? [...cols, column] : cols.filter((x) => x !== column))} />{column}</label>)}</div></div></details>
+          <div><div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Selected Columns</div><div className="max-h-[46vh] space-y-1.5 overflow-y-auto">{viewColumnsDraft.map((column, index) => <div key={column} className="flex items-center gap-2 rounded border border-[#EDF0F4] bg-[#F2F3F5] px-2 py-1.5 text-xs text-[#344252] dark:border-[#354A5C] dark:bg-[#22384B] dark:text-white"><GripVertical className="h-4 w-4 shrink-0 text-[#718096]" /><span className="flex-1">{column}</span><button aria-label={`Move ${column} up`} disabled={index === 0} onClick={() => setViewColumnsDraft((cols) => { const next = [...cols]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; return next; })} className="px-1 text-[#718096] disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button><button aria-label={`Move ${column} down`} disabled={index === viewColumnsDraft.length - 1} onClick={() => setViewColumnsDraft((cols) => { const next = [...cols]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; return next; })} className="px-1 text-[#718096] disabled:opacity-30"><ChevronDown className="h-4 w-4" /></button><button aria-label={`Remove ${column}`} onClick={() => setViewColumnsDraft((cols) => cols.filter((x) => x !== column))} className="px-1 text-[#718096] hover:text-[#D14D56]"><X className="h-4 w-4" /></button></div>)}{viewColumnsDraft.length === 0 && <p className="rounded bg-[#F7F9FC] p-3 text-[11px] text-[#7B8794]">Choose at least one column to show in the applicant list.</p>}</div></div>
+        </div>
+      </div>}
+      {dialog === 'folder' && <div className="space-y-4">
+        <label className="block space-y-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Business Units<select value={viewBusinessUnit} onChange={(e) => setViewBusinessUnit(e.target.value)} className={fieldClass}><option>All Business Units</option>{currentUser?.businessUnit && <option>{currentUser.businessUnit}</option>}<option>Ampcus Tech Pvt Ltd.</option></select></label>
+        <label className="block space-y-1.5 text-xs font-medium text-[#526173]">Folder Name<input autoFocus value={nameInput} onChange={(e) => setNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveViewOrFolder()} placeholder="Folder Name" className={fieldClass} /></label>
+        <details className="group rounded-md border border-[#DCE6EF] dark:border-[#354A5C]"><summary className="cursor-pointer list-none px-3 py-2.5 text-xs text-[#526173] dark:text-[#D8E9F7]">{viewColumnsDraft.length} of {allApplicantColumns.length} selected <ChevronRight className="float-right h-4 w-4 transition-transform group-open:rotate-90" /></summary><div className="max-h-56 overflow-y-auto border-t border-[#E7EDF3] p-2 dark:border-[#354A5C]"><div className="grid grid-cols-2 gap-1">{allApplicantColumns.map((column) => <label key={column} className="flex items-center gap-2 rounded px-2 py-1.5 text-[11px] text-[#526173] hover:bg-[#F5F8FB] dark:text-[#D8E9F7] dark:hover:bg-[#22384B]"><input type="checkbox" checked={viewColumnsDraft.includes(column)} onChange={(e) => setViewColumnsDraft((cols) => e.target.checked ? [...cols, column] : cols.filter((x) => x !== column))} />{column}</label>)}</div></div></details>
+        <div><div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#526173]">Selected Columns</div><div className="space-y-1.5">{viewColumnsDraft.map((column) => <div key={column} className="flex items-center gap-2 rounded border border-[#EDF0F4] bg-[#F2F3F5] px-2 py-2 text-xs text-[#344252] dark:border-[#354A5C] dark:bg-[#22384B] dark:text-white"><GripVertical className="h-4 w-4 shrink-0 text-[#718096]" /><span className="flex-1">{column}</span><button aria-label={`Remove ${column}`} onClick={() => setViewColumnsDraft((cols) => cols.filter((x) => x !== column))} className="px-1 text-[#718096] hover:text-[#D14D56]"><X className="h-4 w-4" /></button></div>)}{viewColumnsDraft.length === 0 && <p className="rounded bg-[#F7F9FC] p-3 text-[11px] text-[#7B8794]">Choose at least one column to show in this folder.</p>}</div></div>
+      </div>}
+      {dialog === 'columns' && <><p className="text-[11px] text-[#7B8794]">Choose which applicant fields appear in the roster table.</p><div className="grid grid-cols-2 gap-2">{allApplicantColumns.map((column) => <label key={column} className="flex items-center gap-2 rounded-lg border border-[#E7EDF3] px-3 py-2 text-xs text-[#526173] dark:border-[#354A5C] dark:text-[#D8E9F7]"><input type="checkbox" checked={visibleColumns.includes(column)} onChange={(e) => setVisibleColumns((cols) => e.target.checked ? [...cols, column] : cols.filter((x) => x !== column))} />{column}</label>)}</div></>}
+      {dialog === 'ticket' && <><label className="block space-y-1 text-[#687789]">Request type<select value={ticketType} onChange={(e) => setTicketType(e.target.value)} className={fieldClass}><option>Candidate follow-up</option><option>Resume review</option><option>Interview coordination</option><option>Data correction</option><option>System support</option></select></label><label className="block space-y-1 text-[#687789]">Ticket title<input value={ticketTitle} onChange={(e) => setTicketTitle(e.target.value)} placeholder="Enter a short ticket title" className={fieldClass} /></label><label className="block space-y-1 text-[#687789]">Priority<select value={ticketPriority} onChange={(e) => setTicketPriority(e.target.value)} className={fieldClass}><option>Low</option><option>Medium</option><option>High</option><option>Urgent</option></select></label><label className="block space-y-1 text-[#687789]">Ticket description<textarea rows={4} value={ticketDescription} onChange={(e) => setTicketDescription(e.target.value)} placeholder="Describe the request and any relevant context" className={fieldClass} /></label><label className="block space-y-1 text-[#687789]">Applicant (optional)<select className={fieldClass}><option>Select applicant</option>{applicants.map((a) => <option key={a.id}>{a.name}</option>)}</select></label><label className="block space-y-1 text-[#687789]">Attachments<input type="file" multiple className="block w-full text-[11px]" /></label></>}
+      <div className={`${dialog === 'folder' ? 'sticky bottom-0 bg-white px-5 py-3 dark:bg-[#1B2936]' : ''} flex justify-end gap-2 border-t border-[#E7EDF3] pt-4 dark:border-[#354A5C]`}><button onClick={() => setDialog(null)} className={buttonClass}>Cancel</button>{dialog === 'view' || dialog === 'folder' ? <button disabled={(dialog === 'view' && (!nameInput.trim() || viewColumnsDraft.length === 0)) || (dialog === 'folder' && (!nameInput.trim() || viewColumnsDraft.length === 0))} onClick={saveViewOrFolder} className="rounded-lg bg-[#2F80E7] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{dialog === 'view' ? 'Save view' : 'Create folder'}</button> : dialog === 'columns' ? <button onClick={() => { localStorage.setItem('ats_applicant_columns', JSON.stringify(visibleColumns)); setDialog(null); showToast('Applicant columns updated.'); }} className="rounded-lg bg-[#2F80E7] px-4 py-2 font-semibold text-white">Save columns</button> : <button onClick={() => { if (!ticketTitle.trim()) return; const tickets = JSON.parse(localStorage.getItem('ats_applicant_tickets') || '[]'); localStorage.setItem('ats_applicant_tickets', JSON.stringify([{ id: `T-${Date.now()}`, title: ticketTitle.trim(), type: ticketType, priority: ticketPriority, description: ticketDescription, createdAt: new Date().toISOString() }, ...tickets])); setDialog(null); setTicketTitle(''); setTicketDescription(''); showToast('Ticket created in this browser.'); }} className="rounded-lg bg-[#2F80E7] px-4 py-2 font-semibold text-white">Create ticket</button>}</div>
+    </div></div></div>}
+  </div>;
 };

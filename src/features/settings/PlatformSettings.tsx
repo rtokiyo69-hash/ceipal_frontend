@@ -13,7 +13,7 @@ import {
 import { ApiService } from '../../services/api';
 
 export const PlatformSettings: React.FC = () => {
-  const [companyName, setCompanyName] = useState('NexusTalent Technologies Inc.');
+  const [companyName, setCompanyName] = useState('Scout Technologies Inc.');
   const [timezone, setTimezone] = useState('America/Los_Angeles (PST)');
   const [currency, setCurrency] = useState('USD ($)');
   const [fastApiEndpoint, setFastApiEndpoint] = useState('http://localhost:8000/api/v1');

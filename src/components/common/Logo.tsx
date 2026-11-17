@@ -32,7 +32,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', collaps
       {!collapsed && (
         <div className="flex items-baseline tracking-tight">
           <span className={`font-display font-extrabold text-white ${textSizes[size]}`}>
-            Nexus<span className="text-[#2F80E7] font-bold">Talent</span>
+            Scout
           </span>
           <span className="w-1.5 h-1.5 bg-[#2F80E7] rounded-full ml-1" />
         </div>

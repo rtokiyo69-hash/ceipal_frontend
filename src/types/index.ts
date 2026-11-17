@@ -133,6 +133,44 @@ export interface Applicant {
   workHistory?: { role: string; company: string; duration: string; summary: string }[];
   documents?: { name: string; size: string; date: string; type: string }[];
   notes?: { id: string; author: string; text: string; date: string }[];
+  // Optional recruiter profile fields collected by the frontend applicant form.
+  middleName?: string;
+  legalName?: string;
+  alternateEmail?: string;
+  homePhone?: string;
+  workPhone?: string;
+  dateOfBirth?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  workAuthorization?: string;
+  address?: string;
+  country?: string;
+  state?: string;
+  zipCode?: string;
+  relevantExperience?: number;
+  referredBy?: string;
+  applicantGroup?: string;
+  currentCompany?: string;
+  currentCTC?: string;
+  expectedCTC?: string;
+  currency?: string;
+  passportNumber?: string;
+  preferredShift?: string;
+  willingToRelocate?: boolean;
+  primarySkills?: string[];
+  technology?: string;
+  industry?: string;
+  referenceId?: string;
+  applicantRemarks?: string;
+  educationDetails?: { degree: string; school: string; year: string }[];
+  certifications?: string[];
+  languages?: string[];
+  employerDetails?: { company: string; title: string; location: string; from: string; to: string; summary: string }[];
+  customFields?: Record<string, string>;
+  gdprApproved?: boolean;
+  createdBy?: string;
+  createdOn?: string;
+  createdDate?: string;
 }
 
 export interface Client {

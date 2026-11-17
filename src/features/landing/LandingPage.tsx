@@ -47,7 +47,7 @@ export const LandingPage: React.FC = () => {
       <div className="bg-[#0B4F89] text-[#EAF4FC] px-4 py-2 text-xs font-medium border-b border-[#083F70] flex items-center justify-center gap-3">
         <span className="flex items-center gap-1.5 text-[#2F80E7]">
           <Sparkles className="w-3.5 h-3.5 text-[#2F80E7]" />
-          <span className="font-semibold text-white">NexusTalent 2026.4 Enterprise Edition:</span>
+          <span className="font-semibold text-white">Scout 2026.4 Enterprise Edition:</span>
         </span>
         <span className="hidden sm:inline text-[#D8E9F7]">
           Unified ATS, Vendor Management &amp; Global Workforce Operations with instant skill indexing.
@@ -380,7 +380,7 @@ export const LandingPage: React.FC = () => {
               Built for Recruiters Who Move at Lightning Speed
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Every millisecond counts when placing top-tier technical and executive talent. NexusTalent equips recruiters with keyboard shortcuts, instant boolean search, direct resume previews, and 1-click submission approvals.
+              Every millisecond counts when placing top-tier technical and executive talent. Scout equips recruiters with keyboard shortcuts, instant boolean search, direct resume previews, and 1-click submission approvals.
             </p>
 
             <div className="space-y-3 pt-2 text-xs font-medium">
@@ -442,7 +442,7 @@ export const LandingPage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="p-8 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-4">
               <p className="text-sm text-slate-700 dark:text-slate-200 italic leading-relaxed">
-                "Switching from our legacy ATS to NexusTalent cut our recruiter submission turnaround from 3 days to under 4 hours. The visual candidate pipeline and automated client submission packet saved our recruiters over 15 hours per week."
+                "Switching from our legacy ATS to Scout cut our recruiter submission turnaround from 3 days to under 4 hours. The visual candidate pipeline and automated client submission packet saved our recruiters over 15 hours per week."
               </p>
               <div className="flex items-center gap-3 pt-2">
                 <img
@@ -613,7 +613,7 @@ export const LandingPage: React.FC = () => {
               Sign In
             </span>
           </div>
-          <div>© 2026 NexusTalent Inc. All rights reserved. Enterprise Unified Talent Platform.</div>
+          <div>© 2026 Scout Inc. All rights reserved. Enterprise Unified Talent Platform.</div>
         </div>
       </footer>
 

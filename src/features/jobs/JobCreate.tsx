@@ -97,6 +97,23 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
 
+  // Ceipal Parse Screen CKEditor State (matching user's screenshot media_1794910793067_a5e40e35.png)
+  const parseEditorRef = useRef<HTMLDivElement>(null);
+  const [parseFont, setParseFont] = useState('Arial');
+  const [parseFontSize, setParseFontSize] = useState('13px');
+  const [parseFormat, setParseFormat] = useState('Normal');
+  const [parseStyle, setParseStyle] = useState('Styles');
+  const [parseSourceMode, setParseSourceMode] = useState(false);
+  const [parseTextColor, setParseTextColor] = useState('#202B37');
+  const [parseHighlightColor, setParseHighlightColor] = useState('#FFFF00');
+  const [showParseColorPicker, setShowParseColorPicker] = useState(false);
+  const [showParseHighlightPicker, setShowParseHighlightPicker] = useState(false);
+  const [showParseLinkInput, setShowParseLinkInput] = useState(false);
+  const [parseLinkUrl, setParseLinkUrl] = useState('');
+  const [showParseTableInput, setShowParseTableInput] = useState(false);
+  const [parseTableRows, setParseTableRows] = useState(3);
+  const [parseTableCols, setParseTableCols] = useState(3);
+
   // Ceipal Documents: EXACTLY 3 options (Local Drive, Dropbox, Box - matching user's Ceipal screenshot)
   const [documentSources, setDocumentSources] = useState<Record<string, 'Local Drive' | 'Dropbox' | 'Box'>>({});
   const [activeDocModal, setActiveDocModal] = useState<'dropbox' | 'box' | null>(null);
@@ -131,7 +148,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   const [isEmailPreviewOpen, setIsEmailPreviewOpen] = useState(false);
 
   useEffect(() => {
-    if (creationMode !== 'manual' || !descriptionEditorRef.current) return;
+    if ((creationMode !== 'manual' && creationMode !== 'template') || !descriptionEditorRef.current) return;
 
     const parsedDescription = new DOMParser().parseFromString(description, 'text/html');
     const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'UL', 'OL', 'LI', 'P', 'DIV', 'BR']);
@@ -152,7 +169,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     descriptionEditorRef.current.replaceChildren(
       ...Array.from(parsedDescription.body.childNodes).flatMap(copySafeNodes)
     );
-  }, [creationMode, descriptionRevision]);
+  }, [creationMode, descriptionRevision, selectedTemplateKey]);
 
   const applyDescription = (value: string) => {
     setDescription(value);
@@ -431,34 +448,82 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     applyDescription(tpl.description);
   };
 
-  // AI Parse Job Details (Faithful to Ceipal 5.2.3)
+  // AI Parse Job Details (Faithful to Ceipal 5.2.3 and media_1794910793067_a5e40e35.png)
   const handleParseJobDetails = () => {
-    if (!rawJdText.trim()) return;
+    let sourceContent = rawJdText;
+    if (parseEditorRef.current && parseEditorRef.current.innerHTML && parseEditorRef.current.innerHTML.trim() !== '' && parseEditorRef.current.innerHTML !== '<p><br></p>') {
+      sourceContent = parseEditorRef.current.innerHTML;
+    }
+    if (!sourceContent.trim()) {
+      alert('Please enter or paste job details to parse.');
+      return;
+    }
 
-    // Intelligent extraction simulation
-    let extractedTitle = 'Extracted Software Engineer';
+    // Convert HTML to plain text for pattern matching
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = sourceContent;
+    const plainText = tempDiv.textContent || tempDiv.innerText || sourceContent;
+    const lower = plainText.toLowerCase();
+
+    // Intelligent extraction defaults
+    let extractedTitle = 'Senior Full Stack Software Engineer';
     let extractedPrimary = ['React', 'TypeScript', 'Node.js', 'PostgreSQL'];
     let extractedCategory = 'IT Software';
     let extractedMin = 4;
     let extractedMax = 8;
     let extractedRate = 135;
 
-    const lower = rawJdText.toLowerCase();
-    if (lower.includes('cloud') || lower.includes('aws') || lower.includes('kubernetes')) {
+    // Title extraction heuristics
+    const titleRegex = /(?:title|position|role|job title|opening for|hiring for)[:\s]+([^\n\r,.;]{3,50})/i;
+    const titleMatch = plainText.match(titleRegex);
+    if (titleMatch && titleMatch[1]?.trim()) {
+      extractedTitle = titleMatch[1].trim();
+    } else if (lower.includes('cloud') || lower.includes('aws') || lower.includes('devops') || lower.includes('kubernetes')) {
       extractedTitle = 'Senior Cloud Infrastructure Engineer';
       extractedPrimary = ['AWS', 'Kubernetes', 'Terraform', 'Linux', 'Docker'];
       extractedCategory = 'Big Data & Cloud';
       extractedRate = 150;
-    } else if (lower.includes('data') || lower.includes('spark') || lower.includes('python')) {
+    } else if (lower.includes('data') || lower.includes('spark') || lower.includes('python') || lower.includes('snowflake')) {
       extractedTitle = 'Lead Data Platform Engineer';
       extractedPrimary = ['PySpark', 'Python', 'Databricks', 'SQL', 'GCP'];
       extractedCategory = 'Big Data & Cloud';
       extractedRate = 145;
-    } else if (lower.includes('qa') || lower.includes('test') || lower.includes('automation')) {
+    } else if (lower.includes('qa') || lower.includes('test') || lower.includes('automation') || lower.includes('selenium')) {
       extractedTitle = 'Senior QA Automation Specialist';
       extractedPrimary = ['Playwright', 'Selenium', 'Java', 'API Testing'];
       extractedCategory = 'QA Testing';
       extractedRate = 120;
+    } else if (lower.includes('frontend') || lower.includes('react') || lower.includes('ui/ux') || lower.includes('angular')) {
+      extractedTitle = 'Senior Frontend Engineer';
+      extractedPrimary = ['React', 'TypeScript', 'Next.js', 'Tailwind CSS', 'GraphQL'];
+      extractedCategory = 'IT Software';
+      extractedRate = 130;
+    } else if (lower.includes('java') || lower.includes('spring')) {
+      extractedTitle = 'Senior Java Backend Engineer';
+      extractedPrimary = ['Java 17', 'Spring Boot', 'Microservices', 'PostgreSQL', 'Docker'];
+      extractedCategory = 'IT Software';
+      extractedRate = 140;
+    }
+
+    // Experience heuristics
+    const expRegex = /(\d+)\s*(?:-|to)\s*(\d+)\s*(?:years|yrs|year)/i;
+    const expMatch = plainText.match(expRegex);
+    if (expMatch) {
+      extractedMin = parseInt(expMatch[1], 10);
+      extractedMax = parseInt(expMatch[2], 10);
+    } else {
+      const singleExpMatch = plainText.match(/(\d+)\+?\s*(?:years|yrs|year)/i);
+      if (singleExpMatch) {
+        extractedMin = parseInt(singleExpMatch[1], 10);
+        extractedMax = extractedMin + 3;
+      }
+    }
+
+    // Rate heuristics
+    const rateRegex = /\$?(\d{2,3})\s*(?:-|\/|to)\s*\$?(\d{2,3})\s*(?:\/hr|hr|per hour|usd)/i;
+    const rateMatch = plainText.match(rateRegex);
+    if (rateMatch && rateMatch[2]) {
+      extractedRate = parseInt(rateMatch[2], 10);
     }
 
     setTitle(extractedTitle);
@@ -468,7 +533,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     setMaxExperience(extractedMax);
     setBillRate(extractedRate);
     setPayRate(Math.round(extractedRate * 0.75));
-    applyDescription(rawJdText);
+    applyDescription(sourceContent);
     setCreationMode('manual');
   };
 
@@ -558,42 +623,55 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in">
       {/* Top Header & Navigation Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DCE6EF] dark:border-[#354A5C] pb-4">
-        <div className="flex items-center gap-3">
+      {creationMode === 'select' ? (
+        <div className="flex items-center justify-between pb-2">
           <button
-            onClick={() => {
-              if (creationMode !== 'select') {
-                setCreationMode('select');
-              } else {
-                navigate('jobs');
-              }
-            }}
-            className="p-2 rounded-xl bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#1769AA] hover:bg-[#EAF4FC] transition-colors"
-            title="Back"
+            onClick={() => navigate('jobs')}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white hover:bg-slate-50 dark:hover:bg-[#22384B] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Job Postings</span>
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EAF4FC] dark:bg-[#083F70] text-[#1769AA] dark:text-[#D8E9F7]">
-                Job Posting Management
-              </span>
-              <span className="text-xs font-mono font-bold text-[#7A8794]">
-                {code}
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white mt-0.5">
-              {creationMode === 'select' && 'New Job Posting'}
-              {creationMode === 'manual' && 'Manual Job Creation'}
-              {creationMode === 'template' && 'Job Template Blueprint'}
-              {creationMode === 'parse' && 'Parse Job Details'}
-            </h1>
-          </div>
         </div>
+      ) : creationMode === 'parse' ? (
+        <div className="flex items-center justify-between pb-1">
+          <button
+            type="button"
+            onClick={() => setCreationMode('select')}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white hover:bg-slate-50 dark:hover:bg-[#22384B] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Methods</span>
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DCE6EF] dark:border-[#354A5C] pb-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCreationMode('select')}
+              className="p-2 rounded-xl bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#1769AA] hover:bg-[#EAF4FC] transition-colors"
+              title="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EAF4FC] dark:bg-[#083F70] text-[#1769AA] dark:text-[#D8E9F7]">
+                  Job Posting Management
+                </span>
+                <span className="text-xs font-mono font-bold text-[#7A8794]">
+                  {code}
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white mt-0.5">
+                {creationMode === 'manual' && 'Manual Job Creation'}
+                {creationMode === 'template' && (selectedTemplateKey ? `New Job from Template: ${title}` : 'Job Template Selection')}
+              </h1>
+            </div>
+          </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {creationMode !== 'select' && (
+          {/* Action Controls */}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setCreationMode('select')}
@@ -601,132 +679,262 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             >
               Switch Method
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => navigate('jobs')}
-            className="px-3.5 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#5E6B7A] dark:text-[#B9CAD9] hover:bg-slate-100 transition-colors"
-          >
-            Cancel
-          </button>
-          {creationMode === 'manual' && (
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="px-5 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              type="button"
+              onClick={() => navigate('jobs')}
+              className="px-3.5 py-2 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#5E6B7A] dark:text-[#B9CAD9] hover:bg-slate-100 transition-colors"
             >
-              <Save className="w-4 h-4" />
-              <span>{isSubmitting ? 'Publishing...' : 'Save & Publish'}</span>
+              Cancel
             </button>
-          )}
+            {(creationMode === 'manual' || (creationMode === 'template' && selectedTemplateKey)) && (
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="px-5 py-2 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSubmitting ? 'Publishing...' : 'Save & Publish'}</span>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================================= */}
-      {/* 1. CEIPAL 3-METHOD SELECTION SCREEN (media_1794558512745_31ee4c3d.png) */}
+      {/* 1. CEIPAL 3-METHOD SELECTION SCREEN (media_1794837670723_c70a8d91.png) */}
       {/* ========================================================================= */}
       {creationMode === 'select' && (
-        <div className="p-8 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-3xl shadow-xs text-center space-y-8">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-display font-bold text-[#202B37] dark:text-white">
-              Create New Job
-            </h2>
-            <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-1">
-              Select one of the 3 standard Ceipal ingestion pathways to initiate a new job requisition.
-            </p>
-          </div>
+        <div className="py-12 sm:py-20 flex flex-col items-center justify-center text-center space-y-12 animate-in fade-in zoom-in-95 duration-300">
+          {/* Main Title matching Screenshot */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#111827] dark:text-white tracking-tight">
+            Create a New Job
+          </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+          {/* 3 Glassmorphism Cards with Hover Zoom Effects */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 md:gap-14 w-full max-w-4xl px-4">
             {/* 1. Manual Creation */}
             <div
               onClick={() => setCreationMode('manual')}
-              className="p-6 rounded-2xl border-2 border-[#DCE6EF] dark:border-[#354A5C] hover:border-[#1769AA] bg-[#F5F8FB] dark:bg-[#162431] hover:bg-white dark:hover:bg-[#1B2936] hover:shadow-xl hover:shadow-[#1769AA]/10 transition-all cursor-pointer group flex flex-col justify-between"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1B2936]/50 hover:bg-white/80 dark:hover:bg-[#1B2936]/80 border border-white/80 dark:border-white/10 hover:border-blue-400/50 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 w-64 h-64 select-none"
             >
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#1769AA]/10 text-[#1769AA] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                  <FileText className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white group-hover:text-[#1769AA] transition-colors">
-                  5.2.1 Manual Creation
-                </h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-2 leading-relaxed">
-                  Complete manual specification form with facility codes, client billing, rate cards, skills, and managerial allocations.
-                </p>
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 rounded-3xl bg-radial from-blue-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+              {/* Icon 1: Manual Creation (Exact Screenshot Replica) */}
+              <div className="relative transform group-hover:scale-105 transition-transform duration-300">
+                <svg viewBox="0 0 140 140" className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl" fill="none">
+                  <defs>
+                    <filter id="card-shadow-1" x="-10%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.12" />
+                    </filter>
+                    <filter id="pencil-shadow" x="-20%" y="-20%" width="150%" height="150%">
+                      <feDropShadow dx="2" dy="5" stdDeviation="4" floodOpacity="0.2" />
+                    </filter>
+                    <linearGradient id="sheet-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFFFFF" />
+                      <stop offset="100%" stopColor="#F8FAFC" />
+                    </linearGradient>
+                    <linearGradient id="pencil-body" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FB923C" />
+                      <stop offset="100%" stopColor="#EA580C" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Back sheet layer for depth */}
+                  <rect x="22" y="18" width="76" height="96" rx="18" fill="#E0F2FE" />
+                  
+                  {/* Front sheet with shadow */}
+                  <g filter="url(#card-shadow-1)">
+                    <rect x="26" y="22" width="74" height="92" rx="16" fill="url(#sheet-grad)" stroke="#E2E8F0" strokeWidth="1.5" />
+                    <rect x="38" y="38" width="36" height="8" rx="4" fill="#1E293B" />
+                    <rect x="38" y="54" width="30" height="6" rx="3" fill="#38BDF8" />
+                    <rect x="38" y="68" width="22" height="6" rx="3" fill="#38BDF8" />
+                  </g>
+
+                  {/* 3D Pencil across page */}
+                  <g transform="translate(74, 48) rotate(45)" filter="url(#pencil-shadow)">
+                    {/* Pencil eraser */}
+                    <path d="M-6 -26 h12 a6 6 0 0 1 6 6 v6 h-24 v-6 a6 6 0 0 1 6 -6 z" fill="#0D9488" />
+                    {/* Ferrule collar */}
+                    <rect x="-12" y="-14" width="24" height="6" rx="1" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.5" />
+                    {/* Pencil Body (Orange) */}
+                    <rect x="-12" y="-8" width="24" height="34" rx="2" fill="url(#pencil-body)" />
+                    {/* Highlight reflection stripe on pencil */}
+                    <rect x="-6" y="-8" width="4" height="34" fill="#FED7AA" fillOpacity="0.6" />
+                    {/* Wooden sharpened cone */}
+                    <path d="M-12 26 L0 46 L12 26 Z" fill="#FDE68A" />
+                    {/* Graphite lead tip */}
+                    <path d="M-4 39 L0 46 L4 39 Z" fill="#1E293B" />
+                  </g>
+                </svg>
               </div>
-              <div className="mt-6 flex items-center text-xs font-bold text-[#1769AA] group-hover:translate-x-1 transition-transform">
-                <span>Start Manual Entry</span>
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
+
+              {/* Ground diffuse shadow */}
+              <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-blue-500/30 transition-all duration-300" />
+
+              {/* Label */}
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-[#1769AA] dark:group-hover:text-[#60A5FA] tracking-tight transition-colors text-center">
+                Manual Creation
+              </h3>
             </div>
 
-            {/* 2. Job Template */}
+            {/* 2. Use Job Template */}
             <div
               onClick={() => setCreationMode('template')}
-              className="p-6 rounded-2xl border-2 border-[#DCE6EF] dark:border-[#354A5C] hover:border-[#1769AA] bg-[#F5F8FB] dark:bg-[#162431] hover:bg-white dark:hover:bg-[#1B2936] hover:shadow-xl hover:shadow-[#1769AA]/10 transition-all cursor-pointer group flex flex-col justify-between"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1B2936]/50 hover:bg-white/80 dark:hover:bg-[#1B2936]/80 border border-white/80 dark:border-white/10 hover:border-teal-400/50 shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 w-64 h-64 select-none"
             >
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#1769AA]/10 text-[#1769AA] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                  <Copy className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white group-hover:text-[#1769AA] transition-colors">
-                  5.2.2 Job Template
-                </h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-2 leading-relaxed">
-                  1-Click pre-fill from tested industry requisition blueprints (Software Developer, Cloud Architect, Full Stack, SRE).
-                </p>
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 rounded-3xl bg-radial from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+              {/* Icon 2: Use Job Template (Exact Screenshot Replica) */}
+              <div className="relative transform group-hover:scale-105 transition-transform duration-300">
+                <svg viewBox="0 0 140 140" className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl" fill="none">
+                  <defs>
+                    <filter id="card-shadow-2" x="-10%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.12" />
+                    </filter>
+                    <filter id="badge-shadow" x="-20%" y="-20%" width="150%" height="150%">
+                      <feDropShadow dx="1" dy="4" stdDeviation="4" floodOpacity="0.25" />
+                    </filter>
+                    <linearGradient id="badge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#14B8A6" />
+                      <stop offset="100%" stopColor="#0F766E" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Back sheet tilted */}
+                  <rect x="18" y="24" width="76" height="94" rx="18" fill="#E0F2FE" transform="rotate(-6 56 71)" />
+
+                  {/* Front sheet with shadow */}
+                  <g filter="url(#card-shadow-2)">
+                    <rect x="28" y="22" width="76" height="94" rx="16" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1.5" />
+                    
+                    {/* Dark top header bar */}
+                    <rect x="40" y="38" width="40" height="9" rx="4.5" fill="#1E293B" />
+                    
+                    {/* Two colorful content blocks */}
+                    <rect x="40" y="54" width="22" height="20" rx="5" fill="#FFEDD5" stroke="#FED7AA" strokeWidth="1" />
+                    <rect x="66" y="54" width="22" height="20" rx="5" fill="#CCFBF1" stroke="#99F6E4" strokeWidth="1" />
+                    
+                    {/* Bottom content lines */}
+                    <rect x="40" y="82" width="48" height="5" rx="2.5" fill="#E2E8F0" />
+                    <rect x="40" y="92" width="30" height="4" rx="2" fill="#F1F5F9" />
+                  </g>
+
+                  {/* Top-Right Green Checkmark Badge */}
+                  <g filter="url(#badge-shadow)">
+                    <circle cx="98" cy="36" r="16" fill="url(#badge-grad)" stroke="#FFFFFF" strokeWidth="2.5" />
+                    <path d="M92 36.5 L96.5 41 L105 31.5" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </g>
+                </svg>
               </div>
-              <div className="mt-6 flex items-center text-xs font-bold text-[#1769AA] group-hover:translate-x-1 transition-transform">
-                <span>Browse Templates</span>
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
+
+              {/* Ground diffuse shadow */}
+              <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-teal-500/30 transition-all duration-300" />
+
+              {/* Label */}
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 tracking-tight transition-colors text-center">
+                Use Job Template
+              </h3>
             </div>
 
             {/* 3. Parse Job Details */}
             <div
               onClick={() => setCreationMode('parse')}
-              className="p-6 rounded-2xl border-2 border-[#DCE6EF] dark:border-[#354A5C] hover:border-[#2F80E7] bg-[#F5F8FB] dark:bg-[#162431] hover:bg-white dark:hover:bg-[#1B2936] hover:shadow-xl hover:shadow-[#2F80E7]/10 transition-all cursor-pointer group flex flex-col justify-between"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1B2936]/50 hover:bg-white/80 dark:hover:bg-[#1B2936]/80 border border-white/80 dark:border-white/10 hover:border-orange-400/50 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 w-64 h-64 select-none"
             >
-              <div>
-                <div className="w-14 h-14 rounded-2xl bg-[#2F80E7]/10 text-[#2F80E7] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white group-hover:text-[#2F80E7] transition-colors">
-                  5.2.3 Parse Job Details
-                </h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-2 leading-relaxed">
-                  Paste raw client requirement emails or copy-pasted briefs. Automatically extracts title, tech stack, experience, and rates.
-                </p>
+              {/* Ambient Glow */}
+              <div className="absolute inset-0 rounded-3xl bg-radial from-orange-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+              {/* Icon 3: Parse Job Details (Exact Screenshot Replica) */}
+              <div className="relative transform group-hover:scale-105 transition-transform duration-300">
+                <svg viewBox="0 0 140 140" className="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-xl" fill="none">
+                  <defs>
+                    <filter id="card-shadow-3" x="-10%" y="-10%" width="130%" height="130%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.12" />
+                    </filter>
+                    <filter id="orange-badge-shadow" x="-20%" y="-20%" width="150%" height="150%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.25" />
+                    </filter>
+                    <linearGradient id="orange-badge" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FB923C" />
+                      <stop offset="100%" stopColor="#EA580C" />
+                    </linearGradient>
+                    <linearGradient id="glass-card" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFFFFF" />
+                      <stop offset="100%" stopColor="#F1F5F9" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Outer glass container / backing */}
+                  <rect x="22" y="24" width="96" height="96" rx="22" fill="#E0F2FE" fillOpacity="0.6" stroke="#BAE6FD" strokeWidth="1.5" />
+
+                  {/* Inner translucent sheet with shadow */}
+                  <g filter="url(#card-shadow-3)">
+                    <rect x="26" y="28" width="88" height="88" rx="18" fill="url(#glass-card)" stroke="#FFFFFF" strokeWidth="1.5" />
+
+                    {/* Top Orange Upload Badge with Arrow */}
+                    <g filter="url(#orange-badge-shadow)">
+                      <rect x="49" y="18" width="42" height="42" rx="12" fill="url(#orange-badge)" />
+                      {/* Upward Arrow */}
+                      <path d="M70 44 V28 M64 34 L70 28 L76 34" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </g>
+
+                    {/* Bottom Dark Navy Card */}
+                    <rect x="38" y="66" width="64" height="42" rx="12" fill="#1E293B" />
+                    {/* Data chips / lines inside dark card */}
+                    <rect x="46" y="76" width="34" height="4.5" rx="2.25" fill="#2DD4BF" />
+                    <rect x="46" y="85" width="48" height="4.5" rx="2.25" fill="#38BDF8" />
+                    <rect x="46" y="94" width="24" height="4.5" rx="2.25" fill="#2DD4BF" />
+                  </g>
+                </svg>
               </div>
-              <div className="mt-6 flex items-center text-xs font-bold text-[#2F80E7] group-hover:translate-x-1 transition-transform">
-                <span>Paste &amp; Parse</span>
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </div>
+
+              {/* Ground diffuse shadow */}
+              <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-orange-500/30 transition-all duration-300" />
+
+              {/* Label */}
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight transition-colors text-center">
+                Parse Job Details
+              </h3>
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 2. JOB TEMPLATE SELECTOR (media_1794558557697_1622e78b.png) */}
+      {/* 2. JOB TEMPLATE SELECTOR (Opens full form directly on same page) */}
       {/* ========================================================================= */}
       {creationMode === 'template' && (
-        <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+        <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
             <div>
-              <h2 className="text-lg font-bold text-[#202B37] dark:text-white">
-                5.2.2 Job Template Selection
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EAF4FC] dark:bg-[#083F70] text-[#1769AA] dark:text-[#D8E9F7]">
+                  5.2.2 Job Template Selection
+                </span>
+                {selectedTemplateKey && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                    Template Loaded
+                  </span>
+                )}
+              </div>
+              <h2 className="text-base font-bold text-[#202B37] dark:text-white mt-1">
+                Choose Business Unit &amp; Job Template
               </h2>
               <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-0.5">
-                Choose your Business Unit and standard role template to auto-populate all requisition fields.
+                Selecting a template directly opens and populates all requisition details, skills, billing rates, and job description on this page.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#202B37] dark:text-[#F5F8FB] mb-1.5">
-                Business Unit
-              </label>
+              <div className="flex items-center h-[30px] mb-1.5">
+                <label className="block text-xs font-bold text-[#202B37] dark:text-[#F5F8FB]">
+                  Business Unit
+                </label>
+              </div>
               <select
                 value={businessUnit}
                 onChange={(e) => setBusinessUnit(e.target.value)}
@@ -740,9 +948,22 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#202B37] dark:text-[#F5F8FB] mb-1.5">
-                Job Templates *
-              </label>
+              <div className="flex items-center justify-between h-[30px] mb-1.5">
+                <label className="block text-xs font-bold text-[#202B37] dark:text-[#F5F8FB]">
+                  Job Templates *
+                </label>
+                {selectedTemplateKey && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectTemplate('')}
+                    className="px-3 py-1 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Clear selected template"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Clear Template Selection</span>
+                  </button>
+                )}
+              </div>
               <select
                 value={selectedTemplateKey}
                 onChange={(e) => handleSelectTemplate(e.target.value)}
@@ -756,148 +977,517 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             </div>
           </div>
 
-          {selectedTemplateKey && (
-            <div className="p-5 rounded-2xl bg-[#EAF4FC] dark:bg-[#083F70]/40 border border-[#1769AA]/30 space-y-4 animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#1769AA] dark:text-[#D8E9F7]">
-                    Template Pre-filled Preview
-                  </span>
-                  <h3 className="text-base font-bold text-[#202B37] dark:text-white mt-0.5">
-                    {title}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCreationMode('manual')}
-                  className="px-4 py-2 bg-[#1769AA] hover:bg-[#12578E] text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
-                >
-                  <span>Edit in Full Form</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+          {!selectedTemplateKey && (
+            <div className="p-8 text-center border-2 border-dashed border-[#DCE6EF] dark:border-[#354A5C] rounded-xl bg-slate-50/50 dark:bg-slate-900/20 space-y-2">
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#1769AA] flex items-center justify-center mx-auto text-lg">
+                📋
               </div>
-
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white font-semibold border border-[#DCE6EF] dark:border-[#354A5C]">
-                  Industry: {industry}
-                </span>
-                <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white font-semibold border border-[#DCE6EF] dark:border-[#354A5C]">
-                  Experience: {minExperience} - {maxExperience} Years
-                </span>
-                <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white font-semibold border border-[#DCE6EF] dark:border-[#354A5C]">
-                  Bill Rate: ${billRate}/hr
-                </span>
-              </div>
-
-              <div>
-                <span className="text-xs font-bold text-[#5E6B7A] dark:text-[#B9CAD9]">Primary Skills:</span>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {primarySkills.map((sk, idx) => (
-                    <span key={idx} className="px-2 py-0.5 rounded-md bg-[#1769AA]/10 text-[#1769AA] dark:text-[#8CBCE8] font-bold text-xs">
-                      {sk}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-xs font-bold text-[#5E6B7A] dark:text-[#B9CAD9]">Description Blueprint:</span>
-                <pre className="p-3 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-[#F5F8FB] font-sans whitespace-pre-wrap mt-1 max-h-36 overflow-y-auto">
-                  {description}
-                </pre>
-              </div>
+              <h3 className="text-xs font-bold text-[#202B37] dark:text-white">
+                Select a template from the dropdown above
+              </h3>
+              <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] max-w-md mx-auto">
+                Once chosen, the entire job creation form will open immediately below on this page with all fields pre-filled for you to edit.
+              </p>
             </div>
           )}
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 3. PARSE JOB DETAILS SCREEN (media_1794558595058_2fb8155c.png) */}
+      {/* 3. PARSE JOB DETAILS SCREEN (Ceipal Exact Replica matching media_1794910793067_a5e40e35.png) */}
       {/* ========================================================================= */}
       {creationMode === 'parse' && (
-        <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#DCE6EF] dark:border-[#354A5C]">
-            <div>
-              <h2 className="text-lg font-bold text-[#202B37] dark:text-white">
-                5.2.3 Parse Job Details
-              </h2>
-              <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-0.5">
-                Paste the raw job requirement text or client email to extract parameters directly.
-              </p>
-            </div>
-          </div>
-
-          <div className="max-w-xs">
-            <label className="block text-xs font-bold text-[#202B37] dark:text-[#F5F8FB] mb-1.5">
+        <div className="space-y-4 animate-in fade-in">
+          {/* Ceipal Top Row: Business Unit */}
+          <div className="max-w-xs space-y-1">
+            <label className="block text-xs font-bold text-[#475569] dark:text-[#94A3B8]">
               Business Unit
             </label>
             <select
               value={businessUnit}
               onChange={(e) => setBusinessUnit(e.target.value)}
-              className="w-full p-2.5 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#202B37] dark:text-white"
+              className="w-full px-3 py-1.5 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded text-xs font-semibold text-[#202B37] dark:text-white shadow-2xs focus:outline-none focus:border-[#2F80E7]"
             >
               <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
               <option value="Cloud & AI Practice">Cloud &amp; AI Practice</option>
               <option value="Core Engineering">Core Engineering</option>
+              <option value="Fintech & Enterprise">Fintech &amp; Enterprise</option>
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-[#202B37] dark:text-[#F5F8FB]">
-              Paste Job Details *
-            </label>
-            <textarea
-              rows={10}
-              value={rawJdText}
-              onChange={(e) => setRawJdText(e.target.value)}
-              placeholder="Example: We need a Senior Full Stack Developer in Mumbai. Must know React, TypeScript, Node.js, and AWS ECS. Budget $130-$145/hr. 5+ years experience needed. Candidate will lead development of microservices..."
-              className="w-full p-4 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl text-xs font-mono text-[#202B37] dark:text-white focus:outline-none focus:border-[#2F80E7] focus:ring-2 focus:ring-[#2F80E7]/20"
-            />
+          {/* Ceipal Header: New Job */}
+          <div>
+            <h2 className="text-xl font-bold text-[#202B37] dark:text-white">
+              New Job
+            </h2>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setCreationMode('select')}
-              className="px-4 py-2 text-xs font-semibold text-[#5E6B7A] dark:text-[#B9CAD9] hover:bg-slate-100 rounded-xl"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleParseJobDetails}
-              disabled={!rawJdText.trim()}
-              className="px-6 py-2.5 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-md shadow-[#2F80E7]/20 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Start Parsing</span>
-            </button>
+          {/* Ceipal Main Card: Paste Job Details */}
+          <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-lg p-5 shadow-2xs space-y-2.5">
+            <div className="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">
+              Paste Job Details
+            </div>
+
+            {/* Ceipal CKEditor Container */}
+            <div className="border border-[#CBD5E1] dark:border-[#354A5C] rounded-md overflow-hidden bg-white dark:bg-[#162431] shadow-2xs">
+              {/* CKEditor Toolbar Row 1 */}
+              <div className="flex items-center justify-between flex-wrap gap-1 px-2.5 py-1.5 bg-[#F8FAFC] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] text-xs">
+                <div className="flex items-center gap-0.5 flex-wrap text-[#475569] dark:text-[#CBD5E1]">
+                  {/* Clean / Magic wand */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Clean Format">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  </button>
+                  {/* Cut */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('cut')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Cut">
+                    <Scissors className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Copy */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('copy')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Copy">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Paste */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      document.execCommand('insertText', false, text);
+                    } catch {}
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste">
+                    <FileText className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Paste from Word */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      document.execCommand('insertText', false, text);
+                    } catch {}
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste from Word">
+                    <FileCode className="w-3.5 h-3.5 text-[#0061D5]" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Undo / Redo */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('undo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Undo">
+                    <Undo2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('redo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Redo">
+                    <Redo2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Find */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                    const term = prompt('Find text:');
+                    if (term && (window as any).find) (window as any).find(term);
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Find">
+                    <Search className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Replace */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                    const findStr = prompt('Text to find:');
+                    if (findStr) {
+                      const replaceStr = prompt('Replace with:') || '';
+                      if (parseEditorRef.current) {
+                        parseEditorRef.current.innerHTML = parseEditorRef.current.innerHTML.replaceAll(findStr, replaceStr);
+                        setRawJdText(parseEditorRef.current.innerHTML);
+                      }
+                    }
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Replace">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Select All */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('selectAll')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Select All">
+                    <CheckSquare className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Remove Format */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Remove Format">
+                    <RemoveFormatting className="w-3.5 h-3.5 text-red-500" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Bold / Italic / Underline / Strike */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('bold')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-bold" title="Bold">
+                    <Bold className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('italic')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] italic" title="Italic">
+                    <Italic className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('underline')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] underline" title="Underline">
+                    <Underline className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('strikeThrough')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] line-through" title="Strikethrough">
+                    <Strikethrough className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Subscript / Superscript */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('subscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Subscript">
+                    <Subscript className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('superscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Superscript">
+                    <Superscript className="w-3.5 h-3.5" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Lists */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertOrderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Numbered List">
+                    <ListOrdered className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertUnorderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Bulleted List">
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Indent / Outdent */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('outdent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Decrease Indent">
+                    <Outdent className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('indent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Increase Indent">
+                    <Indent className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Blockquote */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('formatBlock', false, 'blockquote')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Blockquote">
+                    <Quote className="w-3.5 h-3.5" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Link */}
+                  <button type="button" onClick={() => setShowParseLinkInput(!showParseLinkInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Insert Link">
+                    <Link2 className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Unlink */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('unlink')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Unlink">
+                    <Unlink className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Anchor */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                    const name = prompt('Anchor name:');
+                    if (name) document.execCommand('insertHTML', false, `<a name="${name}"></a>`);
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Anchor">
+                    <Anchor className="w-3.5 h-3.5" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Image */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                    const url = prompt('Image URL:');
+                    if (url) document.execCommand('insertImage', false, url);
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Image">
+                    <Image className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Table */}
+                  <button type="button" onClick={() => setShowParseTableInput(!showParseTableInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Table">
+                    <Table className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Horizontal Rule */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertHorizontalRule')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Horizontal Rule">
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  {/* Special Character */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertText', false, 'Ω')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-serif text-xs font-bold" title="Special Character (Ω)">
+                    Ω
+                  </button>
+                </div>
+
+                {/* Source Mode Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setParseSourceMode(!parseSourceMode)}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors ${
+                    parseSourceMode
+                      ? 'bg-[#2F80E7] text-white'
+                      : 'hover:bg-[#E2E8F0] dark:hover:bg-[#334155] text-[#475569] dark:text-[#CBD5E1]'
+                  }`}
+                  title="Toggle HTML Source Code View"
+                >
+                  <Code2 className="w-3.5 h-3.5" />
+                  <span>Source</span>
+                </button>
+              </div>
+
+              {/* CKEditor Toolbar Row 2: Alignment, Fonts, Colors AND Action Buttons on Right */}
+              <div className="flex items-center justify-between flex-wrap gap-2 px-2.5 py-1 bg-[#F1F5F9] dark:bg-[#162431] border-b border-[#E2E8F0] dark:border-[#334155] text-xs">
+                {/* Left side: Formatting tools */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Alignment */}
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyLeft')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Left">
+                    <AlignLeft className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyCenter')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Center">
+                    <AlignCenter className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyRight')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Right">
+                    <AlignRight className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyFull')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Justify">
+                    <AlignJustify className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                  </button>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Text Color A */}
+                  <div className="relative">
+                    <button type="button" onClick={() => { setShowParseColorPicker(!showParseColorPicker); setShowParseHighlightPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Text Color">
+                      <Type className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                      <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: parseTextColor }}></span>
+                    </button>
+                    {showParseColorPicker && (
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg shadow-xl p-2 z-50 grid grid-cols-7 gap-1 w-[160px]">
+                        {['#000000','#333333','#666666','#999999','#CCCCCC','#FFFFFF','#E05252','#D97706','#16A34A','#2563EB','#7C3AED','#DB2777','#1769AA','#0B4F89'].map((c) => (
+                          <button key={c} type="button" onClick={() => { setParseTextColor(c); document.execCommand('foreColor', false, c); setShowParseColorPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Highlight Color */}
+                  <div className="relative">
+                    <button type="button" onClick={() => { setShowParseHighlightPicker(!showParseHighlightPicker); setShowParseColorPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Background Color">
+                      <Highlighter className="w-3.5 h-3.5 text-[#475569] dark:text-[#CBD5E1]" />
+                      <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: parseHighlightColor }}></span>
+                    </button>
+                    {showParseHighlightPicker && (
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1B2936] border border-[#CBD5E1] dark:border-[#354A5C] rounded-lg shadow-xl p-2 z-50 grid grid-cols-6 gap-1 w-[140px]">
+                        {['#FFFF00','#00FF00','#00FFFF','#FF69B4','#FFA500','#FF6347','#E6E6FA','#98FB98','#87CEEB','#FFFFFF'].map((c) => (
+                          <button key={c} type="button" onClick={() => { setParseHighlightColor(c); document.execCommand('hiliteColor', false, c); setShowParseHighlightPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="w-px h-4 bg-[#CBD5E1] dark:bg-[#475569] mx-1"></span>
+
+                  {/* Styles */}
+                  <select
+                    value={parseStyle}
+                    onChange={(e) => setParseStyle(e.target.value)}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="Styles">Styles</option>
+                    <option value="lead">Lead Paragraph</option>
+                    <option value="badge">Badge Tag</option>
+                    <option value="italic-title">Italic Title</option>
+                  </select>
+
+                  {/* Format */}
+                  <select
+                    value={parseFormat}
+                    onChange={(e) => {
+                      setParseFormat(e.target.value);
+                      const tag = e.target.value === 'Normal' ? 'P' : e.target.value === 'Heading 1' ? 'H1' : e.target.value === 'Heading 2' ? 'H2' : e.target.value === 'Heading 3' ? 'H3' : 'P';
+                      document.execCommand('formatBlock', false, tag);
+                    }}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="Normal">Format</option>
+                    <option value="Heading 1">Heading 1</option>
+                    <option value="Heading 2">Heading 2</option>
+                    <option value="Heading 3">Heading 3</option>
+                    <option value="Formatted">Formatted</option>
+                  </select>
+
+                  {/* Font */}
+                  <select
+                    value={parseFont}
+                    onChange={(e) => {
+                      setParseFont(e.target.value);
+                      document.execCommand('fontName', false, e.target.value);
+                    }}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="Arial">Font</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Lucida Sans">Lucida Sans</option>
+                    <option value="Tahoma">Tahoma</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Trebuchet MS">Trebuchet MS</option>
+                    <option value="Verdana">Verdana</option>
+                  </select>
+
+                  {/* Size */}
+                  <select
+                    value={parseFontSize}
+                    onChange={(e) => {
+                      setParseFontSize(e.target.value);
+                      document.execCommand('fontSize', false, e.target.value);
+                    }}
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#CBD5E1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
+                  >
+                    <option value="3">Size</option>
+                    <option value="1">8</option>
+                    <option value="2">10</option>
+                    <option value="3">12</option>
+                    <option value="4">14</option>
+                    <option value="5">18</option>
+                    <option value="6">24</option>
+                    <option value="7">36</option>
+                  </select>
+                </div>
+
+                {/* Right side: Action Buttons matching Screenshot EXACTLY */}
+                <div className="flex items-center gap-1.5 ml-auto">
+                  <button
+                    type="button"
+                    onClick={handleParseJobDetails}
+                    disabled={!rawJdText.trim()}
+                    className="px-3.5 py-1 bg-[#007BFF] hover:bg-[#0069D9] disabled:opacity-50 text-white font-semibold text-[11px] rounded shadow-xs transition-colors"
+                  >
+                    Start Parsing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreationMode('select')}
+                    className="px-3.5 py-1 bg-[#007BFF] hover:bg-[#0069D9] text-white font-semibold text-[11px] rounded shadow-xs transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              {/* Popovers for Link & Table */}
+              {showParseLinkInput && (
+                <div className="p-2.5 bg-[#F8FAFC] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-2 text-xs">
+                  <span className="text-[11px] font-semibold text-[#475569]">URL:</span>
+                  <input
+                    type="url"
+                    value={parseLinkUrl}
+                    onChange={(e) => setParseLinkUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="flex-1 px-2 py-1 bg-white dark:bg-[#162431] border border-[#CBD5E1] rounded text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (parseLinkUrl.trim()) {
+                        document.execCommand('createLink', false, parseLinkUrl.trim());
+                        setParseLinkUrl('');
+                        setShowParseLinkInput(false);
+                      }
+                    }}
+                    className="px-3 py-1 bg-[#2F80E7] text-white text-[11px] font-bold rounded"
+                  >
+                    Insert Link
+                  </button>
+                  <button type="button" onClick={() => setShowParseLinkInput(false)} className="text-[#64748B] text-xs">✕</button>
+                </div>
+              )}
+
+              {showParseTableInput && (
+                <div className="p-2.5 bg-[#F8FAFC] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-3 text-xs">
+                  <span className="text-[11px] font-semibold text-[#475569]">Table:</span>
+                  <label className="flex items-center gap-1 text-[11px]">
+                    <span>Rows:</span>
+                    <input type="number" min={1} max={10} value={parseTableRows} onChange={(e) => setParseTableRows(Number(e.target.value))} className="w-12 px-1 py-0.5 border rounded text-xs text-center" />
+                  </label>
+                  <label className="flex items-center gap-1 text-[11px]">
+                    <span>Cols:</span>
+                    <input type="number" min={1} max={8} value={parseTableCols} onChange={(e) => setParseTableCols(Number(e.target.value))} className="w-12 px-1 py-0.5 border rounded text-xs text-center" />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let html = '<table style="border-collapse:collapse;width:100%;border:1px solid #CBD5E1;margin:8px 0"><thead><tr>';
+                      for (let c = 0; c < parseTableCols; c++) html += `<th style="border:1px solid #CBD5E1;padding:6px 10px;background:#F1F5F9;font-weight:bold;text-align:left;font-size:12px">Col ${c + 1}</th>`;
+                      html += '</tr></thead><tbody>';
+                      for (let r = 0; r < parseTableRows; r++) {
+                        html += '<tr>';
+                        for (let c = 0; c < parseTableCols; c++) html += `<td style="border:1px solid #CBD5E1;padding:6px 10px;font-size:12px">&nbsp;</td>`;
+                        html += '</tr>';
+                      }
+                      html += '</tbody></table>';
+                      document.execCommand('insertHTML', false, html);
+                      setShowParseTableInput(false);
+                    }}
+                    className="px-3 py-1 bg-[#2F80E7] text-white text-[11px] font-bold rounded"
+                  >
+                    Insert
+                  </button>
+                  <button type="button" onClick={() => setShowParseTableInput(false)} className="text-[#64748B] text-xs">✕</button>
+                </div>
+              )}
+
+              {/* Editor Content Area */}
+              {parseSourceMode ? (
+                <textarea
+                  value={rawJdText}
+                  onChange={(e) => setRawJdText(e.target.value)}
+                  rows={18}
+                  className="w-full p-4 font-mono text-xs text-[#202B37] dark:text-white bg-white dark:bg-[#162431] focus:outline-none min-h-[460px]"
+                  placeholder="<p>Enter HTML source code or paste job details here...</p>"
+                />
+              ) : (
+                <div
+                  ref={parseEditorRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  role="textbox"
+                  aria-label="Paste Job Details"
+                  aria-multiline="true"
+                  onInput={(e) => setRawJdText(e.currentTarget.innerHTML)}
+                  data-placeholder="Paste job details or client requirement email here..."
+                  className="min-h-[460px] w-full p-4 text-xs font-sans text-[#202B37] dark:text-white bg-white dark:bg-[#162431] focus:outline-none whitespace-pre-wrap leading-relaxed"
+                  style={{ fontFamily: parseFont }}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 4. MANUAL CREATION ALL CEIPAL FIELDS (media_1794558525216_f124bc83.png etc.) */}
+      {/* 4. REQUISITION FORM (Manual Creation or Template Loaded on Same Page) */}
       {/* ========================================================================= */}
-      {creationMode === 'manual' && (
+      {(creationMode === 'manual' || (creationMode === 'template' && selectedTemplateKey)) && (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Top Business Unit Header Card */}
           <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="w-full sm:w-80">
-              <label className="block text-xs font-bold text-[#5E6B7A] dark:text-[#B9CAD9] mb-1">
-                Business Unit
-              </label>
-              <select
-                value={businessUnit}
-                onChange={(e) => setBusinessUnit(e.target.value)}
-                className="w-full p-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#202B37] dark:text-white"
-              >
-                <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
-                <option value="Cloud & AI Practice">Cloud &amp; AI Practice</option>
-                <option value="Core Engineering">Core Engineering</option>
-                <option value="Fintech & Enterprise">Fintech &amp; Enterprise</option>
-              </select>
-            </div>
+            {creationMode === 'manual' ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="w-full sm:w-60">
+                  <label className="block text-xs font-bold text-[#5E6B7A] dark:text-[#B9CAD9] mb-1">
+                    Business Unit
+                  </label>
+                  <select
+                    value={businessUnit}
+                    onChange={(e) => setBusinessUnit(e.target.value)}
+                    className="w-full p-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#202B37] dark:text-white"
+                  >
+                    <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
+                    <option value="Cloud & AI Practice">Cloud &amp; AI Practice</option>
+                    <option value="Core Engineering">Core Engineering</option>
+                    <option value="Fintech & Enterprise">Fintech &amp; Enterprise</option>
+                  </select>
+                </div>
+                <div className="w-full sm:w-64">
+                  <label className="block text-xs font-bold text-[#5E6B7A] dark:text-[#B9CAD9] mb-1">
+                    Job Template (Optional)
+                  </label>
+                  <select
+                    value={selectedTemplateKey}
+                    onChange={(e) => handleSelectTemplate(e.target.value)}
+                    className="w-full p-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs font-semibold text-[#202B37] dark:text-white"
+                  >
+                    <option value="">-- Apply a Template --</option>
+                    {templatesList.map(t => (
+                      <option key={t.id} value={t.id}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 py-1">
+                <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center gap-2 border border-emerald-500/20 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Template Active: {title}</span>
+                </span>
+                <span className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] font-medium hidden sm:inline">
+                  • {businessUnit}
+                </span>
+              </div>
+            )}
 
             {/* Form Section Quick Jump Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
