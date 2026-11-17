@@ -5,7 +5,6 @@
 
 import React, { useEffect } from 'react';
 import { useAppStore } from './store/appStore';
-import { LandingPage } from './features/landing/LandingPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { Sidebar } from './components/navigation/Sidebar';
 import { TopBar } from './components/navigation/TopBar';
@@ -43,13 +42,8 @@ export default function App() {
     }
   }, [isDark]);
 
-  // Public Landing Page
-  if (currentRoute === 'landing') {
-    return <LandingPage />;
-  }
-
-  // Login Page
-  if (currentRoute === 'login') {
+  // Open the sign-in screen for both the login route and legacy landing links.
+  if (currentRoute === 'login' || currentRoute === 'landing') {
     return <LoginPage />;
   }
 

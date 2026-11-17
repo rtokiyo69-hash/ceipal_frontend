@@ -18,7 +18,7 @@ import { useAppStore } from '../../store/appStore';
 import { UserRole } from '../../types';
 
 export const LoginPage: React.FC = () => {
-  const { loginAs, selectedRoleForLogin, setLoginRole, navigate } = useAppStore();
+  const { loginAs, selectedRoleForLogin, setLoginRole } = useAppStore();
   const [role, setRole] = useState<UserRole>(selectedRoleForLogin || 'recruiter');
   const [email, setEmail] = useState('priya.sharma@talentember.io');
   const [password, setPassword] = useState('••••••••••••');
@@ -65,9 +65,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Top Brand Mark */}
         <div className="relative z-10 flex items-center justify-between">
-          <div onClick={() => navigate('landing')} className="cursor-pointer">
-            <Logo size="lg" />
-          </div>
+          <Logo size="lg" />
           <span className="px-3 py-1 bg-[#2D194B]/80 border border-[#1769AA]/40 rounded-full text-xs font-mono text-[#D8E9F7]">
             Unified ATS &amp; VMS Platform
           </span>
@@ -136,17 +134,9 @@ export const LoginPage: React.FC = () => {
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#202B37] dark:text-white">
-                Sign In to Workspace
-              </h1>
-              <button
-                onClick={() => navigate('landing')}
-                className="text-xs text-[#6B7785] hover:text-[#1769AA] transition-colors"
-              >
-                ← Back to Home
-              </button>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#202B37] dark:text-white">
+              Sign In to Workspace
+            </h1>
             <p className="text-xs text-[#6B7785]">
               Select your persona below to experience role-tailored dashboards and permissions.
             </p>

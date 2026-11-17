@@ -228,12 +228,12 @@ export const ApiService = {
       matchScore: applicantData.matchScore || Math.floor(Math.random() * 20 + 80),
       avatar: applicantData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250',
       isFavorite: false,
-      summary: applicantData.summary || 'Profile parsed and imported into NexusTalent ATS repository.',
+      summary: applicantData.summary || 'Profile parsed and imported into Scout ATS repository.',
       documents: applicantData.documents || [
         { name: `${(applicantData.name || 'Candidate').replace(/\s+/g, '_')}_Resume.pdf`, size: '1.2 MB', date: new Date().toISOString().split('T')[0], type: 'Resume' }
       ],
       notes: [
-        { id: `nt-${Date.now()}`, author: 'NexusTalent AI Parser', text: 'Resume extracted with high confidence. Key skills matched to active open requisitions.', date: 'Just now' }
+        { id: `nt-${Date.now()}`, author: 'Scout AI Parser', text: 'Resume extracted with high confidence. Key skills matched to active open requisitions.', date: 'Just now' }
       ]
     };
 

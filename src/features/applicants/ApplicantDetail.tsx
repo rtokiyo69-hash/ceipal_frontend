@@ -311,7 +311,7 @@ export const ApplicantDetail: React.FC = () => {
                 Candidate Profile Summary
               </div>
               <p className="text-[#202B37] dark:text-[#F5F8FB] leading-relaxed p-4 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl">
-                {applicant.summary || 'Profile imported into NexusTalent unified applicant pool.'}
+                {applicant.summary || 'Profile imported into Scout unified applicant pool.'}
               </p>
             </div>
 
@@ -401,7 +401,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               <div className="pt-2 text-[10px] text-[#276749] dark:text-[#8AC9A7] font-semibold">
-                ✓ Parsed by NexusTalent Neural Extraction Engine · 100% Verified
+                ✓ Parsed by Scout Neural Extraction Engine · 100% Verified
               </div>
             </div>
           </div>

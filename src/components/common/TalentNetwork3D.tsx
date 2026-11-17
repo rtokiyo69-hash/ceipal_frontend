@@ -154,7 +154,7 @@ export const TalentNetwork3D: React.FC<TalentNetwork3DProps> = ({
       // Verification Line
       ctx.fillStyle = '#10B981';
       ctx.font = '15px "DM Sans", sans-serif';
-      ctx.fillText('✓ Verified Talent Credentials · NexusTalent ID', 28, 310);
+      ctx.fillText('✓ Verified Talent Credentials · Scout ID', 28, 310);
 
       const tex = new THREE.CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;

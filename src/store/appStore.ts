@@ -83,7 +83,7 @@ if (initialUrlState.route && initialUrlState.route !== 'landing' && !initialAuth
 }
 
 let globalState: AppState = {
-  currentRoute: initialUrlState.route || (initialAuth ? 'dashboard' : 'landing'),
+  currentRoute: initialUrlState.route === 'landing' ? 'login' : initialUrlState.route || 'login',
   selectedId: initialUrlState.id,
   currentUser: initialUser,
   isAuthenticated: initialAuth,
@@ -119,11 +119,12 @@ function notify() {
 if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => {
     const params = new URLSearchParams(window.location.search);
-    const r = (params.get('route') as AppRoute) || 'landing';
+    const requestedRoute = (params.get('route') as AppRoute) || 'login';
+    const r = requestedRoute === 'landing' ? 'login' : requestedRoute;
     const id = params.get('id') || undefined;
     globalState.currentRoute = r;
     globalState.selectedId = id;
-    if (r !== 'landing' && !globalState.isAuthenticated) {
+    if (r !== 'login' && !globalState.isAuthenticated) {
       globalState.isAuthenticated = true;
       globalState.currentUser = INITIAL_USERS[2];
     }
@@ -143,15 +144,17 @@ export function useAppStore() {
   }, []);
 
   const navigate = (route: AppRoute, id?: string) => {
-    globalState.currentRoute = route;
+    const nextRoute = route === 'landing' ? 'login' : route;
+    globalState.currentRoute = nextRoute;
     globalState.selectedId = id;
     if (typeof window !== 'undefined') {
       try {
         const newUrl = new URL(window.location.href);
-        if (route === 'landing') {
-          newUrl.search = '';
+        if (nextRoute === 'login') {
+          newUrl.searchParams.set('route', 'login');
+          newUrl.searchParams.delete('id');
         } else {
-          newUrl.searchParams.set('route', route);
+          newUrl.searchParams.set('route', nextRoute);
           if (id) {
             newUrl.searchParams.set('id', id);
           } else {
@@ -191,7 +194,7 @@ export function useAppStore() {
   const logout = () => {
     globalState.currentUser = null;
     globalState.isAuthenticated = false;
-    globalState.currentRoute = 'landing';
+    globalState.currentRoute = 'login';
     try {
       localStorage.removeItem('talentember_current_user');
       localStorage.removeItem('talentember_authenticated');
@@ -200,7 +203,8 @@ export function useAppStore() {
     }
     if (typeof window !== 'undefined') {
       const newUrl = new URL(window.location.href);
-      newUrl.search = '';
+      newUrl.searchParams.set('route', 'login');
+      newUrl.searchParams.delete('id');
       window.history.pushState({}, '', newUrl.toString());
     }
     notify();

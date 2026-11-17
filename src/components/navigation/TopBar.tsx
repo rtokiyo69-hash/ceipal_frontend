@@ -79,7 +79,6 @@ export const TopBar: React.FC = () => {
 
   if (currentUser?.role === 'recruiter') {
     const recruiterTabs = [
-      { label: 'Home', route: 'dashboard' as const },
       { label: 'Job Posting', route: 'jobs' as const },
       { label: 'Applicants', route: 'applicants' as const },
       { label: 'Client', route: 'clients' as const },
@@ -100,7 +99,7 @@ export const TopBar: React.FC = () => {
         <button
           onClick={() => navigate('dashboard')}
           className="flex items-center shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded"
-          aria-label="NexusTalent home"
+          aria-label="Scout dashboard"
         >
           <Logo size="sm" />
         </button>
