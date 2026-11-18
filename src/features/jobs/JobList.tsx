@@ -30,6 +30,7 @@ import {
   Calendar,
   DollarSign,
   User,
+  Pencil,
   Shield,
   HelpCircle,
   RotateCcw,
@@ -96,6 +97,18 @@ const SUBMISSION_GROUPS = ['Shortlist', 'Priority Candidates', 'Client Review', 
 
 const JOB_STATUSES: JobStatus[] = ['Open', 'Active', 'Sourcing', 'In Review', 'Closed', 'On Hold'];
 const JOB_PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
+const SUBMISSION_STATUSES = [
+  'Submitted to Client',
+  'Client Review',
+  'Interview Requested',
+  'Client Rejected',
+  'Waiting for Evaluation by Internal Reviewer',
+  'Internal Disqualified',
+  'Placed',
+  'Offered',
+  'Not Joined',
+  'Interview Scheduled'
+];
 const BULK_JOB_ACTIONS: { id: BulkJobAction; label: string }[] = [
   { id: 'notes', label: 'Add Notes' },
   { id: 'folder', label: 'Add to Folder' },
@@ -144,6 +157,8 @@ export type JobColumnKey =
   | 'location'
   | 'states'
   | 'status'
+  | 'jobStartDate'
+  | 'jobEndDate'
   | 'rate'
   | 'recruitmentManager'
   | 'primaryRecruiter'
@@ -151,19 +166,68 @@ export type JobColumnKey =
   | 'createdBy'
   | 'createdDate'
   | 'modifiedDate'
+  | 'clientPractice'
+  | 'postJobCareerPortal'
+  | 'experience'
+  | 'hitQuota'
+  | 'clientSubmissionTime1'
+  | 'clientSubmissionTime2'
+  | 'clientSubmissionTime3'
+  | 'clearance'
+  | 'comments'
+  | 'degree'
+  | 'respondBy'
+  | 'address'
+  | 'careerPortalPublishedDate'
+  | 'industry'
+  | 'tvop'
+  | 'pwPublishedDate'
+  | 'pwPublishedBy'
+  | 'vmsName'
+  | 'latestClientSubmissionDate'
+  | 'latestClientSubmissionBy'
+  | 'noticePeriod'
+  | 'lastSubmissionOn'
+  | 'appliersVisitors'
+  | 'firstInterviewOn'
   | 'minSalary'
   | 'maxSalary'
   | 'avgSalary'
+  | 'clientManager'
   | 'priority'
-  | 'type'
+  | 'duration'
   | 'openings'
-  | 'noticePeriod';
+  | 'salesManager'
+  | 'remoteJob'
+  | 'jobAge'
+  | 'maxSubmissions'
+  | 'type'
+  | 'firstSubmissionOn'
+  | 'firstClientSubmissionOn'
+  | 'modifiedBy'
+  | 'primarySkills'
+  | 'publishedOnJobBoard'
+  | 'jobPublishedOn'
+  | 'teamName'
+  | 'accountManager'
+  | 'referralBonus'
+  | 'placementType'
+  | 'geopoliticalZone'
+  | 'secondarySalesManager'
+  | 'secondaryRecruitmentManager'
+  | 'isHotJob'
+  | 'category'
+  | 'activeJobAge'
+  | 'facility'
+  | 'customJobCategory'
+  | 'customJobSkillType';
 
 interface ColumnDef {
   key: JobColumnKey;
   label: string;
   minWidth: string;
   defaultVisible: boolean;
+  group?: 'Custom Fields';
 }
 
 const ALL_COLUMNS: ColumnDef[] = [
@@ -175,6 +239,8 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: 'location', label: 'Location', minWidth: 'min-w-[180px]', defaultVisible: true },
   { key: 'states', label: 'States', minWidth: 'min-w-[150px]', defaultVisible: true },
   { key: 'status', label: 'Job Status', minWidth: 'min-w-[130px]', defaultVisible: true },
+  { key: 'jobStartDate', label: 'Job Start Date', minWidth: 'min-w-[150px]', defaultVisible: false },
+  { key: 'jobEndDate', label: 'Job End Date', minWidth: 'min-w-[150px]', defaultVisible: false },
   { key: 'rate', label: 'Client Bill Rate / Salary', minWidth: 'min-w-[180px]', defaultVisible: true },
   { key: 'recruitmentManager', label: 'Recruitment Manager', minWidth: 'min-w-[170px]', defaultVisible: true },
   { key: 'primaryRecruiter', label: 'Primary Recruiter', minWidth: 'min-w-[160px]', defaultVisible: true },
@@ -182,33 +248,129 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: 'createdBy', label: 'Job Posting Created By', minWidth: 'min-w-[180px]', defaultVisible: true },
   { key: 'createdDate', label: 'Job Created', minWidth: 'min-w-[160px]', defaultVisible: true },
   { key: 'modifiedDate', label: 'Job Modified On', minWidth: 'min-w-[160px]', defaultVisible: true },
+  { key: 'clientPractice', label: 'Client Practice', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'postJobCareerPortal', label: 'Post Job on Career Portal', minWidth: 'min-w-[180px]', defaultVisible: false },
+  { key: 'experience', label: 'Experience', minWidth: 'min-w-[140px]', defaultVisible: false },
+  { key: 'hitQuota', label: 'Hit Quota', minWidth: 'min-w-[120px]', defaultVisible: false },
+  { key: 'clientSubmissionTime1', label: '1st Client Sub. Time', minWidth: 'min-w-[170px]', defaultVisible: false },
+  { key: 'clientSubmissionTime2', label: '2nd Client Sub. Time', minWidth: 'min-w-[170px]', defaultVisible: false },
+  { key: 'clientSubmissionTime3', label: '3rd Client Sub. Time', minWidth: 'min-w-[170px]', defaultVisible: false },
+  { key: 'clearance', label: 'Clearance', minWidth: 'min-w-[130px]', defaultVisible: false },
+  { key: 'comments', label: 'Comments', minWidth: 'min-w-[220px]', defaultVisible: false },
+  { key: 'degree', label: 'Degree', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'respondBy', label: 'Respond By', minWidth: 'min-w-[150px]', defaultVisible: false },
+  { key: 'address', label: 'Address', minWidth: 'min-w-[220px]', defaultVisible: false },
+  { key: 'careerPortalPublishedDate', label: 'Career Portal Published Date', minWidth: 'min-w-[190px]', defaultVisible: false },
+  { key: 'industry', label: 'Industry', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'tvop', label: 'TVOP', minWidth: 'min-w-[120px]', defaultVisible: false },
+  { key: 'pwPublishedDate', label: 'PW Published Date', minWidth: 'min-w-[170px]', defaultVisible: false },
+  { key: 'pwPublishedBy', label: 'PW Published By', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'vmsName', label: 'VMS Name', minWidth: 'min-w-[140px]', defaultVisible: false },
+  { key: 'latestClientSubmissionDate', label: 'Latest Client Submission on', minWidth: 'min-w-[190px]', defaultVisible: false },
+  { key: 'latestClientSubmissionBy', label: 'Latest Client Submission by', minWidth: 'min-w-[190px]', defaultVisible: false },
+  { key: 'noticePeriod', label: 'Notice Period', minWidth: 'min-w-[140px]', defaultVisible: false },
+  { key: 'lastSubmissionOn', label: 'Last Submission on', minWidth: 'min-w-[170px]', defaultVisible: false },
+  { key: 'appliersVisitors', label: 'Appliers/Visitors', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'firstInterviewOn', label: 'First Interview on', minWidth: 'min-w-[160px]', defaultVisible: false },
   { key: 'minSalary', label: 'Min Salary', minWidth: 'min-w-[130px]', defaultVisible: true },
   { key: 'maxSalary', label: 'Max Salary', minWidth: 'min-w-[130px]', defaultVisible: true },
-  { key: 'avgSalary', label: 'Avg Salary', minWidth: 'min-w-[130px]', defaultVisible: true },
+  { key: 'avgSalary', label: 'Average Salary', minWidth: 'min-w-[150px]', defaultVisible: true },
+  { key: 'clientManager', label: 'Client Manager', minWidth: 'min-w-[160px]', defaultVisible: false },
   { key: 'priority', label: 'Priority', minWidth: 'min-w-[120px]', defaultVisible: false },
+  { key: 'duration', label: 'Duration', minWidth: 'min-w-[140px]', defaultVisible: false },
+  { key: 'openings', label: 'Number of Positions', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'salesManager', label: 'Sales Manager', minWidth: 'min-w-[150px]', defaultVisible: false },
+  { key: 'remoteJob', label: 'Remote Job', minWidth: 'min-w-[130px]', defaultVisible: false },
+  { key: 'jobAge', label: 'Job Age', minWidth: 'min-w-[120px]', defaultVisible: false },
+  { key: 'maxSubmissions', label: 'Maximum Allowed Submissions', minWidth: 'min-w-[210px]', defaultVisible: false },
   { key: 'type', label: 'Job Type', minWidth: 'min-w-[130px]', defaultVisible: false },
-  { key: 'openings', label: 'Openings', minWidth: 'min-w-[100px]', defaultVisible: false },
-  { key: 'noticePeriod', label: 'Notice Period', minWidth: 'min-w-[140px]', defaultVisible: false }
+  { key: 'firstSubmissionOn', label: 'First Submission on', minWidth: 'min-w-[170px]', defaultVisible: false },
+  { key: 'firstClientSubmissionOn', label: 'First Client Submission on', minWidth: 'min-w-[190px]', defaultVisible: false },
+  { key: 'modifiedBy', label: 'Job Modified By', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'primarySkills', label: 'Primary Skills', minWidth: 'min-w-[220px]', defaultVisible: false },
+  { key: 'publishedOnJobBoard', label: 'Published on Job Board', minWidth: 'min-w-[180px]', defaultVisible: false },
+  { key: 'jobPublishedOn', label: 'Job Published on', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'teamName', label: 'Team Name', minWidth: 'min-w-[140px]', defaultVisible: false },
+  { key: 'accountManager', label: 'Account Manager', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'referralBonus', label: 'Referral Bonus', minWidth: 'min-w-[140px]', defaultVisible: false },
+  { key: 'placementType', label: 'Placement Type', minWidth: 'min-w-[150px]', defaultVisible: false },
+  { key: 'geopoliticalZone', label: 'Geopolitical Zone', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'secondarySalesManager', label: 'Secondary Sales Manager', minWidth: 'min-w-[190px]', defaultVisible: false },
+  { key: 'secondaryRecruitmentManager', label: 'Secondary Recruitment Manager', minWidth: 'min-w-[220px]', defaultVisible: false },
+  { key: 'isHotJob', label: 'Is Hot Job', minWidth: 'min-w-[120px]', defaultVisible: false },
+  { key: 'category', label: 'Job Category', minWidth: 'min-w-[160px]', defaultVisible: false },
+  { key: 'activeJobAge', label: 'Active Job Age (Days)', minWidth: 'min-w-[180px]', defaultVisible: false },
+  { key: 'facility', label: 'Facility', minWidth: 'min-w-[150px]', defaultVisible: false },
+  { key: 'customJobCategory', label: 'Job Category', minWidth: 'min-w-[160px]', defaultVisible: false, group: 'Custom Fields' },
+  { key: 'customJobSkillType', label: 'Job Skill Type', minWidth: 'min-w-[160px]', defaultVisible: false, group: 'Custom Fields' }
 ];
+
+const DEFAULT_VISIBLE_COLUMNS = ALL_COLUMNS.filter((column) => column.defaultVisible).map((column) => column.key);
+
+const formatColumnValue = (value: string | number | boolean | null | undefined): string => {
+  if (value === undefined || value === null || value === '') return '—';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return String(value);
+};
+
+const getJobAgeInDays = (dateValue?: string): number | undefined => {
+  if (!dateValue) return undefined;
+  const timestamp = Date.parse(dateValue);
+  if (!Number.isFinite(timestamp)) return undefined;
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 86_400_000));
+};
 
 const getJobColumnValue = (job: Job, key: JobColumnKey): string => {
   switch (key) {
     case 'code': return job.code || '';
     case 'title': return job.title || '';
     case 'businessUnit': return job.businessUnit || 'Ampcus Tech Pvt Ltd.';
-    case 'client': return job.client || '';
-    case 'clientJobId': return job.clientJobId || '';
-    case 'location': return job.location || '';
-    case 'states': return job.states || '';
-    case 'status': return job.status || '';
+    case 'client': return job.client || '—';
+    case 'clientJobId': return job.clientJobId || '—';
+    case 'location': return job.location || '—';
+    case 'states': return job.states || '—';
+    case 'status': return job.status || '—';
+    case 'jobStartDate': return job.startDate || '—';
+    case 'jobEndDate': return job.endDate || '—';
     case 'rate':
       return `${job.currency === 'INR' ? '₹' : '$'}${job.billRate} / ${job.rateType === 'Yearly' ? 'yr' : 'hr'}`;
-    case 'recruitmentManager': return job.recruitmentManager || 'Sachin Wadeyar';
-    case 'primaryRecruiter': return job.assignedRecruiter || job.assignedTo || 'Priya Sharma';
-    case 'assignedTo': return job.assignedTo || job.assignedRecruiter || 'Ganesh Godse';
-    case 'createdBy': return job.assignedRecruiter || 'Ganesh Godse';
-    case 'createdDate': return job.createdDate || '10/11/2026';
-    case 'modifiedDate': return '10/11/2026 20:07:23';
+    case 'recruitmentManager': return job.recruitmentManager || '—';
+    case 'primaryRecruiter': return job.assignedRecruiter || job.assignedTo || '—';
+    case 'assignedTo': return job.assignedTo || job.assignedRecruiter || '—';
+    case 'createdBy': return job.createdBy || job.assignedRecruiter || '—';
+    case 'createdDate': return job.createdDate || '—';
+    case 'modifiedDate': return job.modifiedDate || '—';
+    case 'clientPractice': return job.clientPractice || '—';
+    case 'postJobCareerPortal': return formatColumnValue(job.postJobOnCareerPortal);
+    case 'experience':
+      return job.experienceRequired ||
+        (job.minExperience !== undefined || job.maxExperience !== undefined
+          ? `${job.minExperience ?? '—'} - ${job.maxExperience ?? '—'} years`
+          : '—');
+    case 'hitQuota': return formatColumnValue(job.hitQuota);
+    case 'clientSubmissionTime1': return job.firstClientSubmissionTime || '—';
+    case 'clientSubmissionTime2': return job.secondClientSubmissionTime || '—';
+    case 'clientSubmissionTime3': return job.thirdClientSubmissionTime || '—';
+    case 'clearance': return job.clearance || '—';
+    case 'comments': return job.comments || '—';
+    case 'degree': return job.degree || '—';
+    case 'respondBy': return job.respondBy || '—';
+    case 'address': return job.address || '—';
+    case 'careerPortalPublishedDate': return job.careerPortalPublishedDate || '—';
+    case 'industry': return job.industry || '—';
+    case 'tvop': return job.tvop || '—';
+    case 'pwPublishedDate': return job.pwPublishedDate || '—';
+    case 'pwPublishedBy': return job.pwPublishedBy || '—';
+    case 'vmsName': return job.vmsName || '—';
+    case 'latestClientSubmissionDate': return job.latestClientSubmissionDate || '—';
+    case 'latestClientSubmissionBy': return job.latestClientSubmissionBy || '—';
+    case 'lastSubmissionOn': return job.lastSubmissionDate || '—';
+    case 'appliersVisitors': {
+      const appliers = job.appliersCount ?? job.applicantsCount;
+      const visitors = job.visitorsCount;
+      return appliers === undefined && visitors === undefined ? '—' : `${formatColumnValue(appliers)} / ${formatColumnValue(visitors)}`;
+    }
+    case 'firstInterviewOn': return job.firstInterviewDate || '—';
     case 'minSalary':
       return job.payRate ? `${job.currency === 'INR' ? '₹' : '$'}${job.payRate * 160 * 12}/yr` : '—';
     case 'maxSalary':
@@ -217,10 +379,44 @@ const getJobColumnValue = (job: Job, key: JobColumnKey): string => {
       return job.billRate && job.payRate
         ? `${job.currency === 'INR' ? '₹' : '$'}${Math.round(((job.billRate + job.payRate) / 2) * 160 * 12)}/yr`
         : '—';
+    case 'clientManager': return job.clientManager || '—';
     case 'priority': return job.priority || 'Medium';
+    case 'duration': return job.duration || '—';
+    case 'salesManager': return job.salesManager || '—';
+    case 'remoteJob': return job.remoteJob || '—';
+    case 'jobAge': {
+      const age = getJobAgeInDays(job.createdDate);
+      return age === undefined ? '—' : `${age} days`;
+    }
+    case 'maxSubmissions': return formatColumnValue(job.maxSubmissions);
     case 'type': return job.type || 'Full-Time';
     case 'openings': return String(job.openings || 1);
-    case 'noticePeriod': return job.noticePeriod || '1 Month';
+    case 'firstSubmissionOn': return job.firstSubmissionDate || '—';
+    case 'firstClientSubmissionOn': return job.firstClientSubmissionDate || '—';
+    case 'modifiedBy': return job.modifiedBy || '—';
+    case 'primarySkills': return (job.primarySkills?.length ? job.primarySkills : job.skills || []).join(', ') || '—';
+    case 'publishedOnJobBoard': return formatColumnValue(job.publishedOnJobBoard);
+    case 'jobPublishedOn': return job.jobPublishedOn || '—';
+    case 'teamName': return job.teamName || '—';
+    case 'accountManager': return job.accountManager || '—';
+    case 'referralBonus': return formatColumnValue(job.referralBonus);
+    case 'placementType': return job.placementType || '—';
+    case 'geopoliticalZone': return job.geopoliticalZone || '—';
+    case 'secondarySalesManager': return job.secondarySalesManager || '—';
+    case 'secondaryRecruitmentManager': return job.secondaryRecruitmentManager || '—';
+    case 'isHotJob': return formatColumnValue(job.isHotJob);
+    case 'category': return job.category || '—';
+    case 'activeJobAge': {
+      if (job.status !== 'Active' && job.status !== 'Open') return '—';
+      const age = getJobAgeInDays(job.createdDate);
+      return age === undefined ? '—' : `${age} days`;
+    }
+    case 'facility': return job.facility || '—';
+    case 'customJobCategory': return formatColumnValue(job.customFields?.['Job Category']);
+    case 'customJobSkillType':
+      return formatColumnValue(job.customFields?.['Job Skill Type'] ?? job.skillType);
+    case 'noticePeriod': return job.noticePeriod || '—';
+    default: return '—';
   }
 };
 
@@ -229,6 +425,14 @@ export const JobList: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [users, setUsers] = useState<Awaited<ReturnType<typeof ApiService.getAllUsers>>>([]);
+  const [inlineEdit, setInlineEdit] = useState<{
+    entity: 'job' | 'submission';
+    id: string;
+    field: 'status' | 'assignedRecruiter' | 'assignedTo' | 'score';
+    value: string;
+  } | null>(null);
+  const [isSavingInlineEdit, setIsSavingInlineEdit] = useState(false);
 
   // Search & Global Filters
   const [search, setSearch] = useState('');
@@ -273,8 +477,9 @@ export const JobList: React.FC = () => {
 
   // Column Visibility Customization (Ceipal Screenshot 202359)
   const [visibleColumns, setVisibleColumns] = useState<JobColumnKey[]>(
-    ALL_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.key)
+    DEFAULT_VISIBLE_COLUMNS
   );
+  const [pendingVisibleColumns, setPendingVisibleColumns] = useState<JobColumnKey[]>(DEFAULT_VISIBLE_COLUMNS);
   const [isColumnDrawerOpen, setIsColumnDrawerOpen] = useState(false);
   const [columnDrawerSearch, setColumnDrawerSearch] = useState('');
 
@@ -344,11 +549,62 @@ export const JobList: React.FC = () => {
     ApiService.getJobs().then(setJobs);
     ApiService.getApplicants().then(setApplicants);
     ApiService.getSubmissions().then(setSubmissions);
+    ApiService.getAllUsers().then(setUsers);
   }, [currentRoute]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const saveInlineEdit = async () => {
+    if (!inlineEdit || isSavingInlineEdit) return;
+    setIsSavingInlineEdit(true);
+    try {
+      if (inlineEdit.entity === 'job') {
+        const selectedRecruiter = users.find((user) => user.name === inlineEdit.value);
+        const updates: Partial<Job> =
+          inlineEdit.field === 'status'
+            ? { status: inlineEdit.value as JobStatus }
+            : inlineEdit.field === 'assignedRecruiter'
+              ? { assignedRecruiter: inlineEdit.value, ...(selectedRecruiter ? { recruiterId: selectedRecruiter.id } : {}) }
+              : { assignedTo: inlineEdit.value };
+        const updatedJob = await ApiService.updateJob(inlineEdit.id, {
+          ...updates,
+          modifiedDate: new Date().toISOString().slice(0, 10),
+          modifiedBy: currentUser?.name
+        });
+        setJobs((currentJobs) => currentJobs.map((job) => job.id === updatedJob.id ? updatedJob : job));
+      } else if (inlineEdit.field === 'status') {
+        const updatedSubmission = await ApiService.updateSubmissionStatus(inlineEdit.id, inlineEdit.value);
+        if (!updatedSubmission) throw new Error('Submission not found.');
+        setSubmissions((currentSubmissions) =>
+          currentSubmissions.map((submission) => submission.id === updatedSubmission.id ? updatedSubmission : submission)
+        );
+      } else if (inlineEdit.field === 'score') {
+        const updatedSubmission = await ApiService.updateSubmissionScore(inlineEdit.id, Number(inlineEdit.value));
+        setSubmissions((currentSubmissions) =>
+          currentSubmissions.map((submission) => submission.id === updatedSubmission.id ? updatedSubmission : submission)
+        );
+      }
+      showToast('Changes saved.');
+      setInlineEdit(null);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to save changes.');
+    } finally {
+      setIsSavingInlineEdit(false);
+    }
+  };
+
+  const openColumnDrawer = () => {
+    setPendingVisibleColumns(visibleColumns);
+    setColumnDrawerSearch('');
+    setIsColumnDrawerOpen(true);
+  };
+
+  const applyVisibleColumns = () => {
+    setVisibleColumns(pendingVisibleColumns);
+    setIsColumnDrawerOpen(false);
   };
 
   // Distinct values for each column (for filter checkboxes)
@@ -959,7 +1215,7 @@ export const JobList: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Column Chooser Button */}
           <button
-            onClick={() => setIsColumnDrawerOpen(true)}
+            onClick={openColumnDrawer}
             className="px-3 py-1.5 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] hover:text-[#1769AA] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
             title="Edit displayed columns"
           >
@@ -1571,26 +1827,94 @@ export const JobList: React.FC = () => {
                           }
 
                           if (col.key === 'status') {
+                            const isEditing = inlineEdit?.entity === 'job' && inlineEdit.id === j.id && inlineEdit.field === 'status';
                             return (
                               <td key={col.key} className="p-2.5 border-r border-[#DCE6EF]/30">
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                                    j.status === 'Active' || j.status === 'Open'
-                                      ? 'bg-[#8AC9A7]/20 text-[#1E4D36] border-[#8AC9A7]/40 dark:text-[#8AC9A7]'
-                                      : j.status === 'Sourcing'
-                                      ? 'bg-[#EAF4FC] text-[#1769AA] border-[#1769AA]/30 dark:bg-[#22384B] dark:text-[#D8E9F7]'
-                                      : j.status === 'In Review'
-                                      ? 'bg-[#2F80E7]/15 text-[#2F80E7] border-[#2F80E7]/30'
-                                      : 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-1.5 h-1.5 rounded-full ${
-                                      j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#1769AA]'
-                                    }`}
-                                  ></span>
-                                  {j.status}
-                                </span>
+                                {isEditing ? (
+                                  <div className="flex items-center gap-1">
+                                    <select
+                                      autoFocus
+                                      aria-label={`Edit job status for ${j.code}`}
+                                      value={inlineEdit.value}
+                                      onChange={(event) => setInlineEdit({ ...inlineEdit, value: event.target.value })}
+                                      className="min-w-24 rounded border border-[#DCE6EF] bg-white px-2 py-1 text-[11px] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                                    >
+                                      {JOB_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                                    </select>
+                                    <button type="button" onClick={saveInlineEdit} disabled={isSavingInlineEdit} aria-label="Save job status" className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" /></button>
+                                    <button type="button" onClick={() => setInlineEdit(null)} aria-label="Cancel job status edit" className="rounded p-1 text-slate-500 hover:bg-slate-100"><X className="h-3.5 w-3.5" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                        j.status === 'Active' || j.status === 'Open'
+                                          ? 'bg-[#8AC9A7]/20 text-[#1E4D36] border-[#8AC9A7]/40 dark:text-[#8AC9A7]'
+                                          : j.status === 'Sourcing'
+                                          ? 'bg-[#EAF4FC] text-[#1769AA] border-[#1769AA]/30 dark:bg-[#22384B] dark:text-[#D8E9F7]'
+                                          : j.status === 'In Review'
+                                          ? 'bg-[#2F80E7]/15 text-[#2F80E7] border-[#2F80E7]/30'
+                                          : 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'
+                                      }`}
+                                    >
+                                      <span className={`w-1.5 h-1.5 rounded-full ${j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#1769AA]'}`}></span>
+                                      {j.status}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      aria-label={`Edit job status for ${j.code}`}
+                                      title="Edit job status"
+                                      onClick={() => setInlineEdit({ entity: 'job', id: j.id, field: 'status', value: j.status })}
+                                      className="rounded p-1 text-[#1769AA] hover:bg-[#EAF4FC]"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                            );
+                          }
+
+                          if (col.key === 'primaryRecruiter' || col.key === 'assignedTo') {
+                            const field = col.key === 'primaryRecruiter' ? 'assignedRecruiter' : 'assignedTo';
+                            const value = col.key === 'primaryRecruiter'
+                              ? j.assignedRecruiter || j.assignedTo || '—'
+                              : j.assignedTo || j.assignedRecruiter || '—';
+                            const isEditing = inlineEdit?.entity === 'job' && inlineEdit.id === j.id && inlineEdit.field === field;
+                            const recruiterOptions = Array.from(new Set([
+                              value === '—' ? '' : value,
+                              ...users.filter((user) => user.role !== 'super_admin').map((user) => user.name)
+                            ])).filter(Boolean);
+                            return (
+                              <td key={col.key} className="p-2.5 border-r border-[#DCE6EF]/30 text-[#5E6B7A] dark:text-[#B9CAD9]">
+                                {isEditing ? (
+                                  <div className="flex items-center gap-1">
+                                    <select
+                                      autoFocus
+                                      aria-label={`Edit ${col.label} for ${j.code}`}
+                                      value={inlineEdit.value}
+                                      onChange={(event) => setInlineEdit({ ...inlineEdit, value: event.target.value })}
+                                      className="min-w-28 rounded border border-[#DCE6EF] bg-white px-2 py-1 text-[11px] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                                    >
+                                      {recruiterOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+                                    </select>
+                                    <button type="button" onClick={saveInlineEdit} disabled={isSavingInlineEdit} aria-label={`Save ${col.label}`} className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" /></button>
+                                    <button type="button" onClick={() => setInlineEdit(null)} aria-label={`Cancel ${col.label} edit`} className="rounded p-1 text-slate-500 hover:bg-slate-100"><X className="h-3.5 w-3.5" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1">
+                                    <span className="truncate" title={value}>{value}</span>
+                                    <button
+                                      type="button"
+                                      aria-label={`Edit ${col.label} for ${j.code}`}
+                                      title={`Edit ${col.label}`}
+                                      onClick={() => setInlineEdit({ entity: 'job', id: j.id, field, value: value === '—' ? '' : value })}
+                                      className="shrink-0 rounded p-1 text-[#1769AA] hover:bg-[#EAF4FC]"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
                               </td>
                             );
                           }
@@ -1768,12 +2092,74 @@ export const JobList: React.FC = () => {
                                           </td>
                                           <td className="p-2.5 font-mono text-[#1769AA]">{applicant?.phone || '—'}</td>
                                           <td className="p-2.5">
-                                            <span className="inline-block max-w-[220px] truncate rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-[#1769AA]" title={submission.status}>
-                                              {submission.status}
-                                            </span>
+                                            {inlineEdit?.entity === 'submission' && inlineEdit.id === submission.id && inlineEdit.field === 'status' ? (
+                                              <div className="flex items-center gap-1">
+                                                <select
+                                                  autoFocus
+                                                  aria-label={`Edit application status for ${submission.applicantName}`}
+                                                  value={inlineEdit.value}
+                                                  onChange={(event) => setInlineEdit((edit) => edit ? { ...edit, value: event.target.value } : edit)}
+                                                  className="max-w-[220px] rounded border border-[#DCE6EF] bg-white px-2 py-1 text-[11px] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                                                >
+                                                  {Array.from(new Set([...SUBMISSION_STATUSES, submission.status])).map((status) => <option key={status} value={status}>{status}</option>)}
+                                                </select>
+                                                <button type="button" onClick={saveInlineEdit} disabled={isSavingInlineEdit} aria-label="Save application status" className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" /></button>
+                                                <button type="button" onClick={() => setInlineEdit(null)} aria-label="Cancel application status edit" className="rounded p-1 text-slate-500 hover:bg-slate-100"><X className="h-3.5 w-3.5" /></button>
+                                              </div>
+                                            ) : (
+                                              <div className="flex items-center gap-1">
+                                                <span className="inline-block max-w-[220px] truncate rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-[#1769AA]" title={submission.status}>
+                                                  {submission.status}
+                                                </span>
+                                                <button
+                                                  type="button"
+                                                  aria-label={`Edit application status for ${submission.applicantName}`}
+                                                  title="Edit application status"
+                                                  onClick={() => setInlineEdit({ entity: 'submission', id: submission.id, field: 'status', value: submission.status })}
+                                                  className="rounded p-1 text-[#1769AA] hover:bg-[#EAF4FC]"
+                                                >
+                                                  <Pencil className="h-3 w-3" />
+                                                </button>
+                                              </div>
+                                            )}
                                           </td>
                                           <td className="p-2.5 font-mono font-bold text-[#1769AA]">
-                                            {submission.score ?? applicant?.matchScore ?? '—'}{submission.score !== undefined || applicant ? '%' : ''}
+                                            {inlineEdit?.entity === 'submission' && inlineEdit.id === submission.id && inlineEdit.field === 'score' ? (
+                                              <div className="flex items-center gap-1">
+                                                <input
+                                                  autoFocus
+                                                  type="number"
+                                                  min="0"
+                                                  max="100"
+                                                  step="1"
+                                                  aria-label={`Edit submission score for ${submission.applicantName}`}
+                                                  value={inlineEdit.value}
+                                                  onChange={(event) => setInlineEdit((edit) => edit ? { ...edit, value: event.target.value } : edit)}
+                                                  className="w-16 rounded border border-[#DCE6EF] bg-white px-2 py-1 text-[11px] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                                                />
+                                                <span>%</span>
+                                                <button type="button" onClick={saveInlineEdit} disabled={isSavingInlineEdit} aria-label="Save submission score" className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-3.5 w-3.5" /></button>
+                                                <button type="button" onClick={() => setInlineEdit(null)} aria-label="Cancel submission score edit" className="rounded p-1 text-slate-500 hover:bg-slate-100"><X className="h-3.5 w-3.5" /></button>
+                                              </div>
+                                            ) : (
+                                              <div className="flex items-center gap-1">
+                                                <span>{submission.score ?? applicant?.matchScore ?? '—'}{submission.score !== undefined || applicant ? '%' : ''}</span>
+                                                <button
+                                                  type="button"
+                                                  aria-label={`Edit submission score for ${submission.applicantName}`}
+                                                  title="Edit submission score"
+                                                  onClick={() => setInlineEdit({
+                                                    entity: 'submission',
+                                                    id: submission.id,
+                                                    field: 'score',
+                                                    value: String(submission.score ?? applicant?.matchScore ?? 0)
+                                                  })}
+                                                  className="rounded p-1 text-[#1769AA] hover:bg-[#EAF4FC]"
+                                                >
+                                                  <Pencil className="h-3 w-3" />
+                                                </button>
+                                              </div>
+                                            )}
                                           </td>
                                           <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{applicant?.location || '—'}</td>
                                           <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
@@ -1886,7 +2272,7 @@ export const JobList: React.FC = () => {
               <div>
                 <h3 className="text-base font-bold text-[#202B37] dark:text-white">Edit Columns</h3>
                 <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
-                  {visibleColumns.length} of {ALL_COLUMNS.length} selected
+                  {pendingVisibleColumns.length} of {ALL_COLUMNS.length} selected
                 </p>
               </div>
               <button
@@ -1911,14 +2297,14 @@ export const JobList: React.FC = () => {
             <div className="flex items-center justify-between text-xs px-1">
               <button
                 type="button"
-                onClick={() => setVisibleColumns(ALL_COLUMNS.map((c) => c.key))}
+                onClick={() => setPendingVisibleColumns(ALL_COLUMNS.map((c) => c.key))}
                 className="text-[#1769AA] font-semibold hover:underline"
               >
                 Select All
               </button>
               <button
                 type="button"
-                onClick={() => setVisibleColumns(['code', 'title', 'client', 'status'])}
+                onClick={() => setPendingVisibleColumns(DEFAULT_VISIBLE_COLUMNS)}
                 className="text-[#7A8794] hover:underline"
               >
                 Reset to Default
@@ -1926,33 +2312,40 @@ export const JobList: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 divide-y divide-[#DCE6EF]/50 dark:divide-[#354A5C]/50">
-              {ALL_COLUMNS.filter((c) =>
-                c.label.toLowerCase().includes(columnDrawerSearch.toLowerCase())
-              ).map((col) => {
-                const isChecked = visibleColumns.includes(col.key);
+              {ALL_COLUMNS.filter((column) =>
+                column.label.toLowerCase().includes(columnDrawerSearch.toLowerCase()) ||
+                column.group?.toLowerCase().includes(columnDrawerSearch.toLowerCase())
+              ).map((column, index, filteredColumns) => {
+                const isChecked = pendingVisibleColumns.includes(column.key);
+                const startsCustomGroup = column.group === 'Custom Fields' &&
+                  filteredColumns[index - 1]?.group !== 'Custom Fields';
                 return (
-                  <label
-                    key={col.key}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#F5F8FB] dark:hover:bg-[#162431] cursor-pointer text-xs"
-                  >
-                    <span className="font-medium text-[#202B37] dark:text-white">{col.label}</span>
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setVisibleColumns([...visibleColumns, col.key]);
-                        } else {
-                          if (visibleColumns.length > 2) {
-                            setVisibleColumns(visibleColumns.filter((k) => k !== col.key));
+                  <React.Fragment key={column.key}>
+                    {startsCustomGroup && (
+                      <div className="px-2 pt-4 text-[10px] font-bold uppercase tracking-wider text-[#7A8794]">
+                        Custom Fields
+                      </div>
+                    )}
+                    <label className="flex cursor-pointer items-center justify-between rounded-lg p-2 text-xs hover:bg-[#F5F8FB] dark:hover:bg-[#162431]">
+                      <span className="font-medium text-[#202B37] dark:text-white">{column.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(event) => {
+                          if (event.target.checked) {
+                            setPendingVisibleColumns((current) =>
+                              current.includes(column.key) ? current : [...current, column.key]
+                            );
+                          } else if (pendingVisibleColumns.length > 2) {
+                            setPendingVisibleColumns((current) => current.filter((key) => key !== column.key));
                           } else {
                             showToast('At least 2 columns must remain visible');
                           }
-                        }
-                      }}
-                      className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
-                    />
-                  </label>
+                        }}
+                        className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
+                      />
+                    </label>
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -1960,7 +2353,7 @@ export const JobList: React.FC = () => {
             <div className="pt-3 border-t border-[#DCE6EF] dark:border-[#354A5C] flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setIsColumnDrawerOpen(false)}
+                onClick={applyVisibleColumns}
                 className="px-4 py-2 bg-[#2F80E7] text-white font-bold rounded-xl text-xs shadow-xs"
               >
                 Apply Changes

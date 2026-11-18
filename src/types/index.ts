@@ -47,6 +47,9 @@ export interface Job {
 
   // Authentic Ceipal ATS Fields
   clientJobId?: string;
+  createdBy?: string;
+  modifiedDate?: string;
+  modifiedBy?: string;
   facility?: string;
   currency?: string;
   rateType?: 'Hourly' | 'Yearly' | 'Monthly' | 'Daily';
@@ -88,6 +91,32 @@ export interface Job {
   benchConsultant?: string;
   mailMergeLimit?: number;
   publishedCampuses?: string[];
+  clearance?: string;
+  clientPractice?: string;
+  hitQuota?: string | number;
+  firstClientSubmissionTime?: string;
+  secondClientSubmissionTime?: string;
+  thirdClientSubmissionTime?: string;
+  tvop?: string;
+  pwPublishedDate?: string;
+  pwPublishedBy?: string;
+  vmsName?: string;
+  latestClientSubmissionDate?: string;
+  latestClientSubmissionBy?: string;
+  lastSubmissionDate?: string;
+  appliersCount?: number;
+  visitorsCount?: number;
+  firstInterviewDate?: string;
+  firstSubmissionDate?: string;
+  firstClientSubmissionDate?: string;
+  publishedOnJobBoard?: boolean | string;
+  jobPublishedOn?: string;
+  teamName?: string;
+  referralBonus?: string | number;
+  placementType?: string;
+  geopoliticalZone?: string;
+  isHotJob?: boolean;
+  customFields?: Record<string, string | number | boolean | null | undefined>;
 }
 
 export interface JobNote {
