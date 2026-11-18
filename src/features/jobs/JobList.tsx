@@ -1216,8 +1216,6 @@ export const JobList: React.FC = () => {
           {/* Column Chooser Button */}
           <button
             onClick={openColumnDrawer}
-            className="px-3 py-1.5 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] hover:text-[#1769AA] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
-            onClick={() => setIsColumnDrawerOpen(true)}
             className="px-3 py-1.5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] hover:bg-[#EDF2F4] hover:text-[#2B2D42] rounded-xl text-xs font-semibold text-[#2B2D42] dark:text-[#EDF2F4] transition-colors flex items-center gap-1.5 shadow-xs"
             title="Edit displayed columns"
           >
@@ -1917,25 +1915,6 @@ export const JobList: React.FC = () => {
                                     </button>
                                   </div>
                                 )}
-                              <td key={col.key} className="p-2.5 border-r border-[#D7DCE5]/30">
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                                    j.status === 'Active' || j.status === 'Open'
-                                      ? 'bg-[#8AC9A7]/20 text-[#1E4D36] border-[#8AC9A7]/40 dark:text-[#8AC9A7]'
-                                      : j.status === 'Sourcing'
-                                      ? 'bg-[#EDF2F4] text-[#2B2D42] border-[#2B2D42]/30 dark:bg-[#36384F] dark:text-[#EDF2F4]'
-                                      : j.status === 'In Review'
-                                      ? 'bg-[#2B2D42]/15 text-[#2B2D42] border-[#2B2D42]/30'
-                                      : 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-1.5 h-1.5 rounded-full ${
-                                      j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#2B2D42]'
-                                    }`}
-                                  ></span>
-                                  {j.status}
-                                </span>
                               </td>
                             );
                           }
@@ -2297,12 +2276,9 @@ export const JobList: React.FC = () => {
           <div className="bg-white dark:bg-[#2B2D42] border-l border-[#D7DCE5] dark:border-[#45485E] w-full max-w-sm h-full shadow-2xl flex flex-col p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#D7DCE5] dark:border-[#45485E]">
               <div>
-                <h3 className="text-base font-bold text-[#202B37] dark:text-white">Edit Columns</h3>
-                <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
-                  {pendingVisibleColumns.length} of {ALL_COLUMNS.length} selected
                 <h3 className="text-base font-bold text-[#2B2D42] dark:text-white">Edit Columns</h3>
                 <p className="text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
-                  {visibleColumns.length} of {ALL_COLUMNS.length} selected
+                  {pendingVisibleColumns.length} of {ALL_COLUMNS.length} selected
                 </p>
               </div>
               <button
@@ -2328,8 +2304,6 @@ export const JobList: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPendingVisibleColumns(ALL_COLUMNS.map((c) => c.key))}
-                className="text-[#1769AA] font-semibold hover:underline"
-                onClick={() => setVisibleColumns(ALL_COLUMNS.map((c) => c.key))}
                 className="text-[#2B2D42] font-semibold hover:underline"
               >
                 Select All
@@ -2337,15 +2311,13 @@ export const JobList: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPendingVisibleColumns(DEFAULT_VISIBLE_COLUMNS)}
-                className="text-[#7A8794] hover:underline"
-                onClick={() => setVisibleColumns(['code', 'title', 'client', 'status'])}
                 className="text-[#8D99AE] hover:underline"
               >
                 Reset to Default
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 divide-y divide-[#DCE6EF]/50 dark:divide-[#354A5C]/50">
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 divide-y divide-[#D7DCE5]/50 dark:divide-[#45485E]/50">
               {ALL_COLUMNS.filter((column) =>
                 column.label.toLowerCase().includes(columnDrawerSearch.toLowerCase()) ||
                 column.group?.toLowerCase().includes(columnDrawerSearch.toLowerCase())
@@ -2380,34 +2352,6 @@ export const JobList: React.FC = () => {
                       />
                     </label>
                   </React.Fragment>
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 divide-y divide-[#D7DCE5]/50 dark:divide-[#45485E]/50">
-              {ALL_COLUMNS.filter((c) =>
-                c.label.toLowerCase().includes(columnDrawerSearch.toLowerCase())
-              ).map((col) => {
-                const isChecked = visibleColumns.includes(col.key);
-                return (
-                  <label
-                    key={col.key}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] cursor-pointer text-xs"
-                  >
-                    <span className="font-medium text-[#2B2D42] dark:text-white">{col.label}</span>
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setVisibleColumns([...visibleColumns, col.key]);
-                        } else {
-                          if (visibleColumns.length > 2) {
-                            setVisibleColumns(visibleColumns.filter((k) => k !== col.key));
-                          } else {
-                            showToast('At least 2 columns must remain visible');
-                          }
-                        }
-                      }}
-                      className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
-                    />
-                  </label>
                 );
               })}
             </div>
@@ -2416,8 +2360,6 @@ export const JobList: React.FC = () => {
               <button
                 type="button"
                 onClick={applyVisibleColumns}
-                className="px-4 py-2 bg-[#2F80E7] text-white font-bold rounded-xl text-xs shadow-xs"
-                onClick={() => setIsColumnDrawerOpen(false)}
                 className="px-4 py-2 bg-[#2B2D42] text-white font-bold rounded-xl text-xs shadow-xs"
               >
                 Apply Changes
