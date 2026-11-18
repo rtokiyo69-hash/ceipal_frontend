@@ -29,11 +29,11 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-3 animate-in fade-in duration-200 sm:p-6">
       <div
-        className="my-auto flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]"
+        className="my-auto flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#D7DCE5] bg-white shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="border-b border-[#DCE6EF] bg-[#F5F8FB] p-6 sm:p-8 dark:border-[#354A5C] dark:bg-[#162431]">
+        <div className="border-b border-[#D7DCE5] bg-[#EDF2F4] p-6 sm:p-8 dark:border-[#45485E] dark:bg-[#36384F]">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className={`w-14 h-14 rounded-2xl bg-gradient-to-tr ${recruiter.avatarGradient} text-white flex items-center justify-center font-bold text-lg shadow-md shrink-0`}>
@@ -72,7 +72,7 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
               className={`p-3 rounded-2xl border text-left transition-all ${
                 activeFilter === 'submission'
                   ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-900 dark:text-cyan-200 shadow-sm'
-                  : 'bg-white dark:bg-[#1B2936] border-[#DCE6EF] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
+                  : 'bg-white dark:bg-[#2B2D42] border-[#D7DCE5] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
               }`}
             >
               <span className="text-[10px] font-semibold uppercase text-slate-400 block">Submissions</span>
@@ -86,7 +86,7 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
               className={`p-3 rounded-2xl border text-left transition-all ${
                 activeFilter === 'client_submission'
                   ? 'bg-teal-500/20 border-teal-400/50 text-teal-900 dark:text-teal-200 shadow-sm'
-                  : 'bg-white dark:bg-[#1B2936] border-[#DCE6EF] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
+                  : 'bg-white dark:bg-[#2B2D42] border-[#D7DCE5] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
               }`}
             >
               <span className="text-[10px] font-semibold uppercase text-slate-400 block">Client Subs</span>
@@ -100,7 +100,7 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
               className={`p-3 rounded-2xl border text-left transition-all ${
                 activeFilter === 'interview'
                   ? 'bg-sky-500/20 border-sky-400/50 text-sky-900 dark:text-sky-200 shadow-sm'
-                  : 'bg-white dark:bg-[#1B2936] border-[#DCE6EF] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
+                  : 'bg-white dark:bg-[#2B2D42] border-[#D7DCE5] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
               }`}
             >
               <span className="text-[10px] font-semibold uppercase text-slate-400 block">Interviews</span>
@@ -114,7 +114,7 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
               className={`p-3 rounded-2xl border text-left transition-all ${
                 activeFilter === 'hire'
                   ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-900 dark:text-emerald-200 shadow-sm'
-                  : 'bg-white dark:bg-[#1B2936] border-[#DCE6EF] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
+                  : 'bg-white dark:bg-[#2B2D42] border-[#D7DCE5] dark:border-[#455B6F] text-slate-800 dark:text-slate-200'
               }`}
             >
               <span className="text-[10px] font-semibold uppercase text-slate-400 block">Hires</span>
@@ -123,7 +123,7 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
               </span>
             </button>
 
-            <div className="rounded-2xl border border-[#DCE6EF] bg-white p-3 dark:border-[#455B6F] dark:bg-[#1B2936]">
+            <div className="rounded-2xl border border-[#D7DCE5] bg-white p-3 dark:border-[#455B6F] dark:bg-[#2B2D42]">
               <span className="block text-[10px] font-semibold uppercase text-slate-600 dark:text-slate-300">Conversion</span>
               <span className="font-['Outfit'] text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
                 {conversionRate.toFixed(1)}%
@@ -172,7 +172,7 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
                 return (
                   <div
                     key={act.id}
-                    className="flex flex-col justify-between gap-3 rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] p-4 text-xs sm:flex-row sm:items-center dark:border-[#354A5C] dark:bg-[#162431]"
+                    className="flex flex-col justify-between gap-3 rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] p-4 text-xs sm:flex-row sm:items-center dark:border-[#45485E] dark:bg-[#36384F]"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -225,11 +225,11 @@ export const RecruiterDrilldownModal: React.FC<RecruiterDrilldownModalProps> = (
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-[#DCE6EF] bg-[#F5F8FB] px-6 py-4 text-xs text-slate-700 dark:border-[#354A5C] dark:bg-[#162431] dark:text-slate-300">
+        <div className="flex items-center justify-between border-t border-[#D7DCE5] bg-[#EDF2F4] px-6 py-4 text-xs text-slate-700 dark:border-[#45485E] dark:bg-[#36384F] dark:text-slate-300">
           <span>Recruiter Record Verification ID: {recruiter.id}</span>
           <button
             onClick={onClose}
-            className="rounded-xl border border-[#C9D5E1] bg-white px-4 py-1.5 font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-[#455B6F] dark:bg-[#1B2936] dark:text-slate-200 dark:hover:bg-[#253848]"
+            className="rounded-xl border border-[#C9D5E1] bg-white px-4 py-1.5 font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-[#455B6F] dark:bg-[#2B2D42] dark:text-slate-200 dark:hover:bg-[#253848]"
           >
             Close
           </button>

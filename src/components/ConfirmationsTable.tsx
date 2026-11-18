@@ -8,7 +8,9 @@ import {
   ExternalLink,
   ShieldCheck,
   Check,
-  Filter
+  Filter,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { ConfirmationRecord, ConfirmationType, ConfirmationStatus } from '../types/jsip';
 import { INITIAL_CONFIRMATIONS } from '../data/mockJsipData';
@@ -16,17 +18,20 @@ import { INITIAL_CONFIRMATIONS } from '../data/mockJsipData';
 interface ConfirmationsTableProps {
   onInspectCandidate?: (candidateId: string) => void;
   onShowToast: (message: string) => void;
+  dashboardPreview?: boolean;
 }
 
 export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
   onInspectCandidate,
-  onShowToast
+  onShowToast,
+  dashboardPreview = false
 }) => {
   const [confirmations, setConfirmations] = useState<ConfirmationRecord[]>(INITIAL_CONFIRMATIONS);
   const [typeFilter, setTypeFilter] = useState<ConfirmationType | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<'candidate' | 'client' | 'type' | 'date' | 'status'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showAll, setShowAll] = useState(false);
 
   // Verify / toggle confirmation status
   const handleVerifyConfirmation = (id: string) => {
@@ -80,6 +85,8 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
     const verified = confirmations.filter(c => c.status === 'Verified').length;
     return { placements, interviews, clientReviews, verified };
   }, [confirmations]);
+  const isCompactPreview = dashboardPreview && !showAll;
+  const visibleConfirmations = isCompactPreview ? filteredConfirmations.slice(0, 5) : filteredConfirmations;
 
   const handleSort = (field: typeof sortField) => {
     if (sortField === field) {
@@ -91,9 +98,9 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
   };
 
   return (
-    <div className="flex h-[590px] max-h-[590px] min-h-[590px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936]">
+    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#D7DCE5] bg-white shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'}`}>
       {/* Table Top Controls Header */}
-      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#DCE6EF] bg-[#F5F8FB] p-4 sm:flex-row sm:items-center sm:p-5 dark:border-[#354A5C] dark:bg-[#162431]">
+      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#D7DCE5] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#45485E] dark:bg-[#2B2D42]">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-teal-500/15 text-teal-600 dark:text-teal-300">
             <FileCheck2 className="w-4 h-4" />
@@ -105,19 +112,22 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
                 {filteredConfirmations.length} Records
               </span>
             </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
-              <span>Client approvals, interviews & placement signings.</span>
-              {filteredConfirmations.length > 7 && (
-                <span className="text-teal-600 dark:text-teal-400 font-medium">
-                  (7 lines visible · scroll for all {filteredConfirmations.length})
-                </span>
-              )}
-            </p>
+            {!isCompactPreview && <p className="text-[11px] text-slate-500 dark:text-slate-400">Client approvals, interviews & placement signings.</p>}
           </div>
         </div>
 
         {/* Filter & Search Bar */}
         <div className="flex items-center gap-2">
+          {dashboardPreview && filteredConfirmations.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(value => !value)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#2B2D42] transition hover:bg-[#EDF2F4] dark:text-[#8D99AE] dark:hover:bg-[#36384F]"
+            >
+              {showAll ? 'Show less' : 'View all'}
+              {showAll ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+          )}
           {/* Type Filter */}
           <select
             aria-label="Filter confirmations by type"
@@ -146,11 +156,11 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
       </div>
 
       {/* Table Body Viewport - Intact Height with Smooth Scrolling */}
-      <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 w-full scroll-smooth">
-        <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[580px]">
+      <div className={`w-full overflow-x-auto ${isCompactPreview ? '' : 'min-h-0 flex-1 overflow-y-auto scroll-smooth'}`}>
+        <table className={`w-full border-separate border-spacing-0 text-left text-xs ${isCompactPreview ? 'min-w-[420px]' : 'min-w-[580px]'}`}>
           <colgroup>
             <col className="w-[34%] min-w-[190px]" />
-            <col className="w-[24%] min-w-[140px]" />
+            <col className={isCompactPreview ? 'hidden' : 'w-[24%] min-w-[140px]'} />
             <col className="w-[14%] min-w-[80px]" />
             <col className="w-[14%] min-w-[80px]" />
             <col className="w-[14%] min-w-[80px]" />
@@ -161,7 +171,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
             <tr className="h-[42px]">
               <th
                 onClick={() => handleSort('candidate')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center gap-1">
                   <span>Candidate & Role</span>
@@ -171,7 +181,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
 
               <th
                 onClick={() => handleSort('client')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300`}
               >
                 <div className="flex items-center gap-1">
                   <span>Client / Recruiter</span>
@@ -181,7 +191,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
 
               <th
                 onClick={() => handleSort('type')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Type</span>
@@ -191,7 +201,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
 
               <th
                 onClick={() => handleSort('status')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-center transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-center gap-1">
                   <span>Status</span>
@@ -199,7 +209,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
                 </div>
               </th>
 
-              <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 text-right dark:border-[#354A5C] dark:bg-[#162431]">
+              <th className="sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-4 py-2.5 text-right dark:border-[#45485E] dark:bg-[#36384F]">
                 <span>Action</span>
               </th>
             </tr>
@@ -213,7 +223,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
                 </td>
               </tr>
             ) : (
-              filteredConfirmations.map((item) => {
+              visibleConfirmations.map((item) => {
                 const typeBadge =
                   item.type === 'Placement'
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-400/30'
@@ -231,7 +241,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
                 return (
                   <tr
                     key={item.id}
-                    className="h-[52px] max-h-[52px] hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-colors group"
+                    className={`${isCompactPreview ? 'h-12' : 'h-[52px] max-h-[52px]'} hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-colors group`}
                   >
                     {/* Candidate & Role */}
                     <td className="py-2.5 px-4 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60">
@@ -250,7 +260,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
                     </td>
 
                     {/* Client & Recruiter */}
-                    <td className="py-2.5 px-3 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60">
+                    <td className={`${isCompactPreview ? 'hidden' : ''} py-2.5 px-3 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60`}>
                       <div className="space-y-0.5">
                         <div className="font-medium text-slate-800 dark:text-slate-200">
                           {item.clientName}
@@ -297,21 +307,21 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
           </tbody>
 
           {/* Sticky Totals Footer */}
-          <tfoot className="text-slate-800 dark:text-slate-100 font-bold text-xs">
+          <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-800 dark:text-slate-100 font-bold text-xs`}>
             <tr className="h-[44px]">
-              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 font-['Outfit'] dark:bg-[#162431]">
+              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 font-['Outfit'] dark:bg-[#36384F]">
                 <span>TOTAL CONFIRMATIONS</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-xs text-slate-700 dark:bg-[#162431] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-xs text-slate-700 dark:bg-[#36384F] dark:text-slate-300">
                 <span>{confirmations.length} records</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-teal-600 dark:bg-[#162431] dark:text-teal-400">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-teal-600 dark:bg-[#36384F] dark:text-teal-400">
                 {totals.placements} Hired
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-emerald-600 dark:bg-[#162431] dark:text-emerald-400">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-center font-mono font-bold text-emerald-600 dark:bg-[#36384F] dark:text-emerald-400">
                 {totals.verified} Verified
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#162431] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-4 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#36384F] dark:text-slate-300">
                 <span>Live Audit</span>
               </td>
             </tr>
@@ -320,7 +330,7 @@ export const ConfirmationsTable: React.FC<ConfirmationsTableProps> = ({
       </div>
 
       {/* Mini Metric Strip at Bottom of Confirmations Table */}
-      <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-[#DCE6EF] bg-[#F5F8FB] p-3 text-center text-xs dark:border-[#354A5C] dark:bg-[#162431]">
+      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#D7DCE5] bg-[#EDF2F4] p-3 text-center text-xs dark:border-[#45485E] dark:bg-[#36384F]`}>
         <div>
           <span className="text-[10px] uppercase text-slate-400 block font-semibold">Placements</span>
           <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">

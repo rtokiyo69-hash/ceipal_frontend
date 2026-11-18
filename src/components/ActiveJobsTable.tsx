@@ -13,17 +13,21 @@ import {
   CheckCircle2, 
   ExternalLink,
   X,
-  Users
+  Users,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { RAW_ACTIVE_JOBS } from '../data/mockDashboardTablesData';
 import { ActiveJobsDateFilter, ActiveJobRecord } from '../types/dashboardTables';
 
 interface ActiveJobsTableProps {
   onShowToast: (message: string) => void;
+  dashboardPreview?: boolean;
 }
 
 export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
-  onShowToast
+  onShowToast,
+  dashboardPreview = false
 }) => {
   // Independent Date Filter (Default: 'last_month')
   const [dateFilter, setDateFilter] = useState<ActiveJobsDateFilter>('last_month');
@@ -40,6 +44,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
 
   // Selected job for quick preview modal
   const [selectedJob, setSelectedJob] = useState<ActiveJobRecord | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   // Handle Refresh
   const handleRefresh = () => {
@@ -99,6 +104,8 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
     const uniqueStates = new Set(displayedJobs.map(j => j.stateCode)).size;
     return { totalJobs, totalOpenings, uniqueStates };
   }, [displayedJobs]);
+  const isCompactPreview = dashboardPreview && !showAll;
+  const visibleJobs = isCompactPreview ? displayedJobs.slice(0, 5) : displayedJobs;
 
   const handleSort = (field: typeof sortField) => {
     if (sortField === field) {
@@ -110,35 +117,38 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
   };
 
   return (
-    <div className={`flex h-[590px] max-h-[590px] min-h-[590px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#DCE6EF] bg-white shadow-sm transition-all duration-300 dark:border-[#354A5C] dark:bg-[#1B2936] ${
-      isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#F5F8FB] p-2 dark:bg-[#111C26]' : ''
+    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#D7DCE5] bg-white shadow-sm transition-all duration-300 dark:border-[#45485E] dark:bg-[#2B2D42] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'} ${
+      isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#EDF2F4] p-2 dark:bg-[#202234]' : ''
     }`}>
       {/* Table Header Controls */}
-      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#DCE6EF] bg-[#F5F8FB] p-4 sm:flex-row sm:items-center sm:p-5 dark:border-[#354A5C] dark:bg-[#162431]">
+      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#D7DCE5] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#45485E] dark:bg-[#2B2D42]">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-teal-500/15 text-teal-600 dark:text-teal-300">
             <Briefcase className="w-4 h-4" />
           </div>
           <div>
             <h2 className="font-['Outfit'] font-bold text-base sm:text-lg text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Active Jobs – All</span>
+              <span>Active Jobs</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-teal-500/15 text-teal-600 dark:text-teal-300 font-semibold">
                 {displayedJobs.length} Requisitions
               </span>
             </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
-              <span>Active client billings, rates & regional openings.</span>
-              {displayedJobs.length > 7 && (
-                <span className="text-teal-600 dark:text-teal-400 font-medium">
-                  (7 lines visible · scroll for all {displayedJobs.length})
-                </span>
-              )}
-            </p>
+            {!isCompactPreview && <p className="text-[11px] text-slate-500 dark:text-slate-400">Active client billings, rates & regional openings.</p>}
           </div>
         </div>
 
         {/* Right Controls: Date Filter, Search, Refresh, Expand */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {dashboardPreview && displayedJobs.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(value => !value)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#2B2D42] transition hover:bg-[#EDF2F4] dark:text-[#8D99AE] dark:hover:bg-[#36384F]"
+            >
+              {showAll ? 'Show less' : 'View all'}
+              {showAll ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+          )}
           {/* Independent Date Filter Dropdown (Default: Last Month) */}
           <div className="flex items-center gap-1.5 bg-white/70 dark:bg-slate-900/70 border border-slate-300/60 dark:border-cyan-500/25 rounded-xl px-2.5 py-1.5 shadow-xs">
             <Calendar className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
@@ -196,12 +206,12 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
       </div>
 
       {/* Table Body Viewport - Exactly 7 Lines Visible with Smooth Scrolling */}
-      <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 w-full scroll-smooth">
-        <table className="w-full text-left text-xs border-separate border-spacing-0 min-w-[580px]">
+      <div className={`w-full overflow-x-auto ${isCompactPreview ? '' : 'min-h-0 flex-1 overflow-y-auto scroll-smooth'}`}>
+        <table className={`w-full border-separate border-spacing-0 text-left text-xs ${isCompactPreview ? 'min-w-[420px]' : 'min-w-[580px]'}`}>
           <colgroup>
-            <col className="w-[18%] min-w-[95px]" />
+            <col className={isCompactPreview ? 'hidden' : 'w-[18%] min-w-[95px]'} />
             <col className="w-[36%] min-w-[190px]" />
-            <col className="w-[26%] min-w-[140px]" />
+            <col className={isCompactPreview ? 'hidden' : 'w-[26%] min-w-[140px]'} />
             <col className="w-[20%] min-w-[110px]" />
           </colgroup>
 
@@ -211,7 +221,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 1: Job Code */}
               <th
                 onClick={() => handleSort('jobCode')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300 sm:px-4"
+                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-4`}
               >
                 <div className="flex items-center gap-1">
                   <span>Job Code</span>
@@ -222,7 +232,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 2: Job Title */}
               <th
                 onClick={() => handleSort('jobTitle')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center gap-1">
                   <span>Job Title & Client</span>
@@ -233,7 +243,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 3: Client Bill Rate / Salary */}
               <th
                 onClick={() => handleSort('billRate')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300`}
               >
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-emerald-500/80" />
@@ -245,7 +255,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 4: State */}
               <th
                 onClick={() => handleSort('state')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#354A5C] dark:bg-[#162431] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-teal-500/80" />
@@ -265,7 +275,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
                 </td>
               </tr>
             ) : (
-              displayedJobs.map((job) => {
+              visibleJobs.map((job) => {
                 const statusBadge =
                   job.status === 'Active'
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-400/30'
@@ -279,10 +289,10 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
                   <tr
                     key={job.id}
                     onClick={() => setSelectedJob(job)}
-                    className="h-[52px] max-h-[52px] hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-colors group cursor-pointer"
+                    className={`${isCompactPreview ? 'h-12' : 'h-[52px] max-h-[52px]'} hover:bg-cyan-500/5 dark:hover:bg-cyan-500/10 transition-colors group cursor-pointer`}
                   >
                     {/* Job Code */}
-                    <td className="py-2.5 px-3.5 sm:px-4 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60">
+                    <td className={`${isCompactPreview ? 'hidden' : ''} py-2.5 px-3.5 sm:px-4 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60`}>
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono font-bold text-[11px] px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-400/30">
                           {job.jobCode}
@@ -303,7 +313,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
                     </td>
 
                     {/* Client Bill Rate / Salary */}
-                    <td className="py-2.5 px-3 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60">
+                    <td className={`${isCompactPreview ? 'hidden' : ''} py-2.5 px-3 whitespace-nowrap border-b border-slate-200/40 dark:border-slate-800/60`}>
                       <div className="space-y-0.5">
                         <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
                           {job.clientBillRate}
@@ -332,21 +342,21 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
           </tbody>
 
           {/* Sticky Totals Footer */}
-          <tfoot className="text-slate-900 dark:text-white font-bold text-xs">
+          <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-900 dark:text-white font-bold text-xs`}>
             <tr className="h-[44px]">
-              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#162431]">
+              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#36384F]">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
                   <span>TOTAL JOBS</span>
                 </div>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-cyan-600 dark:bg-[#162431] dark:text-cyan-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-cyan-600 dark:bg-[#36384F] dark:text-cyan-300">
                 <span>{totals.totalJobs} Active ({totals.totalOpenings} Openings)</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-emerald-600 dark:bg-[#162431] dark:text-emerald-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-emerald-600 dark:bg-[#36384F] dark:text-emerald-300">
                 <span>$125 – $195 / hr Range</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#162431] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#36384F] dark:text-slate-300">
                 <span>{totals.uniqueStates} States Active</span>
               </td>
             </tr>
@@ -355,7 +365,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
       </div>
 
       {/* Bottom Summary Strip */}
-      <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-[#DCE6EF] bg-[#F5F8FB] p-3 text-center sm:p-4 dark:border-[#354A5C] dark:bg-[#162431]">
+      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#D7DCE5] bg-[#EDF2F4] p-3 text-center sm:p-4 dark:border-[#45485E] dark:bg-[#36384F]`}>
         <div className="space-y-0.5">
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             Total Active Roles
@@ -387,7 +397,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
       {/* Active Job Quick Modal */}
       {selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg space-y-5 rounded-2xl border border-[#DCE6EF] bg-white p-6 shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]">
+          <div className="w-full max-w-lg space-y-5 rounded-2xl border border-[#D7DCE5] bg-white p-6 shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200/50 dark:border-cyan-500/20">
               <div className="flex items-center gap-2.5">
                 <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-400/30">

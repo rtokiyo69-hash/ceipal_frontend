@@ -140,7 +140,7 @@ function sanitizeEmailHtml(value: string): string {
 const COLORS = [
   '#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
   '#E05252', '#D97706', '#16A34A', '#2563EB', '#7C3AED', '#DB2777',
-  '#1769AA', '#0B4F89'
+  '#2B2D42', '#2B2D42'
 ];
 const HIGHLIGHT_COLORS = [
   '#FFFF00', '#00FF00', '#00FFFF', '#FF69B4', '#FFA500',
@@ -166,7 +166,7 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
   const [selectedFontSize, setSelectedFontSize] = useState('3');
   const [selectedFormat, setSelectedFormat] = useState('Normal');
   const [selectedStyle, setSelectedStyle] = useState('Styles');
-  const [textColor, setTextColor] = useState('#202B37');
+  const [textColor, setTextColor] = useState('#2B2D42');
   const [highlightColor, setHighlightColor] = useState('#FFFF00');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
@@ -349,7 +349,7 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
   );
 
   return (
-    <div className="overflow-visible border border-[#CBD5E1] bg-white dark:border-[#354A5C] dark:bg-[#162431]">
+    <div className="overflow-visible border border-[#CBD5E1] bg-white dark:border-[#45485E] dark:bg-[#36384F]">
       <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1.5 dark:border-[#334155] dark:bg-[#1E293B]">
         <div className="flex flex-wrap items-center gap-0.5">
           {toolbarButton('Clean Format', <Sparkles className="h-3.5 w-3.5 text-amber-600" />, () => runCommand('removeFormat'))}
@@ -398,14 +398,14 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
           onClick={() => setIsSourceMode((sourceMode) => !sourceMode)}
           aria-pressed={isSourceMode}
           title="Toggle HTML source view"
-          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold ${isSourceMode ? 'bg-[#2F80E7] text-white' : 'text-[#475569] hover:bg-[#E2E8F0] dark:text-[#CBD5E1] dark:hover:bg-[#334155]'}`}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold ${isSourceMode ? 'bg-[#2B2D42] text-white' : 'text-[#475569] hover:bg-[#E2E8F0] dark:text-[#CBD5E1] dark:hover:bg-[#334155]'}`}
         >
           <Code2 className="h-3.5 w-3.5" />
           Source
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1 border-b border-[#E2E8F0] bg-[#F1F5F9] px-2 py-1 dark:border-[#334155] dark:bg-[#162431]">
+      <div className="flex flex-wrap items-center gap-1 border-b border-[#E2E8F0] bg-[#F1F5F9] px-2 py-1 dark:border-[#334155] dark:bg-[#36384F]">
         {toolbarButton('Align Left', <AlignLeft className="h-3.5 w-3.5" />, () => runCommand('justifyLeft'))}
         {toolbarButton('Align Center', <AlignCenter className="h-3.5 w-3.5" />, () => runCommand('justifyCenter'))}
         {toolbarButton('Align Right', <AlignRight className="h-3.5 w-3.5" />, () => runCommand('justifyRight'))}
@@ -418,7 +418,7 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
             <span className="mx-auto mt-0.5 block h-1 w-3 rounded" style={{ backgroundColor: textColor }} />
           </button>
           {showColorPicker && (
-            <div className="absolute left-0 top-full z-50 grid w-40 grid-cols-7 gap-1 rounded-lg border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#354A5C] dark:bg-[#1B2936]">
+            <div className="absolute left-0 top-full z-50 grid w-40 grid-cols-7 gap-1 rounded-lg border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#45485E] dark:bg-[#2B2D42]">
               {COLORS.map((color) => (
                 <button key={color} type="button" aria-label={`Text color ${color}`} onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={() => { setTextColor(color); runCommand('foreColor', color); setShowColorPicker(false); }} className="h-4 w-4 rounded border border-gray-300 hover:scale-125 dark:border-gray-600" style={{ backgroundColor: color }} />
               ))}
@@ -433,17 +433,17 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
             <span className="mx-auto mt-0.5 block h-1 w-3 rounded" style={{ backgroundColor: highlightColor }} />
           </button>
           {showHighlightPicker && (
-            <div className="absolute left-0 top-full z-50 grid w-36 grid-cols-6 gap-1 rounded-lg border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#354A5C] dark:bg-[#1B2936]">
+            <div className="absolute left-0 top-full z-50 grid w-36 grid-cols-6 gap-1 rounded-lg border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#45485E] dark:bg-[#2B2D42]">
               {HIGHLIGHT_COLORS.map((color) => (
                 <button key={color} type="button" aria-label={`Highlight color ${color}`} onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={() => { setHighlightColor(color); runCommand('hiliteColor', color); setShowHighlightPicker(false); }} className="h-4 w-4 rounded border border-gray-300 hover:scale-125 dark:border-gray-600" style={{ backgroundColor: color }} />
               ))}
-              <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={() => { runCommand('removeFormat'); setShowHighlightPicker(false); }} className="col-span-6 text-left text-[10px] text-[#1769AA] hover:underline">Remove highlight</button>
+              <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={() => { runCommand('removeFormat'); setShowHighlightPicker(false); }} className="col-span-6 text-left text-[10px] text-[#2B2D42] hover:underline">Remove highlight</button>
             </div>
           )}
         </div>
 
         <span className="mx-1 h-4 border-l border-[#CBD5E1] dark:border-[#475569]" />
-        <select value={selectedStyle} onMouseDown={saveSelection} onChange={(event) => { setSelectedStyle(event.target.value); if (event.target.value === 'Lead Paragraph') runCommand('formatBlock', 'blockquote'); if (event.target.value === 'Italic Title') runCommand('italic'); if (event.target.value === 'Badge Tag') runCommand('hiliteColor', '#EAF4FC'); }} aria-label="Text style" className="max-w-32 rounded border border-[#CBD5E1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
+        <select value={selectedStyle} onMouseDown={saveSelection} onChange={(event) => { setSelectedStyle(event.target.value); if (event.target.value === 'Lead Paragraph') runCommand('formatBlock', 'blockquote'); if (event.target.value === 'Italic Title') runCommand('italic'); if (event.target.value === 'Badge Tag') runCommand('hiliteColor', '#EDF2F4'); }} aria-label="Text style" className="max-w-32 rounded border border-[#CBD5E1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
           <option>Styles</option>
           <option>Lead Paragraph</option>
           <option>Badge Tag</option>
@@ -471,38 +471,38 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
       </div>
 
       {showFindReplace && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] bg-white p-2 dark:border-[#334155] dark:bg-[#1B2936]">
-          <input value={findText} onChange={(event) => setFindText(event.target.value)} placeholder="Find text" className="min-w-32 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#162431] dark:text-white" />
-          <input value={replaceText} onChange={(event) => setReplaceText(event.target.value)} placeholder="Replace with" className="min-w-32 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#162431] dark:text-white" />
-          <button type="button" onClick={() => findInEditor()} className="rounded bg-[#EAF4FC] px-2 py-1 text-[10px] font-semibold text-[#1769AA]">Find</button>
-          <button type="button" onClick={() => findInEditor(true)} className="rounded bg-[#EAF4FC] px-2 py-1 text-[10px] font-semibold text-[#1769AA]">Replace next</button>
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] bg-white p-2 dark:border-[#334155] dark:bg-[#2B2D42]">
+          <input value={findText} onChange={(event) => setFindText(event.target.value)} placeholder="Find text" className="min-w-32 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#36384F] dark:text-white" />
+          <input value={replaceText} onChange={(event) => setReplaceText(event.target.value)} placeholder="Replace with" className="min-w-32 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#36384F] dark:text-white" />
+          <button type="button" onClick={() => findInEditor()} className="rounded bg-[#EDF2F4] px-2 py-1 text-[10px] font-semibold text-[#2B2D42]">Find</button>
+          <button type="button" onClick={() => findInEditor(true)} className="rounded bg-[#EDF2F4] px-2 py-1 text-[10px] font-semibold text-[#2B2D42]">Replace next</button>
         </div>
       )}
 
       {showLinkInput && (
-        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-white p-2 dark:border-[#334155] dark:bg-[#1B2936]">
+        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-white p-2 dark:border-[#334155] dark:bg-[#2B2D42]">
           <label htmlFor="email-editor-link" className="text-[10px] font-semibold">Link URL</label>
-          <input id="email-editor-link" type="url" value={linkUrl} onMouseDown={saveSelection} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://..." className="min-w-0 flex-1 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#162431] dark:text-white" />
-          <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={insertLink} className="rounded bg-[#2F80E7] px-3 py-1 text-[10px] font-bold text-white">Insert Link</button>
+          <input id="email-editor-link" type="url" value={linkUrl} onMouseDown={saveSelection} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://..." className="min-w-0 flex-1 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#36384F] dark:text-white" />
+          <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={insertLink} className="rounded bg-[#2B2D42] px-3 py-1 text-[10px] font-bold text-white">Insert Link</button>
           <button type="button" onClick={() => setShowLinkInput(false)} className="text-[#64748B]" aria-label="Close link editor">×</button>
         </div>
       )}
 
       {showImageInput && (
-        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-white p-2 dark:border-[#334155] dark:bg-[#1B2936]">
+        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-white p-2 dark:border-[#334155] dark:bg-[#2B2D42]">
           <label htmlFor="email-editor-image" className="text-[10px] font-semibold">Image URL</label>
-          <input id="email-editor-image" type="url" value={imageUrl} onMouseDown={saveSelection} onChange={(event) => setImageUrl(event.target.value)} placeholder="https://..." className="min-w-0 flex-1 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#162431] dark:text-white" />
-          <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={insertImage} className="rounded bg-[#2F80E7] px-3 py-1 text-[10px] font-bold text-white">Insert Image</button>
+          <input id="email-editor-image" type="url" value={imageUrl} onMouseDown={saveSelection} onChange={(event) => setImageUrl(event.target.value)} placeholder="https://..." className="min-w-0 flex-1 rounded border border-[#CBD5E1] px-2 py-1 text-[11px] dark:border-[#475569] dark:bg-[#36384F] dark:text-white" />
+          <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={insertImage} className="rounded bg-[#2B2D42] px-3 py-1 text-[10px] font-bold text-white">Insert Image</button>
           <button type="button" onClick={() => setShowImageInput(false)} className="text-[#64748B]" aria-label="Close image editor">×</button>
         </div>
       )}
 
       {showTableInput && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] bg-white p-2 text-[10px] dark:border-[#334155] dark:bg-[#1B2936]">
+        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] bg-white p-2 text-[10px] dark:border-[#334155] dark:bg-[#2B2D42]">
           <span className="font-semibold">Insert table</span>
-          <label className="flex items-center gap-1">Rows <input type="number" min={1} max={10} value={tableRows} onChange={(event) => setTableRows(Number(event.target.value))} className="w-14 rounded border px-1 py-0.5 dark:border-[#475569] dark:bg-[#162431]" /></label>
-          <label className="flex items-center gap-1">Columns <input type="number" min={1} max={8} value={tableColumns} onChange={(event) => setTableColumns(Number(event.target.value))} className="w-14 rounded border px-1 py-0.5 dark:border-[#475569] dark:bg-[#162431]" /></label>
-          <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={insertTable} className="rounded bg-[#2F80E7] px-3 py-1 font-bold text-white">Insert</button>
+          <label className="flex items-center gap-1">Rows <input type="number" min={1} max={10} value={tableRows} onChange={(event) => setTableRows(Number(event.target.value))} className="w-14 rounded border px-1 py-0.5 dark:border-[#475569] dark:bg-[#36384F]" /></label>
+          <label className="flex items-center gap-1">Columns <input type="number" min={1} max={8} value={tableColumns} onChange={(event) => setTableColumns(Number(event.target.value))} className="w-14 rounded border px-1 py-0.5 dark:border-[#475569] dark:bg-[#36384F]" /></label>
+          <button type="button" onMouseDown={(event) => { event.preventDefault(); saveSelection(); }} onClick={insertTable} className="rounded bg-[#2B2D42] px-3 py-1 font-bold text-white">Insert</button>
           <button type="button" onClick={() => setShowTableInput(false)} className="text-[#64748B]" aria-label="Close table editor">×</button>
         </div>
       )}
@@ -512,7 +512,7 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
           aria-label="Email message HTML source"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="min-h-[280px] w-full resize-y bg-white p-3 font-mono text-[11px] text-[#202B37] outline-none dark:bg-[#162431] dark:text-white"
+          className="min-h-[280px] w-full resize-y bg-white p-3 font-mono text-[11px] text-[#2B2D42] outline-none dark:bg-[#36384F] dark:text-white"
         />
       ) : (
         <div
@@ -528,7 +528,7 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
           onKeyUp={saveSelection}
           onInput={syncEditor}
           onPaste={handlePaste}
-          className="min-h-[280px] w-full overflow-auto bg-white p-3 text-xs leading-6 text-[#334155] outline-none dark:bg-[#1B2936] dark:text-white [&_table]:border-collapse [&_td]:border [&_td]:border-slate-300 [&_td]:p-1 [&_th]:border [&_th]:border-slate-300 [&_th]:p-1"
+          className="min-h-[280px] w-full overflow-auto bg-white p-3 text-xs leading-6 text-[#334155] outline-none dark:bg-[#2B2D42] dark:text-white [&_table]:border-collapse [&_td]:border [&_td]:border-slate-300 [&_td]:p-1 [&_th]:border [&_th]:border-slate-300 [&_th]:p-1"
           style={{ borderTop: `2px solid ${accentColor}` }}
         />
       )}

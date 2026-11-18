@@ -109,7 +109,7 @@ export const AdvancedSearch: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#0B4F89] text-white border border-[#1769AA] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -117,10 +117,10 @@ export const AdvancedSearch: React.FC = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-display font-bold text-[#2B2D42] dark:text-white">
           Advanced Talent Intelligence &amp; Boolean Search
         </h1>
-        <p className="text-xs text-[#6B7785]">
+        <p className="text-xs text-[#8D99AE]">
           Multi-parameter skill matrix, semantic boolean matching, and geographical radius screening
         </p>
       </div>
@@ -128,15 +128,15 @@ export const AdvancedSearch: React.FC = () => {
       {/* Search Console Grid */}
       <div className="grid lg:grid-cols-12 gap-6">
         {/* Left Form: Search Criteria */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#1E1B29] border border-[#DCE6EF] dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5 text-xs">
+        <div className="lg:col-span-5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5 text-xs">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[#202B37] dark:text-white flex items-center gap-1.5">
-              <Filter className="w-4 h-4 text-[#1769AA]" />
+            <span className="font-bold text-[#2B2D42] dark:text-white flex items-center gap-1.5">
+              <Filter className="w-4 h-4 text-[#2B2D42]" />
               <span>Search Parameters</span>
             </span>
             <button
               onClick={handleReset}
-              className="text-xs text-[#6B7785] hover:text-[#1769AA] dark:hover:text-[#8CBCE8] flex items-center gap-1 transition-colors"
+              className="text-xs text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-[#8D99AE] flex items-center gap-1 transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Reset Filters</span>
@@ -145,24 +145,24 @@ export const AdvancedSearch: React.FC = () => {
 
           {/* Keyword Search */}
           <div>
-            <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">
+            <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">
               Boolean Keyword / Designation
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7785]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D99AE]" />
               <input
                 type="text"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder='e.g. "Distributed Systems" OR "Cloud Architect"'
-                className="w-full pl-9 pr-3 py-2 bg-[#F5F8FB] dark:bg-slate-800/80 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA] focus:ring-1 focus:ring-[#1769AA]"
+                className="w-full pl-9 pr-3 py-2 bg-[#EDF2F4] dark:bg-slate-800/80 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
               />
             </div>
           </div>
 
           {/* Skill Matrix Chips */}
           <div>
-            <label className="block text-[#202B37] dark:text-slate-400 mb-1.5 font-medium">
+            <label className="block text-[#2B2D42] dark:text-slate-400 mb-1.5 font-medium">
               Must-Have Technical Skills (AND logic)
             </label>
             <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
@@ -175,8 +175,8 @@ export const AdvancedSearch: React.FC = () => {
                     onClick={() => toggleSkill(sk)}
                     className={`px-2.5 py-1 rounded-lg font-mono text-[11px] transition-all ${
                       isSelected
-                        ? 'bg-[#1769AA] text-white shadow-xs font-semibold'
-                        : 'bg-[#EAF4FC] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 text-[#1769AA] dark:text-slate-300 hover:bg-[#1769AA]/15'
+                        ? 'bg-[#2B2D42] text-white shadow-xs font-semibold'
+                        : 'bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 text-[#2B2D42] dark:text-slate-300 hover:bg-[#2B2D42]/15'
                     }`}
                   >
                     {isSelected ? `✓ ${sk}` : `+ ${sk}`}
@@ -189,8 +189,8 @@ export const AdvancedSearch: React.FC = () => {
           {/* Experience Slider */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[#202B37] dark:text-slate-400 font-medium">Minimum Experience</label>
-              <span className="font-mono font-bold text-[#1769AA] dark:text-[#8CBCE8]">{minExp} Years</span>
+              <label className="text-[#2B2D42] dark:text-slate-400 font-medium">Minimum Experience</label>
+              <span className="font-mono font-bold text-[#2B2D42] dark:text-[#8D99AE]">{minExp} Years</span>
             </div>
             <input
               type="range"
@@ -198,38 +198,38 @@ export const AdvancedSearch: React.FC = () => {
               max="15"
               value={minExp}
               onChange={(e) => setMinExp(Number(e.target.value))}
-              className="w-full accent-[#1769AA]"
+              className="w-full accent-[#2B2D42]"
             />
           </div>
 
           {/* Location & Remote */}
           <div className="space-y-2">
-            <label className="block text-[#202B37] dark:text-slate-400 font-medium">Location or Region</label>
+            <label className="block text-[#2B2D42] dark:text-slate-400 font-medium">Location or Region</label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. San Jose, Bengaluru, New York"
-              className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
+              className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
             />
             <label className="flex items-center gap-2 pt-1 cursor-pointer">
               <input
                 type="checkbox"
                 checked={remoteOnly}
                 onChange={(e) => setRemoteOnly(e.target.checked)}
-                className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
+                className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
               />
-              <span className="text-[#6B7785] dark:text-slate-400">Remote availability candidates only</span>
+              <span className="text-[#8D99AE] dark:text-slate-400">Remote availability candidates only</span>
             </label>
           </div>
 
           {/* Candidate Source */}
           <div>
-            <label className="block text-[#202B37] dark:text-slate-400 mb-1 font-medium">Sourcing Channel</label>
+            <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Sourcing Channel</label>
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 rounded-xl text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
+              className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
             >
               <option value="All">All Ingestion Sources</option>
               <option value="LinkedIn">LinkedIn</option>
@@ -242,9 +242,9 @@ export const AdvancedSearch: React.FC = () => {
           {/* Save Search Button */}
           <button
             onClick={handleSaveSearch}
-            className="w-full py-2 bg-[#F5F8FB] dark:bg-slate-800 border border-[#DCE6EF] dark:border-slate-700 hover:border-[#1769AA] hover:bg-[#EAF4FC] rounded-xl text-xs font-semibold text-[#202B37] dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+            className="w-full py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 hover:border-[#2B2D42] hover:bg-[#EDF2F4] rounded-xl text-xs font-semibold text-[#2B2D42] dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
           >
-            <Save className="w-3.5 h-3.5 text-[#1769AA]" />
+            <Save className="w-3.5 h-3.5 text-[#2B2D42]" />
             <span>Save Current Search Query</span>
           </button>
         </div>
@@ -252,14 +252,14 @@ export const AdvancedSearch: React.FC = () => {
         {/* Right Column: Search Results */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-mono text-[#6B7785]">
-              Showing <strong className="text-[#202B37] dark:text-white">{searchResults.length}</strong> matching candidates
+            <span className="font-mono text-[#8D99AE]">
+              Showing <strong className="text-[#2B2D42] dark:text-white">{searchResults.length}</strong> matching candidates
             </span>
           </div>
 
           <div className="space-y-3">
             {searchResults.length === 0 ? (
-              <div className="p-12 text-center bg-white dark:bg-[#1E1B29] border border-[#DCE6EF] dark:border-slate-800 rounded-2xl text-xs text-[#6B7785]">
+              <div className="p-12 text-center bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl text-xs text-[#8D99AE]">
                 No candidates matched all your boolean criteria. Try loosening technical skill filters or reducing minimum experience.
               </div>
             ) : (
@@ -267,23 +267,23 @@ export const AdvancedSearch: React.FC = () => {
                 <div
                   key={cand.id}
                   onClick={() => navigate('applicant-detail', cand.id)}
-                  className="p-4 bg-white dark:bg-[#1E1B29] border border-[#DCE6EF] dark:border-slate-800 hover:border-[#1769AA] dark:hover:border-[#1769AA] rounded-2xl shadow-xs transition-all cursor-pointer space-y-3"
+                  className="p-4 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 hover:border-[#2B2D42] dark:hover:border-[#2B2D42] rounded-2xl shadow-xs transition-all cursor-pointer space-y-3"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <img
                         src={cand.avatar}
                         alt={cand.name}
-                        className="w-12 h-12 rounded-full object-cover ring-1 ring-[#DCE6EF] dark:ring-slate-700"
+                        className="w-12 h-12 rounded-full object-cover ring-1 ring-[#D7DCE5] dark:ring-slate-700"
                       />
                       <div>
-                        <div className="text-sm font-bold text-[#202B37] dark:text-white hover:text-[#1769AA] dark:hover:text-[#8CBCE8]">
+                        <div className="text-sm font-bold text-[#2B2D42] dark:text-white hover:text-[#2B2D42] dark:hover:text-[#8D99AE]">
                           {cand.name}
                         </div>
-                        <div className="text-xs text-[#6B7785]">{cand.currentDesignation}</div>
-                        <div className="text-[11px] text-[#6B7785] flex items-center gap-2 mt-1">
+                        <div className="text-xs text-[#8D99AE]">{cand.currentDesignation}</div>
+                        <div className="text-[11px] text-[#8D99AE] flex items-center gap-2 mt-1">
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-[#6B7785]" />
+                            <MapPin className="w-3 h-3 text-[#8D99AE]" />
                             {cand.location}
                           </span>
                           <span>·</span>
@@ -307,8 +307,8 @@ export const AdvancedSearch: React.FC = () => {
                         key={sk}
                         className={`px-2 py-0.5 rounded text-[10px] font-mono ${
                           selectedSkills.includes(sk)
-                            ? 'bg-[#EAF4FC] text-[#1769AA] border border-[#1769AA]/30 dark:bg-[#1769AA]/20 dark:text-[#D8E9F7] font-bold'
-                            : 'bg-[#F5F8FB] dark:bg-slate-800 text-[#6B7785] dark:text-slate-300 border border-[#DCE6EF] dark:border-slate-700'
+                            ? 'bg-[#EDF2F4] text-[#2B2D42] border border-[#2B2D42]/30 dark:bg-[#2B2D42]/20 dark:text-[#EDF2F4] font-bold'
+                            : 'bg-[#EDF2F4] dark:bg-slate-800 text-[#8D99AE] dark:text-slate-300 border border-[#D7DCE5] dark:border-slate-700'
                         }`}
                       >
                         {sk}
@@ -316,9 +316,9 @@ export const AdvancedSearch: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-[#DCE6EF] dark:border-slate-800 flex items-center justify-between text-xs text-[#6B7785]">
-                    <span>Stage: <strong className="text-[#202B37] dark:text-white">{cand.status}</strong></span>
-                    <span className="text-[#1769AA] hover:text-[#0B4F89] dark:text-[#8CBCE8] font-semibold flex items-center gap-1">
+                  <div className="pt-2 border-t border-[#D7DCE5] dark:border-slate-800 flex items-center justify-between text-xs text-[#8D99AE]">
+                    <span>Stage: <strong className="text-[#2B2D42] dark:text-white">{cand.status}</strong></span>
+                    <span className="text-[#2B2D42] hover:text-[#2B2D42] dark:text-[#8D99AE] font-semibold flex items-center gap-1">
                       View Candidate Dossier →
                     </span>
                   </div>

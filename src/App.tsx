@@ -99,7 +99,7 @@ export default function App() {
   };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-[#F5F8FB] dark:bg-[#111C26] text-[#202B37] dark:text-[#F5F8FB] ${isRecruiter ? 'recruiter-shell' : ''}`}>
+    <div className={`flex h-screen w-screen overflow-hidden bg-[#EDF2F4] dark:bg-[#202234] text-[#2B2D42] dark:text-[#EDF2F4] ${isRecruiter ? 'recruiter-shell' : ''}`}>
       {!isRecruiter && <Sidebar />}
 
       {/* Main Workspace Frame */}

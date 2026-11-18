@@ -140,7 +140,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`relative flex flex-col bg-[#0B4F89] text-white border-r border-[#083F70] transition-all duration-200 select-none z-30 shrink-0 ${
+      className={`relative flex flex-col bg-[#2B2D42] text-white border-r border-[#083F70] transition-all duration-200 select-none z-30 shrink-0 ${
         collapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -155,7 +155,7 @@ export const Sidebar: React.FC = () => {
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-md text-[#D8E9F7] hover:text-white hover:bg-[#1A659E] transition-colors"
+          className="p-1 rounded-md text-[#EDF2F4] hover:text-white hover:bg-[#1A659E] transition-colors"
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -167,7 +167,7 @@ export const Sidebar: React.FC = () => {
         {navGroups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
             {!collapsed && (
-              <div className="px-3 pb-1 text-[10px] font-mono tracking-wider text-[#D8E9F7]/80 uppercase font-semibold">
+              <div className="px-3 pb-1 text-[10px] font-mono tracking-wider text-[#EDF2F4]/80 uppercase font-semibold">
                 {group.groupTitle}
               </div>
             )}
@@ -186,18 +186,18 @@ export const Sidebar: React.FC = () => {
                   title={collapsed ? item.label : undefined}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-[#1769AA] text-white font-semibold shadow-sm shadow-[#1769AA]/40'
-                      : 'text-[#D8E9F7] hover:bg-[#1A659E] hover:text-white'
+                      ? 'bg-[#2B2D42] text-white font-semibold shadow-sm shadow-[#2B2D42]/40'
+                      : 'text-[#EDF2F4] hover:bg-[#1A659E] hover:text-white'
                   } ${collapsed ? 'justify-center' : ''}`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#D8E9F7]'}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#EDF2F4]'}`} />
                   {!collapsed && (
                     <span className="flex-1 text-left truncate">{item.label}</span>
                   )}
                   {!collapsed && item.badge && (
                     <span
                       className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-[#2F80E7] text-white'
+                        isActive ? 'bg-white/20 text-white' : 'bg-[#2B2D42] text-white'
                       }`}
                     >
                       {item.badge}
@@ -216,17 +216,17 @@ export const Sidebar: React.FC = () => {
           <div className="mb-2">
             <button
               onClick={() => setRoleSwitcherOpen(!roleSwitcherOpen)}
-              className="w-full flex items-center justify-between text-xs text-[#EAF4FC] hover:text-white px-2.5 py-1.5 rounded-lg bg-[#3E2365] border border-[#1A659E] transition-colors"
+              className="w-full flex items-center justify-between text-xs text-[#EDF2F4] hover:text-white px-2.5 py-1.5 rounded-lg bg-[#3E2365] border border-[#1A659E] transition-colors"
             >
               <span className="flex items-center gap-1.5 font-mono">
-                <UserCheck className="w-3.5 h-3.5 text-[#2F80E7]" />
+                <UserCheck className="w-3.5 h-3.5 text-[#2B2D42]" />
                 Switch Persona
               </span>
               <span>{roleSwitcherOpen ? '▲' : '▼'}</span>
             </button>
 
             {roleSwitcherOpen && (
-              <div className="mt-1.5 p-1 bg-[#0B4F89] border border-[#1A659E] rounded-lg space-y-1 text-xs shadow-xl">
+              <div className="mt-1.5 p-1 bg-[#2B2D42] border border-[#1A659E] rounded-lg space-y-1 text-xs shadow-xl">
                 {(['super_admin', 'manager', 'recruiter'] as UserRole[]).map((r) => (
                   <button
                     key={r}
@@ -235,7 +235,7 @@ export const Sidebar: React.FC = () => {
                       setRoleSwitcherOpen(false);
                     }}
                     className={`w-full text-left px-2 py-1 rounded-md capitalize transition-colors ${
-                      role === r ? 'bg-[#1769AA] text-white font-medium' : 'text-[#D8E9F7] hover:bg-[#1A659E]'
+                      role === r ? 'bg-[#2B2D42] text-white font-medium' : 'text-[#EDF2F4] hover:bg-[#1A659E]'
                     }`}
                   >
                     {r.replace('_', ' ')}
@@ -251,12 +251,12 @@ export const Sidebar: React.FC = () => {
           <img
             src={currentUser?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250'}
             alt={currentUser?.name}
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#2F80E7]"
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#2B2D42]"
           />
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-white truncate">{currentUser?.name}</div>
-              <div className="text-[11px] text-[#D8E9F7] capitalize truncate">
+              <div className="text-[11px] text-[#EDF2F4] capitalize truncate">
                 {role.replace('_', ' ')}
               </div>
             </div>
@@ -264,7 +264,7 @@ export const Sidebar: React.FC = () => {
           {!collapsed && (
             <button
               onClick={logout}
-              className="p-1.5 text-[#D8E9F7] hover:text-[#2F80E7] hover:bg-[#1A659E] rounded transition-colors"
+              className="p-1.5 text-[#EDF2F4] hover:text-[#2B2D42] hover:bg-[#1A659E] rounded transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

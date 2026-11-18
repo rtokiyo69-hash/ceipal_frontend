@@ -134,7 +134,7 @@ const EMAIL_JOB_FIELDS = [
 ];
 const EMAIL_THEMES = [
   { id: 'plain', name: 'Plain', accent: '#64748B', background: '#FFFFFF' },
-  { id: 'classic-blue', name: 'Classic Blue', accent: '#2F80E7', background: '#F3F8FF' },
+  { id: 'classic-blue', name: 'Classic Blue', accent: '#2B2D42', background: '#F3F8FF' },
   { id: 'ocean', name: 'Ocean', accent: '#0E7490', background: '#ECFEFF' },
   { id: 'sunset', name: 'Sunset', accent: '#EA580C', background: '#FFF7ED' },
   { id: 'forest', name: 'Forest', accent: '#15803D', background: '#F0FDF4' },
@@ -506,7 +506,7 @@ export const JobList: React.FC = () => {
   const [emailColumns, setEmailColumns] = useState<string[]>(['Job Title', 'Job Code', 'Location']);
   const [isEmailColumnsOpen, setIsEmailColumnsOpen] = useState(false);
   const [emailTheme, setEmailTheme] = useState('classic-blue');
-  const [customEmailColor, setCustomEmailColor] = useState('#2F80E7');
+  const [customEmailColor, setCustomEmailColor] = useState('#2B2D42');
   const [isEmailThemeOpen, setIsEmailThemeOpen] = useState(false);
   const [isScheduleMode, setIsScheduleMode] = useState(false);
   const [scheduleDateTime, setScheduleDateTime] = useState('');
@@ -1186,7 +1186,7 @@ export const JobList: React.FC = () => {
     <div className="space-y-4">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#0B4F89] text-white border border-[#1769AA] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -1196,17 +1196,17 @@ export const JobList: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#202B37] dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#2B2D42] dark:text-white">
               Job Posting
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/20">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EDF2F4] dark:bg-[#36384F] text-[#2B2D42] dark:text-[#EDF2F4] border border-[#2B2D42]/20">
               {filteredJobs.length} Requisitions
             </span>
-            <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9] bg-white dark:bg-[#1B2936] px-2 py-0.5 rounded-md border border-[#DCE6EF] dark:border-[#354A5C]">
+            <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-[#8D99AE] dark:text-[#B9CAD9] bg-white dark:bg-[#2B2D42] px-2 py-0.5 rounded-md border border-[#D7DCE5] dark:border-[#45485E]">
               <span>💡 Click any job to open in a new tab</span>
             </span>
           </div>
-          <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9] mt-0.5">
+          <p className="text-xs text-[#8D99AE] dark:text-[#B9CAD9] mt-0.5">
             Full enterprise requisition pipeline with multi-column filtering, expandable candidate submissions, and dual scrollbars
           </p>
         </div>
@@ -1217,34 +1217,36 @@ export const JobList: React.FC = () => {
           <button
             onClick={openColumnDrawer}
             className="px-3 py-1.5 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] hover:text-[#1769AA] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
+            onClick={() => setIsColumnDrawerOpen(true)}
+            className="px-3 py-1.5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] hover:bg-[#EDF2F4] hover:text-[#2B2D42] rounded-xl text-xs font-semibold text-[#2B2D42] dark:text-[#EDF2F4] transition-colors flex items-center gap-1.5 shadow-xs"
             title="Edit displayed columns"
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#1769AA]" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#2B2D42]" />
             <span>Columns ({visibleColumns.length})</span>
           </button>
 
           {/* Send Requirement */}
           <button
             onClick={() => openSendModal()}
-            className="px-3 py-1.5 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] hover:text-[#1769AA] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
+            className="px-3 py-1.5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] hover:bg-[#EDF2F4] hover:text-[#2B2D42] rounded-xl text-xs font-semibold text-[#2B2D42] dark:text-[#EDF2F4] transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <Send className="w-3.5 h-3.5 text-[#1769AA]" />
+            <Send className="w-3.5 h-3.5 text-[#2B2D42]" />
             <span>Send Requirement</span>
           </button>
 
           {/* Export CSV Button */}
           <button
             onClick={handleExportCSV}
-            className="px-3 py-1.5 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] hover:bg-[#EAF4FC] rounded-xl text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] transition-colors flex items-center gap-1.5 shadow-xs"
+            className="px-3 py-1.5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] hover:bg-[#EDF2F4] rounded-xl text-xs font-semibold text-[#2B2D42] dark:text-[#EDF2F4] transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-[#7A8794]" />
+            <Download className="w-3.5 h-3.5 text-[#8D99AE]" />
             <span>Export CSV</span>
           </button>
 
           {/* + New Job Posting */}
           <button
             onClick={() => navigate('job-new')}
-            className="px-4 py-1.5 bg-[#2F80E7] hover:bg-[#216BC4] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2F80E7]/30 transition-all flex items-center gap-1.5"
+            className="px-4 py-1.5 bg-[#2B2D42] hover:bg-[#222336] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2B2D42]/30 transition-all flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>+ New</span>
@@ -1253,17 +1255,17 @@ export const JobList: React.FC = () => {
       </div>
 
       {/* Ceipal Quick View Sub-Tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-b border-[#DCE6EF] dark:border-[#354A5C]">
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-b border-[#D7DCE5] dark:border-[#45485E]">
         <button
           onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             statusFilter === 'All' && priorityFilter === 'All'
-              ? 'text-[#1769AA] border-[#1769AA] bg-[#EAF4FC]/60 dark:bg-[#22384B]/50'
-              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
+              ? 'text-[#2B2D42] border-[#2B2D42] bg-[#EDF2F4]/60 dark:bg-[#36384F]/50'
+              : 'text-[#8D99AE] dark:text-[#B9CAD9] border-transparent hover:text-[#2B2D42] dark:hover:text-white'
           }`}
         >
           <span>All Jobs</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white dark:bg-[#1B2936] text-[#1769AA] border border-[#DCE6EF] font-mono">
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white dark:bg-[#2B2D42] text-[#2B2D42] border border-[#D7DCE5] font-mono">
             {jobs.length}
           </span>
         </button>
@@ -1272,8 +1274,8 @@ export const JobList: React.FC = () => {
           onClick={() => { setStatusFilter('Active'); setPriorityFilter('All'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             statusFilter === 'Active'
-              ? 'text-[#1769AA] border-[#1769AA] bg-[#EAF4FC]/60 dark:bg-[#22384B]/50'
-              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
+              ? 'text-[#2B2D42] border-[#2B2D42] bg-[#EDF2F4]/60 dark:bg-[#36384F]/50'
+              : 'text-[#8D99AE] dark:text-[#B9CAD9] border-transparent hover:text-[#2B2D42] dark:hover:text-white'
           }`}
         >
           <span>Active Postings</span>
@@ -1284,8 +1286,8 @@ export const JobList: React.FC = () => {
           onClick={() => { setStatusFilter('Open'); }}
           className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
             statusFilter === 'Open'
-              ? 'text-[#1769AA] border-[#1769AA] bg-[#EAF4FC]/60'
-              : 'text-[#5E6B7A] dark:text-[#B9CAD9] border-transparent hover:text-[#202B37] dark:hover:text-white'
+              ? 'text-[#2B2D42] border-[#2B2D42] bg-[#EDF2F4]/60'
+              : 'text-[#8D99AE] dark:text-[#B9CAD9] border-transparent hover:text-[#2B2D42] dark:hover:text-white'
           }`}
         >
           <span>Open Sourcing</span>
@@ -1305,24 +1307,24 @@ export const JobList: React.FC = () => {
       </div>
 
       {/* Ceipal Filter and Specialized Search Bar */}
-      <div className="p-3 bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs space-y-2">
+      <div className="p-3 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl shadow-xs space-y-2">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search bar with Integrated Scope Dropdown */}
-          <div className="flex items-center flex-1 max-w-xl bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl overflow-hidden focus-within:border-[#1769AA] transition-colors">
-            <div className="relative border-r border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="flex items-center flex-1 max-w-xl bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl overflow-hidden focus-within:border-[#2B2D42] transition-colors">
+            <div className="relative border-r border-[#D7DCE5] dark:border-[#45485E]">
               <select
                 value={searchScope}
                 onChange={(e) => setSearchScope(e.target.value)}
                 aria-label="Search Scope"
-                className="appearance-none bg-transparent pl-3 pr-7 py-2 text-xs font-semibold text-[#202B37] dark:text-[#F5F8FB] focus:outline-none cursor-pointer"
+                className="appearance-none bg-transparent pl-3 pr-7 py-2 text-xs font-semibold text-[#2B2D42] dark:text-[#EDF2F4] focus:outline-none cursor-pointer"
               >
                 {searchScopes.map((scope) => (
-                  <option key={scope} value={scope} className="bg-white dark:bg-[#1B2936]">
+                  <option key={scope} value={scope} className="bg-white dark:bg-[#2B2D42]">
                     {scope}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3 h-3 text-[#7A8794] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 text-[#8D99AE] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             <div className="relative flex-1 flex items-center">
@@ -1331,17 +1333,17 @@ export const JobList: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={`Search across ${searchScope.toLowerCase()}...`}
-                className="w-full pl-3 pr-8 py-2 bg-transparent text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none placeholder-[#7A8794]"
+                className="w-full pl-3 pr-8 py-2 bg-transparent text-xs text-[#2B2D42] dark:text-[#EDF2F4] focus:outline-none placeholder-[#8D99AE]"
               />
               {search ? (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 text-[#7A8794] hover:text-[#202B37] dark:hover:text-white"
+                  className="absolute right-2.5 text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-white"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               ) : (
-                <Search className="w-3.5 h-3.5 text-[#7A8794] absolute right-2.5 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 text-[#8D99AE] absolute right-2.5 pointer-events-none" />
               )}
             </div>
           </div>
@@ -1353,7 +1355,7 @@ export const JobList: React.FC = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Status Filter"
-              className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1.5 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
+              className="bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl px-2.5 py-1.5 text-xs text-[#2B2D42] dark:text-[#EDF2F4] focus:outline-none focus:border-[#2B2D42]"
             >
               <option value="All">All Statuses</option>
               <option value="Active">Active</option>
@@ -1369,7 +1371,7 @@ export const JobList: React.FC = () => {
               value={businessUnitFilter}
               onChange={(e) => setBusinessUnitFilter(e.target.value)}
               aria-label="Unit Filter"
-              className="bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl px-2.5 py-1.5 text-xs text-[#202B37] dark:text-[#F5F8FB] focus:outline-none focus:border-[#1769AA]"
+              className="bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl px-2.5 py-1.5 text-xs text-[#2B2D42] dark:text-[#EDF2F4] focus:outline-none focus:border-[#2B2D42]"
             >
               <option value="All">All Units</option>
               <option value="Ampcus Tech Pvt Ltd">Ampcus Tech Pvt Ltd</option>
@@ -1381,8 +1383,8 @@ export const JobList: React.FC = () => {
 
         {/* Active Column Filters Tags Bar */}
         {Object.keys(columnFilters).length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-[#DCE6EF] dark:border-[#354A5C]">
-            <span className="text-[11px] font-semibold text-[#5E6B7A] dark:text-[#B9CAD9]">
+          <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-[#D7DCE5] dark:border-[#45485E]">
+            <span className="text-[11px] font-semibold text-[#8D99AE] dark:text-[#B9CAD9]">
               Filtered by:
             </span>
             {Object.entries(columnFilters).map(([key, vals]) => {
@@ -1390,7 +1392,7 @@ export const JobList: React.FC = () => {
               return (
                 <span
                   key={key}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/30"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] bg-[#EDF2F4] dark:bg-[#36384F] text-[#2B2D42] dark:text-[#EDF2F4] border border-[#2B2D42]/30"
                 >
                   <strong>{colLabel}:</strong> {vals && vals.length === 1 ? vals[0] : `${vals?.length || 0} values`}
                   <button
@@ -1404,7 +1406,7 @@ export const JobList: React.FC = () => {
             })}
             <button
               onClick={() => setColumnFilters({})}
-              className="text-[11px] text-[#1769AA] hover:underline"
+              className="text-[11px] text-[#2B2D42] hover:underline"
             >
               Clear column filters
             </button>
@@ -1413,9 +1415,9 @@ export const JobList: React.FC = () => {
       </div>
 
       {/* Horizontal & Vertical Scroll Hint */}
-      <div className="flex items-center justify-between text-[11px] text-[#7A8794] px-1">
+      <div className="flex items-center justify-between text-[11px] text-[#8D99AE] px-1">
         <span className="flex items-center gap-1">
-          <ArrowUpDown className="w-3 h-3 text-[#1769AA]" />
+          <ArrowUpDown className="w-3 h-3 text-[#2B2D42]" />
           <span>Scroll table vertically and horizontally to inspect all requisition fields</span>
         </span>
         <span className="font-mono">
@@ -1430,19 +1432,19 @@ export const JobList: React.FC = () => {
               type="button"
               onClick={() => setIsBulkActionsOpen((open) => !open)}
               aria-expanded={isBulkActionsOpen}
-              className="inline-flex items-center gap-2 rounded-md bg-[#2F80E7] px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#216BC4]"
+              className="inline-flex items-center gap-2 rounded-md bg-[#2B2D42] px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#222336]"
             >
               ACTIONS
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isBulkActionsOpen ? 'rotate-180' : ''}`} />
             </button>
             {isBulkActionsOpen && (
-              <div className="absolute left-0 top-full z-40 mt-1 grid w-[min(32rem,90vw)] grid-cols-1 gap-1 rounded-xl border border-[#DCE6EF] bg-white p-2 shadow-xl dark:border-[#354A5C] dark:bg-[#1B2936] sm:grid-cols-2">
+              <div className="absolute left-0 top-full z-40 mt-1 grid w-[min(32rem,90vw)] grid-cols-1 gap-1 rounded-xl border border-[#D7DCE5] bg-white p-2 shadow-xl dark:border-[#45485E] dark:bg-[#2B2D42] sm:grid-cols-2">
                 {BULK_JOB_ACTIONS.map((action) => (
                   <button
                     key={action.id}
                     type="button"
                     onClick={() => openBulkJobAction(action.id)}
-                    className="rounded-lg px-3 py-2 text-left text-xs font-medium text-[#465466] transition-colors hover:bg-[#EAF4FC] hover:text-[#1769AA] dark:text-[#D8E9F7] dark:hover:bg-[#22384B]"
+                    className="rounded-lg px-3 py-2 text-left text-xs font-medium text-[#465466] transition-colors hover:bg-[#EDF2F4] hover:text-[#2B2D42] dark:text-[#EDF2F4] dark:hover:bg-[#36384F]"
                   >
                     {action.label}
                   </button>
@@ -1450,13 +1452,13 @@ export const JobList: React.FC = () => {
               </div>
             )}
           </div>
-          <span className="text-xs font-medium text-[#5E6B7A] dark:text-[#B9CAD9]">
+          <span className="text-xs font-medium text-[#8D99AE] dark:text-[#B9CAD9]">
             {selectedIds.length} job{selectedIds.length === 1 ? '' : 's'} selected
           </span>
           <button
             type="button"
             onClick={() => setSelectedIds([])}
-            className="text-xs font-semibold text-[#1769AA] hover:underline"
+            className="text-xs font-semibold text-[#2B2D42] hover:underline"
           >
             Clear selection
           </button>
@@ -1464,26 +1466,26 @@ export const JobList: React.FC = () => {
       )}
 
       {/* Ceipal-Style High Density Data Grid with DUAL Scrollbars */}
-      <div className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-2xl shadow-xs overflow-hidden relative">
+      <div className="bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl shadow-xs overflow-hidden relative">
         {/* Table Container with ceipal-table-scroll class for prominent vertical & horizontal scrollbars */}
         <div className="ceipal-table-scroll max-h-[68vh] overflow-x-auto overflow-y-auto">
           <table className="w-full text-left border-collapse text-xs" style={{ minWidth: '2200px' }}>
             {/* Sticky Table Header */}
             <thead>
-              <tr className="bg-[#F5F8FB] dark:bg-[#162431] border-b border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9]">
+              <tr className="bg-[#EDF2F4] dark:bg-[#36384F] border-b border-[#D7DCE5] dark:border-[#45485E] text-[#8D99AE] dark:text-[#B9CAD9]">
                 {/* 1. Sticky Checkbox Column */}
-                <th className="sticky top-0 left-0 z-30 p-2.5 w-10 text-center bg-[#F5F8FB] dark:bg-[#162431] border-r border-[#DCE6EF]/60">
+                <th className="sticky top-0 left-0 z-30 p-2.5 w-10 text-center bg-[#EDF2F4] dark:bg-[#36384F] border-r border-[#D7DCE5]/60">
                   <input
                     type="checkbox"
                     checked={selectedIds.length === filteredJobs.length && filteredJobs.length > 0}
                     onChange={handleSelectAll}
                     aria-label="Select all jobs"
-                    className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
+                    className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
                   />
                 </th>
 
                 {/* 2. Sticky Expand Submissions Button [+ 1] */}
-                <th className="sticky top-0 left-[40px] z-30 w-16 p-2.5 text-center font-semibold bg-[#F5F8FB] dark:bg-[#162431] border-r border-[#DCE6EF]/60">
+                <th className="sticky top-0 left-[40px] z-30 w-16 p-2.5 text-center font-semibold bg-[#EDF2F4] dark:bg-[#36384F] border-r border-[#D7DCE5]/60">
                   Submissions
                 </th>
 
@@ -1495,39 +1497,39 @@ export const JobList: React.FC = () => {
                   return (
                     <th
                       key={col.key}
-                      className={`sticky top-0 z-20 p-2.5 font-semibold whitespace-nowrap bg-[#F5F8FB] dark:bg-[#162431] border-r border-[#DCE6EF]/40 ${col.minWidth}`}
+                      className={`sticky top-0 z-20 p-2.5 font-semibold whitespace-nowrap bg-[#EDF2F4] dark:bg-[#36384F] border-r border-[#D7DCE5]/40 ${col.minWidth}`}
                     >
                       <div className="flex items-center justify-between gap-1.5">
-                        <span className="truncate text-[#202B37] dark:text-white font-bold">{col.label}</span>
+                        <span className="truncate text-[#2B2D42] dark:text-white font-bold">{col.label}</span>
 
                         {/* Column Filter Dropdown Trigger (Ceipal ▼ icon) */}
                         <div className="relative">
                           <button
                             type="button"
                             onClick={(e) => openColumnFilter(col.key, e)}
-                            className={`p-1 rounded hover:bg-[#EAF4FC] dark:hover:bg-[#22384B] transition-colors flex items-center gap-0.5 ${
-                              isFiltered ? 'text-[#1769AA] bg-[#EAF4FC] font-bold' : 'text-[#7A8794]'
+                            className={`p-1 rounded hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] transition-colors flex items-center gap-0.5 ${
+                              isFiltered ? 'text-[#2B2D42] bg-[#EDF2F4] font-bold' : 'text-[#8D99AE]'
                             }`}
                             title={`Filter & sort ${col.label}`}
                           >
                             <span className="text-[10px]">▼</span>
-                            {isFiltered && <span className="w-1.5 h-1.5 rounded-full bg-[#1769AA]"></span>}
+                            {isFiltered && <span className="w-1.5 h-1.5 rounded-full bg-[#2B2D42]"></span>}
                           </button>
 
                           {/* Filter Popover Dialog */}
                           {activeFilterCol === col.key && (
                             <div
                               ref={filterPopoverRef}
-                              className="absolute left-0 mt-2 w-72 rounded-xl border border-[#CCD8E3] dark:border-[#4D6274] bg-white dark:bg-[#1B2936] p-3 shadow-2xl z-50 text-left font-normal"
+                              className="absolute left-0 mt-2 w-72 rounded-xl border border-[#C5CDD8] dark:border-[#5A5D72] bg-white dark:bg-[#2B2D42] p-3 shadow-2xl z-50 text-left font-normal"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <div className="flex items-center justify-between pb-2 border-b border-[#DCE6EF] dark:border-[#354A5C]">
-                                <span className="text-xs font-bold text-[#202B37] dark:text-white">
+                              <div className="flex items-center justify-between pb-2 border-b border-[#D7DCE5] dark:border-[#45485E]">
+                                <span className="text-xs font-bold text-[#2B2D42] dark:text-white">
                                   Filter {col.label}
                                 </span>
                                 <button
                                   onClick={() => setActiveFilterCol(null)}
-                                  className="text-[#7A8794] hover:text-[#202B37]"
+                                  className="text-[#8D99AE] hover:text-[#2B2D42]"
                                 >
                                   <X className="w-3.5 h-3.5" />
                                 </button>
@@ -1540,8 +1542,8 @@ export const JobList: React.FC = () => {
                                   onClick={() => setSortBy({ key: col.key, direction: 'asc' })}
                                   className={`flex-1 py-1 px-2 text-[10px] rounded border ${
                                     isSorted && sortBy.direction === 'asc'
-                                      ? 'border-[#1769AA] text-[#1769AA] font-bold bg-[#EAF4FC]'
-                                      : 'border-[#DCE6EF] dark:border-[#354A5C]'
+                                      ? 'border-[#2B2D42] text-[#2B2D42] font-bold bg-[#EDF2F4]'
+                                      : 'border-[#D7DCE5] dark:border-[#45485E]'
                                   }`}
                                 >
                                   Sort A → Z
@@ -1551,8 +1553,8 @@ export const JobList: React.FC = () => {
                                   onClick={() => setSortBy({ key: col.key, direction: 'desc' })}
                                   className={`flex-1 py-1 px-2 text-[10px] rounded border ${
                                     isSorted && sortBy.direction === 'desc'
-                                      ? 'border-[#1769AA] text-[#1769AA] font-bold bg-[#EAF4FC]'
-                                      : 'border-[#DCE6EF] dark:border-[#354A5C]'
+                                      ? 'border-[#2B2D42] text-[#2B2D42] font-bold bg-[#EDF2F4]'
+                                      : 'border-[#D7DCE5] dark:border-[#45485E]'
                                   }`}
                                 >
                                   Sort Z → A
@@ -1561,18 +1563,18 @@ export const JobList: React.FC = () => {
 
                               {/* Search values input */}
                               <div className="relative my-2">
-                                <Search className="w-3 h-3 text-[#7A8794] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <Search className="w-3 h-3 text-[#8D99AE] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 <input
                                   type="text"
                                   placeholder="Search values..."
                                   value={filterSearchQuery}
                                   onChange={(e) => setFilterSearchQuery(e.target.value)}
-                                  className="w-full pl-7 pr-2.5 py-1.5 text-xs bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-lg text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
+                                  className="w-full pl-7 pr-2.5 py-1.5 text-xs bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-lg text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
                                 />
                               </div>
 
                               {/* Multi-select Checklist of Unique Values */}
-                              <div className="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-[#DCE6EF] dark:border-[#354A5C] my-2 text-xs">
+                              <div className="max-h-40 overflow-y-auto space-y-1 py-1 border-t border-b border-[#D7DCE5] dark:border-[#45485E] my-2 text-xs">
                                 {(() => {
                                   const allVals = getUniqueValuesForCol(col.key);
                                   const displayedVals = allVals.filter((v) =>
@@ -1581,7 +1583,7 @@ export const JobList: React.FC = () => {
 
                                   if (displayedVals.length === 0) {
                                     return (
-                                      <div className="text-[11px] text-[#7A8794] py-2 text-center">
+                                      <div className="text-[11px] text-[#8D99AE] py-2 text-center">
                                         No values match
                                       </div>
                                     );
@@ -1593,7 +1595,7 @@ export const JobList: React.FC = () => {
 
                                   return (
                                     <>
-                                      <label className="flex items-center gap-2 p-1 hover:bg-[#F5F8FB] dark:hover:bg-[#162431] rounded cursor-pointer font-bold text-[#1769AA]">
+                                      <label className="flex items-center gap-2 p-1 hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] rounded cursor-pointer font-bold text-[#2B2D42]">
                                         <input
                                           type="checkbox"
                                           checked={isAllSelected}
@@ -1608,14 +1610,14 @@ export const JobList: React.FC = () => {
                                               );
                                             }
                                           }}
-                                          className="rounded border-[#DCE6EF] text-[#1769AA]"
+                                          className="rounded border-[#D7DCE5] text-[#2B2D42]"
                                         />
                                         <span>[Select all]</span>
                                       </label>
                                       {displayedVals.map((val) => (
                                         <label
                                           key={val}
-                                          className="flex items-center gap-2 p-1 hover:bg-[#F5F8FB] dark:hover:bg-[#162431] rounded cursor-pointer text-[#202B37] dark:text-[#F5F8FB]"
+                                          className="flex items-center gap-2 p-1 hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] rounded cursor-pointer text-[#2B2D42] dark:text-[#EDF2F4]"
                                         >
                                           <input
                                             type="checkbox"
@@ -1627,7 +1629,7 @@ export const JobList: React.FC = () => {
                                                 setTempSelectedValues(tempSelectedValues.filter((v) => v !== val));
                                               }
                                             }}
-                                            className="rounded border-[#DCE6EF] text-[#1769AA]"
+                                            className="rounded border-[#D7DCE5] text-[#2B2D42]"
                                           />
                                           <span className="truncate" title={val}>
                                             {val}
@@ -1644,7 +1646,7 @@ export const JobList: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => applyColumnFilter(col.key)}
-                                  className="px-3 py-1 bg-[#2F80E7] hover:bg-[#216BC4] text-white font-bold rounded-lg text-xs"
+                                  className="px-3 py-1 bg-[#2B2D42] hover:bg-[#222336] text-white font-bold rounded-lg text-xs"
                                 >
                                   Search
                                 </button>
@@ -1652,14 +1654,14 @@ export const JobList: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => resetColumnFilter(col.key)}
-                                    className="px-2.5 py-1 text-xs text-[#5E6B7A] dark:text-[#B9CAD9] hover:text-[#202B37]"
+                                    className="px-2.5 py-1 text-xs text-[#8D99AE] dark:text-[#B9CAD9] hover:text-[#2B2D42]"
                                   >
                                     Reset
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setActiveFilterCol(null)}
-                                    className="px-2.5 py-1 text-xs text-[#1769AA] font-semibold"
+                                    className="px-2.5 py-1 text-xs text-[#2B2D42] font-semibold"
                                   >
                                     Close
                                   </button>
@@ -1674,21 +1676,21 @@ export const JobList: React.FC = () => {
                 })}
 
                 {/* Rightmost Actions Header */}
-                <th className="sticky top-0 right-0 z-20 bg-[#F5F8FB] dark:bg-[#162431] p-2.5 text-right font-semibold whitespace-nowrap min-w-[120px] shadow-xs">
+                <th className="sticky top-0 right-0 z-20 bg-[#EDF2F4] dark:bg-[#36384F] p-2.5 text-right font-semibold whitespace-nowrap min-w-[120px] shadow-xs">
                   Actions
                 </th>
               </tr>
             </thead>
 
             {/* Table Body */}
-            <tbody className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C]">
+            <tbody className="divide-y divide-[#D7DCE5] dark:divide-[#45485E]">
               {filteredJobs.length === 0 ? (
                 <tr>
-                  <td colSpan={visibleColumns.length + 3} className="p-12 text-center text-xs text-[#7A8794]">
+                  <td colSpan={visibleColumns.length + 3} className="p-12 text-center text-xs text-[#8D99AE]">
                     <div className="max-w-xs mx-auto space-y-2">
-                      <Briefcase className="w-8 h-8 text-[#7A8794] mx-auto opacity-50" />
-                      <div className="font-semibold text-[#202B37] dark:text-white">No job postings found</div>
-                      <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
+                      <Briefcase className="w-8 h-8 text-[#8D99AE] mx-auto opacity-50" />
+                      <div className="font-semibold text-[#2B2D42] dark:text-white">No job postings found</div>
+                      <p className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">
                         Try adjusting your search filters or create a new job posting.
                       </p>
                     </div>
@@ -1706,23 +1708,23 @@ export const JobList: React.FC = () => {
                   return (
                     <React.Fragment key={j.id}>
                       <tr
-                        className={`hover:bg-[#EAF4FC]/60 dark:hover:bg-[#22384B]/40 transition-colors group ${
+                        className={`hover:bg-[#EDF2F4]/60 dark:hover:bg-[#36384F]/40 transition-colors group ${
                           isExpanded ? 'bg-[#F0F7FD] dark:bg-[#1E3244]' : ''
                         }`}
                       >
                         {/* 1. Checkbox */}
-                        <td className="sticky left-0 z-10 p-2.5 text-center bg-white dark:bg-[#1B2936] group-hover:bg-[#EAF4FC] dark:group-hover:bg-[#22384B] border-r border-[#DCE6EF]/50">
+                        <td className="sticky left-0 z-10 p-2.5 text-center bg-white dark:bg-[#2B2D42] group-hover:bg-[#EDF2F4] dark:group-hover:bg-[#36384F] border-r border-[#D7DCE5]/50">
                           <input
                             type="checkbox"
                             checked={selectedIds.includes(j.id)}
                             onChange={() => handleSelectOne(j.id)}
                             aria-label={`Select job ${j.code}`}
-                            className="rounded border-[#DCE6EF] text-[#1769AA] focus:ring-[#1769AA]"
+                            className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
                           />
                         </td>
 
                         {/* 2. Ceipal Expand Submissions Button [+ 1] */}
-                        <td className="sticky left-[40px] z-10 p-2.5 text-center bg-white dark:bg-[#1B2936] group-hover:bg-[#EAF4FC] dark:group-hover:bg-[#22384B] border-r border-[#DCE6EF]/50">
+                        <td className="sticky left-[40px] z-10 p-2.5 text-center bg-white dark:bg-[#2B2D42] group-hover:bg-[#EDF2F4] dark:group-hover:bg-[#36384F] border-r border-[#D7DCE5]/50">
                           <div className="flex items-center justify-center gap-1.5">
                             <span
                               className={`inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
@@ -1744,8 +1746,8 @@ export const JobList: React.FC = () => {
                               aria-label={`${isExpanded ? 'Collapse' : 'Expand'} submissions for ${j.code} (${countSubmissions})`}
                               className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-0.5 ${
                                 isExpanded
-                                  ? 'bg-[#1769AA] text-white shadow-xs'
-                                  : 'bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] border border-[#1769AA]/30 hover:bg-[#1769AA] hover:text-white'
+                                  ? 'bg-[#2B2D42] text-white shadow-xs'
+                                  : 'bg-[#EDF2F4] dark:bg-[#36384F] text-[#2B2D42] dark:text-[#EDF2F4] border border-[#2B2D42]/30 hover:bg-[#2B2D42] hover:text-white'
                               }`}
                               title={isExpanded ? 'Collapse submissions' : 'Expand applicant submissions'}
                             >
@@ -1761,18 +1763,18 @@ export const JobList: React.FC = () => {
 
                           if (col.key === 'code') {
                             return (
-                              <td key={col.key} className="p-2.5 border-r border-[#DCE6EF]/30 font-mono font-bold">
+                              <td key={col.key} className="p-2.5 border-r border-[#D7DCE5]/30 font-mono font-bold">
                                 <a
                                   href={getJobDetailUrl(j.id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => handleJobClick(e, j.id)}
-                                  className="text-[#1769AA] dark:text-[#5AA4E2] hover:underline flex items-center gap-1.5 group/link"
+                                  className="text-[#2B2D42] dark:text-[#8D99AE] hover:underline flex items-center gap-1.5 group/link"
                                   title="Open in new tab"
                                 >
-                                  <Briefcase className="w-3.5 h-3.5 text-[#7A8794] flex-shrink-0" />
+                                  <Briefcase className="w-3.5 h-3.5 text-[#8D99AE] flex-shrink-0" />
                                   <span>{j.code}</span>
-                                  <ExternalLink className="w-3 h-3 opacity-60 group-hover/link:opacity-100 flex-shrink-0 text-[#1769AA]" />
+                                  <ExternalLink className="w-3 h-3 opacity-60 group-hover/link:opacity-100 flex-shrink-0 text-[#2B2D42]" />
                                 </a>
                               </td>
                             );
@@ -1780,18 +1782,18 @@ export const JobList: React.FC = () => {
 
                           if (col.key === 'title') {
                             return (
-                              <td key={col.key} className="p-2.5 border-r border-[#DCE6EF]/30">
+                              <td key={col.key} className="p-2.5 border-r border-[#D7DCE5]/30">
                                 <a
                                   href={getJobDetailUrl(j.id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => handleJobClick(e, j.id)}
-                                  className="font-bold text-[#202B37] dark:text-white hover:text-[#1769AA] cursor-pointer transition-colors line-clamp-1 block"
+                                  className="font-bold text-[#2B2D42] dark:text-white hover:text-[#2B2D42] cursor-pointer transition-colors line-clamp-1 block"
                                   title={`${j.title} (Open in new tab)`}
                                 >
                                   {j.title}
                                 </a>
-                                <div className="flex items-center gap-2 text-[11px] text-[#7A8794] mt-0.5">
+                                <div className="flex items-center gap-2 text-[11px] text-[#8D99AE] mt-0.5">
                                   <span>{j.type}</span>
                                   {j.duration && (
                                     <>
@@ -1806,9 +1808,9 @@ export const JobList: React.FC = () => {
 
                           if (col.key === 'client') {
                             return (
-                              <td key={col.key} className="p-2.5 border-r border-[#DCE6EF]/30">
-                                <div className="font-semibold text-[#202B37] dark:text-white flex items-center gap-1">
-                                  <Building2 className="w-3 h-3 text-[#7A8794] flex-shrink-0" />
+                              <td key={col.key} className="p-2.5 border-r border-[#D7DCE5]/30">
+                                <div className="font-semibold text-[#2B2D42] dark:text-white flex items-center gap-1">
+                                  <Building2 className="w-3 h-3 text-[#8D99AE] flex-shrink-0" />
                                   <span className="truncate">{j.client}</span>
                                 </div>
                               </td>
@@ -1817,7 +1819,7 @@ export const JobList: React.FC = () => {
 
                           if (col.key === 'location') {
                             return (
-                              <td key={col.key} className="p-2.5 border-r border-[#DCE6EF]/30 text-[#5E6B7A] dark:text-[#B9CAD9]">
+                              <td key={col.key} className="p-2.5 border-r border-[#D7DCE5]/30 text-[#8D99AE] dark:text-[#B9CAD9]">
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-3 h-3 text-[#8AC9A7] flex-shrink-0" />
                                   <span className="truncate font-mono text-[11px]">{j.location}</span>
@@ -1915,6 +1917,25 @@ export const JobList: React.FC = () => {
                                     </button>
                                   </div>
                                 )}
+                              <td key={col.key} className="p-2.5 border-r border-[#D7DCE5]/30">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                    j.status === 'Active' || j.status === 'Open'
+                                      ? 'bg-[#8AC9A7]/20 text-[#1E4D36] border-[#8AC9A7]/40 dark:text-[#8AC9A7]'
+                                      : j.status === 'Sourcing'
+                                      ? 'bg-[#EDF2F4] text-[#2B2D42] border-[#2B2D42]/30 dark:bg-[#36384F] dark:text-[#EDF2F4]'
+                                      : j.status === 'In Review'
+                                      ? 'bg-[#2B2D42]/15 text-[#2B2D42] border-[#2B2D42]/30'
+                                      : 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#2B2D42]'
+                                    }`}
+                                  ></span>
+                                  {j.status}
+                                </span>
                               </td>
                             );
                           }
@@ -1922,7 +1943,7 @@ export const JobList: React.FC = () => {
                           return (
                             <td
                               key={col.key}
-                              className="p-2.5 border-r border-[#DCE6EF]/30 text-[#5E6B7A] dark:text-[#B9CAD9] truncate"
+                              className="p-2.5 border-r border-[#D7DCE5]/30 text-[#8D99AE] dark:text-[#B9CAD9] truncate"
                               title={val}
                             >
                               {val}
@@ -1931,12 +1952,12 @@ export const JobList: React.FC = () => {
                         })}
 
                         {/* Actions column */}
-                        <td className="sticky right-0 z-10 p-2.5 text-right whitespace-nowrap bg-white dark:bg-[#1B2936] group-hover:bg-[#EAF4FC] dark:group-hover:bg-[#22384B] shadow-xs">
+                        <td className="sticky right-0 z-10 p-2.5 text-right whitespace-nowrap bg-white dark:bg-[#2B2D42] group-hover:bg-[#EDF2F4] dark:group-hover:bg-[#36384F] shadow-xs">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => openSendModal(j)}
                               title="Send Requirement"
-                              className="p-1.5 text-[#5E6B7A] hover:text-[#1769AA] hover:bg-white dark:hover:bg-[#162431] rounded-lg transition-colors"
+                              className="p-1.5 text-[#8D99AE] hover:text-[#2B2D42] hover:bg-white dark:hover:bg-[#36384F] rounded-lg transition-colors"
                             >
                               <Send className="w-3.5 h-3.5" />
                             </button>
@@ -1945,7 +1966,7 @@ export const JobList: React.FC = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => handleJobClick(e, j.id)}
-                              className="px-2.5 py-1 text-xs text-[#1769AA] hover:text-white hover:bg-[#1769AA] border border-[#1769AA]/30 rounded-lg transition-all font-semibold inline-flex items-center gap-1"
+                              className="px-2.5 py-1 text-xs text-[#2B2D42] hover:text-white hover:bg-[#2B2D42] border border-[#2B2D42]/30 rounded-lg transition-all font-semibold inline-flex items-center gap-1"
                               title="Open dossier in new tab"
                             >
                               <span>View</span>
@@ -1957,16 +1978,16 @@ export const JobList: React.FC = () => {
 
                       {/* Ceipal Expandable In-Line Submissions / Applicants Row (Ceipal Screenshot 202134) */}
                       {isExpanded && (
-                        <tr className="bg-[#F8FAFD] dark:bg-[#142330] border-y-2 border-[#1769AA]/30">
+                        <tr className="bg-[#F8FAFD] dark:bg-[#142330] border-y-2 border-[#2B2D42]/30">
                           <td colSpan={visibleColumns.length + 3} className="p-4">
-                            <div className="rounded-xl border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] p-4 shadow-sm space-y-3">
+                            <div className="rounded-xl border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] p-4 shadow-sm space-y-3">
                               {/* Submissions Header Strip */}
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D7DCE5] dark:border-[#45485E]">
                                 <div className="flex items-center gap-2">
-                                  <span className="px-2.5 py-1 bg-[#1769AA] text-white rounded-lg text-xs font-bold font-mono">
+                                  <span className="px-2.5 py-1 bg-[#2B2D42] text-white rounded-lg text-xs font-bold font-mono">
                                     Submissions ({countSubmissions})
                                   </span>
-                                  <span className="text-xs font-semibold text-[#202B37] dark:text-white">
+                                  <span className="text-xs font-semibold text-[#2B2D42] dark:text-white">
                                     Applicants attached to {j.code} ({j.title})
                                   </span>
                                 </div>
@@ -1977,7 +1998,7 @@ export const JobList: React.FC = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => handleJobClick(e, j.id)}
-                                    className="px-3 py-1 bg-[#EAF4FC] dark:bg-[#22384B] text-[#1769AA] dark:text-[#D8E9F7] hover:bg-[#1769AA] hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                                    className="px-3 py-1 bg-[#EDF2F4] dark:bg-[#36384F] text-[#2B2D42] dark:text-[#EDF2F4] hover:bg-[#2B2D42] hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
                                   >
                                     <span>Full Job Snapshot &amp; Matching in New Tab</span>
                                     <ExternalLink className="w-3.5 h-3.5" />
@@ -1989,33 +2010,33 @@ export const JobList: React.FC = () => {
                                 <div
                                   role="toolbar"
                                   aria-label="Selected submission actions"
-                                  className="flex items-center gap-1 overflow-x-auto border-b border-[#DCE6EF] pb-2 text-[11px] dark:border-[#354A5C]"
+                                  className="flex items-center gap-1 overflow-x-auto border-b border-[#D7DCE5] pb-2 text-[11px] dark:border-[#45485E]"
                                 >
                                   {SUBMISSION_ACTIONS.map((action) => (
                                     <button
                                       key={action.id}
                                       type="button"
                                       onClick={() => openSubmissionAction(action.id, selectedJobSubmissions, j)}
-                                      className="shrink-0 border-r border-[#DCE6EF] px-2 text-[#1769AA] hover:text-[#0B4F89] hover:underline last:border-r-0 dark:border-[#354A5C] dark:text-[#8CBCE8]"
+                                      className="shrink-0 border-r border-[#D7DCE5] px-2 text-[#2B2D42] hover:text-[#2B2D42] hover:underline last:border-r-0 dark:border-[#45485E] dark:text-[#8D99AE]"
                                     >
                                       {action.label}
                                     </button>
                                   ))}
-                                  <span className="ml-auto shrink-0 text-[10px] text-[#7A8794]">
+                                  <span className="ml-auto shrink-0 text-[10px] text-[#8D99AE]">
                                     {selectedJobSubmissions.length} selected
                                   </span>
                                 </div>
                               )}
 
                               {/* Ceipal Submissions Quick Filter Strip */}
-                              <div className="flex items-center gap-2 overflow-x-auto text-xs text-[#5E6B7A] dark:text-[#B9CAD9] pb-1">
+                              <div className="flex items-center gap-2 overflow-x-auto text-xs text-[#8D99AE] dark:text-[#B9CAD9] pb-1">
                                 <div className="relative min-w-[200px]">
                                   <input
                                     type="text"
                                     placeholder="Applicant Name / Submission ID..."
-                                    className="w-full pl-7 pr-3 py-1 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-lg text-xs"
+                                    className="w-full pl-7 pr-3 py-1 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-lg text-xs"
                                   />
-                                  <Search className="w-3 h-3 text-[#7A8794] absolute left-2 top-1/2 -translate-y-1/2" />
+                                  <Search className="w-3 h-3 text-[#8D99AE] absolute left-2 top-1/2 -translate-y-1/2" />
                                 </div>
                                 <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-[11px]">Score 30%+</span>
                                 <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-[11px]">Status: All</span>
@@ -2023,9 +2044,9 @@ export const JobList: React.FC = () => {
                               </div>
 
                               {/* Ceipal Submissions Table */}
-                              <div className="overflow-x-auto border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl">
+                              <div className="overflow-x-auto border border-[#D7DCE5] dark:border-[#45485E] rounded-xl">
                                 <table className="w-full text-left text-xs min-w-[1300px]">
-                                  <thead className="bg-[#F5F8FB] dark:bg-[#162431] border-b border-[#DCE6EF] dark:border-[#354A5C] text-[#5E6B7A] dark:text-[#B9CAD9]">
+                                  <thead className="bg-[#EDF2F4] dark:bg-[#36384F] border-b border-[#D7DCE5] dark:border-[#45485E] text-[#8D99AE] dark:text-[#B9CAD9]">
                                     <tr>
                                       <th className="p-2.5 w-8 text-center">
                                         <input
@@ -2056,10 +2077,10 @@ export const JobList: React.FC = () => {
                                       <th className="p-2.5 font-semibold text-right">Action</th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-[#DCE6EF] dark:divide-[#354A5C]">
+                                  <tbody className="divide-y divide-[#D7DCE5] dark:divide-[#45485E]">
                                     {jobSubmissions.length === 0 ? (
                                       <tr>
-                                        <td colSpan={14} className="p-8 text-center text-xs text-[#7A8794]">
+                                        <td colSpan={14} className="p-8 text-center text-xs text-[#8D99AE]">
                                           No candidate submissions are linked to this job yet.
                                         </td>
                                       </tr>
@@ -2069,7 +2090,7 @@ export const JobList: React.FC = () => {
                                       return (
                                         <tr
                                           key={submission.id}
-                                          className={`transition-colors ${isSelected ? 'bg-[#FFFDD0] dark:bg-amber-950/30' : 'hover:bg-[#EAF4FC]/40 dark:hover:bg-[#22384B]/40'}`}
+                                          className={`transition-colors ${isSelected ? 'bg-[#FFFDD0] dark:bg-amber-950/30' : 'hover:bg-[#EDF2F4]/40 dark:hover:bg-[#36384F]/40'}`}
                                         >
                                           <td className="p-2.5 text-center">
                                             <input
@@ -2080,17 +2101,17 @@ export const JobList: React.FC = () => {
                                               className="rounded"
                                             />
                                           </td>
-                                          <td className="p-2.5 font-mono font-bold text-[#1769AA]">{submission.submissionId}</td>
+                                          <td className="p-2.5 font-mono font-bold text-[#2B2D42]">{submission.submissionId}</td>
                                           <td className="p-2.5">
                                             <button
                                               type="button"
                                               onClick={() => navigate('applicant-detail', submission.applicantId)}
-                                              className="font-bold text-left text-[#202B37] hover:underline dark:text-white"
+                                              className="font-bold text-left text-[#2B2D42] hover:underline dark:text-white"
                                             >
                                               {submission.applicantName}
                                             </button>
                                           </td>
-                                          <td className="p-2.5 font-mono text-[#1769AA]">{applicant?.phone || '—'}</td>
+                                          <td className="p-2.5 font-mono text-[#2B2D42]">{applicant?.phone || '—'}</td>
                                           <td className="p-2.5">
                                             {inlineEdit?.entity === 'submission' && inlineEdit.id === submission.id && inlineEdit.field === 'status' ? (
                                               <div className="flex items-center gap-1">
@@ -2160,9 +2181,15 @@ export const JobList: React.FC = () => {
                                                 </button>
                                               </div>
                                             )}
+                                            <span className="inline-block max-w-[220px] truncate rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-[#2B2D42]" title={submission.status}>
+                                              {submission.status}
+                                            </span>
                                           </td>
-                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{applicant?.location || '—'}</td>
-                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">
+                                          <td className="p-2.5 font-mono font-bold text-[#2B2D42]">
+                                            {submission.score ?? applicant?.matchScore ?? '—'}{submission.score !== undefined || applicant ? '%' : ''}
+                                          </td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{applicant?.location || '—'}</td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">
                                             {applicant ? `${applicant.experienceYears} Years` : '—'}
                                           </td>
                                           <td className="p-2.5">
@@ -2174,20 +2201,20 @@ export const JobList: React.FC = () => {
                                             <button
                                               type="button"
                                               onClick={() => showToast(applicant?.documents?.length ? `Resume opened for ${submission.applicantName}` : `No resume is available for ${submission.applicantName}.`)}
-                                              className="rounded p-1 text-[#1769AA] hover:bg-[#EAF4FC]"
+                                              className="rounded p-1 text-[#2B2D42] hover:bg-[#EDF2F4]"
                                               title="View Resume"
                                             >
                                               <FileText className="mx-auto h-4 w-4" />
                                             </button>
                                           </td>
-                                          <td className="p-2.5 font-mono text-[#5E6B7A]">{applicant?.noticePeriod || '—'}</td>
-                                          <td className="p-2.5 text-[#5E6B7A] dark:text-[#B9CAD9]">{submission.recruiter}</td>
-                                          <td className="p-2.5 font-mono text-[11px] text-[#7A8794]">{submission.submittedDate}</td>
+                                          <td className="p-2.5 font-mono text-[#8D99AE]">{applicant?.noticePeriod || '—'}</td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{submission.recruiter}</td>
+                                          <td className="p-2.5 font-mono text-[11px] text-[#8D99AE]">{submission.submittedDate}</td>
                                           <td className="p-2.5 text-right">
                                             <button
                                               type="button"
                                               onClick={() => navigate('applicant-detail', submission.applicantId)}
-                                              className="rounded-lg px-2.5 py-1 text-xs font-semibold text-[#1769AA] hover:bg-[#EAF4FC]"
+                                              className="rounded-lg px-2.5 py-1 text-xs font-semibold text-[#2B2D42] hover:bg-[#EDF2F4]"
                                             >
                                               Review Profile
                                             </button>
@@ -2211,49 +2238,49 @@ export const JobList: React.FC = () => {
         </div>
 
         {/* Ceipal Pagination Footer Bar */}
-        <div className="p-3 bg-[#F5F8FB] dark:bg-[#162431] border-t border-[#DCE6EF] dark:border-[#354A5C] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+        <div className="p-3 bg-[#EDF2F4] dark:bg-[#36384F] border-t border-[#D7DCE5] dark:border-[#45485E] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
           <div className="flex items-center gap-2">
             <span>
-              Showing <strong className="text-[#202B37] dark:text-white">1 - {filteredJobs.length}</strong> of{' '}
-              <strong className="text-[#202B37] dark:text-white">11,779</strong> results
+              Showing <strong className="text-[#2B2D42] dark:text-white">1 - {filteredJobs.length}</strong> of{' '}
+              <strong className="text-[#2B2D42] dark:text-white">11,779</strong> results
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
-              className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white disabled:opacity-50"
+              className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white disabled:opacity-50"
               disabled
             >
               « First
             </button>
             <button
-              className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white disabled:opacity-50"
+              className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white disabled:opacity-50"
               disabled
             >
               ‹ Prev
             </button>
-            <button className="px-2.5 py-1 rounded-lg bg-[#1769AA] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white">
+            <button className="px-2.5 py-1 rounded-lg bg-[#2B2D42] text-white font-bold">1</button>
+            <button className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white">
               2
             </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white">
+            <button className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white">
               3
             </button>
-            <span className="px-1 text-[#7A8794]">...</span>
-            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white">
+            <span className="px-1 text-[#8D99AE]">...</span>
+            <button className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white">
               472
             </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white">
+            <button className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white">
               Next ›
             </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#DCE6EF] dark:border-[#354A5C] bg-white dark:bg-[#1B2936] text-[#202B37] dark:text-white">
+            <button className="px-2.5 py-1 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] bg-white dark:bg-[#2B2D42] text-[#2B2D42] dark:text-white">
               Last »
             </button>
 
             <div className="ml-2 flex items-center gap-1">
               <select
                 aria-label="Items per page"
-                className="bg-white dark:bg-[#1B2936] border border-[#DCE6EF] dark:border-[#354A5C] rounded-lg px-2 py-1 text-xs text-[#202B37] dark:text-white focus:outline-none"
+                className="bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-lg px-2 py-1 text-xs text-[#2B2D42] dark:text-white focus:outline-none"
               >
                 <option value="25">25 Per Page</option>
                 <option value="50">50 Per Page</option>
@@ -2267,30 +2294,33 @@ export const JobList: React.FC = () => {
       {/* Ceipal Column Customizer Drawer (Screenshot 202359) */}
       {isColumnDrawerOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex justify-end animate-in fade-in">
-          <div className="bg-white dark:bg-[#1B2936] border-l border-[#DCE6EF] dark:border-[#354A5C] w-full max-w-sm h-full shadow-2xl flex flex-col p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#DCE6EF] dark:border-[#354A5C]">
+          <div className="bg-white dark:bg-[#2B2D42] border-l border-[#D7DCE5] dark:border-[#45485E] w-full max-w-sm h-full shadow-2xl flex flex-col p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D7DCE5] dark:border-[#45485E]">
               <div>
                 <h3 className="text-base font-bold text-[#202B37] dark:text-white">Edit Columns</h3>
                 <p className="text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
                   {pendingVisibleColumns.length} of {ALL_COLUMNS.length} selected
+                <h3 className="text-base font-bold text-[#2B2D42] dark:text-white">Edit Columns</h3>
+                <p className="text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
+                  {visibleColumns.length} of {ALL_COLUMNS.length} selected
                 </p>
               </div>
               <button
                 onClick={() => setIsColumnDrawerOpen(false)}
-                className="text-[#7A8794] hover:text-[#202B37] dark:hover:text-white p-1"
+                className="text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-white p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#7A8794] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#8D99AE] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search columns..."
                 value={columnDrawerSearch}
                 onChange={(e) => setColumnDrawerSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 bg-[#F5F8FB] dark:bg-[#162431] border border-[#DCE6EF] dark:border-[#354A5C] rounded-xl text-xs text-[#202B37] dark:text-white focus:outline-none focus:border-[#1769AA]"
+                className="w-full pl-8 pr-3 py-2 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl text-xs text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
               />
             </div>
 
@@ -2299,6 +2329,8 @@ export const JobList: React.FC = () => {
                 type="button"
                 onClick={() => setPendingVisibleColumns(ALL_COLUMNS.map((c) => c.key))}
                 className="text-[#1769AA] font-semibold hover:underline"
+                onClick={() => setVisibleColumns(ALL_COLUMNS.map((c) => c.key))}
+                className="text-[#2B2D42] font-semibold hover:underline"
               >
                 Select All
               </button>
@@ -2306,6 +2338,8 @@ export const JobList: React.FC = () => {
                 type="button"
                 onClick={() => setPendingVisibleColumns(DEFAULT_VISIBLE_COLUMNS)}
                 className="text-[#7A8794] hover:underline"
+                onClick={() => setVisibleColumns(['code', 'title', 'client', 'status'])}
+                className="text-[#8D99AE] hover:underline"
               >
                 Reset to Default
               </button>
@@ -2346,15 +2380,45 @@ export const JobList: React.FC = () => {
                       />
                     </label>
                   </React.Fragment>
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 divide-y divide-[#D7DCE5]/50 dark:divide-[#45485E]/50">
+              {ALL_COLUMNS.filter((c) =>
+                c.label.toLowerCase().includes(columnDrawerSearch.toLowerCase())
+              ).map((col) => {
+                const isChecked = visibleColumns.includes(col.key);
+                return (
+                  <label
+                    key={col.key}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] cursor-pointer text-xs"
+                  >
+                    <span className="font-medium text-[#2B2D42] dark:text-white">{col.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setVisibleColumns([...visibleColumns, col.key]);
+                        } else {
+                          if (visibleColumns.length > 2) {
+                            setVisibleColumns(visibleColumns.filter((k) => k !== col.key));
+                          } else {
+                            showToast('At least 2 columns must remain visible');
+                          }
+                        }
+                      }}
+                      className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
+                    />
+                  </label>
                 );
               })}
             </div>
 
-            <div className="pt-3 border-t border-[#DCE6EF] dark:border-[#354A5C] flex items-center justify-end gap-2">
+            <div className="pt-3 border-t border-[#D7DCE5] dark:border-[#45485E] flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={applyVisibleColumns}
                 className="px-4 py-2 bg-[#2F80E7] text-white font-bold rounded-xl text-xs shadow-xs"
+                onClick={() => setIsColumnDrawerOpen(false)}
+                className="px-4 py-2 bg-[#2B2D42] text-white font-bold rounded-xl text-xs shadow-xs"
               >
                 Apply Changes
               </button>
@@ -2369,14 +2433,14 @@ export const JobList: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="submission-action-title"
-            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#DCE6EF] bg-white p-6 shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#D7DCE5] bg-white p-6 shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]"
           >
-            <div className="mb-4 flex items-start justify-between gap-4 border-b border-[#DCE6EF] pb-3 dark:border-[#354A5C]">
+            <div className="mb-4 flex items-start justify-between gap-4 border-b border-[#D7DCE5] pb-3 dark:border-[#45485E]">
               <div>
-                <h3 id="submission-action-title" className="text-base font-bold text-[#202B37] dark:text-white">
+                <h3 id="submission-action-title" className="text-base font-bold text-[#2B2D42] dark:text-white">
                   {SUBMISSION_ACTIONS.find((action) => action.id === submissionAction)?.label}
                 </h3>
-                <p className="mt-1 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                <p className="mt-1 text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
                   {submissionActionTargetIds.length} selected submission{submissionActionTargetIds.length === 1 ? '' : 's'}
                 </p>
               </div>
@@ -2384,7 +2448,7 @@ export const JobList: React.FC = () => {
                 type="button"
                 onClick={() => { setSubmissionAction(null); setSubmissionActionTargetIds([]); }}
                 aria-label="Close submission action"
-                className="rounded-lg p-1 text-[#7A8794] hover:bg-[#F5F8FB] dark:hover:bg-[#162431]"
+                className="rounded-lg p-1 text-[#8D99AE] hover:bg-[#EDF2F4] dark:hover:bg-[#36384F]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -2393,68 +2457,68 @@ export const JobList: React.FC = () => {
             <form onSubmit={applySubmissionAction} className="space-y-4 text-xs">
               {submissionAction === 'score' && (
                 <label className="block space-y-1">
-                  <span className="font-semibold text-[#202B37] dark:text-white">Submission score (0-100)</span>
+                  <span className="font-semibold text-[#2B2D42] dark:text-white">Submission score (0-100)</span>
                   <input
                     type="number" min="0" max="100" step="1" required
                     value={submissionActionForm.score}
                     onChange={(event) => setSubmissionActionForm((form) => ({ ...form, score: event.target.value }))}
-                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   />
                 </label>
               )}
               {submissionAction === 'note' && (
                 <label className="block space-y-1">
-                  <span className="font-semibold text-[#202B37] dark:text-white">Note</span>
+                  <span className="font-semibold text-[#2B2D42] dark:text-white">Note</span>
                   <textarea
                     required rows={4} value={submissionActionForm.note}
                     onChange={(event) => setSubmissionActionForm((form) => ({ ...form, note: event.target.value }))}
                     placeholder="Add a note to the selected candidate profiles..."
-                    className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full resize-y rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   />
                 </label>
               )}
               {submissionAction === 'email' && (
                 <>
                   <label className="block space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">To</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">To</span>
                     <input
                       type="text" required value={submissionActionForm.recipients}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, recipients: event.target.value }))}
                       placeholder="candidate@example.com"
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                   <label className="block space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Subject</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Subject</span>
                     <input
                       type="text" required value={submissionActionForm.subject}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, subject: event.target.value }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                   <label className="block space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Message</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Message</span>
                     <textarea
                       required rows={5} value={submissionActionForm.emailBody}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, emailBody: event.target.value }))}
-                      className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full resize-y rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
-                  <p className="text-[11px] text-[#7A8794]">This opens a draft in your default email app. NexusTalent does not send emails directly.</p>
+                  <p className="text-[11px] text-[#8D99AE]">This opens a draft in your default email app. NexusTalent does not send emails directly.</p>
                 </>
               )}
               {submissionAction === 'submit-client' && (
-                <p className="text-[#5E6B7A] dark:text-[#B9CAD9]">
+                <p className="text-[#8D99AE] dark:text-[#B9CAD9]">
                   Mark the selected submissions as <strong>Submitted to Client</strong>?
                 </p>
               )}
               {submissionAction === 'group' && (
                 <label className="block space-y-1">
-                  <span className="font-semibold text-[#202B37] dark:text-white">Candidate group</span>
+                  <span className="font-semibold text-[#2B2D42] dark:text-white">Candidate group</span>
                   <select
                     value={submissionActionForm.group}
                     onChange={(event) => setSubmissionActionForm((form) => ({ ...form, group: event.target.value }))}
-                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     {SUBMISSION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
                   </select>
@@ -2463,35 +2527,35 @@ export const JobList: React.FC = () => {
               {submissionAction === 'schedule-interview' && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Interview date</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Interview date</span>
                     <input
                       type="date" required value={submissionActionForm.date}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, date: event.target.value }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Time</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Time</span>
                     <input
                       type="time" required value={submissionActionForm.time}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, time: event.target.value }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Interviewer</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Interviewer</span>
                     <input
                       required value={submissionActionForm.interviewer}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, interviewer: event.target.value }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Interview type</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Interview type</span>
                     <select
                       value={submissionActionForm.interviewType}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, interviewType: event.target.value as Interview['type'] }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     >
                       <option>Technical Screen</option>
                       <option>Architecture Deep-Dive</option>
@@ -2500,23 +2564,23 @@ export const JobList: React.FC = () => {
                     </select>
                   </label>
                   <label className="space-y-1 sm:col-span-2">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Meeting link (optional)</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Meeting link (optional)</span>
                     <input
                       type="url" value={submissionActionForm.meetingLink}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, meetingLink: event.target.value }))}
                       placeholder="https://"
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                 </div>
               )}
               {submissionAction === 'other-job' && (
                 <label className="block space-y-1">
-                  <span className="font-semibold text-[#202B37] dark:text-white">Target job</span>
+                  <span className="font-semibold text-[#2B2D42] dark:text-white">Target job</span>
                   <select
                     required value={submissionActionForm.otherJobId}
                     onChange={(event) => setSubmissionActionForm((form) => ({ ...form, otherJobId: event.target.value }))}
-                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     {jobs.filter((job) => !submissions
                       .filter((submission) => submissionActionTargetIds.includes(submission.id))
@@ -2528,47 +2592,47 @@ export const JobList: React.FC = () => {
               {submissionAction === 'task' && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1 sm:col-span-2">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Task</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Task</span>
                     <input
                       required value={submissionActionForm.taskTitle}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, taskTitle: event.target.value }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="font-semibold text-[#202B37] dark:text-white">Due date</span>
+                    <span className="font-semibold text-[#2B2D42] dark:text-white">Due date</span>
                     <input
                       type="date" required value={submissionActionForm.dueDate}
                       onChange={(event) => setSubmissionActionForm((form) => ({ ...form, dueDate: event.target.value }))}
-                      className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                      className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                     />
                   </label>
                 </div>
               )}
               {submissionAction === 'request-details' && (
                 <label className="block space-y-1">
-                  <span className="font-semibold text-[#202B37] dark:text-white">Details requested</span>
+                  <span className="font-semibold text-[#2B2D42] dark:text-white">Details requested</span>
                   <textarea
                     required rows={4} value={submissionActionForm.requestMessage}
                     onChange={(event) => setSubmissionActionForm((form) => ({ ...form, requestMessage: event.target.value }))}
                     placeholder="Describe the information needed..."
-                    className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full resize-y rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   />
                 </label>
               )}
 
-              <div className="flex justify-end gap-2 border-t border-[#DCE6EF] pt-3 dark:border-[#354A5C]">
+              <div className="flex justify-end gap-2 border-t border-[#D7DCE5] pt-3 dark:border-[#45485E]">
                 <button
                   type="button" disabled={isApplyingSubmissionAction}
                   onClick={() => { setSubmissionAction(null); setSubmissionActionTargetIds([]); }}
-                  className="rounded-xl border border-[#DCE6EF] px-4 py-2 text-xs font-semibold text-[#5E6B7A] hover:bg-[#F5F8FB] disabled:opacity-50 dark:border-[#354A5C] dark:text-[#B9CAD9]"
+                  className="rounded-xl border border-[#D7DCE5] px-4 py-2 text-xs font-semibold text-[#8D99AE] hover:bg-[#EDF2F4] disabled:opacity-50 dark:border-[#45485E] dark:text-[#B9CAD9]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isApplyingSubmissionAction || (submissionAction === 'other-job' && !submissionActionForm.otherJobId)}
-                  className="rounded-xl bg-[#1769AA] px-4 py-2 text-xs font-bold text-white hover:bg-[#0B4F89] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-[#2B2D42] px-4 py-2 text-xs font-bold text-white hover:bg-[#2B2D42] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isApplyingSubmissionAction ? 'Working...' :
                     submissionAction === 'email' ? 'Open Email Draft' :
@@ -2592,14 +2656,14 @@ export const JobList: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="bulk-job-action-title"
-            className="w-full max-w-lg space-y-4 rounded-2xl border border-[#DCE6EF] bg-white p-6 shadow-2xl dark:border-[#354A5C] dark:bg-[#1B2936]"
+            className="w-full max-w-lg space-y-4 rounded-2xl border border-[#D7DCE5] bg-white p-6 shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]"
           >
-            <div className="flex items-center justify-between border-b border-[#DCE6EF] pb-3 dark:border-[#354A5C]">
+            <div className="flex items-center justify-between border-b border-[#D7DCE5] pb-3 dark:border-[#45485E]">
               <div>
-                <h3 id="bulk-job-action-title" className="text-base font-bold text-[#202B37] dark:text-white">
+                <h3 id="bulk-job-action-title" className="text-base font-bold text-[#2B2D42] dark:text-white">
                   {BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label}
                 </h3>
-                <p className="mt-1 text-xs text-[#5E6B7A] dark:text-[#B9CAD9]">
+                <p className="mt-1 text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
                   Apply to {selectedIds.length} selected job{selectedIds.length === 1 ? '' : 's'}
                 </p>
               </div>
@@ -2607,7 +2671,7 @@ export const JobList: React.FC = () => {
                 type="button"
                 onClick={() => setBulkAction(null)}
                 aria-label="Close action dialog"
-                className="rounded-lg p-1 text-[#7A8794] hover:bg-[#F5F8FB] hover:text-[#202B37] dark:hover:bg-[#162431] dark:hover:text-white"
+                className="rounded-lg p-1 text-[#8D99AE] hover:bg-[#EDF2F4] hover:text-[#2B2D42] dark:hover:bg-[#36384F] dark:hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -2615,7 +2679,7 @@ export const JobList: React.FC = () => {
 
             <form onSubmit={applyBulkJobAction} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label htmlFor="bulk-job-action-value" className="font-semibold text-[#202B37] dark:text-white">
+                <label htmlFor="bulk-job-action-value" className="font-semibold text-[#2B2D42] dark:text-white">
                   {bulkAction === 'notes' ? 'Note' :
                     bulkAction === 'folder' ? 'Folder name' :
                     bulkAction === 'status' ? 'New status' :
@@ -2635,7 +2699,7 @@ export const JobList: React.FC = () => {
                     value={bulkActionValue}
                     onChange={(e) => setBulkActionValue(e.target.value)}
                     placeholder="Add a note to the selected jobs..."
-                    className="w-full resize-y rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs text-[#202B37] focus:border-[#1769AA] focus:outline-none dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full resize-y rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs text-[#2B2D42] focus:border-[#2B2D42] focus:outline-none dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   />
                 ) : bulkAction === 'status' || bulkAction === 'priority' || bulkAction === 'macro' ? (
                   <select
@@ -2643,7 +2707,7 @@ export const JobList: React.FC = () => {
                     required
                     value={bulkActionValue}
                     onChange={(e) => setBulkActionValue(e.target.value)}
-                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs text-[#202B37] focus:border-[#1769AA] focus:outline-none dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs text-[#2B2D42] focus:border-[#2B2D42] focus:outline-none dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     {bulkAction === 'status' ? JOB_STATUSES.map((status) => (
                       <option key={status} value={status}>{status}</option>
@@ -2671,18 +2735,18 @@ export const JobList: React.FC = () => {
                       bulkAction === 'bench-consultant' ? 'Enter consultant name' :
                       bulkAction === 'publish-campuses' ? 'e.g. New York, London' : undefined
                     }
-                    className="w-full rounded-xl border border-[#DCE6EF] bg-[#F5F8FB] px-3 py-2 text-xs text-[#202B37] focus:border-[#1769AA] focus:outline-none dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-xl border border-[#D7DCE5] bg-[#EDF2F4] px-3 py-2 text-xs text-[#2B2D42] focus:border-[#2B2D42] focus:outline-none dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   />
                 )}
               </div>
 
               {bulkAction === 'rollover' && (
-                <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
+                <p className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">
                   The selected jobs will be set to Active and updated with this end date.
                 </p>
               )}
               {bulkAction === 'publish-campuses' && (
-                <p className="text-[11px] text-[#5E6B7A] dark:text-[#B9CAD9]">
+                <p className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">
                   This enables career portal publishing and saves the campus list on each job.
                 </p>
               )}
@@ -2691,13 +2755,13 @@ export const JobList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setBulkAction(null)}
-                  className="rounded-xl border border-[#DCE6EF] px-4 py-2 text-xs font-semibold text-[#5E6B7A] hover:bg-[#F5F8FB] dark:border-[#354A5C] dark:text-[#B9CAD9] dark:hover:bg-[#162431]"
+                  className="rounded-xl border border-[#D7DCE5] px-4 py-2 text-xs font-semibold text-[#8D99AE] hover:bg-[#EDF2F4] dark:border-[#45485E] dark:text-[#B9CAD9] dark:hover:bg-[#36384F]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#2F80E7] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#216BC4]"
+                  className="rounded-xl bg-[#2B2D42] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#222336]"
                 >
                   Apply to selected jobs
                 </button>
@@ -2713,12 +2777,12 @@ export const JobList: React.FC = () => {
           <div className="mx-auto grid min-h-full max-w-[1600px] grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <form
               onSubmit={handleSendRequirement}
-              className="space-y-0 border border-[#D5D5D5] bg-white text-xs text-[#465466] shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-[#D8E9F7]"
+              className="space-y-0 border border-[#D5D5D5] bg-white text-xs text-[#465466] shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-[#EDF2F4]"
             >
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#E5E5E5] px-4 py-3 dark:border-[#354A5C]">
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#E5E5E5] px-4 py-3 dark:border-[#45485E]">
                 <div className="flex min-w-[280px] flex-1 items-center gap-3">
-                  <h2 className="text-base font-medium text-[#315D88] dark:text-[#D8E9F7]">Send Requirement</h2>
-                  <span className="rounded-full bg-[#EAF4FC] px-2 py-1 text-[10px] font-semibold text-[#1769AA] dark:bg-[#22384B] dark:text-[#D8E9F7]">
+                  <h2 className="text-base font-medium text-[#315D88] dark:text-[#EDF2F4]">Send Requirement</h2>
+                  <span className="rounded-full bg-[#EDF2F4] px-2 py-1 text-[10px] font-semibold text-[#2B2D42] dark:bg-[#36384F] dark:text-[#EDF2F4]">
                     {selectedJobsForSend.length} position{selectedJobsForSend.length === 1 ? '' : 's'}
                   </span>
                 </div>
@@ -2740,7 +2804,7 @@ export const JobList: React.FC = () => {
                   <button
                     type="button"
                     onClick={closeSendModal}
-                    className="rounded-sm border border-[#C9C9C9] bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#555] hover:bg-[#EFEFEF] dark:border-[#354A5C] dark:bg-[#162431] dark:text-[#D8E9F7]"
+                    className="rounded-sm border border-[#C9C9C9] bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#555] hover:bg-[#EFEFEF] dark:border-[#45485E] dark:bg-[#36384F] dark:text-[#EDF2F4]"
                   >
                     Cancel
                   </button>
@@ -2752,7 +2816,7 @@ export const JobList: React.FC = () => {
                     id="requirement-from"
                     value={fromEmail}
                     onChange={(e) => setFromEmail(e.target.value)}
-                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     <option value={currentUser?.email || 'recruiting@ampcus.com'}>
                       System ({currentUser?.name || 'Recruiter'} &lt;{currentUser?.email || 'recruiting@ampcus.com'}&gt;)
@@ -2764,7 +2828,7 @@ export const JobList: React.FC = () => {
                     id="requirement-reply-to"
                     value={replyToEmail}
                     onChange={(e) => setReplyToEmail(e.target.value)}
-                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     <option value={currentUser?.email || 'recruiting@ampcus.com'}>
                       {currentUser?.email || 'recruiting@ampcus.com'}
@@ -2775,7 +2839,7 @@ export const JobList: React.FC = () => {
               </div>
 
               {isScheduleMode && (
-                <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E5E5] bg-[#F7FAFF] px-4 py-2.5 dark:border-[#354A5C] dark:bg-[#162431]">
+                <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E5E5] bg-[#F7FAFF] px-4 py-2.5 dark:border-[#45485E] dark:bg-[#36384F]">
                   <Calendar className="h-4 w-4 text-[#4387F5]" />
                   <label htmlFor="requirement-schedule" className="font-semibold">Schedule date &amp; time</label>
                   <input
@@ -2785,7 +2849,7 @@ export const JobList: React.FC = () => {
                     min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
                     value={scheduleDateTime}
                     onChange={(e) => setScheduleDateTime(e.target.value)}
-                    className="rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] dark:border-[#354A5C] dark:bg-[#1B2936] dark:text-white"
+                    className="rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white"
                   />
                   <span className="text-[10px] text-[#687786] dark:text-[#B9CAD9]">
                     Choose a future time, then click Schedule again.
@@ -2793,7 +2857,7 @@ export const JobList: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-start gap-3 border-b border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+              <div className="flex items-start gap-3 border-b border-[#E5E5E5] px-3 py-2 dark:border-[#45485E]">
                 <label htmlFor="requirement-recipients" className="w-32 flex-shrink-0 pt-1 text-[10px] text-[#687786] dark:text-[#B9CAD9]">
                   Recipients *
                 </label>
@@ -2814,7 +2878,7 @@ export const JobList: React.FC = () => {
                   Reset
                 </button>
               </div>
-              <div className="border-b border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+              <div className="border-b border-[#E5E5E5] px-3 py-2 dark:border-[#45485E]">
                 <label htmlFor="requirement-additional-recipients" className="sr-only">Additional recipients</label>
                 <input
                   id="requirement-additional-recipients"
@@ -2822,11 +2886,11 @@ export const JobList: React.FC = () => {
                   value={additionalRecipients}
                   onChange={(e) => setAdditionalRecipients(e.target.value)}
                   placeholder="Additional recipients, separate emails with commas (sent as CC/BCC)"
-                  className="w-full border-0 bg-transparent py-1 text-[10px] text-[#687786] outline-none placeholder:text-[#A6A6A6] dark:text-[#D8E9F7]"
+                  className="w-full border-0 bg-transparent py-1 text-[10px] text-[#687786] outline-none placeholder:text-[#A6A6A6] dark:text-[#EDF2F4]"
                 />
               </div>
 
-              <div className="flex items-center gap-3 border-b border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+              <div className="flex items-center gap-3 border-b border-[#E5E5E5] px-3 py-2 dark:border-[#45485E]">
                 <label htmlFor="requirement-subject" className="w-32 flex-shrink-0 text-[10px] text-[#687786] dark:text-[#B9CAD9]">Subject *</label>
                 <input
                   id="requirement-subject"
@@ -2853,7 +2917,7 @@ export const JobList: React.FC = () => {
                 onError={showToast}
               />
 
-              <div className="flex flex-col gap-2 border-t border-[#E5E5E5] px-3 py-3 dark:border-[#354A5C] sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-2 border-t border-[#E5E5E5] px-3 py-3 dark:border-[#45485E] sm:flex-row sm:items-center">
                 <label className="flex items-center gap-2 text-[10px] font-semibold text-[#687786] dark:text-[#B9CAD9]">
                   <Paperclip className="h-3.5 w-3.5" />
                   Attachment
@@ -2867,7 +2931,7 @@ export const JobList: React.FC = () => {
                 {emailAttachments.length > 0 && (
                   <div className="flex min-w-0 flex-wrap gap-1">
                     {emailAttachments.map((file, index) => (
-                      <span key={`${file.name}-${index}`} className="max-w-[180px] truncate rounded bg-[#F1F5F9] px-2 py-1 text-[10px] dark:bg-[#22384B]" title={file.name}>
+                      <span key={`${file.name}-${index}`} className="max-w-[180px] truncate rounded bg-[#F1F5F9] px-2 py-1 text-[10px] dark:bg-[#36384F]" title={file.name}>
                         {file.name}
                       </span>
                     ))}
@@ -2876,7 +2940,7 @@ export const JobList: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E5E5] px-3 py-2 dark:border-[#354A5C]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E5E5] px-3 py-2 dark:border-[#45485E]">
                 <span className="text-[10px] text-[#687786] dark:text-[#B9CAD9]">
                   Email delivery is not connected in this app; send and schedule actions prepare the message only.
                 </span>
@@ -2898,7 +2962,7 @@ export const JobList: React.FC = () => {
                   <button
                     type="button"
                     onClick={closeSendModal}
-                    className="rounded-sm border border-[#C9C9C9] bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#555] hover:bg-[#EFEFEF] dark:border-[#354A5C] dark:bg-[#162431] dark:text-[#D8E9F7]"
+                    className="rounded-sm border border-[#C9C9C9] bg-[#F8F8F8] px-3 py-1.5 text-[11px] font-medium text-[#555] hover:bg-[#EFEFEF] dark:border-[#45485E] dark:bg-[#36384F] dark:text-[#EDF2F4]"
                   >
                     Cancel
                   </button>
@@ -2906,9 +2970,9 @@ export const JobList: React.FC = () => {
               </div>
             </form>
 
-            <aside className="border border-[#D5D5D5] bg-white shadow-sm dark:border-[#354A5C] dark:bg-[#1B2936]">
-              <div className="border-b border-[#E5E5E5] px-4 py-3 dark:border-[#354A5C]">
-                <h3 className="text-sm font-medium text-[#315D88] dark:text-[#D8E9F7]">Customize Email Body</h3>
+            <aside className="border border-[#D5D5D5] bg-white shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42]">
+              <div className="border-b border-[#E5E5E5] px-4 py-3 dark:border-[#45485E]">
+                <h3 className="text-sm font-medium text-[#315D88] dark:text-[#EDF2F4]">Customize Email Body</h3>
               </div>
               <div className="space-y-4 p-4">
                 <div className="space-y-1.5">
@@ -2917,13 +2981,13 @@ export const JobList: React.FC = () => {
                     type="button"
                     onClick={() => setIsEmailColumnsOpen((open) => !open)}
                     aria-expanded={isEmailColumnsOpen}
-                    className="flex w-full items-center justify-between rounded-sm border border-[#D8D8D8] bg-white px-2.5 py-1.5 text-left text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="flex w-full items-center justify-between rounded-sm border border-[#D8D8D8] bg-white px-2.5 py-1.5 text-left text-[11px] text-[#334155] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     <span>{emailColumns.length} selected</span>
                     <ChevronDown className={`h-3 w-3 transition-transform ${isEmailColumnsOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isEmailColumnsOpen && (
-                    <div className="max-h-44 space-y-1 overflow-y-auto rounded-sm border border-[#D8D8D8] p-2 dark:border-[#354A5C]">
+                    <div className="max-h-44 space-y-1 overflow-y-auto rounded-sm border border-[#D8D8D8] p-2 dark:border-[#45485E]">
                       {EMAIL_JOB_FIELDS.map((field) => (
                         <label key={field} className="flex items-center gap-2 py-1 text-[10px]">
                           <input
@@ -2946,7 +3010,7 @@ export const JobList: React.FC = () => {
                     id="requirement-template"
                     value={emailTemplate}
                     onChange={(e) => handleTemplateChange(e.target.value)}
-                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     <option value="">-- Select Template --</option>
                     <option value="Standard Requirement">Standard Requirement</option>
@@ -2969,7 +3033,7 @@ export const JobList: React.FC = () => {
                       });
                       setEmailEditorResetKey((key) => key + 1);
                     }}
-                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#354A5C] dark:bg-[#162431] dark:text-white"
+                    className="w-full rounded-sm border border-[#D8D8D8] bg-white px-2 py-1.5 text-[11px] text-[#334155] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
                   >
                     <option value="">Select</option>
                     <option value="Hi [FirstName]">Hi [FirstName]</option>
@@ -2994,7 +3058,7 @@ export const JobList: React.FC = () => {
                         onClick={() => { setEmailTheme(theme.id); setCustomEmailColor(theme.accent); }}
                         aria-label={`${theme.name} email theme`}
                         aria-pressed={emailTheme === theme.id}
-                        className={`rounded border p-1 text-left transition-shadow ${emailTheme === theme.id ? 'border-[#2F80E7] ring-1 ring-[#2F80E7]' : 'border-[#D8D8D8] hover:border-[#94A3B8] dark:border-[#354A5C]'}`}
+                        className={`rounded border p-1 text-left transition-shadow ${emailTheme === theme.id ? 'border-[#2B2D42] ring-1 ring-[#2B2D42]' : 'border-[#D8D8D8] hover:border-[#94A3B8] dark:border-[#45485E]'}`}
                       >
                         <span className="block overflow-hidden rounded-sm border border-[#E5E5E5] dark:border-[#475569]" style={{ backgroundColor: theme.background }}>
                           <span className="block h-1.5" style={{ backgroundColor: theme.accent }} />
@@ -3004,13 +3068,13 @@ export const JobList: React.FC = () => {
                             <span className="block h-1 w-2/3 rounded bg-slate-200" />
                           </span>
                         </span>
-                        <span className="mt-1 block truncate text-[9px] text-[#5E6B7A] dark:text-[#B9CAD9]">{theme.name}</span>
+                        <span className="mt-1 block truncate text-[9px] text-[#8D99AE] dark:text-[#B9CAD9]">{theme.name}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="border-t border-[#E5E5E5] pt-3 dark:border-[#354A5C]">
+                <div className="border-t border-[#E5E5E5] pt-3 dark:border-[#45485E]">
                   <button
                     type="button"
                     onClick={() => setIsEmailThemeOpen((open) => !open)}
@@ -3033,7 +3097,7 @@ export const JobList: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="border-t border-[#E5E5E5] px-4 py-3 text-[10px] text-[#687786] dark:border-[#354A5C] dark:text-[#B9CAD9]">
+              <div className="border-t border-[#E5E5E5] px-4 py-3 text-[10px] text-[#687786] dark:border-[#45485E] dark:text-[#B9CAD9]">
                 Message includes {selectedJobsForSend.length} selected job position{selectedJobsForSend.length === 1 ? '' : 's'}.
               </div>
             </aside>
