@@ -42,26 +42,26 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#EDF2F4] dark:bg-slate-950 text-[#2B2D42] dark:text-slate-100 selection:bg-[#2B2D42] selection:text-white">
+    <div className="min-h-screen bg-[#FFF0E8] dark:bg-slate-950 text-[#252525] dark:text-slate-100 selection:bg-[#FF6B5E] selection:text-white">
       {/* Announcement Bar */}
-      <div className="bg-[#2B2D42] text-[#EDF2F4] px-4 py-2 text-xs font-medium border-b border-[#083F70] flex items-center justify-center gap-3">
-        <span className="flex items-center gap-1.5 text-[#2B2D42]">
-          <Sparkles className="w-3.5 h-3.5 text-[#2B2D42]" />
+      <div className="bg-[#FF6B5E] text-[#FFF0E8] px-4 py-2 text-xs font-medium border-b border-[#083F70] flex items-center justify-center gap-3">
+        <span className="flex items-center gap-1.5 text-[#252525]">
+          <Sparkles className="w-3.5 h-3.5 text-[#252525]" />
           <span className="font-semibold text-white">ATS 2026.4 Enterprise Edition:</span>
         </span>
-        <span className="hidden sm:inline text-[#EDF2F4]">
+        <span className="hidden sm:inline text-[#FFF0E8]">
           Unified ATS, Vendor Management &amp; Global Workforce Operations with instant skill indexing.
         </span>
         <button
           onClick={() => handleStartDemo('recruiter')}
-          className="text-[#2B2D42] hover:text-white font-semibold underline underline-offset-2 transition-colors ml-1"
+          className="text-[#252525] hover:text-white font-semibold underline underline-offset-2 transition-colors ml-1"
         >
           Launch Recruiter Workspace →
         </button>
       </div>
 
       {/* Header Navigation (§2 Top Bar Contract) */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#2B2D42]/95 backdrop-blur-md border-b border-[#D7DCE5] dark:border-slate-800">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#252525]/95 backdrop-blur-md border-b border-[#E8C8BE] dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between gap-8">
           {/* Zone 1: Single text element wordmark */}
           <div onClick={() => navigate('landing')} className="cursor-pointer">
@@ -69,52 +69,52 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Zone 2: Clean single-line text links */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-[#2B2D42] dark:text-slate-300">
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-[#252525] dark:text-slate-300">
             <div className="relative group">
               <button
                 onClick={() => setOfferDropdown(!offerDropdown)}
-                className="flex items-center gap-1 hover:text-[#2B2D42] dark:hover:text-[#8D99AE] transition-colors whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 hover:text-[#252525] dark:hover:text-[#806B66] transition-colors whitespace-nowrap shrink-0"
               >
                 <span>What We Offer</span>
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               <div className="absolute top-full -left-4 pt-2 hidden group-hover:block">
-                <div className="w-64 bg-white dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl shadow-xl p-2 text-xs">
+                <div className="w-64 bg-white dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-xl shadow-xl p-2 text-xs">
                   <div
                     onClick={() => setActiveTab('ats')}
-                    className="p-2 rounded-lg hover:bg-[#EDF2F4] dark:hover:bg-slate-700/50 cursor-pointer"
+                    className="p-2 rounded-lg hover:bg-[#FFF0E8] dark:hover:bg-slate-700/50 cursor-pointer"
                   >
-                    <div className="font-semibold text-[#2B2D42] dark:text-white">Unified ATS Engine</div>
-                    <div className="text-[11px] text-[#8D99AE]">Fast multi-format resume parsing &amp; pipeline</div>
+                    <div className="font-semibold text-[#252525] dark:text-white">Unified ATS Engine</div>
+                    <div className="text-[11px] text-[#806B66]">Fast multi-format resume parsing &amp; pipeline</div>
                   </div>
                   <div
                     onClick={() => setActiveTab('vms')}
-                    className="p-2 rounded-lg hover:bg-[#EDF2F4] dark:hover:bg-slate-700/50 cursor-pointer"
+                    className="p-2 rounded-lg hover:bg-[#FFF0E8] dark:hover:bg-slate-700/50 cursor-pointer"
                   >
-                    <div className="font-semibold text-[#2B2D42] dark:text-white">Vendor Management (VMS)</div>
-                    <div className="text-[11px] text-[#8D99AE]">Supplier contracts &amp; compliance automation</div>
+                    <div className="font-semibold text-[#252525] dark:text-white">Vendor Management (VMS)</div>
+                    <div className="text-[11px] text-[#806B66]">Supplier contracts &amp; compliance automation</div>
                   </div>
                   <div
                     onClick={() => setActiveTab('workforce')}
-                    className="p-2 rounded-lg hover:bg-[#EDF2F4] dark:hover:bg-slate-700/50 cursor-pointer"
+                    className="p-2 rounded-lg hover:bg-[#FFF0E8] dark:hover:bg-slate-700/50 cursor-pointer"
                   >
-                    <div className="font-semibold text-[#2B2D42] dark:text-white">Workforce &amp; Placements</div>
-                    <div className="text-[11px] text-[#8D99AE]">Contract margins, bill rates &amp; time tracking</div>
+                    <div className="font-semibold text-[#252525] dark:text-white">Workforce &amp; Placements</div>
+                    <div className="text-[11px] text-[#806B66]">Contract margins, bill rates &amp; time tracking</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <a href="#solutions" className="hover:text-[#2B2D42] dark:hover:text-[#8D99AE] transition-colors whitespace-nowrap shrink-0">
+            <a href="#solutions" className="hover:text-[#252525] dark:hover:text-[#806B66] transition-colors whitespace-nowrap shrink-0">
               Solutions
             </a>
-            <a href="#capabilities" className="hover:text-[#2B2D42] dark:hover:text-[#8D99AE] transition-colors whitespace-nowrap shrink-0">
+            <a href="#capabilities" className="hover:text-[#252525] dark:hover:text-[#806B66] transition-colors whitespace-nowrap shrink-0">
               Capabilities
             </a>
-            <a href="#pricing" className="hover:text-[#2B2D42] dark:hover:text-[#8D99AE] transition-colors whitespace-nowrap shrink-0">
+            <a href="#pricing" className="hover:text-[#252525] dark:hover:text-[#806B66] transition-colors whitespace-nowrap shrink-0">
               Pricing
             </a>
-            <a href="#testimonials" className="hover:text-[#2B2D42] dark:hover:text-[#8D99AE] transition-colors whitespace-nowrap shrink-0">
+            <a href="#testimonials" className="hover:text-[#252525] dark:hover:text-[#806B66] transition-colors whitespace-nowrap shrink-0">
               Case Studies
             </a>
           </nav>
@@ -123,13 +123,13 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={handleLoginClick}
-              className="px-4 py-2 text-xs font-semibold text-[#2B2D42] dark:text-slate-200 hover:text-[#2B2D42] dark:hover:text-[#8D99AE] transition-colors whitespace-nowrap"
+              className="px-4 py-2 text-xs font-semibold text-[#252525] dark:text-slate-200 hover:text-[#252525] dark:hover:text-[#806B66] transition-colors whitespace-nowrap"
             >
               Sign In
             </button>
             <button
               onClick={() => handleStartDemo('recruiter')}
-              className="px-4 py-2 text-xs font-semibold text-white bg-[#2B2D42] hover:bg-[#222336] rounded-xl shadow-xs shadow-[#2B2D42]/30 transition-all whitespace-nowrap"
+              className="px-4 py-2 text-xs font-semibold text-white bg-[#FF6B5E] hover:bg-[#E85249] rounded-xl shadow-xs shadow-[#FF6B5E]/30 transition-all whitespace-nowrap"
             >
               Launch Live App
             </button>
@@ -142,17 +142,17 @@ export const LandingPage: React.FC = () => {
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Heading, Proposition, Primary CTAs */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EDF2F4] dark:bg-[#2B2D42]/20 border border-[#2B2D42]/30 rounded-full text-xs font-mono text-[#2B2D42] dark:text-[#EDF2F4]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFF0E8] dark:bg-[#252525]/20 border border-[#FF6B5E]/30 rounded-full text-xs font-mono text-[#252525] dark:text-[#FFF0E8]">
               <span>ENTERPRISE TALENT ARCHITECTURE</span>
               <span>·</span>
-              <span className="text-[#8D99AE]">CEIPAL-INSPIRED VELOCITY</span>
+              <span className="text-[#806B66]">CEIPAL-INSPIRED VELOCITY</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight leading-[1.08] text-[#2B2D42] dark:text-white text-balance">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight leading-[1.08] text-[#252525] dark:text-white text-balance">
               The Unified Talent Platform for Hiring, Vendors &amp; Workforce
             </h1>
 
-            <p className="text-base sm:text-lg text-[#8D99AE] leading-relaxed max-w-xl">
+            <p className="text-base sm:text-lg text-[#806B66] leading-relaxed max-w-xl">
               Transform your recruitment operations with one intelligent platform to manage jobs,
               applicants, clients, vendors, and workforce operations with unmatched precision.
             </p>
@@ -160,7 +160,7 @@ export const LandingPage: React.FC = () => {
             <div className="pt-2 flex flex-wrap items-center gap-4">
               <button
                 onClick={() => handleStartDemo('recruiter')}
-                className="px-6 py-3 text-sm font-semibold text-white bg-[#2B2D42] hover:bg-[#222336] rounded-xl shadow-md shadow-[#2B2D42]/30 transition-all flex items-center gap-2 group cursor-pointer"
+                className="px-6 py-3 text-sm font-semibold text-white bg-[#FF6B5E] hover:bg-[#E85249] rounded-xl shadow-md shadow-[#FF6B5E]/30 transition-all flex items-center gap-2 group cursor-pointer"
               >
                 <span>Launch Recruiter Workspace</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -168,36 +168,36 @@ export const LandingPage: React.FC = () => {
 
               <button
                 onClick={() => setDemoModalOpen(true)}
-                className="px-5 py-3 text-sm font-semibold text-[#2B2D42] dark:text-slate-200 bg-white dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 hover:border-[#2B2D42] rounded-xl transition-all shadow-xs"
+                className="px-5 py-3 text-sm font-semibold text-[#252525] dark:text-slate-200 bg-white dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 hover:border-[#FF6B5E] rounded-xl transition-all shadow-xs"
               >
                 Request Enterprise Demo
               </button>
             </div>
 
             {/* Claim-to-Proof Metric Strip */}
-            <div className="pt-8 border-t border-[#D7DCE5] dark:border-slate-800 grid grid-cols-3 gap-6">
+            <div className="pt-8 border-t border-[#E8C8BE] dark:border-slate-800 grid grid-cols-3 gap-6">
               <div>
-                <div className="text-2xl font-bold font-mono text-[#2B2D42] dark:text-white tabular-nums">
+                <div className="text-2xl font-bold font-mono text-[#252525] dark:text-white tabular-nums">
                   3.8x
                 </div>
-                <div className="text-xs text-[#8D99AE] mt-0.5">Faster Submissions</div>
+                <div className="text-xs text-[#806B66] mt-0.5">Faster Submissions</div>
               </div>
               <div>
-                <div className="text-2xl font-bold font-mono text-[#2B2D42] dark:text-[#8D99AE] tabular-nums">
+                <div className="text-2xl font-bold font-mono text-[#252525] dark:text-[#806B66] tabular-nums">
                   94.2%
                 </div>
-                <div className="text-xs text-[#8D99AE] mt-0.5">Resume Match Accuracy</div>
+                <div className="text-xs text-[#806B66] mt-0.5">Resume Match Accuracy</div>
               </div>
               <div>
                 <div className="text-2xl font-bold font-mono text-[#2E7D5B] dark:text-[#8AC9A7] tabular-nums">48 Hrs</div>
-                <div className="text-xs text-[#8D99AE] mt-0.5">Avg Time-to-Interview</div>
+                <div className="text-xs text-[#806B66] mt-0.5">Avg Time-to-Interview</div>
               </div>
             </div>
           </div>
 
           {/* Right Column: 3D Interactive Scene with Layered Depth */}
           <div className="lg:col-span-6 relative">
-            <div className="relative rounded-3xl bg-[#2B2D42] border border-[#083F70] shadow-2xl overflow-hidden p-2">
+            <div className="relative rounded-3xl bg-[#FF6B5E] border border-[#083F70] shadow-2xl overflow-hidden p-2">
               <TalentNetwork3D height="500px" interactive={true} />
             </div>
           </div>
@@ -205,29 +205,29 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Solutions Tab Strip */}
-      <section id="solutions" className="py-20 px-6 bg-white dark:bg-[#2B2D42] border-y border-[#D7DCE5] dark:border-slate-800">
+      <section id="solutions" className="py-20 px-6 bg-white dark:bg-[#252525] border-y border-[#E8C8BE] dark:border-slate-800">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-mono text-[#2B2D42] dark:text-[#8D99AE] tracking-widest uppercase">
+            <div className="text-xs font-mono text-[#252525] dark:text-[#806B66] tracking-widest uppercase">
               Core Platform Taxonomy
             </div>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-[#2B2D42] dark:text-white">
+            <h2 className="text-3xl sm:text-4xl font-display font-bold text-[#252525] dark:text-white">
               Architected for Enterprise Staffing &amp; Corporate Teams
             </h2>
-            <p className="text-sm text-[#8D99AE]">
+            <p className="text-sm text-[#806B66]">
               Eliminate fragmented ATS silos, email spreadsheets, and disconnected vendor billing with a unified operating system.
             </p>
           </div>
 
           {/* Interactive Feature Segment Selector */}
           <div className="flex justify-center">
-            <div className="inline-flex p-1 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-xl">
+            <div className="inline-flex p-1 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-xl">
               <button
                 onClick={() => setActiveTab('ats')}
                 className={`px-5 py-2 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === 'ats'
-                    ? 'bg-[#2B2D42] text-white shadow-xs'
-                    : 'text-[#8D99AE] hover:text-[#2B2D42]'
+                    ? 'bg-[#FF6B5E] text-white shadow-xs'
+                    : 'text-[#806B66] hover:text-[#252525]'
                 }`}
               >
                 01. Applicant Tracking &amp; Pipeline
@@ -236,8 +236,8 @@ export const LandingPage: React.FC = () => {
                 onClick={() => setActiveTab('vms')}
                 className={`px-5 py-2 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === 'vms'
-                    ? 'bg-[#2B2D42] text-white shadow-xs'
-                    : 'text-[#8D99AE] hover:text-[#2B2D42]'
+                    ? 'bg-[#FF6B5E] text-white shadow-xs'
+                    : 'text-[#806B66] hover:text-[#252525]'
                 }`}
               >
                 02. Vendor Management (VMS)
@@ -246,8 +246,8 @@ export const LandingPage: React.FC = () => {
                 onClick={() => setActiveTab('workforce')}
                 className={`px-5 py-2 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === 'workforce'
-                    ? 'bg-[#2B2D42] text-white shadow-xs'
-                    : 'text-[#8D99AE] hover:text-[#2B2D42]'
+                    ? 'bg-[#FF6B5E] text-white shadow-xs'
+                    : 'text-[#806B66] hover:text-[#252525]'
                 }`}
               >
                 03. Placements &amp; Workforce
@@ -506,25 +506,25 @@ export const LandingPage: React.FC = () => {
             </ul>
             <button
               onClick={() => handleStartDemo('recruiter')}
-              className="w-full py-2.5 text-xs font-semibold text-[#2B2D42] dark:text-white border border-[#D7DCE5] dark:border-slate-700 hover:border-[#2B2D42] rounded-xl transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-[#252525] dark:text-white border border-[#E8C8BE] dark:border-slate-700 hover:border-[#FF6B5E] rounded-xl transition-colors"
             >
               Start Free Trial
             </button>
           </div>
 
-          <div className="p-8 bg-[#2B2D42] text-white border-2 border-[#2B2D42] rounded-3xl space-y-6 shadow-xl relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#2B2D42] text-white text-[10px] font-mono font-bold uppercase rounded-full shadow-sm">
+          <div className="p-8 bg-[#FF6B5E] text-white border-2 border-[#FF6B5E] rounded-3xl space-y-6 shadow-xl relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#FF6B5E] text-white text-[10px] font-mono font-bold uppercase rounded-full shadow-sm">
               Most Popular
             </div>
             <div>
-              <div className="text-xs font-mono text-[#EDF2F4] uppercase">For Scaling Operations</div>
+              <div className="text-xs font-mono text-[#FFF0E8] uppercase">For Scaling Operations</div>
               <h3 className="text-xl font-bold text-white mt-1">Enterprise Unified</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold font-mono text-white tabular-nums">$149</span>
-                <span className="text-xs text-[#EDF2F4]">/ recruiter / mo</span>
+                <span className="text-xs text-[#FFF0E8]">/ recruiter / mo</span>
               </div>
             </div>
-            <ul className="space-y-3 text-xs text-[#EDF2F4]">
+            <ul className="space-y-3 text-xs text-[#FFF0E8]">
               <li className="flex items-center gap-2">✓ Unlimited recruiters &amp; managers</li>
               <li className="flex items-center gap-2">✓ Full VMS with Vendor Compliance Auditing</li>
               <li className="flex items-center gap-2">✓ Manager Submission Approval Workflow</li>
@@ -533,21 +533,21 @@ export const LandingPage: React.FC = () => {
             </ul>
             <button
               onClick={() => handleStartDemo('manager')}
-              className="w-full py-2.5 text-xs font-semibold text-white bg-[#2B2D42] hover:bg-[#222336] rounded-xl shadow-md transition-all cursor-pointer"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-[#FF6B5E] hover:bg-[#E85249] rounded-xl shadow-md transition-all cursor-pointer"
             >
               Launch Enterprise Trial
             </button>
           </div>
 
-          <div className="p-8 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-3xl space-y-6">
+          <div className="p-8 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-3xl space-y-6">
             <div>
-              <div className="text-xs font-mono text-[#8D99AE] uppercase">For Global Conglomerates</div>
-              <h3 className="text-xl font-bold text-[#2B2D42] dark:text-white mt-1">Custom Platform</h3>
+              <div className="text-xs font-mono text-[#806B66] uppercase">For Global Conglomerates</div>
+              <h3 className="text-xl font-bold text-[#252525] dark:text-white mt-1">Custom Platform</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold font-mono text-[#2B2D42] dark:text-white tabular-nums">Custom</span>
+                <span className="text-4xl font-extrabold font-mono text-[#252525] dark:text-white tabular-nums">Custom</span>
               </div>
             </div>
-            <ul className="space-y-3 text-xs text-[#8D99AE]">
+            <ul className="space-y-3 text-xs text-[#806B66]">
               <li className="flex items-center gap-2">✓ Dedicated single-tenant cloud deployment</li>
               <li className="flex items-center gap-2">✓ Custom ERP &amp; HRIS integration</li>
               <li className="flex items-center gap-2">✓ Granular RBAC &amp; immutable audit logs</li>
@@ -555,7 +555,7 @@ export const LandingPage: React.FC = () => {
             </ul>
             <button
               onClick={() => handleStartDemo('super_admin')}
-              className="w-full py-2.5 text-xs font-semibold text-[#2B2D42] dark:text-white border border-[#D7DCE5] dark:border-slate-700 hover:border-[#2B2D42] rounded-xl transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-[#252525] dark:text-white border border-[#E8C8BE] dark:border-slate-700 hover:border-[#FF6B5E] rounded-xl transition-colors"
             >
               Contact Sales
             </button>
@@ -564,33 +564,33 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Final Call to Action */}
-      <section className="py-20 px-6 bg-[#2B2D42] text-white text-center border-t border-[#083F70]">
+      <section className="py-20 px-6 bg-[#FF6B5E] text-white text-center border-t border-[#083F70]">
         <div className="max-w-3xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#083F70] rounded-full text-xs font-mono text-[#2B2D42]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#083F70] rounded-full text-xs font-mono text-[#252525]">
             READY TO MODERNIZE RECRUITMENT OPERATIONS?
           </div>
           <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-white">
             Experience the Unified Talent Platform
           </h2>
-          <p className="text-sm text-[#EDF2F4] leading-relaxed max-w-xl mx-auto">
+          <p className="text-sm text-[#FFF0E8] leading-relaxed max-w-xl mx-auto">
             Log in directly as Super Admin, Recruitment Practice Manager, or Lead Recruiter to explore the complete workflows with realistic production datasets.
           </p>
           <div className="pt-2 flex flex-wrap justify-center gap-4">
             <button
               onClick={() => handleStartDemo('recruiter')}
-              className="px-6 py-3 text-xs font-bold text-white bg-[#2B2D42] hover:bg-[#222336] rounded-xl shadow-lg shadow-[#2B2D42]/30 transition-all cursor-pointer"
+              className="px-6 py-3 text-xs font-bold text-white bg-[#FF6B5E] hover:bg-[#E85249] rounded-xl shadow-lg shadow-[#FF6B5E]/30 transition-all cursor-pointer"
             >
               Sign In as Recruiter
             </button>
             <button
               onClick={() => handleStartDemo('manager')}
-              className="px-6 py-3 text-xs font-bold text-[#EDF2F4] bg-[#2B2D42] hover:bg-[#5833AA] rounded-xl border border-[#2B2D42] transition-all cursor-pointer"
+              className="px-6 py-3 text-xs font-bold text-[#FFF0E8] bg-[#FF6B5E] hover:bg-[#5833AA] rounded-xl border border-[#FF6B5E] transition-all cursor-pointer"
             >
               Sign In as Manager
             </button>
             <button
               onClick={() => handleStartDemo('super_admin')}
-              className="px-6 py-3 text-xs font-bold text-white bg-[#083F70] hover:bg-[#202234] rounded-xl border border-[#2B2D42]/40 transition-all cursor-pointer"
+              className="px-6 py-3 text-xs font-bold text-white bg-[#083F70] hover:bg-[#C94039] rounded-xl border border-[#FF6B5E]/40 transition-all cursor-pointer"
             >
               Sign In as Super Admin
             </button>
@@ -619,20 +619,20 @@ export const LandingPage: React.FC = () => {
 
       {/* Cookie Consent Banner */}
       {!cookieConsentAccepted && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50 p-4 bg-[#2B2D42] text-white border border-[#2B2D42] rounded-2xl shadow-2xl flex items-center justify-between gap-4 text-xs animate-in slide-in-from-bottom duration-200">
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50 p-4 bg-[#FF6B5E] text-white border border-[#FF6B5E] rounded-2xl shadow-2xl flex items-center justify-between gap-4 text-xs animate-in slide-in-from-bottom duration-200">
           <div>
             We use essential cookies to maintain secure sessions and optimize candidate matching.
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setCookieConsentAccepted(true)}
-              className="px-3 py-1.5 bg-[#2B2D42] hover:bg-[#222336] text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+              className="px-3 py-1.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
             >
               Accept All
             </button>
             <button
               onClick={() => setCookieConsentAccepted(true)}
-              className="p-1 text-[#EDF2F4] hover:text-white"
+              className="p-1 text-[#FFF0E8] hover:text-white"
             >
               <X className="w-4 h-4" />
             </button>
@@ -643,12 +643,12 @@ export const LandingPage: React.FC = () => {
       {/* Enterprise Demo Request Modal */}
       {demoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#2B2D42] dark:text-white">
+              <h3 className="text-lg font-bold text-[#252525] dark:text-white">
                 Request Enterprise Talent Demo
               </h3>
-              <button onClick={() => setDemoModalOpen(false)} className="text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-white">
+              <button onClick={() => setDemoModalOpen(false)} className="text-[#806B66] hover:text-[#252525] dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -656,13 +656,13 @@ export const LandingPage: React.FC = () => {
             {demoSubmitted ? (
               <div className="py-6 text-center space-y-2">
                 <CheckCircle className="w-10 h-10 text-[#8AC9A7] mx-auto" />
-                <div className="text-sm font-bold text-[#2B2D42] dark:text-white">Demo Request Received!</div>
-                <div className="text-xs text-[#8D99AE]">
+                <div className="text-sm font-bold text-[#252525] dark:text-white">Demo Request Received!</div>
+                <div className="text-xs text-[#806B66]">
                   An enterprise account architect will connect with you within 2 business hours.
                 </div>
                 <button
                   onClick={() => setDemoModalOpen(false)}
-                  className="mt-4 px-4 py-2 bg-[#2B2D42] hover:bg-[#222336] text-white text-xs font-semibold rounded-lg"
+                  className="mt-4 px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-semibold rounded-lg"
                 >
                   Done
                 </button>
@@ -676,26 +676,26 @@ export const LandingPage: React.FC = () => {
                 className="space-y-3 text-xs"
               >
                 <div>
-                  <label className="block font-medium text-[#8D99AE] mb-1">Full Name</label>
+                  <label className="block font-medium text-[#806B66] mb-1">Full Name</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Rachel Adams"
-                    className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-lg text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
+                    className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-lg text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-[#8D99AE] mb-1">Work Email</label>
+                  <label className="block font-medium text-[#806B66] mb-1">Work Email</label>
                   <input
                     type="email"
                     required
                     placeholder="rachel@enterprise-staffing.com"
-                    className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-lg text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
+                    className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-lg text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-[#8D99AE] mb-1">Company Size</label>
-                  <select className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-lg text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]">
+                  <label className="block font-medium text-[#806B66] mb-1">Company Size</label>
+                  <select className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-lg text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]">
                     <option>10 - 50 Recruiters</option>
                     <option>50 - 250 Recruiters</option>
                     <option>250+ Enterprise Scale</option>
@@ -703,7 +703,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[#2B2D42] hover:bg-[#222336] text-white font-semibold rounded-lg shadow-sm transition-colors mt-2"
+                  className="w-full py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white font-semibold rounded-lg shadow-sm transition-colors mt-2"
                 >
                   Schedule Guided Walkthrough
                 </button>

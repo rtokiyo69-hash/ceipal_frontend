@@ -116,7 +116,7 @@ export const TalentNetwork3D: React.FC<TalentNetwork3DProps> = ({
       ctx.fill();
 
       // Match Score Ring
-      ctx.fillStyle = '#06B6D4';
+      ctx.fillStyle = '#806B66';
       ctx.font = 'bold 30px "Plus Jakarta Sans", sans-serif';
       ctx.fillText(score, 38, 60);
 
@@ -125,11 +125,11 @@ export const TalentNetwork3D: React.FC<TalentNetwork3DProps> = ({
       ctx.fillText('MATCH INDEX', 90, 58);
 
       // Name & Role
-      ctx.fillStyle = '#F8FAFC';
+      ctx.fillStyle = '#FFF0E8';
       ctx.font = 'bold 26px "Plus Jakarta Sans", sans-serif';
       ctx.fillText(name, 28, 130);
 
-      ctx.fillStyle = '#94A3B8';
+      ctx.fillStyle = '#B68F87';
       ctx.font = '18px "DM Sans", sans-serif';
       ctx.fillText(role, 28, 165);
 
@@ -138,7 +138,7 @@ export const TalentNetwork3D: React.FC<TalentNetwork3DProps> = ({
       ctx.font = 'bold 15px "JetBrains Mono", monospace';
       skills.forEach((sk) => {
         const textWidth = ctx.measureText(sk).width;
-        ctx.fillStyle = '#1E293B';
+        ctx.fillStyle = '#252525';
         ctx.beginPath();
         ctx.roundRect(x, 205, textWidth + 24, 34, 8);
         ctx.fill();
@@ -146,7 +146,7 @@ export const TalentNetwork3D: React.FC<TalentNetwork3DProps> = ({
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        ctx.fillStyle = '#F8FAFC';
+        ctx.fillStyle = '#FFF0E8';
         ctx.fillText(sk, x + 12, 228);
         x += textWidth + 34;
       });

@@ -3,11 +3,9 @@ import {
   Briefcase, 
   DollarSign, 
   MapPin, 
-  Calendar, 
   RotateCw, 
   Maximize2, 
   Minimize2, 
-  Search, 
   ArrowUpDown, 
   Eye, 
   CheckCircle2, 
@@ -18,22 +16,24 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { RAW_ACTIVE_JOBS } from '../data/mockDashboardTablesData';
-import { ActiveJobsDateFilter, ActiveJobRecord } from '../types/dashboardTables';
+import { ActiveJobRecord } from '../types/dashboardTables';
 
 interface ActiveJobsTableProps {
   onShowToast: (message: string) => void;
+  startDate: string;
+  endDate: string;
+  searchQuery: string;
   dashboardPreview?: boolean;
 }
 
 export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
   onShowToast,
+  startDate,
+  endDate,
+  searchQuery,
   dashboardPreview = false
 }) => {
-  // Independent Date Filter (Default: 'last_month')
-  const [dateFilter, setDateFilter] = useState<ActiveJobsDateFilter>('last_month');
-
-  // Search & Sorting
-  const [searchQuery, setSearchQuery] = useState('');
+  // Sorting
   const [sortField, setSortField] = useState<'jobCode' | 'jobTitle' | 'billRate' | 'state'>('jobCode');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -59,16 +59,10 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
     }, 500);
   };
 
-  // Filter jobs based on independent date filter
+  // Apply the shared report date range
   const dateFilteredJobs = useMemo(() => {
-    return RAW_ACTIVE_JOBS.filter((job) => {
-      if (dateFilter === 'all_active') return true;
-      if (dateFilter === 'this_month') return job.createdAt >= '2026-11-01';
-      if (dateFilter === 'last_month') return job.createdAt >= '2026-10-01' && job.createdAt <= '2026-10-31';
-      if (dateFilter === 'this_quarter') return job.createdAt >= '2026-10-01';
-      return true;
-    });
-  }, [dateFilter]);
+    return RAW_ACTIVE_JOBS.filter(job => job.createdAt >= startDate && job.createdAt <= endDate);
+  }, [startDate, endDate]);
 
   // Filter by search & sort
   const displayedJobs = useMemo(() => {
@@ -80,7 +74,9 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
         job.jobTitle.toLowerCase().includes(q) ||
         job.clientName.toLowerCase().includes(q) ||
         job.state.toLowerCase().includes(q) ||
-        job.department.toLowerCase().includes(q)
+        job.department.toLowerCase().includes(q) ||
+        job.primaryRecruiter.toLowerCase().includes(q) ||
+        job.status.toLowerCase().includes(q)
       );
     }).sort((a, b) => {
       let comp = 0;
@@ -117,11 +113,11 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
   };
 
   return (
-    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#D7DCE5] bg-white shadow-sm transition-all duration-300 dark:border-[#45485E] dark:bg-[#2B2D42] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'} ${
-      isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#EDF2F4] p-2 dark:bg-[#202234]' : ''
+    <div className={`flex h-[590px] max-h-[590px] min-h-[590px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#E8C8BE] bg-white shadow-sm transition-all duration-300 dark:border-[#3D3634] dark:bg-[#252525] ${
+      isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#FFF0E8] p-2 dark:bg-[#C94039]' : ''
     }`}>
       {/* Table Header Controls */}
-      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#D7DCE5] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#45485E] dark:bg-[#2B2D42]">
+      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#E8C8BE] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#3D3634] dark:bg-[#252525]">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-teal-500/15 text-teal-600 dark:text-teal-300">
             <Briefcase className="w-4 h-4" />
@@ -137,49 +133,18 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: Date Filter, Search, Refresh, Expand */}
+        {/* Table actions */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           {dashboardPreview && displayedJobs.length > 5 && (
             <button
               type="button"
               onClick={() => setShowAll(value => !value)}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#2B2D42] transition hover:bg-[#EDF2F4] dark:text-[#8D99AE] dark:hover:bg-[#36384F]"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#252525] transition hover:bg-[#FFF0E8] dark:text-[#806B66] dark:hover:bg-[#48403E]"
             >
               {showAll ? 'Show less' : 'View all'}
               {showAll ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
           )}
-          {/* Independent Date Filter Dropdown (Default: Last Month) */}
-          <div className="flex items-center gap-1.5 bg-white/70 dark:bg-slate-900/70 border border-slate-300/60 dark:border-cyan-500/25 rounded-xl px-2.5 py-1.5 shadow-xs">
-            <Calendar className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-            <select
-              aria-label="Filter active jobs by date range"
-              value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value as ActiveJobsDateFilter);
-                onShowToast(`Jobs date filter: ${e.target.options[e.target.selectedIndex].text}`);
-              }}
-              className="bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none font-medium pr-1 cursor-pointer"
-            >
-              <option value="last_month">Last Month (Default)</option>
-              <option value="this_month">This Month</option>
-              <option value="this_quarter">This Quarter</option>
-              <option value="all_active">All Active Jobs</option>
-            </select>
-          </div>
-
-          {/* Quick Search */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search code, role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-7 pr-2.5 py-1.5 rounded-xl text-xs bg-white/70 dark:bg-slate-900/70 border border-slate-300/60 dark:border-cyan-500/25 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 w-28 sm:w-36"
-            />
-          </div>
-
           {/* Refresh Button */}
           <button
             onClick={handleRefresh}
@@ -206,7 +171,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
       </div>
 
       {/* Table Body Viewport - Exactly 7 Lines Visible with Smooth Scrolling */}
-      <div className={`w-full overflow-x-auto ${isCompactPreview ? '' : 'min-h-0 flex-1 overflow-y-auto scroll-smooth'}`}>
+      <div className="min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto scroll-smooth">
         <table className={`w-full border-separate border-spacing-0 text-left text-xs ${isCompactPreview ? 'min-w-[420px]' : 'min-w-[580px]'}`}>
           <colgroup>
             <col className={isCompactPreview ? 'hidden' : 'w-[18%] min-w-[95px]'} />
@@ -221,7 +186,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 1: Job Code */}
               <th
                 onClick={() => handleSort('jobCode')}
-                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300 sm:px-4`}
+                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300 sm:px-4`}
               >
                 <div className="flex items-center gap-1">
                   <span>Job Code</span>
@@ -232,7 +197,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 2: Job Title */}
               <th
                 onClick={() => handleSort('jobTitle')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center gap-1">
                   <span>Job Title & Client</span>
@@ -243,7 +208,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 3: Client Bill Rate / Salary */}
               <th
                 onClick={() => handleSort('billRate')}
-                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300`}
+                className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300`}
               >
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-emerald-500/80" />
@@ -255,7 +220,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
               {/* Column 4: State */}
               <th
                 onClick={() => handleSort('state')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#45485E] dark:bg-[#36384F] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-teal-500/80" />
@@ -344,19 +309,19 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
           {/* Sticky Totals Footer */}
           <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-900 dark:text-white font-bold text-xs`}>
             <tr className="h-[44px]">
-              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#36384F]">
+              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#48403E]">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
                   <span>TOTAL JOBS</span>
                 </div>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-cyan-600 dark:bg-[#36384F] dark:text-cyan-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-cyan-600 dark:bg-[#48403E] dark:text-cyan-300">
                 <span>{totals.totalJobs} Active ({totals.totalOpenings} Openings)</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-emerald-600 dark:bg-[#36384F] dark:text-emerald-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 font-mono text-xs text-emerald-600 dark:bg-[#48403E] dark:text-emerald-300">
                 <span>$125 – $195 / hr Range</span>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#36384F] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#48403E] dark:text-slate-300">
                 <span>{totals.uniqueStates} States Active</span>
               </td>
             </tr>
@@ -365,7 +330,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
       </div>
 
       {/* Bottom Summary Strip */}
-      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#D7DCE5] bg-[#EDF2F4] p-3 text-center sm:p-4 dark:border-[#45485E] dark:bg-[#36384F]`}>
+      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#E8C8BE] bg-[#FFF0E8] p-3 text-center sm:p-4 dark:border-[#3D3634] dark:bg-[#48403E]`}>
         <div className="space-y-0.5">
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             Total Active Roles
@@ -397,7 +362,7 @@ export const ActiveJobsTable: React.FC<ActiveJobsTableProps> = ({
       {/* Active Job Quick Modal */}
       {selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg space-y-5 rounded-2xl border border-[#D7DCE5] bg-white p-6 shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]">
+          <div className="w-full max-w-lg space-y-5 rounded-2xl border border-[#E8C8BE] bg-white p-6 shadow-2xl dark:border-[#3D3634] dark:bg-[#252525]">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200/50 dark:border-cyan-500/20">
               <div className="flex items-center gap-2.5">
                 <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-400/30">

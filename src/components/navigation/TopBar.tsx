@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Search,
   Plus,
@@ -31,6 +32,7 @@ export const TopBar: React.FC = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const getBreadcrumbs = () => {
     switch (currentRoute) {
@@ -95,7 +97,7 @@ export const TopBar: React.FC = () => {
     };
 
     return (
-      <header className="h-[52px] px-3 sm:px-5 bg-[#2B2D42] text-white flex items-center gap-3 sm:gap-6 z-20 shrink-0 shadow-sm">
+      <header className="h-[52px] px-3 sm:px-5 bg-[#FF6B5E] text-white flex items-center gap-3 sm:gap-6 z-20 shrink-0 shadow-sm">
         <button
           onClick={() => navigate('dashboard')}
           className="flex items-center shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded"
@@ -104,20 +106,31 @@ export const TopBar: React.FC = () => {
           <Logo size="sm" />
         </button>
 
-        <nav aria-label="Recruiter navigation" className="flex items-center self-stretch gap-0.5 overflow-x-auto min-w-0">
+        <nav aria-label="Recruiter navigation" className="flex items-center gap-1 overflow-x-auto min-w-0">
           {recruiterTabs.map((tab) => (
-            <button
+            <motion.button
               key={tab.route}
               onClick={() => navigate(tab.route)}
               aria-current={isTabActive(tab.route) ? 'page' : undefined}
-              className={`h-full px-2.5 sm:px-3 text-xs sm:text-[13px] whitespace-nowrap transition-colors border-b-2 ${
+              whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.01 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 32, mass: 0.45 }}
+              className={`relative isolate px-2.5 sm:px-3 py-2 rounded-xl border border-transparent text-xs sm:text-[13px] whitespace-nowrap ${
                 isTabActive(tab.route)
-                  ? 'bg-[#8D99AE] border-white text-[#2B2D42] font-semibold'
-                  : 'border-transparent text-white/90 hover:bg-white/10 hover:text-white'
+                  ? 'font-semibold'
+                  : 'text-white/90 hover:bg-white/10 hover:text-white'
               }`}
             >
-              {tab.label}
-            </button>
+              {isTabActive(tab.route) && (
+                <motion.span
+                  layoutId="module-selection-glass"
+                  className="topbar-module-active"
+                  aria-hidden="true"
+                  transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 36 }}
+                />
+              )}
+              <span className="relative z-10">{tab.label}</span>
+            </motion.button>
           ))}
         </nav>
 
@@ -142,7 +155,7 @@ export const TopBar: React.FC = () => {
               <Plus className="w-5 h-5" />
             </button>
             {quickCreateOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white text-[#2B2D42] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
+              <div className="absolute right-0 mt-2 w-48 bg-white text-[#252525] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
                 <button onClick={() => { navigate('job-new'); setQuickCreateOpen(false); }} className="w-full px-3 py-2 text-left hover:bg-[#EEF5FC]">New Job Posting</button>
                 <button onClick={() => { navigate('applicant-new'); setQuickCreateOpen(false); }} className="w-full px-3 py-2 text-left hover:bg-[#EEF5FC]">Add Applicant</button>
               </div>
@@ -158,12 +171,12 @@ export const TopBar: React.FC = () => {
               aria-expanded={notificationsOpen}
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#2B2D42] rounded-full" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#FF6B5E] rounded-full" />
             </button>
             {notificationsOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white text-[#2B2D42] border border-[#D5DCE5] rounded shadow-lg p-3 z-50">
-                <div className="text-xs font-semibold pb-2 border-b border-[#D7DCE5]">Notifications</div>
-                <p className="text-xs text-[#8D99AE] pt-3">You’re all caught up.</p>
+              <div className="absolute right-0 mt-2 w-72 bg-white text-[#252525] border border-[#D5DCE5] rounded shadow-lg p-3 z-50">
+                <div className="text-xs font-semibold pb-2 border-b border-[#E8C8BE]">Notifications</div>
+                <p className="text-xs text-[#806B66] pt-3">You’re all caught up.</p>
               </div>
             )}
           </div>
@@ -188,10 +201,10 @@ export const TopBar: React.FC = () => {
               <span className="hidden lg:block max-w-24 truncate text-xs">{currentUser.name}</span>
             </button>
             {profileOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white text-[#2B2D42] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
-                <div className="px-3 py-2 border-b border-[#D7DCE5]">
+              <div className="absolute right-0 mt-2 w-48 bg-white text-[#252525] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
+                <div className="px-3 py-2 border-b border-[#E8C8BE]">
                   <div className="font-semibold truncate">{currentUser.name}</div>
-                  <div className="text-[#8D99AE] capitalize">{currentUser.role.replace('_', ' ')}</div>
+                  <div className="text-[#806B66] capitalize">{currentUser.role.replace('_', ' ')}</div>
                 </div>
                 <button onClick={() => { logout(); setProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[#EEF5FC]">
                   <LogOut className="w-3.5 h-3.5" />
@@ -206,17 +219,17 @@ export const TopBar: React.FC = () => {
   }
 
   return (
-    <header className="h-16 px-6 bg-white dark:bg-[#2B2D42] border-b border-[#D7DCE5] dark:border-[#45485E] flex items-center justify-between gap-6 z-20 shrink-0">
+    <header className="h-16 px-6 bg-white dark:bg-[#252525] border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between gap-6 z-20 shrink-0">
       {/* Zone 1: Contextual breadcrumb trail */}
-      <div className="flex items-center gap-2 text-xs font-medium text-[#8D99AE] dark:text-[#B9CAD9] truncate">
+      <div className="flex items-center gap-2 text-xs font-medium text-[#806B66] dark:text-[#FFD7C9] truncate">
         {breadcrumbs.map((crumb, idx) => (
           <React.Fragment key={idx}>
-            {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-[#8D99AE] shrink-0" />}
+            {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-[#806B66] shrink-0" />}
             <span
               className={
                 idx === breadcrumbs.length - 1
-                  ? 'text-[#2B2D42] dark:text-[#EDF2F4] font-semibold truncate'
-                  : 'hover:text-[#2B2D42] cursor-pointer transition-colors'
+                  ? 'text-[#252525] dark:text-[#FFF0E8] font-semibold truncate'
+                  : 'hover:text-[#252525] cursor-pointer transition-colors'
               }
             >
               {crumb}
@@ -230,11 +243,11 @@ export const TopBar: React.FC = () => {
         {/* Global Search Pill (Off-white bg, Light Grey border, Charcoal text) */}
         <button
           onClick={() => setGlobalSearch(true)}
-          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl text-xs text-[#8D99AE] dark:text-[#B9CAD9] hover:border-[#2B2D42] hover:bg-[#EDF2F4]/50 transition-colors w-64"
+          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs text-[#806B66] dark:text-[#FFD7C9] hover:border-[#FF6B5E] hover:bg-[#FFF0E8]/50 transition-colors w-64"
         >
-          <Search className="w-3.5 h-3.5 text-[#8D99AE]" />
+          <Search className="w-3.5 h-3.5 text-[#806B66]" />
           <span className="flex-1 text-left truncate">Search candidates, jobs, clients...</span>
-          <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-[#2B243B] text-[#8D99AE] dark:text-[#EDF2F4] border border-[#D7DCE5] dark:border-[#5A5D72] rounded">
+          <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-[#2B243B] text-[#806B66] dark:text-[#FFF0E8] border border-[#E8C8BE] dark:border-[#65534F] rounded">
             ⌘K
           </kbd>
         </button>
@@ -243,22 +256,22 @@ export const TopBar: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setQuickCreateOpen(!quickCreateOpen)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2B2D42] hover:bg-[#222336] text-white text-xs font-semibold rounded-xl shadow-xs shadow-[#2B2D42]/25 transition-all whitespace-nowrap shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-semibold rounded-xl shadow-xs shadow-[#FF6B5E]/25 transition-all whitespace-nowrap shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create</span>
           </button>
 
           {quickCreateOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl shadow-xl py-1.5 z-50 text-xs">
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xl py-1.5 z-50 text-xs">
               <button
                 onClick={() => {
                   navigate('job-new');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#2B2D42] dark:text-[#EDF2F4] hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] hover:text-[#2B2D42] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
               >
-                <Briefcase className="w-4 h-4 text-[#2B2D42]" />
+                <Briefcase className="w-4 h-4 text-[#252525]" />
                 <span>New Job Posting</span>
               </button>
 
@@ -267,7 +280,7 @@ export const TopBar: React.FC = () => {
                   navigate('applicant-new');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#2B2D42] dark:text-[#EDF2F4] hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] hover:text-[#2B2D42] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
               >
                 <UserPlus className="w-4 h-4 text-[#8AC9A7]" />
                 <span>Add &amp; Parse Candidate</span>
@@ -278,9 +291,9 @@ export const TopBar: React.FC = () => {
                   navigate('interviews');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#2B2D42] dark:text-[#EDF2F4] hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] hover:text-[#2B2D42] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
               >
-                <Calendar className="w-4 h-4 text-[#2B2D42]" />
+                <Calendar className="w-4 h-4 text-[#252525]" />
                 <span>Schedule Interview</span>
               </button>
 
@@ -289,9 +302,9 @@ export const TopBar: React.FC = () => {
                   navigate('clients');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#2B2D42] dark:text-[#EDF2F4] hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] hover:text-[#2B2D42] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
               >
-                <Building2 className="w-4 h-4 text-[#2B2D42]" />
+                <Building2 className="w-4 h-4 text-[#252525]" />
                 <span>Add Enterprise Client</span>
               </button>
             </div>
@@ -302,50 +315,50 @@ export const TopBar: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="relative p-2 text-[#8D99AE] dark:text-[#B9CAD9] hover:text-[#2B2D42] dark:hover:text-[#EDF2F4] rounded-xl hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] transition-colors border border-transparent hover:border-[#D7DCE5]"
+            className="relative p-2 text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] dark:hover:text-[#FFF0E8] rounded-xl hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] transition-colors border border-transparent hover:border-[#E8C8BE]"
             title="Notifications"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#2B2D42] rounded-full" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF6B5E] rounded-full" />
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl shadow-xl p-3 z-50">
-              <div className="flex items-center justify-between pb-2 border-b border-[#D7DCE5] dark:border-[#45485E]">
-                <span className="text-xs font-semibold text-[#2B2D42] dark:text-white">Live Activity Alerts</span>
-                <span className="text-[10px] text-[#2B2D42] font-mono font-semibold bg-[#EDF2F4] dark:bg-[#36384F] px-2 py-0.5 rounded-full">
+            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xl p-3 z-50">
+              <div className="flex items-center justify-between pb-2 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+                <span className="text-xs font-semibold text-[#252525] dark:text-white">Live Activity Alerts</span>
+                <span className="text-[10px] text-[#252525] font-mono font-semibold bg-[#FFF0E8] dark:bg-[#48403E] px-2 py-0.5 rounded-full">
                   3 Unread
                 </span>
               </div>
-              <div className="divide-y divide-[#D7DCE5] dark:divide-[#45485E] max-h-72 overflow-y-auto">
+              <div className="divide-y divide-[#E8C8BE] dark:divide-[#3D3634] max-h-72 overflow-y-auto">
                 <div className="py-2.5">
-                  <div className="text-xs font-medium text-[#2B2D42] dark:text-white">
+                  <div className="text-xs font-medium text-[#252525] dark:text-white">
                     Round 2 Confirmed: Ananya Deshmukh
                   </div>
-                  <div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">
+                  <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
                     CloudScale VP confirmed 2:00 PM PST session.
                   </div>
                   <div className="text-[10px] font-mono text-[#8AC9A7] mt-1 font-semibold">12m ago</div>
                 </div>
 
                 <div className="py-2.5">
-                  <div className="text-xs font-medium text-[#2B2D42] dark:text-white">
+                  <div className="text-xs font-medium text-[#252525] dark:text-white">
                     Offer Letter Released: Devon Sterling
                   </div>
-                  <div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">
+                  <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
                     FinEdge Capital extended formal offer ($165k).
                   </div>
-                  <div className="text-[10px] font-mono text-[#2B2D42] mt-1 font-semibold">1h ago</div>
+                  <div className="text-[10px] font-mono text-[#252525] mt-1 font-semibold">1h ago</div>
                 </div>
 
                 <div className="py-2.5">
-                  <div className="text-xs font-medium text-[#2B2D42] dark:text-white">
+                  <div className="text-xs font-medium text-[#252525] dark:text-white">
                     Submission Approval Needed
                   </div>
-                  <div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">
+                  <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
                     Nora Al-Mansoor submitted to NovaPay Systems.
                   </div>
-                  <div className="text-[10px] font-mono text-[#2B2D42] mt-1 font-semibold">3h ago</div>
+                  <div className="text-[10px] font-mono text-[#252525] mt-1 font-semibold">3h ago</div>
                 </div>
               </div>
             </div>
@@ -355,15 +368,15 @@ export const TopBar: React.FC = () => {
         {/* Theme Toggle (Light/Dark) */}
         <button
           onClick={toggleTheme}
-          className="p-2 text-[#8D99AE] dark:text-[#B9CAD9] hover:text-[#2B2D42] dark:hover:text-[#EDF2F4] rounded-xl hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] transition-colors border border-transparent hover:border-[#D7DCE5]"
+          className="p-2 text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] dark:hover:text-[#FFF0E8] rounded-xl hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] transition-colors border border-transparent hover:border-[#E8C8BE]"
           title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
         >
-          {isDark ? <Sun className="w-4 h-4 text-[#2B2D42]" /> : <Moon className="w-4 h-4 text-[#2B2D42]" />}
+          {isDark ? <Sun className="w-4 h-4 text-[#252525]" /> : <Moon className="w-4 h-4 text-[#252525]" />}
         </button>
 
         {/* Role badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-[#EDF2F4] dark:bg-[#36384F] rounded-xl border border-[#D7DCE5] dark:border-[#5A5D72] text-[11px] font-mono font-semibold text-[#2B2D42] dark:text-[#EDF2F4]">
-          <Sparkles className="w-3 h-3 text-[#2B2D42]" />
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-[#FFF0E8] dark:bg-[#48403E] rounded-xl border border-[#E8C8BE] dark:border-[#65534F] text-[11px] font-mono font-semibold text-[#252525] dark:text-[#FFF0E8]">
+          <Sparkles className="w-3 h-3 text-[#252525]" />
           <span className="uppercase">{currentUser?.role?.replace('_', ' ') || 'RECRUITER'}</span>
         </div>
       </div>

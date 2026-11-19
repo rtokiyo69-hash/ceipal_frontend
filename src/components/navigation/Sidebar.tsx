@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   LayoutDashboard,
   Briefcase,
@@ -40,6 +41,7 @@ export const Sidebar: React.FC = () => {
   const { currentRoute, navigate, currentUser, logout, loginAs } = useAppStore();
   const [collapsed, setCollapsed] = useState(false);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const role = currentUser?.role || 'recruiter';
 
@@ -140,12 +142,12 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`relative flex flex-col bg-[#2B2D42] text-white border-r border-[#083F70] transition-all duration-200 select-none z-30 shrink-0 ${
+      className={`relative flex flex-col bg-[#252525] text-white border-r border-[#3D3634] transition-all duration-200 select-none z-30 shrink-0 ${
         collapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-5 border-b border-[#083F70]">
+      <div className="h-16 flex items-center justify-between px-5 border-b border-[#3D3634]">
         <div
           onClick={() => navigate('dashboard')}
           className="cursor-pointer flex items-center overflow-hidden"
@@ -155,7 +157,7 @@ export const Sidebar: React.FC = () => {
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-md text-[#EDF2F4] hover:text-white hover:bg-[#1A659E] transition-colors"
+          className="p-1 rounded-md text-[#FFF0E8] hover:text-white hover:bg-white/10 transition-colors"
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -167,7 +169,7 @@ export const Sidebar: React.FC = () => {
         {navGroups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
             {!collapsed && (
-              <div className="px-3 pb-1 text-[10px] font-mono tracking-wider text-[#EDF2F4]/80 uppercase font-semibold">
+              <div className="px-3 pb-1 text-[10px] font-mono tracking-wider text-[#FFF0E8]/80 uppercase font-semibold">
                 {group.groupTitle}
               </div>
             )}
@@ -180,30 +182,42 @@ export const Sidebar: React.FC = () => {
                 (item.id === 'applicants' && currentRoute === 'applicant-detail');
 
               return (
-                <button
+                <motion.button
                   key={item.id}
                   onClick={() => navigate(item.id)}
                   title={collapsed ? item.label : undefined}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                  aria-current={isActive ? 'page' : undefined}
+                  whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.01 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 32, mass: 0.45 }}
+                  className={`relative isolate w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium ${
                     isActive
-                      ? 'bg-[#2B2D42] text-white font-semibold shadow-sm shadow-[#2B2D42]/40'
-                      : 'text-[#EDF2F4] hover:bg-[#1A659E] hover:text-white'
+                      ? 'font-semibold'
+                      : 'text-[#FFF0E8] hover:bg-white/10 hover:text-white'
                   } ${collapsed ? 'justify-center' : ''}`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#EDF2F4]'}`} />
+                  {isActive && (
+                    <motion.span
+                      layoutId="module-selection-glass"
+                      className="sidebar-module-active"
+                      aria-hidden="true"
+                      transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 36 }}
+                    />
+                  )}
+                  <Icon className={`relative z-10 w-4 h-4 shrink-0 ${isActive ? 'text-[#FF6B5E]' : 'text-[#FFF0E8]'}`} />
                   {!collapsed && (
-                    <span className="flex-1 text-left truncate">{item.label}</span>
+                    <span className="relative z-10 flex-1 text-left truncate">{item.label}</span>
                   )}
                   {!collapsed && item.badge && (
                     <span
-                      className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-[#2B2D42] text-white'
+                      className={`relative z-10 text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                        isActive ? 'bg-[#FF6B5E]/20 text-[#FFF0E8]' : 'bg-[#FF6B5E] text-white'
                       }`}
                     >
                       {item.badge}
                     </span>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -211,22 +225,22 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Role Switcher Drawer (Demo Convenience) */}
-      <div className="p-3 border-t border-[#083F70] bg-[#331C54]">
+      <div className="p-3 border-t border-[#3D3634] bg-[#252525]">
         {!collapsed && (
           <div className="mb-2">
             <button
               onClick={() => setRoleSwitcherOpen(!roleSwitcherOpen)}
-              className="w-full flex items-center justify-between text-xs text-[#EDF2F4] hover:text-white px-2.5 py-1.5 rounded-lg bg-[#3E2365] border border-[#1A659E] transition-colors"
+              className="w-full flex items-center justify-between text-xs text-[#FFF0E8] hover:text-white px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 transition-colors"
             >
               <span className="flex items-center gap-1.5 font-mono">
-                <UserCheck className="w-3.5 h-3.5 text-[#2B2D42]" />
+                <UserCheck className="w-3.5 h-3.5 text-[#FF6B5E]" />
                 Switch Persona
               </span>
               <span>{roleSwitcherOpen ? '▲' : '▼'}</span>
             </button>
 
             {roleSwitcherOpen && (
-              <div className="mt-1.5 p-1 bg-[#2B2D42] border border-[#1A659E] rounded-lg space-y-1 text-xs shadow-xl">
+              <div className="mt-1.5 p-1 bg-[#252525] border border-[#3D3634] rounded-lg space-y-1 text-xs shadow-xl">
                 {(['super_admin', 'manager', 'recruiter'] as UserRole[]).map((r) => (
                   <button
                     key={r}
@@ -235,7 +249,7 @@ export const Sidebar: React.FC = () => {
                       setRoleSwitcherOpen(false);
                     }}
                     className={`w-full text-left px-2 py-1 rounded-md capitalize transition-colors ${
-                      role === r ? 'bg-[#2B2D42] text-white font-medium' : 'text-[#EDF2F4] hover:bg-[#1A659E]'
+                      role === r ? 'bg-[#FF6B5E]/20 text-[#FFF0E8] font-medium' : 'text-[#FFF0E8] hover:bg-white/10'
                     }`}
                   >
                     {r.replace('_', ' ')}
@@ -251,12 +265,12 @@ export const Sidebar: React.FC = () => {
           <img
             src={currentUser?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250'}
             alt={currentUser?.name}
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#2B2D42]"
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#FF6B5E]"
           />
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-white truncate">{currentUser?.name}</div>
-              <div className="text-[11px] text-[#EDF2F4] capitalize truncate">
+              <div className="text-[11px] text-[#FFF0E8] capitalize truncate">
                 {role.replace('_', ' ')}
               </div>
             </div>
@@ -264,7 +278,7 @@ export const Sidebar: React.FC = () => {
           {!collapsed && (
             <button
               onClick={logout}
-              className="p-1.5 text-[#EDF2F4] hover:text-[#2B2D42] hover:bg-[#1A659E] rounded transition-colors"
+              className="p-1.5 text-[#FFF0E8] hover:text-white hover:bg-white/10 rounded transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

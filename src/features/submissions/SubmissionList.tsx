@@ -47,7 +47,7 @@ export const SubmissionList: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#FF6B5E] text-white border border-[#FF6B5E] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -55,34 +55,34 @@ export const SubmissionList: React.FC = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-display font-bold text-[#2B2D42] dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-display font-bold text-[#252525] dark:text-white">
           Client Submissions &amp; Approvals
         </h1>
-        <p className="text-xs text-[#8D99AE]">
+        <p className="text-xs text-[#806B66]">
           Track candidate dossiers submitted to clients, manager vetting, and client review stages
         </p>
       </div>
 
       {/* Search */}
-      <div className="p-4 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-xs">
+      <div className="p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs">
         <div className="relative max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D99AE]" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#806B66]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search candidate, job, client or recruiter..."
-            className="w-full pl-10 pr-4 py-2 bg-[#EDF2F4] dark:bg-slate-800/80 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-xs text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
+            className="w-full pl-10 pr-4 py-2 bg-[#FFF0E8] dark:bg-slate-800/80 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-xs text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E] focus:ring-1 focus:ring-[#FF6B5E]"
           />
         </div>
       </div>
 
       {/* Submissions Table */}
-      <div className="bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#EDF2F4] dark:bg-slate-800/60 border-b border-[#D7DCE5] dark:border-slate-800 text-[#8D99AE] dark:text-slate-400">
+              <tr className="bg-[#FFF0E8] dark:bg-slate-800/60 border-b border-[#E8C8BE] dark:border-slate-800 text-[#806B66] dark:text-slate-400">
                 <th className="p-3.5 font-semibold">Submission ID &amp; Candidate</th>
                 <th className="p-3.5 font-semibold">Associated Job</th>
                 <th className="p-3.5 font-semibold">Enterprise Client</th>
@@ -94,32 +94,32 @@ export const SubmissionList: React.FC = () => {
                 <th className="p-3.5 font-semibold text-right">Approval Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#D7DCE5] dark:divide-slate-800">
+            <tbody className="divide-y divide-[#E8C8BE] dark:divide-slate-800">
               {filtered.map((s) => (
                 <tr
                   key={s.id}
-                  className="hover:bg-[#EDF2F4]/50 dark:hover:bg-slate-800/40 transition-colors"
+                  className="hover:bg-[#FFF0E8]/50 dark:hover:bg-slate-800/40 transition-colors"
                 >
                   <td className="p-3.5">
-                    <div className="font-bold text-[#2B2D42] dark:text-white">{s.applicantName}</div>
-                    <div className="font-mono text-[11px] text-[#2B2D42] dark:text-[#8D99AE] font-semibold">{s.submissionId}</div>
+                    <div className="font-bold text-[#252525] dark:text-white">{s.applicantName}</div>
+                    <div className="font-mono text-[11px] text-[#252525] dark:text-[#806B66] font-semibold">{s.submissionId}</div>
                   </td>
 
-                  <td className="p-3.5 font-medium text-[#2B2D42] dark:text-white">{s.jobTitle}</td>
+                  <td className="p-3.5 font-medium text-[#252525] dark:text-white">{s.jobTitle}</td>
 
-                  <td className="p-3.5 text-[#8D99AE]">{s.client}</td>
+                  <td className="p-3.5 text-[#806B66]">{s.client}</td>
 
                   <td className="p-3.5 font-mono">
-                    <div className="font-bold text-[#2B2D42] dark:text-white">${s.billRate}/hr</div>
-                    <div className="text-[10px] text-[#8D99AE]">Pay: ${s.payRate}/hr</div>
+                    <div className="font-bold text-[#252525] dark:text-white">${s.billRate}/hr</div>
+                    <div className="text-[10px] text-[#806B66]">Pay: ${s.payRate}/hr</div>
                   </td>
 
-                  <td className="p-3.5 text-[#2B2D42] dark:text-slate-300">{s.recruiter}</td>
+                  <td className="p-3.5 text-[#252525] dark:text-slate-300">{s.recruiter}</td>
 
-                  <td className="p-3.5 font-mono text-[#8D99AE]">{s.submittedDate}</td>
+                  <td className="p-3.5 font-mono text-[#806B66]">{s.submittedDate}</td>
 
                   <td className="p-3.5">
-                    <span className="px-2 py-0.5 bg-[#EDF2F4] dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded font-medium text-[11px] text-[#2B2D42] dark:text-[#EDF2F4]">
+                    <span className="px-2 py-0.5 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded font-medium text-[11px] text-[#252525] dark:text-[#FFF0E8]">
                       {s.status}
                     </span>
                   </td>
@@ -130,7 +130,7 @@ export const SubmissionList: React.FC = () => {
                         s.approvalStatus === 'Approved'
                           ? 'bg-[#8AC9A7]/15 text-[#2E7D5B] border-[#8AC9A7]/30 dark:bg-[#8AC9A7]/20 dark:text-[#8AC9A7]'
                           : s.approvalStatus === 'Pending Approval'
-                          ? 'bg-[#EDF2F4] text-[#2B2D42] border-[#2B2D42]/30 dark:bg-[#2B2D42]/20 dark:text-[#EDF2F4]'
+                          ? 'bg-[#FFF0E8] text-[#252525] border-[#FF6B5E]/30 dark:bg-[#252525]/20 dark:text-[#FFF0E8]'
                           : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
                       }`}
                     >
@@ -142,13 +142,13 @@ export const SubmissionList: React.FC = () => {
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => handleUpdateApproval(s.id, 'Approved')}
-                        className="px-2.5 py-1 bg-[#8AC9A7] hover:bg-[#72B591] text-[#2B2D42] rounded text-[11px] font-bold transition-colors"
+                        className="px-2.5 py-1 bg-[#8AC9A7] hover:bg-[#72B591] text-[#252525] rounded text-[11px] font-bold transition-colors"
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => handleUpdateApproval(s.id, 'Revision Requested')}
-                        className="px-2.5 py-1 border border-[#D7DCE5] dark:border-slate-700 hover:bg-[#EDF2F4] dark:hover:bg-slate-800 text-[#8D99AE] dark:text-slate-300 rounded text-[11px] transition-colors"
+                        className="px-2.5 py-1 border border-[#E8C8BE] dark:border-slate-700 hover:bg-[#FFF0E8] dark:hover:bg-slate-800 text-[#806B66] dark:text-slate-300 rounded text-[11px] transition-colors"
                       >
                         Revise
                       </button>

@@ -43,7 +43,7 @@ export const PlatformSettings: React.FC = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#FF6B5E] text-white border border-[#FF6B5E] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -51,39 +51,39 @@ export const PlatformSettings: React.FC = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2D42] dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#252525] dark:text-white">
           System &amp; Enterprise Settings
         </h1>
-        <p className="text-xs text-[#8D99AE]">
+        <p className="text-xs text-[#806B66]">
           Configure tenant organization parameters, API integrations, and local mock store
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6 text-xs">
         {/* Organization Information */}
-        <div className="p-6 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-          <div className="flex items-center gap-2 font-bold text-[#2B2D42] dark:text-white">
-            <Building2 className="w-4 h-4 text-[#2B2D42]" />
+        <div className="p-6 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+          <div className="flex items-center gap-2 font-bold text-[#252525] dark:text-white">
+            <Building2 className="w-4 h-4 text-[#252525]" />
             <span>Organization Parameters</span>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Tenant Legal Name</label>
+              <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Tenant Legal Name</label>
               <input
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800/60 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42] transition-colors"
+                className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800/60 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E] focus:ring-1 focus:ring-[#FF6B5E] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Default Operating Timezone</label>
+              <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Default Operating Timezone</label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800/60 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
+                className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800/60 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
               >
                 <option value="America/Los_Angeles (PST)">America/Los_Angeles (PST)</option>
                 <option value="America/New_York (EST)">America/New_York (EST)</option>
@@ -93,11 +93,11 @@ export const PlatformSettings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Base Financial Currency</label>
+              <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Base Financial Currency</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800/60 border border-[#D7DCE5] dark:border-slate-700 rounded-xl text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42]"
+                className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800/60 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
               >
                 <option value="USD ($)">USD ($)</option>
                 <option value="INR (₹)">INR (₹)</option>
@@ -109,29 +109,29 @@ export const PlatformSettings: React.FC = () => {
         </div>
 
         {/* Future FastAPI Backend Configuration */}
-        <div className="p-6 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-          <div className="flex items-center gap-2 font-bold text-[#2B2D42] dark:text-white">
-            <Server className="w-4 h-4 text-[#2B2D42]" />
+        <div className="p-6 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+          <div className="flex items-center gap-2 font-bold text-[#252525] dark:text-white">
+            <Server className="w-4 h-4 text-[#252525]" />
             <span>FastAPI Backend Gateway Target</span>
           </div>
-          <p className="text-[#8D99AE] leading-relaxed">
-            The frontend API layer (<code className="text-[#2B2D42] dark:text-[#8D99AE] font-mono">src/services/api.ts</code>) is designed with exact REST and JSON contracts matching the upcoming FastAPI backend specification.
+          <p className="text-[#806B66] leading-relaxed">
+            The frontend API layer (<code className="text-[#252525] dark:text-[#806B66] font-mono">src/services/api.ts</code>) is designed with exact REST and JSON contracts matching the upcoming FastAPI backend specification.
           </p>
 
           <div>
-            <label className="block text-[#2B2D42] dark:text-slate-400 mb-1 font-medium">Backend REST Endpoint URL</label>
+            <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Backend REST Endpoint URL</label>
             <input
               type="text"
               value={fastApiEndpoint}
               onChange={(e) => setFastApiEndpoint(e.target.value)}
-              className="w-full px-3 py-2 bg-[#EDF2F4] dark:bg-slate-800/60 border border-[#D7DCE5] dark:border-slate-700 rounded-xl font-mono text-[#2B2D42] dark:text-white focus:outline-none focus:border-[#2B2D42] focus:ring-1 focus:ring-[#2B2D42]"
+              className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800/60 border border-[#E8C8BE] dark:border-slate-700 rounded-xl font-mono text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E] focus:ring-1 focus:ring-[#FF6B5E]"
             />
           </div>
         </div>
 
         {/* Notifications & Automation */}
-        <div className="p-6 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-          <div className="flex items-center gap-2 font-bold text-[#2B2D42] dark:text-white">
+        <div className="p-6 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+          <div className="flex items-center gap-2 font-bold text-[#252525] dark:text-white">
             <Bell className="w-4 h-4 text-[#8AC9A7]" />
             <span>Automated Notifications</span>
           </div>
@@ -142,9 +142,9 @@ export const PlatformSettings: React.FC = () => {
                 type="checkbox"
                 checked={notifySubmissions}
                 onChange={(e) => setNotifySubmissions(e.target.checked)}
-                className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
+                className="rounded border-[#E8C8BE] text-[#252525] focus:ring-[#FF6B5E]"
               />
-              <span className="text-[#2B2D42] dark:text-slate-300 font-medium">
+              <span className="text-[#252525] dark:text-slate-300 font-medium">
                 Notify Practice Lead on all candidate submissions
               </span>
             </label>
@@ -154,9 +154,9 @@ export const PlatformSettings: React.FC = () => {
                 type="checkbox"
                 checked={notifyInterviews}
                 onChange={(e) => setNotifyInterviews(e.target.checked)}
-                className="rounded border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
+                className="rounded border-[#E8C8BE] text-[#252525] focus:ring-[#FF6B5E]"
               />
-              <span className="text-[#2B2D42] dark:text-slate-300 font-medium">
+              <span className="text-[#252525] dark:text-slate-300 font-medium">
                 Dispatch automatic Google Calendar invites for confirmed interviews
               </span>
             </label>
@@ -176,7 +176,7 @@ export const PlatformSettings: React.FC = () => {
 
           <button
             type="submit"
-            className="px-5 py-2.5 bg-[#2B2D42] hover:bg-[#222336] text-white rounded-xl font-semibold shadow-xs shadow-[#2B2D42]/30 transition-all flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl font-semibold shadow-xs shadow-[#FF6B5E]/30 transition-all flex items-center gap-1.5"
           >
             <Save className="w-4 h-4" />
             <span>Save Preferences</span>
