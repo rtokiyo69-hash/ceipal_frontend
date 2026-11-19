@@ -34,7 +34,10 @@ import {
   Shield,
   HelpCircle,
   RotateCcw,
-  Paperclip
+  Paperclip,
+  Settings,
+  Upload,
+  ChevronLeft
 } from 'lucide-react';
 import { useAppStore, getJobDetailUrl } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -97,6 +100,8 @@ const SUBMISSION_GROUPS = ['Shortlist', 'Priority Candidates', 'Client Review', 
 
 const JOB_STATUSES: JobStatus[] = ['Open', 'Active', 'Sourcing', 'In Review', 'Closed', 'On Hold'];
 const JOB_PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
+const JOB_TYPES: Job['type'][] = ['Full-Time', 'Contract', 'C2H', 'C2C', 'Remote', 'Hybrid', 'On-Site', 'Part-Time'];
+const RATE_TYPES: NonNullable<Job['rateType']>[] = ['Hourly', 'Yearly', 'Monthly', 'Daily'];
 const SUBMISSION_STATUSES = [
   'Submitted to Client',
   'Client Review',
@@ -144,6 +149,106 @@ const EMAIL_THEMES = [
   { id: 'slate', name: 'Slate', accent: '#334155', background: '#F8FAFC' },
   { id: 'teal', name: 'Teal', accent: '#0F766E', background: '#F0FDFA' }
 ];
+
+type JobPostingView = 'list' | 'approvals' | 'import';
+type ApprovalTab = 'Job Board Approvals' | 'Vendor Approvals' | 'Buddy Portal Approvals' | 'Job Publish Approvals to PW';
+
+interface CsvImportData {
+  headers: string[];
+  rows: Record<string, string>[];
+}
+
+const CSV_JOB_FIELDS: Record<string, keyof Job> = {
+  'job code': 'code',
+  code: 'code',
+  'job title': 'title',
+  title: 'title',
+  'business unit': 'businessUnit',
+  client: 'client',
+  'client id': 'clientId',
+  'client job id': 'clientJobId',
+  location: 'location',
+  states: 'states',
+  status: 'status',
+  'job status': 'status',
+  priority: 'priority',
+  'client bill rate / salary': 'billRate',
+  'bill rate': 'billRate',
+  'bill rate / salary': 'billRate',
+  'pay rate': 'payRate',
+  'job type': 'type',
+  type: 'type',
+  openings: 'openings',
+  'recruitment manager': 'recruitmentManager',
+  'primary recruiter': 'assignedRecruiter',
+  'assigned recruiter': 'assignedRecruiter',
+  'assigned to': 'assignedTo',
+  'job posting created by': 'createdBy',
+  currency: 'currency',
+  'rate type': 'rateType',
+  'experience required': 'experienceRequired',
+  experience: 'experienceRequired',
+  skills: 'skills',
+  description: 'description'
+};
+
+const normalizeCsvHeader = (header: string) =>
+  header.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+function parseJobsCsv(content: string): CsvImportData {
+  const text = content.replace(/^\uFEFF/, '');
+  const records: string[][] = [];
+  let record: string[] = [];
+  let field = '';
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (quoted) {
+      if (character === '"' && text[index + 1] === '"') {
+        field += '"';
+        index += 1;
+      } else if (character === '"') {
+        quoted = false;
+      } else {
+        field += character;
+      }
+    } else if (character === '"' && field.length === 0) {
+      quoted = true;
+    } else if (character === ',') {
+      record.push(field);
+      field = '';
+    } else if (character === '\n') {
+      record.push(field);
+      if (record.some((value) => value.trim())) records.push(record);
+      record = [];
+      field = '';
+    } else if (character !== '\r') {
+      field += character;
+    }
+  }
+
+  if (quoted) throw new Error('The CSV file contains an unclosed quoted field.');
+  record.push(field);
+  if (record.some((value) => value.trim())) records.push(record);
+  if (records.length < 2) throw new Error('The CSV file must contain a header row and at least one job row.');
+
+  const headers = records[0].map((header) => header.trim());
+  if (headers.some((header) => !header)) throw new Error('Every CSV column must have a header.');
+  const normalizedHeaders = headers.map(normalizeCsvHeader);
+  if (new Set(normalizedHeaders).size !== normalizedHeaders.length) {
+    throw new Error('The CSV file contains duplicate column headers.');
+  }
+
+  const rows = records.slice(1).map((values, index) => {
+    if (values.length > headers.length) {
+      throw new Error(`CSV row ${index + 2} has more values than the header row.`);
+    }
+    return Object.fromEntries(headers.map((header, columnIndex) => [header, (values[columnIndex] || '').trim()]));
+  });
+
+  return { headers, rows };
+}
 
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -221,6 +326,15 @@ export type JobColumnKey =
   | 'facility'
   | 'customJobCategory'
   | 'customJobSkillType';
+
+type FilterOperator = 'Equals' | 'Not Equals' | 'Is Null' | 'Is Not Null' | 'In List' | 'Not In List';
+
+interface JobFilterRule {
+  id: string;
+  field: JobColumnKey | '';
+  operator: FilterOperator | '';
+  value: string;
+}
 
 interface ColumnDef {
   key: JobColumnKey;
@@ -306,6 +420,25 @@ const ALL_COLUMNS: ColumnDef[] = [
 ];
 
 const DEFAULT_VISIBLE_COLUMNS = ALL_COLUMNS.filter((column) => column.defaultVisible).map((column) => column.key);
+const PREDEFINED_JOB_FILTERS = [
+  'Active Jobs',
+  'My Jobs',
+  'Closed Jobs',
+  'Shared Jobs',
+  'Jobs with submissions',
+  'Jobs without submissions',
+  'Jobs with Client Submissions',
+  'Jobs without Client Submissions',
+  'Jobs without Recruiters Assigned',
+  'Jobs with Pipeline',
+  'Jobs without Pipeline',
+  'Bench Jobs',
+  'Referral Jobs',
+  'VMS Jobs',
+  'Vivian Jobs'
+] as const;
+type PredefinedJobFilter = typeof PREDEFINED_JOB_FILTERS[number];
+const FILTER_OPERATORS: FilterOperator[] = ['Equals', 'Not Equals', 'Is Null', 'Is Not Null', 'In List', 'Not In List'];
 
 const formatColumnValue = (value: string | number | boolean | null | undefined): string => {
   if (value === undefined || value === null || value === '') return '—';
@@ -426,6 +559,14 @@ export const JobList: React.FC = () => {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<Awaited<ReturnType<typeof ApiService.getAllUsers>>>([]);
+  const [postingsView, setPostingsView] = useState<JobPostingView>('list');
+  const [activeApprovalTab, setActiveApprovalTab] = useState<ApprovalTab>('Job Board Approvals');
+  const [approvalSearch, setApprovalSearch] = useState('');
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [csvImportData, setCsvImportData] = useState<CsvImportData | null>(null);
+  const [csvFileName, setCsvFileName] = useState('');
+  const [csvImportError, setCsvImportError] = useState<string | null>(null);
+  const [isImportingJobs, setIsImportingJobs] = useState(false);
   const [inlineEdit, setInlineEdit] = useState<{
     entity: 'job' | 'submission';
     id: string;
@@ -440,6 +581,13 @@ export const JobList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
   const [businessUnitFilter, setBusinessUnitFilter] = useState<string>('All');
+  const [activePredefinedFilter, setActivePredefinedFilter] = useState<PredefinedJobFilter | null>(null);
+  const [activeFilterRules, setActiveFilterRules] = useState<JobFilterRule[]>([]);
+  const [draftPredefinedFilter, setDraftPredefinedFilter] = useState<PredefinedJobFilter | null>(null);
+  const [draftFilterRules, setDraftFilterRules] = useState<JobFilterRule[]>([]);
+  const [draftBusinessUnit, setDraftBusinessUnit] = useState('All');
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const filterRuleIdRef = useRef(0);
 
   // Column Filtering State (Each Column Name has its own filter dropdown)
   const [columnFilters, setColumnFilters] = useState<Partial<Record<JobColumnKey, string[]>>>({});
@@ -490,6 +638,7 @@ export const JobList: React.FC = () => {
   const [bulkAction, setBulkAction] = useState<BulkJobAction | null>(null);
   const [bulkActionValue, setBulkActionValue] = useState('');
   const actionMenuRef = useRef<HTMLDivElement>(null);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
 
   // Send Requirement modal
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -524,6 +673,9 @@ export const JobList: React.FC = () => {
       }
       if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
         setIsBulkActionsOpen(false);
+      }
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
+        setIsSettingsMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -596,6 +748,171 @@ export const JobList: React.FC = () => {
     }
   };
 
+  const openPostingsView = (view: Exclude<JobPostingView, 'list'>) => {
+    setPostingsView(view);
+    setIsSettingsMenuOpen(false);
+  };
+
+  const handleCsvFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setCsvImportError(null);
+    setCsvImportData(null);
+    setCsvFileName(file.name);
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setCsvImportError('Choose a CSV file to import job postings.');
+      return;
+    }
+
+    try {
+      setCsvImportData(parseJobsCsv(await file.text()));
+    } catch (error) {
+      setCsvImportError(error instanceof Error ? error.message : 'Unable to read this CSV file.');
+    }
+  };
+
+  const handleImportJobs = async () => {
+    if (!csvImportData || isImportingJobs) return;
+    setCsvImportError(null);
+    setIsImportingJobs(true);
+    let importedCount = 0;
+
+    try {
+      const clients = await ApiService.getClients();
+      const existingJobs = await ApiService.getJobs();
+      const knownCodes = new Set(existingJobs.map((job) => job.code.trim().toLowerCase()));
+      const plans: { payload: Omit<Job, 'id' | 'code' | 'createdDate' | 'applicantsCount' | 'documents'>; sourceCode: string }[] = [];
+
+      csvImportData.rows.forEach((row, rowIndex) => {
+        const valueFor = (field: keyof Job) =>
+          Object.entries(row).find(([header]) => CSV_JOB_FIELDS[normalizeCsvHeader(header)] === field)?.[1]?.trim() || '';
+        const rowNumber = rowIndex + 2;
+        const title = valueFor('title');
+        const clientName = valueFor('client');
+        const location = valueFor('location');
+        if (!title || !clientName || !location) {
+          throw new Error(`CSV row ${rowNumber} needs Job Title, Client, and Location.`);
+        }
+
+        const statusInput = valueFor('status');
+        const status = JOB_STATUSES.find((option) => option.toLowerCase() === statusInput.toLowerCase());
+        if (statusInput && !status) throw new Error(`CSV row ${rowNumber} has an unsupported Job Status.`);
+
+        const priorityInput = valueFor('priority');
+        const priority = JOB_PRIORITIES.find((option) => option.toLowerCase() === priorityInput.toLowerCase());
+        if (priorityInput && !priority) throw new Error(`CSV row ${rowNumber} has an unsupported Priority.`);
+
+        const typeInput = valueFor('type');
+        const type = JOB_TYPES.find((option) => option.toLowerCase() === typeInput.toLowerCase());
+        if (typeInput && !type) throw new Error(`CSV row ${rowNumber} has an unsupported Job Type.`);
+
+        const rateTypeInput = valueFor('rateType');
+        const rateType = RATE_TYPES.find((option) => option.toLowerCase() === rateTypeInput.toLowerCase());
+        if (rateTypeInput && !rateType) throw new Error(`CSV row ${rowNumber} has an unsupported Rate Type.`);
+
+        const numberFor = (field: 'billRate' | 'payRate' | 'openings', label: string, defaultValue: number) => {
+          const rawValue = valueFor(field);
+          if (!rawValue) return defaultValue;
+          const parsed = Number(rawValue.replace(/[^0-9.-]/g, ''));
+          if (!Number.isFinite(parsed) || parsed < 0 || (field === 'openings' && (!Number.isInteger(parsed) || parsed < 1))) {
+            throw new Error(`CSV row ${rowNumber} has an invalid ${label}.`);
+          }
+          return parsed;
+        };
+
+        const sourceCode = valueFor('code');
+        if (sourceCode && knownCodes.has(sourceCode.toLowerCase())) {
+          throw new Error(`CSV row ${rowNumber} duplicates existing Job Code "${sourceCode}".`);
+        }
+        if (sourceCode) knownCodes.add(sourceCode.toLowerCase());
+
+        const assignedRecruiter = valueFor('assignedRecruiter') || valueFor('assignedTo') || currentUser?.name || 'Unassigned';
+        const recruiter = users.find((user) => user.name.toLowerCase() === assignedRecruiter.toLowerCase());
+        const matchedClient = clients.find((client) => client.name.toLowerCase() === clientName.toLowerCase());
+        const matchingJob = existingJobs.find((job) => job.client.toLowerCase() === clientName.toLowerCase());
+        const payload: Omit<Job, 'id' | 'code' | 'createdDate' | 'applicantsCount' | 'documents'> = {
+          title,
+          client: clientName,
+          clientId: valueFor('clientId') || matchedClient?.clientId || matchingJob?.clientId || clientName,
+          businessUnit: valueFor('businessUnit') || currentUser?.businessUnit || 'General',
+          location,
+          type: type || 'Full-Time',
+          status: status || 'Open',
+          priority: priority || 'Medium',
+          assignedRecruiter,
+          recruiterId: recruiter?.id || '',
+          openings: numberFor('openings', 'Openings', 1),
+          billRate: numberFor('billRate', 'Bill Rate', 0),
+          payRate: numberFor('payRate', 'Pay Rate', 0),
+          skills: valueFor('skills').split(/[;,]/).map((skill) => skill.trim()).filter(Boolean),
+          experienceRequired: valueFor('experienceRequired'),
+          description: valueFor('description'),
+          clientJobId: valueFor('clientJobId') || undefined,
+          states: valueFor('states') || undefined,
+          recruitmentManager: valueFor('recruitmentManager') || undefined,
+          assignedTo: valueFor('assignedTo') || assignedRecruiter,
+          createdBy: valueFor('createdBy') || currentUser?.name || undefined,
+          currency: valueFor('currency') || 'USD',
+          rateType: rateType || undefined
+        };
+        plans.push({ payload, sourceCode });
+      });
+
+      for (const plan of plans) {
+        const createdJob = await ApiService.createJob(plan.payload);
+        importedCount += 1;
+        setJobs((currentJobs) => [createdJob, ...currentJobs]);
+        if (plan.sourceCode) {
+          const updatedJob = await ApiService.updateJob(createdJob.id, { code: plan.sourceCode });
+          setJobs((currentJobs) => currentJobs.map((job) => job.id === updatedJob.id ? updatedJob : job));
+        }
+      }
+
+      setCsvImportData(null);
+      setCsvFileName('');
+      showToast(`Imported ${importedCount} job posting${importedCount === 1 ? '' : 's'}.`);
+    } catch (error) {
+      setCsvImportError(
+        `${importedCount ? `${importedCount} row${importedCount === 1 ? '' : 's'} imported. ` : ''}${error instanceof Error ? error.message : 'Unable to import jobs.'}`
+      );
+    } finally {
+      setIsImportingJobs(false);
+    }
+  };
+
+  const createFilterRule = (): JobFilterRule => ({
+    id: `filter-rule-${++filterRuleIdRef.current}`,
+    field: '',
+    operator: '',
+    value: ''
+  });
+
+  const openFilterDrawer = () => {
+    setDraftPredefinedFilter(activePredefinedFilter);
+    setDraftFilterRules(activeFilterRules.length ? activeFilterRules : [createFilterRule()]);
+    setDraftBusinessUnit(businessUnitFilter);
+    setIsFilterDrawerOpen(true);
+  };
+
+  const applyFilterDrawer = () => {
+    const hasIncompleteRule = draftFilterRules.some((rule) => {
+      const hasAnyValue = Boolean(rule.field || rule.operator || rule.value.trim());
+      if (!hasAnyValue) return false;
+      if (!rule.field || !rule.operator) return true;
+      return ['Equals', 'Not Equals', 'In List', 'Not In List'].includes(rule.operator) && !rule.value.trim();
+    });
+    if (hasIncompleteRule) {
+      showToast('Complete or remove each filter row before applying.');
+      return;
+    }
+
+    setActivePredefinedFilter(draftPredefinedFilter);
+    setActiveFilterRules(draftFilterRules.filter((rule) => rule.field && rule.operator));
+    setBusinessUnitFilter(draftBusinessUnit);
+    setIsFilterDrawerOpen(false);
+    showToast('Filters applied to job postings.');
+  };
+
   const openColumnDrawer = () => {
     setPendingVisibleColumns(visibleColumns);
     setColumnDrawerSearch('');
@@ -656,6 +973,8 @@ export const JobList: React.FC = () => {
     setStatusFilter('All');
     setPriorityFilter('All');
     setBusinessUnitFilter('All');
+    setActivePredefinedFilter(null);
+    setActiveFilterRules([]);
     setSortBy(null);
     showToast('All filters have been reset');
   };
@@ -699,6 +1018,37 @@ export const JobList: React.FC = () => {
       const matchesStatus = statusFilter === 'All' || j.status === statusFilter;
       const matchesPriority = priorityFilter === 'All' || j.priority === priorityFilter;
       const matchesUnit = businessUnitFilter === 'All' || (j.businessUnit || '').includes(businessUnitFilter);
+      const jobSubmissions = submissions.filter((submission) => submission.jobId === j.id);
+      const hasSubmissions = jobSubmissions.length > 0;
+      const hasClientSubmissions = jobSubmissions.some((submission) =>
+        ['Submitted to Client', 'Client Review', 'Interview Requested', 'Interview Scheduled', 'Offered', 'Placed'].includes(submission.status)
+      );
+      const matchesPredefinedFilter = !activePredefinedFilter || (() => {
+        switch (activePredefinedFilter) {
+          case 'Active Jobs': return j.status === 'Active';
+          case 'My Jobs':
+            return Boolean(currentUser?.name) &&
+              (j.assignedRecruiter === currentUser?.name || j.assignedTo === currentUser?.name);
+          case 'Closed Jobs': return j.status === 'Closed';
+          case 'Shared Jobs':
+            return Boolean(j.assignedRecruiter && j.assignedTo && j.assignedRecruiter !== j.assignedTo);
+          case 'Jobs with submissions': return hasSubmissions;
+          case 'Jobs without submissions': return !hasSubmissions;
+          case 'Jobs with Client Submissions': return hasClientSubmissions;
+          case 'Jobs without Client Submissions': return !hasClientSubmissions;
+          case 'Jobs without Recruiters Assigned':
+            return !j.assignedRecruiter && !j.assignedTo && !j.recruiterId;
+          case 'Jobs with Pipeline': return (j.applicantsCount || 0) > 0 || hasSubmissions;
+          case 'Jobs without Pipeline': return (j.applicantsCount || 0) === 0 && !hasSubmissions;
+          case 'Bench Jobs': return Boolean(j.benchConsultant || j.folder?.toLowerCase().includes('bench'));
+          case 'Referral Jobs':
+            return Boolean(j.placementType?.toLowerCase().includes('referral') || j.referralBonus);
+          case 'VMS Jobs': return Boolean(j.vmsName);
+          case 'Vivian Jobs':
+            return Boolean(j.vmsName?.toLowerCase().includes('vivian') || j.client.toLowerCase().includes('vivian'));
+          default: return true;
+        }
+      })();
 
       // Check per-column filters
       const matchesColumnFilters = Object.entries(columnFilters).every(([col, allowedValues]) => {
@@ -706,8 +1056,26 @@ export const JobList: React.FC = () => {
         const val = getJobColumnValue(j, col as JobColumnKey).trim();
         return allowedValues.includes(val);
       });
+      const matchesFilterRules = activeFilterRules.every((rule) => {
+        if (!rule.field || !rule.operator) return true;
+        const value = getJobColumnValue(j, rule.field).trim();
+        const target = rule.value.trim().toLowerCase();
+        const isNull = !value || value === '—' || value.toLowerCase() === 'n/a';
+        switch (rule.operator) {
+          case 'Equals': return value.toLowerCase() === target;
+          case 'Not Equals': return value.toLowerCase() !== target;
+          case 'Is Null': return isNull;
+          case 'Is Not Null': return !isNull;
+          case 'In List':
+            return rule.value.split(/[;,]/).some((item) => item.trim().toLowerCase() === value.toLowerCase());
+          case 'Not In List':
+            return !rule.value.split(/[;,]/).some((item) => item.trim().toLowerCase() === value.toLowerCase());
+          default: return true;
+        }
+      });
 
-      return matchesSearch && matchesStatus && matchesPriority && matchesUnit && matchesColumnFilters;
+      return matchesSearch && matchesStatus && matchesPriority && matchesUnit &&
+        matchesPredefinedFilter && matchesColumnFilters && matchesFilterRules;
     });
 
     if (sortBy) {
@@ -720,12 +1088,14 @@ export const JobList: React.FC = () => {
     }
 
     return result;
-  }, [jobs, search, searchScope, statusFilter, priorityFilter, businessUnitFilter, columnFilters, sortBy]);
+  }, [jobs, submissions, currentUser, search, searchScope, statusFilter, priorityFilter, businessUnitFilter, activePredefinedFilter, activeFilterRules, columnFilters, sortBy]);
 
   const activeFiltersCount = Object.keys(columnFilters).length +
     (statusFilter !== 'All' ? 1 : 0) +
     (priorityFilter !== 'All' ? 1 : 0) +
     (businessUnitFilter !== 'All' ? 1 : 0) +
+    activeFilterRules.length +
+    (activePredefinedFilter ? 1 : 0) +
     (search ? 1 : 0);
 
   // Toggle row expansion for inline submissions
@@ -1182,6 +1552,197 @@ export const JobList: React.FC = () => {
     }
   };
 
+  const approvalTabs: ApprovalTab[] = [
+    'Job Board Approvals',
+    'Vendor Approvals',
+    'Buddy Portal Approvals',
+    'Job Publish Approvals to PW'
+  ];
+  const missingImportHeaders = ['title', 'client', 'location'].filter(
+    (field) => !csvImportData?.headers.some((header) => CSV_JOB_FIELDS[normalizeCsvHeader(header)] === field)
+  );
+  const importPreviewHeaders = csvImportData?.headers.slice(0, 6) || [];
+
+  if (postingsView !== 'list') {
+    return (
+      <div className="space-y-5">
+        <div className="flex flex-col gap-3 border-b border-[#D7DCE5] pb-4 dark:border-[#45485E] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => setPostingsView('list')}
+              className="mt-1 inline-flex items-center gap-1 rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs font-semibold text-[#2B2D42] transition-colors hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white dark:hover:bg-[#36384F]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Job Posting
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-[#2B2D42] dark:text-white">
+                {postingsView === 'approvals' ? 'Pending Approvals' : 'Import Job Postings'}
+              </h1>
+              <p className="mt-1 text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
+                {postingsView === 'approvals'
+                  ? 'Review job posting requests awaiting approval.'
+                  : 'Upload a CSV file to add job postings to your workspace.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {postingsView === 'approvals' ? (
+          <section className="overflow-hidden rounded-xl border border-[#D7DCE5] bg-white shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42]">
+            <div className="border-b border-[#D7DCE5] px-4 pt-4 dark:border-[#45485E]">
+              <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="Approval categories">
+                {approvalTabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeApprovalTab === tab}
+                    onClick={() => setActiveApprovalTab(tab)}
+                    className={`shrink-0 border-b-2 px-3 py-2.5 text-[11px] font-semibold transition-colors ${
+                      activeApprovalTab === tab
+                        ? 'border-[#2B2D42] text-[#2B2D42] dark:border-[#8CBCE8] dark:text-[#8CBCE8]'
+                        : 'border-transparent text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-white'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4">
+              <label className="mb-4 flex max-w-sm items-center gap-2 text-xs text-[#687786] dark:text-[#B9CAD9]">
+                Search:
+                <input
+                  type="search"
+                  value={approvalSearch}
+                  onChange={(event) => setApprovalSearch(event.target.value)}
+                  aria-label="Search pending approvals"
+                  className="min-w-0 flex-1 rounded-md border border-[#D7DCE5] bg-white px-2.5 py-1.5 text-xs text-[#2B2D42] focus:border-[#2B2D42] focus:outline-none dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
+                />
+              </label>
+
+              <div className="overflow-x-auto rounded-lg border border-[#D7DCE5] dark:border-[#45485E]">
+                <table className="w-full min-w-[1000px] border-collapse text-left text-[11px]">
+                  <thead className="bg-[#EDF2F4] text-[#2B2D42] dark:bg-[#36384F] dark:text-[#EDF2F4]">
+                    <tr>
+                      {['Job Code', 'Job Title', 'Client', 'City', 'States', 'Country', 'Recruitment Manager', 'Requested By', 'Requested On', 'Actions'].map((heading) => (
+                        <th key={heading} className="whitespace-nowrap border-b border-[#D7DCE5] px-3 py-2.5 font-semibold dark:border-[#45485E]">{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colSpan={10} className="px-3 py-8 text-center text-xs text-[#687786] dark:text-[#B9CAD9]">
+                        {approvalSearch ? 'No pending approvals match your search.' : 'No data available in table.'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px] text-[#8D99AE]">
+                <span>Showing 0 to 0 of 0 entries</span>
+                <div className="flex items-center gap-1">
+                  {['«', '‹', '›', '»'].map((label) => (
+                    <button key={label} type="button" disabled aria-label={`Approvals page ${label}`} className="rounded border border-[#D7DCE5] px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#45485E]">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-5 rounded-2xl border border-[#D7DCE5] bg-white p-5 shadow-sm dark:border-[#45485E] dark:bg-[#2B2D42]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-base font-bold text-[#2B2D42] dark:text-white">Import jobs from CSV</h2>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-[#8D99AE] dark:text-[#B9CAD9]">
+                  Include Job Title, Client, and Location for every row. Job Code is optional; when provided, it must be unique.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-[#EDF2F4] px-3 py-2 text-xs text-[#2B2D42] dark:bg-[#36384F] dark:text-[#EDF2F4]">
+                <FileSpreadsheet className="h-4 w-4" />
+                CSV format
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {['Job Code', 'Job Title', 'Business Unit', 'Client', 'Client Job ID', 'Location', 'States', 'Job Status', 'Client Bill Rate / Salary', 'Recruitment Manager', 'Primary Recruiter', 'Assigned To'].map((field) => (
+                <div key={field} className="flex items-center gap-2 rounded-lg border border-[#D7DCE5] px-3 py-2 text-[11px] text-[#687786] dark:border-[#45485E] dark:text-[#B9CAD9]">
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                  {field}
+                </div>
+              ))}
+            </div>
+
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B9CAD9] bg-[#F8FAFC] px-5 py-8 text-center transition-colors hover:border-[#2B2D42] hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#24263A] dark:hover:bg-[#36384F]">
+              <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleCsvFileChange} />
+              <span className="mb-3 rounded-xl bg-white p-3 text-[#2B2D42] shadow-sm dark:bg-[#2B2D42] dark:text-[#8CBCE8]">
+                <Upload className="h-5 w-5" />
+              </span>
+              <span className="text-sm font-semibold text-[#2B2D42] dark:text-white">
+                {csvFileName || 'Choose a CSV file'}
+              </span>
+              <span className="mt-1 text-xs text-[#8D99AE]">Select a file from your computer to preview it before importing.</span>
+            </label>
+
+            {csvImportError && (
+              <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
+                {csvImportError}
+              </div>
+            )}
+
+            {csvImportData && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <p className="text-[#687786] dark:text-[#B9CAD9]">
+                    {csvImportData.rows.length} job row{csvImportData.rows.length === 1 ? '' : 's'} detected
+                    {' · '}
+                    {csvImportData.headers.filter((header) => CSV_JOB_FIELDS[normalizeCsvHeader(header)]).length} recognized column{csvImportData.headers.filter((header) => CSV_JOB_FIELDS[normalizeCsvHeader(header)]).length === 1 ? '' : 's'}
+                  </p>
+                  {missingImportHeaders.length > 0 && (
+                    <p className="text-rose-600 dark:text-rose-300">
+                      Missing columns: {missingImportHeaders.map((field) => field === 'title' ? 'Job Title' : field === 'client' ? 'Client' : 'Location').join(', ')}
+                    </p>
+                  )}
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-[#D7DCE5] dark:border-[#45485E]">
+                  <table className="w-full min-w-[600px] border-collapse text-left text-[11px]">
+                    <thead className="bg-[#EDF2F4] dark:bg-[#36384F]">
+                      <tr>{importPreviewHeaders.map((header) => <th key={header} className="whitespace-nowrap border-b border-[#D7DCE5] px-3 py-2 font-semibold text-[#2B2D42] dark:border-[#45485E] dark:text-white">{header}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#D7DCE5] dark:divide-[#45485E]">
+                      {csvImportData.rows.slice(0, 5).map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          {importPreviewHeaders.map((header) => <td key={header} className="max-w-[220px] truncate px-3 py-2 text-[#687786] dark:text-[#B9CAD9]" title={row[header]}>{row[header] || '—'}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {csvImportData.rows.length > 5 && <p className="border-t border-[#D7DCE5] px-3 py-2 text-[11px] text-[#8D99AE] dark:border-[#45485E]">Showing the first 5 rows of the preview.</p>}
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleImportJobs}
+                    disabled={isImportingJobs || missingImportHeaders.length > 0}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#2B2D42] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#222336] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isImportingJobs ? 'Importing...' : `Import ${csvImportData.rows.length} Job${csvImportData.rows.length === 1 ? '' : 's'}`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Toast Notification */}
@@ -1213,15 +1774,40 @@ export const JobList: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Column Chooser Button */}
-          <button
-            onClick={openColumnDrawer}
-            className="px-3 py-1.5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] hover:bg-[#EDF2F4] hover:text-[#2B2D42] rounded-xl text-xs font-semibold text-[#2B2D42] dark:text-[#EDF2F4] transition-colors flex items-center gap-1.5 shadow-xs"
-            title="Edit displayed columns"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#2B2D42]" />
-            <span>Columns ({visibleColumns.length})</span>
-          </button>
+          <div className="relative" ref={settingsMenuRef}>
+            <button
+              type="button"
+              onClick={() => setIsSettingsMenuOpen((isOpen) => !isOpen)}
+              aria-label="Job posting settings"
+              aria-haspopup="menu"
+              aria-expanded={isSettingsMenuOpen}
+              title="Job posting settings"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#D7DCE5] bg-white px-3 py-2 text-xs font-semibold text-[#2B2D42] shadow-xs transition-colors hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white dark:hover:bg-[#36384F]"
+            >
+              <Settings className="h-4 w-4" />
+              <ChevronDown className={`h-3 w-3 transition-transform ${isSettingsMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isSettingsMenuOpen && (
+              <div role="menu" className="absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden rounded-xl border border-[#D7DCE5] bg-white p-1.5 shadow-xl dark:border-[#45485E] dark:bg-[#2B2D42]">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => openPostingsView('approvals')}
+                  className="w-full rounded-lg px-3 py-2.5 text-left text-xs font-medium text-[#2B2D42] transition-colors hover:bg-[#EDF2F4] dark:text-white dark:hover:bg-[#36384F]"
+                >
+                  Approvals
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => openPostingsView('import')}
+                  className="w-full rounded-lg px-3 py-2.5 text-left text-xs font-medium text-[#2B2D42] transition-colors hover:bg-[#EDF2F4] dark:text-white dark:hover:bg-[#36384F]"
+                >
+                  Import
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Send Requirement */}
           <button
@@ -1376,15 +1962,59 @@ export const JobList: React.FC = () => {
               <option value="Core Engineering">Core Engineering</option>
               <option value="Cloud & AI Practice">Cloud & AI Practice</option>
             </select>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={openFilterDrawer}
+                aria-label="Create filters"
+                title="Create Filters"
+                className={`relative rounded-md border p-2 transition-colors ${
+                  activePredefinedFilter || activeFilterRules.length
+                    ? 'border-[#2B2D42] bg-[#EDF2F4] text-[#2B2D42] dark:border-[#8CBCE8] dark:bg-[#36384F] dark:text-[#8CBCE8]'
+                    : 'border-[#D7DCE5] bg-white text-[#2B2D42] hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white dark:hover:bg-[#36384F]'
+                }`}
+              >
+                <Filter className="h-4 w-4" />
+                <span className="sr-only">Create Filters</span>
+                {activePredefinedFilter || activeFilterRules.length > 0 ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#2F80E7] ring-2 ring-white dark:ring-[#2B2D42]" /> : null}
+              </button>
+              <button
+                type="button"
+                onClick={openColumnDrawer}
+                aria-label="Edit columns"
+                title="Edit Columns"
+                className="rounded-md border border-[#D7DCE5] bg-white p-2 text-[#2B2D42] transition-colors hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white dark:hover:bg-[#36384F]"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Active Column Filters Tags Bar */}
-        {Object.keys(columnFilters).length > 0 && (
+        {(Object.keys(columnFilters).length > 0 || activePredefinedFilter || activeFilterRules.length > 0) && (
           <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-[#D7DCE5] dark:border-[#45485E]">
             <span className="text-[11px] font-semibold text-[#8D99AE] dark:text-[#B9CAD9]">
               Filtered by:
             </span>
+            {activePredefinedFilter && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#2B2D42]/30 bg-[#EDF2F4] px-2.5 py-0.5 text-[11px] text-[#2B2D42] dark:bg-[#36384F] dark:text-[#EDF2F4]">
+                {activePredefinedFilter}
+                <button type="button" onClick={() => setActivePredefinedFilter(null)} aria-label={`Remove ${activePredefinedFilter} filter`} className="hover:text-rose-600">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {activeFilterRules.map((rule) => (
+              <span key={rule.id} className="inline-flex items-center gap-1.5 rounded-full border border-[#2B2D42]/30 bg-[#EDF2F4] px-2.5 py-0.5 text-[11px] text-[#2B2D42] dark:bg-[#36384F] dark:text-[#EDF2F4]">
+                <strong>{ALL_COLUMNS.find((column) => column.key === rule.field)?.label}</strong>
+                {rule.operator}{rule.value ? ` ${rule.value}` : ''}
+                <button type="button" onClick={() => setActiveFilterRules((rules) => rules.filter((item) => item.id !== rule.id))} aria-label="Remove filter condition" className="hover:text-rose-600">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
             {Object.entries(columnFilters).map(([key, vals]) => {
               const colLabel = ALL_COLUMNS.find((c) => c.key === key)?.label || key;
               return (
@@ -1402,12 +2032,14 @@ export const JobList: React.FC = () => {
                 </span>
               );
             })}
-            <button
-              onClick={() => setColumnFilters({})}
-              className="text-[11px] text-[#2B2D42] hover:underline"
-            >
-              Clear column filters
-            </button>
+            {Object.keys(columnFilters).length > 0 && (
+              <button
+                onClick={() => setColumnFilters({})}
+                className="text-[11px] text-[#2B2D42] hover:underline"
+              >
+                Clear column filters
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -2045,27 +2677,45 @@ export const JobList: React.FC = () => {
                                       <th className="p-2.5 font-semibold">Applicant Name</th>
                                       <th className="p-2.5 font-semibold">Mobile Number</th>
                                       <th className="p-2.5 font-semibold">Application Status</th>
-                                      <th className="p-2.5 font-semibold">Match Score</th>
+                                      <th className="p-2.5 font-semibold">Submission Score</th>
                                       <th className="p-2.5 font-semibold">Location</th>
+                                      <th className="p-2.5 font-semibold">Country</th>
                                       <th className="p-2.5 font-semibold">Experience</th>
+                                      <th className="p-2.5 font-semibold">Work Authorization</th>
                                       <th className="p-2.5 font-semibold">Source</th>
                                       <th className="p-2.5 font-semibold text-center">Resume</th>
+                                      <th className="p-2.5 font-semibold">Revision Status</th>
+                                      <th className="p-2.5 font-semibold">Outlook MSG</th>
+                                      <th className="p-2.5 font-semibold">Bill Rate</th>
+                                      <th className="p-2.5 font-semibold">Pay Rate</th>
+                                      <th className="p-2.5 font-semibold">Employer Name</th>
                                       <th className="p-2.5 font-semibold">Notice Period</th>
                                       <th className="p-2.5 font-semibold">Submitted By</th>
+                                      <th className="p-2.5 font-semibold">PW Submission Type</th>
+                                      <th className="p-2.5 font-semibold">Notice Period</th>
+                                      <th className="p-2.5 font-semibold">Current CTC</th>
                                       <th className="p-2.5 font-semibold">Submitted On</th>
-                                      <th className="p-2.5 font-semibold text-right">Action</th>
+                                      <th className="p-2.5 font-semibold">Additional Details</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-[#D7DCE5] dark:divide-[#45485E]">
                                     {jobSubmissions.length === 0 ? (
                                       <tr>
-                                        <td colSpan={14} className="p-8 text-center text-xs text-[#8D99AE]">
+                                        <td colSpan={24} className="p-8 text-center text-xs text-[#8D99AE]">
                                           No candidate submissions are linked to this job yet.
                                         </td>
                                       </tr>
                                     ) : jobSubmissions.map((submission) => {
                                       const applicant = applicants.find((candidate) => candidate.id === submission.applicantId);
                                       const isSelected = selectedSubmissionIds.includes(submission.id);
+                                      const locationMatch = applicant?.location.match(/^([^,]+),\s*([^(,]+)(?:\s*\(.*\))?$/);
+                                      const location = locationMatch?.[1]?.trim() || applicant?.location || '—';
+                                      const country = applicant?.country || locationMatch?.[2]?.trim() || '—';
+                                      const totalExperienceMonths = applicant ? Math.round(applicant.experienceYears * 12) : 0;
+                                      const experience = applicant
+                                        ? `${Math.floor(totalExperienceMonths / 12)} Years${totalExperienceMonths % 12 ? ` ${totalExperienceMonths % 12} Months` : ''}`
+                                        : '—';
+                                      const currency = applicant?.currency || j.currency || 'USD';
                                       return (
                                         <tr
                                           key={submission.id}
@@ -2160,17 +2810,11 @@ export const JobList: React.FC = () => {
                                                 </button>
                                               </div>
                                             )}
-                                            <span className="inline-block max-w-[220px] truncate rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-[#2B2D42]" title={submission.status}>
-                                              {submission.status}
-                                            </span>
                                           </td>
-                                          <td className="p-2.5 font-mono font-bold text-[#2B2D42]">
-                                            {submission.score ?? applicant?.matchScore ?? '—'}{submission.score !== undefined || applicant ? '%' : ''}
-                                          </td>
-                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{applicant?.location || '—'}</td>
-                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">
-                                            {applicant ? `${applicant.experienceYears} Years` : '—'}
-                                          </td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{location}</td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{country}</td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{experience}</td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{applicant?.workAuthorization || '—'}</td>
                                           <td className="p-2.5">
                                             <span className="rounded border border-gray-200 bg-gray-100 px-2 py-0.5 text-[10px] text-gray-700">
                                               {applicant?.source || '—'}
@@ -2186,17 +2830,23 @@ export const JobList: React.FC = () => {
                                               <FileText className="mx-auto h-4 w-4" />
                                             </button>
                                           </td>
+                                          <td className="p-2.5">
+                                            <span className="inline-block rounded border border-[#D7DCE5] bg-[#EDF2F4] px-2 py-0.5 text-[10px] text-[#2B2D42]">
+                                              {submission.approvalStatus || '—'}
+                                            </span>
+                                          </td>
+                                          <td className="p-2.5 text-[#8D99AE]">—</td>
+                                          <td className="p-2.5 whitespace-nowrap text-[#8D99AE]">{currency} {submission.billRate.toLocaleString()}</td>
+                                          <td className="p-2.5 whitespace-nowrap text-[#8D99AE]">{currency} {submission.payRate.toLocaleString()}</td>
+                                          <td className="p-2.5 text-[#8D99AE]">{applicant?.currentCompany || applicant?.employerDetails?.[0]?.company || '—'}</td>
                                           <td className="p-2.5 font-mono text-[#8D99AE]">{applicant?.noticePeriod || '—'}</td>
-                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{submission.recruiter}</td>
+                                          <td className="p-2.5 text-[#8D99AE] dark:text-[#B9CAD9]">{submission.recruiter || '—'}</td>
+                                          <td className="p-2.5 text-[#8D99AE]">—</td>
+                                          <td className="p-2.5 font-mono text-[#8D99AE]">{applicant?.noticePeriod || '—'}</td>
+                                          <td className="p-2.5 text-[#8D99AE]">{applicant?.currentCTC || applicant?.expectedSalary || '—'}</td>
                                           <td className="p-2.5 font-mono text-[11px] text-[#8D99AE]">{submission.submittedDate}</td>
-                                          <td className="p-2.5 text-right">
-                                            <button
-                                              type="button"
-                                              onClick={() => navigate('applicant-detail', submission.applicantId)}
-                                              className="rounded-lg px-2.5 py-1 text-xs font-semibold text-[#2B2D42] hover:bg-[#EDF2F4]"
-                                            >
-                                              Review Profile
-                                            </button>
+                                          <td className="max-w-[280px] truncate p-2.5 text-[#8D99AE]" title={applicant?.applicantRemarks || applicant?.summary || '—'}>
+                                            {applicant?.applicantRemarks || applicant?.summary || '—'}
                                           </td>
                                         </tr>
                                       );
@@ -2269,6 +2919,174 @@ export const JobList: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {isFilterDrawerOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex justify-end bg-black/40 backdrop-blur-[1px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsFilterDrawerOpen(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="job-filters-title"
+            className="flex h-full w-full max-w-[390px] flex-col border-l border-[#D7DCE5] bg-white shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]"
+          >
+            <header className="flex items-center justify-between border-b border-[#D7DCE5] px-5 py-4 dark:border-[#45485E]">
+              <div>
+                <h2 id="job-filters-title" className="text-base font-bold text-[#2B2D42] dark:text-white">Edit Filters</h2>
+                <p className="mt-0.5 text-[11px] text-[#8D99AE]">Build and apply job posting filters.</p>
+              </div>
+              <button type="button" onClick={() => setIsFilterDrawerOpen(false)} aria-label="Close filters" className="rounded-lg p-1.5 text-[#8D99AE] hover:bg-[#EDF2F4] dark:hover:bg-[#36384F]">
+                <X className="h-4 w-4" />
+              </button>
+            </header>
+
+            <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <div className="space-y-2">
+                <label htmlFor="filter-business-unit" className="block text-[10px] font-bold uppercase tracking-wide text-[#687786] dark:text-[#B9CAD9]">Business Unit</label>
+                <select
+                  id="filter-business-unit"
+                  value={draftBusinessUnit}
+                  onChange={(event) => setDraftBusinessUnit(event.target.value)}
+                  className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs text-[#2B2D42] outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
+                >
+                  <option value="All">All selected</option>
+                  {Array.from(new Set(jobs.map((job) => job.businessUnit).filter(Boolean))).sort().map((unit) => (
+                    <option key={unit} value={unit}>{unit}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-bold uppercase tracking-wide text-[#687786] dark:text-[#B9CAD9]">Pre-defined Filters</h3>
+                  {draftPredefinedFilter && (
+                    <button type="button" onClick={() => setDraftPredefinedFilter(null)} className="text-[10px] font-medium text-[#2B2D42] hover:underline dark:text-[#8CBCE8]">Clear</button>
+                  )}
+                </div>
+                <div className="grid gap-1.5">
+                  {PREDEFINED_JOB_FILTERS.map((filter) => (
+                    <label key={filter} className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] transition-colors ${
+                      draftPredefinedFilter === filter
+                        ? 'bg-[#EDF2F4] text-[#2B2D42] dark:bg-[#36384F] dark:text-white'
+                        : 'text-[#687786] hover:bg-[#F8FAFC] dark:text-[#B9CAD9] dark:hover:bg-[#36384F]'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="predefined-job-filter"
+                        checked={draftPredefinedFilter === filter}
+                        onChange={() => setDraftPredefinedFilter(filter)}
+                        className="h-3.5 w-3.5 border-[#D7DCE5] text-[#2B2D42] focus:ring-[#2B2D42]"
+                      />
+                      {filter}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t border-[#D7DCE5] pt-4 dark:border-[#45485E]">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-bold uppercase tracking-wide text-[#687786] dark:text-[#B9CAD9]">Custom Conditions</h3>
+                  <button
+                    type="button"
+                    onClick={() => setDraftFilterRules((rules) => [...rules, createFilterRule()])}
+                    className="text-[11px] font-semibold text-[#2B2D42] hover:underline dark:text-[#8CBCE8]"
+                  >
+                    + Add Filter
+                  </button>
+                </div>
+
+                {draftFilterRules.length === 0 && (
+                  <p className="rounded-lg bg-[#F8FAFC] px-3 py-4 text-center text-[11px] text-[#8D99AE] dark:bg-[#24263A]">
+                    Add a condition to filter by any job field.
+                  </p>
+                )}
+                {draftFilterRules.map((rule) => {
+                  const requiresValue = rule.operator === 'Equals' || rule.operator === 'Not Equals' || rule.operator === 'In List' || rule.operator === 'Not In List';
+                  const valueOptions = rule.field ? getUniqueValuesForCol(rule.field) : [];
+                  return (
+                    <div key={rule.id} className="space-y-2 rounded-xl border border-[#D7DCE5] bg-[#F8FAFC] p-3 dark:border-[#45485E] dark:bg-[#24263A]">
+                      <div className="flex items-center gap-2">
+                        <select
+                          aria-label="Filter field"
+                          value={rule.field}
+                          onChange={(event) => setDraftFilterRules((rules) => rules.map((item) =>
+                            item.id === rule.id ? { ...item, field: event.target.value as JobColumnKey | '', operator: '', value: '' } : item
+                          ))}
+                          className="min-w-0 flex-1 rounded-md border border-[#D7DCE5] bg-white px-2 py-2 text-[11px] text-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
+                        >
+                          <option value="">Select Field</option>
+                          {ALL_COLUMNS.map((column) => <option key={column.key} value={column.key}>{column.label}</option>)}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setDraftFilterRules((rules) => rules.filter((item) => item.id !== rule.id))}
+                          aria-label="Remove filter condition"
+                          title="Remove filter"
+                          className="rounded-md p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          aria-label="Filter operator"
+                          value={rule.operator}
+                          onChange={(event) => setDraftFilterRules((rules) => rules.map((item) =>
+                            item.id === rule.id ? { ...item, operator: event.target.value as FilterOperator | '', value: '' } : item
+                          ))}
+                          className="min-w-0 rounded-md border border-[#D7DCE5] bg-white px-2 py-2 text-[11px] text-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
+                        >
+                          <option value="">Select Operator</option>
+                          {FILTER_OPERATORS.map((operator) => <option key={operator} value={operator}>{operator}</option>)}
+                        </select>
+                        {requiresValue && (
+                          <input
+                            type="text"
+                            value={rule.value}
+                            onChange={(event) => setDraftFilterRules((rules) => rules.map((item) =>
+                              item.id === rule.id ? { ...item, value: event.target.value } : item
+                            ))}
+                            list={`filter-values-${rule.id}`}
+                            placeholder={rule.operator?.includes('List') ? 'Value 1, Value 2' : 'Select or enter value'}
+                            aria-label="Filter value"
+                            className="min-w-0 rounded-md border border-[#D7DCE5] bg-white px-2 py-2 text-[11px] text-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
+                          />
+                        )}
+                        {requiresValue && (
+                          <datalist id={`filter-values-${rule.id}`}>
+                            {valueOptions.map((value) => <option key={value} value={value} />)}
+                          </datalist>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <footer className="flex items-center justify-between border-t border-[#D7DCE5] px-5 py-4 dark:border-[#45485E]">
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftPredefinedFilter(null);
+                  setDraftFilterRules([]);
+                  setDraftBusinessUnit('All');
+                }}
+                className="text-xs font-medium text-[#8D99AE] hover:text-[#2B2D42] dark:hover:text-white"
+              >
+                Clear all
+              </button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setIsFilterDrawerOpen(false)} className="rounded-lg px-3 py-2 text-xs font-medium text-[#687786] hover:bg-[#EDF2F4] dark:text-[#B9CAD9] dark:hover:bg-[#36384F]">Cancel</button>
+                <button type="button" onClick={applyFilterDrawer} className="rounded-lg bg-[#2B2D42] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#222336]">Apply</button>
+              </div>
+            </footer>
+          </section>
+        </div>
+      )}
 
       {/* Ceipal Column Customizer Drawer (Screenshot 202359) */}
       {isColumnDrawerOpen && (
