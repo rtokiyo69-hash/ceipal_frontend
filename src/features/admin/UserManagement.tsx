@@ -43,7 +43,7 @@ export const UserManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#FF6B5E] text-white border border-[#FF6B5E] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -51,22 +51,22 @@ export const UserManagement: React.FC = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-display font-bold text-[#2B2D42] dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-display font-bold text-[#252525] dark:text-white">
           Role &amp; Permission Governance (RBAC)
         </h1>
-        <p className="text-xs text-[#8D99AE]">
+        <p className="text-xs text-[#806B66]">
           Configure role boundaries, practice assignments, and administrative visibility
         </p>
       </div>
 
       {/* Architecture Readiness Notice */}
-      <div className="p-4 bg-[#EDF2F4] dark:bg-[#2B2D42]/15 border border-[#D7DCE5] dark:border-[#2B2D42]/30 rounded-2xl flex items-start gap-3 text-xs">
-        <Shield className="w-5 h-5 text-[#2B2D42] dark:text-[#8D99AE] shrink-0 mt-0.5" />
+      <div className="p-4 bg-[#FFF0E8] dark:bg-[#252525]/15 border border-[#E8C8BE] dark:border-[#FF6B5E]/30 rounded-2xl flex items-start gap-3 text-xs">
+        <Shield className="w-5 h-5 text-[#252525] dark:text-[#806B66] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <div className="font-bold text-[#2B2D42] dark:text-white">
+          <div className="font-bold text-[#252525] dark:text-white">
             Enterprise RBAC Authorization Architecture
           </div>
-          <p className="text-[#8D99AE] dark:text-[#EDF2F4] leading-relaxed">
+          <p className="text-[#806B66] dark:text-[#FFF0E8] leading-relaxed">
             In this evaluation preview, permissions are enforced on client routing and component trees. The service interfaces are designed for seamless token-based validation when paired with a production backend.
           </p>
         </div>
@@ -75,28 +75,28 @@ export const UserManagement: React.FC = () => {
       {/* User Roster & Permissions Matrix */}
       <div className="grid lg:grid-cols-12 gap-6">
         {/* User Table */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
-          <div className="p-4 border-b border-[#D7DCE5] dark:border-slate-800">
-            <h2 className="text-sm font-bold text-[#2B2D42] dark:text-white">Active Team Members</h2>
+        <div className="lg:col-span-7 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+          <div className="p-4 border-b border-[#E8C8BE] dark:border-slate-800">
+            <h2 className="text-sm font-bold text-[#252525] dark:text-white">Active Team Members</h2>
           </div>
 
-          <div className="divide-y divide-[#D7DCE5] dark:divide-slate-800">
+          <div className="divide-y divide-[#E8C8BE] dark:divide-slate-800">
             {users.map((u) => (
               <div
                 key={u.id}
                 onClick={() => setSelectedUser(u)}
                 className={`p-4 flex items-center justify-between gap-4 cursor-pointer transition-colors ${
                   selectedUser?.id === u.id
-                    ? 'bg-[#EDF2F4] dark:bg-[#2B2D42]/20'
-                    : 'hover:bg-[#EDF2F4] dark:hover:bg-slate-800/40'
+                    ? 'bg-[#FFF0E8] dark:bg-[#252525]/20'
+                    : 'hover:bg-[#FFF0E8] dark:hover:bg-slate-800/40'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full object-cover ring-1 ring-[#D7DCE5] dark:ring-slate-700" />
+                  <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full object-cover ring-1 ring-[#E8C8BE] dark:ring-slate-700" />
                   <div>
-                    <div className="text-xs font-bold text-[#2B2D42] dark:text-white">{u.name}</div>
-                    <div className="text-[11px] text-[#8D99AE]">{u.email}</div>
-                    <div className="text-[10px] text-[#2B2D42] dark:text-[#8D99AE] font-mono mt-0.5">{u.businessUnit}</div>
+                    <div className="text-xs font-bold text-[#252525] dark:text-white">{u.name}</div>
+                    <div className="text-[11px] text-[#806B66]">{u.email}</div>
+                    <div className="text-[10px] text-[#252525] dark:text-[#806B66] font-mono mt-0.5">{u.businessUnit}</div>
                   </div>
                 </div>
 
@@ -105,7 +105,7 @@ export const UserManagement: React.FC = () => {
                     value={u.role}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
-                    className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-[#D7DCE5] dark:border-slate-700 rounded-lg text-xs font-bold text-[#2B2D42] dark:text-[#8D99AE] focus:outline-none capitalize"
+                    className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-lg text-xs font-bold text-[#252525] dark:text-[#806B66] focus:outline-none capitalize"
                   >
                     <option value="super_admin">Super Admin</option>
                     <option value="manager">Practice Manager</option>
@@ -118,43 +118,43 @@ export const UserManagement: React.FC = () => {
         </div>
 
         {/* Selected Role Permissions Matrix */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4 text-xs">
+        <div className="lg:col-span-5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4 text-xs">
           <div>
-            <h2 className="text-sm font-bold text-[#2B2D42] dark:text-white">
+            <h2 className="text-sm font-bold text-[#252525] dark:text-white">
               Role Permission Entitlements
             </h2>
-            <p className="text-xs text-[#8D99AE]">
-              Capabilities granted to <strong className="text-[#2B2D42] dark:text-[#8D99AE] capitalize">{selectedUser?.role.replace('_', ' ')}</strong>
+            <p className="text-xs text-[#806B66]">
+              Capabilities granted to <strong className="text-[#252525] dark:text-[#806B66] capitalize">{selectedUser?.role.replace('_', ' ')}</strong>
             </p>
           </div>
 
-          <div className="space-y-2.5 pt-2 border-t border-[#D7DCE5] dark:border-slate-800">
-            <div className="p-2.5 bg-[#EDF2F4] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#D7DCE5] dark:border-slate-750">
+          <div className="space-y-2.5 pt-2 border-t border-[#E8C8BE] dark:border-slate-800">
+            <div className="p-2.5 bg-[#FFF0E8] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#E8C8BE] dark:border-slate-750">
               <div>
-                <div className="font-semibold text-[#2B2D42] dark:text-white">Requisition Lifecycle</div>
-                <div className="text-[11px] text-[#8D99AE]">Create, edit and close job openings</div>
+                <div className="font-semibold text-[#252525] dark:text-white">Requisition Lifecycle</div>
+                <div className="text-[11px] text-[#806B66]">Create, edit and close job openings</div>
               </div>
               <span className="font-mono text-[#2E7D5B] dark:text-[#8AC9A7] font-bold">GRANTED</span>
             </div>
 
-            <div className="p-2.5 bg-[#EDF2F4] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#D7DCE5] dark:border-slate-750">
+            <div className="p-2.5 bg-[#FFF0E8] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#E8C8BE] dark:border-slate-750">
               <div>
-                <div className="font-semibold text-[#2B2D42] dark:text-white">Managerial Submission Vetting</div>
-                <div className="text-[11px] text-[#8D99AE]">Approve or reject candidate submissions</div>
+                <div className="font-semibold text-[#252525] dark:text-white">Managerial Submission Vetting</div>
+                <div className="text-[11px] text-[#806B66]">Approve or reject candidate submissions</div>
               </div>
               <span className="font-mono font-bold text-xs">
                 {selectedUser?.role === 'recruiter' ? (
-                  <span className="text-[#8D99AE]">VIEW ONLY</span>
+                  <span className="text-[#806B66]">VIEW ONLY</span>
                 ) : (
                   <span className="text-[#2E7D5B] dark:text-[#8AC9A7]">GRANTED</span>
                 )}
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#EDF2F4] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#D7DCE5] dark:border-slate-750">
+            <div className="p-2.5 bg-[#FFF0E8] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#E8C8BE] dark:border-slate-750">
               <div>
-                <div className="font-semibold text-[#2B2D42] dark:text-white">Placement Margin Rates</div>
-                <div className="text-[11px] text-[#8D99AE]">View bill-pay spreads &amp; gross profitability</div>
+                <div className="font-semibold text-[#252525] dark:text-white">Placement Margin Rates</div>
+                <div className="text-[11px] text-[#806B66]">View bill-pay spreads &amp; gross profitability</div>
               </div>
               <span className="font-mono font-bold text-xs">
                 {selectedUser?.role === 'recruiter' ? (
@@ -165,10 +165,10 @@ export const UserManagement: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-2.5 bg-[#EDF2F4] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#D7DCE5] dark:border-slate-750">
+            <div className="p-2.5 bg-[#FFF0E8] dark:bg-slate-800/60 rounded-xl flex items-center justify-between border border-[#E8C8BE] dark:border-slate-750">
               <div>
-                <div className="font-semibold text-[#2B2D42] dark:text-white">Security &amp; Audit Logs</div>
-                <div className="text-[11px] text-[#8D99AE]">Access immutable platform compliance logs</div>
+                <div className="font-semibold text-[#252525] dark:text-white">Security &amp; Audit Logs</div>
+                <div className="text-[11px] text-[#806B66]">Access immutable platform compliance logs</div>
               </div>
               <span className="font-mono font-bold text-xs">
                 {selectedUser?.role === 'super_admin' ? (
@@ -181,7 +181,7 @@ export const UserManagement: React.FC = () => {
           </div>
 
           {/* Quick Impersonate Button */}
-          <div className="pt-4 border-t border-[#D7DCE5] dark:border-slate-800">
+          <div className="pt-4 border-t border-[#E8C8BE] dark:border-slate-800">
             <button
               onClick={() => {
                 if (selectedUser) {
@@ -189,7 +189,7 @@ export const UserManagement: React.FC = () => {
                   showToast(`Switched active session to ${selectedUser.name}`);
                 }
               }}
-              className="w-full py-2 bg-[#2B2D42] hover:bg-[#222336] text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-xs"
+              className="w-full py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-xs"
             >
               <UserCheck className="w-4 h-4 text-white" />
               <span>Simulate Session as {selectedUser?.name}</span>

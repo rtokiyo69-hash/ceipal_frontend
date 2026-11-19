@@ -75,7 +75,7 @@ export const ApplicantDetail: React.FC = () => {
   };
 
   if (!applicant) {
-    return <div className="p-8 text-center text-xs text-[#8D99AE]">Loading candidate dossier...</div>;
+    return <div className="p-8 text-center text-xs text-[#806B66]">Loading candidate dossier...</div>;
   }
 
   const handleStageChange = async (newStage: PipelineStage) => {
@@ -145,7 +145,7 @@ export const ApplicantDetail: React.FC = () => {
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#2B2D42] text-white border border-[#2B2D42] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#FF6B5E] text-white border border-[#FF6B5E] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -155,19 +155,19 @@ export const ApplicantDetail: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <button
           onClick={() => navigate('applicants')}
-          className="flex items-center gap-2 text-xs font-semibold text-[#8D99AE] hover:text-[#2B2D42] transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-[#806B66] hover:text-[#252525] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Candidate Pool</span>
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-[#8D99AE] dark:text-[#B9CAD9]">
+          <div className="flex items-center gap-1.5 text-xs text-[#806B66] dark:text-[#FFD7C9]">
             <span>Recruitment Stage:</span>
             <select
               value={stage}
               onChange={(e) => handleStageChange(e.target.value as PipelineStage)}
-              className="px-3 py-1.5 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl text-xs font-bold text-[#2B2D42] focus:outline-none"
+              className="px-3 py-1.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-bold text-[#252525] focus:outline-none"
             >
               <option value="New">Stage: New</option>
               <option value="Screening">Stage: Screening</option>
@@ -183,61 +183,61 @@ export const ApplicantDetail: React.FC = () => {
           {/* Primary action */}
           <button
             onClick={() => navigate('pipeline')}
-            className="px-4 py-1.5 bg-[#2B2D42] hover:bg-[#222336] text-white text-xs font-semibold rounded-xl transition-all shadow-xs shadow-[#2B2D42]/20"
+            className="px-4 py-1.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-semibold rounded-xl transition-all shadow-xs shadow-[#FF6B5E]/20"
           >
             View in Kanban
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#D7DCE5] bg-white px-3 py-2 dark:border-[#45485E] dark:bg-[#2B2D42]">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E8C8BE] bg-white px-3 py-2 dark:border-[#3D3634] dark:bg-[#252525]">
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => { setEditName(applicant.name); setEditEmail(applicant.email); setEditPhone(applicant.phone); setEditTitle(applicant.currentDesignation); setEditLocation(applicant.location); setEditSummary(applicant.summary || ''); setDialog('edit'); }} className="px-3 py-1.5 rounded-lg bg-[#2B2D42] text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#222336]"><Pencil className="w-3.5 h-3.5" /> Edit Applicant</button>
-          <button onClick={() => setActiveTab('resume')} className="px-3 py-1.5 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] text-xs font-semibold text-[#344252] dark:text-white hover:bg-[#EDF2F4] dark:hover:bg-[#36384F]"><FileText className="w-3.5 h-3.5 inline mr-1.5" />View Resume</button>
-          <button onClick={() => setDialog('matching-jobs')} className="px-3 py-1.5 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] text-xs font-semibold text-[#344252] dark:text-white hover:bg-[#EDF2F4] dark:hover:bg-[#36384F]">Matching Jobs</button>
-          <button onClick={() => setDialog('resume-builder')} className="px-3 py-1.5 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] text-xs font-semibold text-[#344252] dark:text-white hover:bg-[#EDF2F4] dark:hover:bg-[#36384F]">Create Resume Builder</button>
+          <button onClick={() => { setEditName(applicant.name); setEditEmail(applicant.email); setEditPhone(applicant.phone); setEditTitle(applicant.currentDesignation); setEditLocation(applicant.location); setEditSummary(applicant.summary || ''); setDialog('edit'); }} className="px-3 py-1.5 rounded-lg bg-[#FF6B5E] text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#E85249]"><Pencil className="w-3.5 h-3.5" /> Edit Applicant</button>
+          <button onClick={() => setActiveTab('resume')} className="px-3 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#4D4140] dark:text-white hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"><FileText className="w-3.5 h-3.5 inline mr-1.5" />View Resume</button>
+          <button onClick={() => setDialog('matching-jobs')} className="px-3 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#4D4140] dark:text-white hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]">Matching Jobs</button>
+          <button onClick={() => setDialog('resume-builder')} className="px-3 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#4D4140] dark:text-white hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]">Create Resume Builder</button>
           <div className="relative">
-            <button onClick={() => setActionMenuOpen(!actionMenuOpen)} className="px-3 py-1.5 rounded-lg border border-[#D7DCE5] dark:border-[#45485E] text-xs font-semibold text-[#344252] dark:text-white hover:bg-[#EDF2F4] dark:hover:bg-[#36384F] flex items-center gap-1"><MoreHorizontal className="w-4 h-4" /> More <ChevronDown className="w-3 h-3" /></button>
-            {actionMenuOpen && <div className="absolute right-0 top-full mt-1 z-30 max-h-80 w-64 overflow-y-auto bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] shadow-xl rounded-xl py-1">
-              {['Bench Marketing Jobs', 'Timeline Activities', 'Create Task', 'Add Note', 'Send Email', 'Request Resume', 'Upload Document', 'Add References', 'Activate Account', 'Print', 'Request More Details from Applicant', 'Request eForm to Employer', 'Request eForm to Applicant', 'Resume Download History', 'Initiate Feedback Review', 'Block Contact On TextOnHire', 'Notification'].map((item) => <button key={item} onClick={() => item === 'Timeline Activities' ? (setActiveTab('timeline'), setActionMenuOpen(false)) : moreAction(item)} className="w-full px-3 py-2 text-left text-xs text-[#344252] dark:text-white hover:bg-[#EDF2F4] dark:hover:bg-[#36384F]">{item}</button>)}
+            <button onClick={() => setActionMenuOpen(!actionMenuOpen)} className="px-3 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#4D4140] dark:text-white hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-1"><MoreHorizontal className="w-4 h-4" /> More <ChevronDown className="w-3 h-3" /></button>
+            {actionMenuOpen && <div className="absolute right-0 top-full mt-1 z-30 max-h-80 w-64 overflow-y-auto bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] shadow-xl rounded-xl py-1">
+              {['Bench Marketing Jobs', 'Timeline Activities', 'Create Task', 'Add Note', 'Send Email', 'Request Resume', 'Upload Document', 'Add References', 'Activate Account', 'Print', 'Request More Details from Applicant', 'Request eForm to Employer', 'Request eForm to Applicant', 'Resume Download History', 'Initiate Feedback Review', 'Block Contact On TextOnHire', 'Notification'].map((item) => <button key={item} onClick={() => item === 'Timeline Activities' ? (setActiveTab('timeline'), setActionMenuOpen(false)) : moreAction(item)} className="w-full px-3 py-2 text-left text-xs text-[#4D4140] dark:text-white hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]">{item}</button>)}
             </div>}
           </div>
         </div>
-        <button onClick={() => setDialog('notification')} className="relative rounded-lg border border-[#D7DCE5] p-2 text-[#687789] hover:bg-[#EDF2F4] dark:border-[#45485E] dark:text-[#B9CAD9] dark:hover:bg-[#36384F]" title="Notifications"><Bell className="h-4 w-4" /></button>
+        <button onClick={() => setDialog('notification')} className="relative rounded-lg border border-[#E8C8BE] p-2 text-[#806B66] hover:bg-[#FFF0E8] dark:border-[#3D3634] dark:text-[#FFD7C9] dark:hover:bg-[#48403E]" title="Notifications"><Bell className="h-4 w-4" /></button>
       </div>
 
-      {/* Candidate Profile Dossier Card: White #FFFFFF, Light Grey #D7DCE5 */}
-      <div className="p-6 bg-white dark:bg-[#2B2D42] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl shadow-xs space-y-6">
+      {/* Candidate Profile Dossier Card: White #FFFFFF, Light Grey #E8C8BE */}
+      <div className="p-6 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xs space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div className="flex items-start gap-4">
             <img
               src={applicant.avatar}
               alt={applicant.name}
-              className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#2B2D42]/30"
+              className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#FF6B5E]/30"
             />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-[#2B2D42] dark:text-white">
+                <h1 className="text-2xl font-bold tracking-tight text-[#252525] dark:text-white">
                   {applicant.name}
                 </h1>
-                <span className="text-xs font-mono px-2 py-0.5 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#5A5D72] rounded text-[#2B2D42] dark:text-[#EDF2F4]">
+                <span className="text-xs font-mono px-2 py-0.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[#252525] dark:text-[#FFF0E8]">
                   {applicant.applicantId}
                 </span>
               </div>
-              <div className="text-sm font-semibold text-[#2B2D42]">
+              <div className="text-sm font-semibold text-[#252525]">
                 {applicant.currentDesignation}
               </div>
-              <div className="flex flex-wrap items-center gap-4 text-xs text-[#8D99AE] dark:text-[#B9CAD9] pt-1">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-[#806B66] dark:text-[#FFD7C9] pt-1">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-[#8AC9A7]" />
                   {applicant.location}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-[#2B2D42]" />
+                  <Mail className="w-3.5 h-3.5 text-[#252525]" />
                   {applicant.email}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-[#2B2D42]" />
+                  <Phone className="w-3.5 h-3.5 text-[#252525]" />
                   {applicant.phone}
                 </span>
               </div>
@@ -245,27 +245,27 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* Match Score Gauge: Mint #8AC9A7 */}
-          <div className="p-4 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl text-center min-w-40">
+          <div className="p-4 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl text-center min-w-40">
             <div className="text-3xl font-extrabold font-mono text-[#276749] dark:text-[#8AC9A7] tabular-nums">
               {applicant.matchScore}%
             </div>
-            <div className="text-[11px] font-mono text-[#2B2D42] font-semibold mt-0.5">
+            <div className="text-[11px] font-mono text-[#252525] font-semibold mt-0.5">
               REQUISITION FIT INDEX
             </div>
-            <div className="text-[10px] text-[#8D99AE] dark:text-[#B9CAD9] mt-1">
+            <div className="text-[10px] text-[#806B66] dark:text-[#FFD7C9] mt-1">
               Source: {applicant.source}
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-[#D7DCE5] dark:border-[#45485E] text-xs font-semibold">
+        <div className="flex items-center gap-2 border-b border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold">
           <button
             onClick={() => setActiveTab('overview')}
             className={`pb-3 px-2 border-b-2 transition-all ${
               activeTab === 'overview'
-                ? 'border-[#2B2D42] text-[#2B2D42]'
-                : 'border-transparent text-[#8D99AE] hover:text-[#2B2D42]'
+                ? 'border-[#FF6B5E] text-[#252525]'
+                : 'border-transparent text-[#806B66] hover:text-[#252525]'
             }`}
           >
             Overview &amp; Skills
@@ -274,8 +274,8 @@ export const ApplicantDetail: React.FC = () => {
             onClick={() => setActiveTab('resume')}
             className={`pb-3 px-2 border-b-2 transition-all ${
               activeTab === 'resume'
-                ? 'border-[#2B2D42] text-[#2B2D42]'
-                : 'border-transparent text-[#8D99AE] hover:text-[#2B2D42]'
+                ? 'border-[#FF6B5E] text-[#252525]'
+                : 'border-transparent text-[#806B66] hover:text-[#252525]'
             }`}
           >
             Resume Document View
@@ -284,8 +284,8 @@ export const ApplicantDetail: React.FC = () => {
             onClick={() => setActiveTab('timeline')}
             className={`pb-3 px-2 border-b-2 transition-all ${
               activeTab === 'timeline'
-                ? 'border-[#2B2D42] text-[#2B2D42]'
-                : 'border-transparent text-[#8D99AE] hover:text-[#2B2D42]'
+                ? 'border-[#FF6B5E] text-[#252525]'
+                : 'border-transparent text-[#806B66] hover:text-[#252525]'
             }`}
           >
             Recruitment Timeline
@@ -294,8 +294,8 @@ export const ApplicantDetail: React.FC = () => {
             onClick={() => setActiveTab('notes')}
             className={`pb-3 px-2 border-b-2 transition-all ${
               activeTab === 'notes'
-                ? 'border-[#2B2D42] text-[#2B2D42]'
-                : 'border-transparent text-[#8D99AE] hover:text-[#2B2D42]'
+                ? 'border-[#FF6B5E] text-[#252525]'
+                : 'border-transparent text-[#806B66] hover:text-[#252525]'
             }`}
           >
             Recruiter Notes ({applicant.notes?.length || 0})
@@ -307,29 +307,29 @@ export const ApplicantDetail: React.FC = () => {
           <div className="space-y-6 text-xs animate-in fade-in">
             {/* Summary */}
             <div className="space-y-2">
-              <div className="font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">
+              <div className="font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">
                 Candidate Profile Summary
               </div>
-              <p className="text-[#2B2D42] dark:text-[#EDF2F4] leading-relaxed p-4 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl">
+              <p className="text-[#252525] dark:text-[#FFF0E8] leading-relaxed p-4 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl">
                 {applicant.summary || 'Profile imported into the ATS unified applicant pool.'}
               </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-[#D7DCE5] p-4 dark:border-[#45485E]"><div className="mb-3 font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">Personal Details</div><div className="grid grid-cols-2 gap-x-3 gap-y-2">{[['Email', applicant.email], ['Phone', applicant.phone], ['Date of Birth', applicant.dateOfBirth || applicant.customFields?.dateOfBirth], ['Work Authorization', applicant.workAuthorization || applicant.customFields?.workAuthorization], ['Nationality', applicant.customFields?.nationality], ['Address', applicant.address || applicant.customFields?.address], ['City / Location', applicant.location], ['Relocation', applicant.willingToRelocate === undefined ? '' : applicant.willingToRelocate ? 'Yes' : 'No']].filter(([, value]) => value).map(([label, value]) => <div key={label}><div className="text-[10px] text-[#7B8794]">{label}</div><div className="mt-0.5 font-medium text-[#344252] dark:text-[#EDF2F4]">{value}</div></div>)}</div></div>
-              <div className="rounded-xl border border-[#D7DCE5] p-4 dark:border-[#45485E]"><div className="mb-3 font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">Professional &amp; Employment Details</div><div className="grid grid-cols-2 gap-x-3 gap-y-2">{[['Current Company', applicant.currentCompany], ['Current CTC', applicant.currentCTC], ['Expected CTC', applicant.expectedCTC], ['Notice Period', applicant.noticePeriod], ['Relevant Experience', applicant.relevantExperience ? `${applicant.relevantExperience} years` : ''], ['Preferred Shift', applicant.preferredShift], ['Applicant Group', applicant.applicantGroup], ['Reference ID', applicant.referenceId]].filter(([, value]) => value).map(([label, value]) => <div key={label}><div className="text-[10px] text-[#7B8794]">{label}</div><div className="mt-0.5 font-medium text-[#344252] dark:text-[#EDF2F4]">{value}</div></div>)}</div></div>
+              <div className="rounded-xl border border-[#E8C8BE] p-4 dark:border-[#3D3634]"><div className="mb-3 font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">Personal Details</div><div className="grid grid-cols-2 gap-x-3 gap-y-2">{[['Email', applicant.email], ['Phone', applicant.phone], ['Date of Birth', applicant.dateOfBirth || applicant.customFields?.dateOfBirth], ['Work Authorization', applicant.workAuthorization || applicant.customFields?.workAuthorization], ['Nationality', applicant.customFields?.nationality], ['Address', applicant.address || applicant.customFields?.address], ['City / Location', applicant.location], ['Relocation', applicant.willingToRelocate === undefined ? '' : applicant.willingToRelocate ? 'Yes' : 'No']].filter(([, value]) => value).map(([label, value]) => <div key={label}><div className="text-[10px] text-[#806B66]">{label}</div><div className="mt-0.5 font-medium text-[#4D4140] dark:text-[#FFF0E8]">{value}</div></div>)}</div></div>
+              <div className="rounded-xl border border-[#E8C8BE] p-4 dark:border-[#3D3634]"><div className="mb-3 font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">Professional &amp; Employment Details</div><div className="grid grid-cols-2 gap-x-3 gap-y-2">{[['Current Company', applicant.currentCompany], ['Current CTC', applicant.currentCTC], ['Expected CTC', applicant.expectedCTC], ['Notice Period', applicant.noticePeriod], ['Relevant Experience', applicant.relevantExperience ? `${applicant.relevantExperience} years` : ''], ['Preferred Shift', applicant.preferredShift], ['Applicant Group', applicant.applicantGroup], ['Reference ID', applicant.referenceId]].filter(([, value]) => value).map(([label, value]) => <div key={label}><div className="text-[10px] text-[#806B66]">{label}</div><div className="mt-0.5 font-medium text-[#4D4140] dark:text-[#FFF0E8]">{value}</div></div>)}</div></div>
             </div>
 
             {/* Skills */}
             <div className="space-y-2">
-              <div className="font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">
+              <div className="font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">
                 Verified Technical Competencies
               </div>
               <div className="flex flex-wrap gap-2">
                 {applicant.skills.map((sk) => (
                   <span
                     key={sk}
-                    className="px-3 py-1 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#5A5D72] rounded-lg font-mono font-medium text-[#2B2D42] dark:text-[#EDF2F4]"
+                    className="px-3 py-1 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#65534F] rounded-lg font-mono font-medium text-[#252525] dark:text-[#FFF0E8]"
                   >
                     {sk}
                   </span>
@@ -340,29 +340,29 @@ export const ApplicantDetail: React.FC = () => {
             {/* Work History */}
             {applicant.workHistory && applicant.workHistory.length > 0 && (
               <div className="space-y-3">
-                <div className="font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">
+                <div className="font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">
                   Employment Experience
                 </div>
                 <div className="space-y-3">
                   {applicant.workHistory.map((wh, idx) => (
                     <div
                       key={idx}
-                      className="p-3 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl space-y-1"
+                      className="p-3 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl space-y-1"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#2B2D42] dark:text-white">{wh.role}</span>
+                        <span className="font-bold text-[#252525] dark:text-white">{wh.role}</span>
                         <span className="font-mono text-[#276749] dark:text-[#8AC9A7] font-semibold">{wh.duration}</span>
                       </div>
-                      <div className="text-[11px] text-[#2B2D42] font-medium">{wh.company}</div>
-                      <p className="text-[#8D99AE] dark:text-[#B9CAD9] pt-1">{wh.summary}</p>
+                      <div className="text-[11px] text-[#252525] font-medium">{wh.company}</div>
+                      <p className="text-[#806B66] dark:text-[#FFD7C9] pt-1">{wh.summary}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            {applicant.educationDetails?.length ? <div className="space-y-2"><div className="font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">Education Details</div>{applicant.educationDetails.map((item, i) => <div key={i} className="rounded-xl border border-[#D7DCE5] bg-[#F7F9FC] p-3 dark:border-[#45485E] dark:bg-[#36384F]"><b>{item.degree}</b><div className="text-[11px] text-[#6D7988]">{item.school} · {item.year}</div></div>)}</div> : null}
-            {applicant.certifications?.length ? <div className="space-y-2"><div className="font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">Certifications</div><div className="flex flex-wrap gap-2">{applicant.certifications.map((item) => <span key={item} className="rounded-lg border border-[#D7DCE5] bg-[#F7F9FC] px-2.5 py-1.5 dark:border-[#45485E] dark:bg-[#36384F]">{item}</span>)}</div></div> : null}
-            {applicant.documents?.length ? <div className="space-y-2"><div className="flex items-center justify-between"><div className="font-bold text-[#2B2D42] uppercase tracking-wider text-[11px] font-mono">Documents</div><button onClick={() => setDialog('upload')} className="text-[11px] font-semibold text-[#2B2D42]">+ Upload</button></div>{applicant.documents.map((doc, i) => <div key={`${doc.name}-${i}`} className="flex items-center justify-between rounded-xl border border-[#D7DCE5] p-3 dark:border-[#45485E]"><span className="flex items-center gap-2"><FileText className="h-4 w-4 text-[#2B2D42]" />{doc.name}</span><span className="text-[10px] text-[#7B8794]">{doc.date} · {doc.size}</span></div>)}</div> : null}
+            {applicant.educationDetails?.length ? <div className="space-y-2"><div className="font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">Education Details</div>{applicant.educationDetails.map((item, i) => <div key={i} className="rounded-xl border border-[#E8C8BE] bg-[#FFF0E8] p-3 dark:border-[#3D3634] dark:bg-[#48403E]"><b>{item.degree}</b><div className="text-[11px] text-[#6D7988]">{item.school} · {item.year}</div></div>)}</div> : null}
+            {applicant.certifications?.length ? <div className="space-y-2"><div className="font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">Certifications</div><div className="flex flex-wrap gap-2">{applicant.certifications.map((item) => <span key={item} className="rounded-lg border border-[#E8C8BE] bg-[#FFF0E8] px-2.5 py-1.5 dark:border-[#3D3634] dark:bg-[#48403E]">{item}</span>)}</div></div> : null}
+            {applicant.documents?.length ? <div className="space-y-2"><div className="flex items-center justify-between"><div className="font-bold text-[#252525] uppercase tracking-wider text-[11px] font-mono">Documents</div><button onClick={() => setDialog('upload')} className="text-[11px] font-semibold text-[#252525]">+ Upload</button></div>{applicant.documents.map((doc, i) => <div key={`${doc.name}-${i}`} className="flex items-center justify-between rounded-xl border border-[#E8C8BE] p-3 dark:border-[#3D3634]"><span className="flex items-center gap-2"><FileText className="h-4 w-4 text-[#252525]" />{doc.name}</span><span className="text-[10px] text-[#806B66]">{doc.date} · {doc.size}</span></div>)}</div> : null}
           </div>
         )}
 
@@ -370,34 +370,34 @@ export const ApplicantDetail: React.FC = () => {
         {activeTab === 'resume' && (
           <div className="space-y-4 text-xs animate-in fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-mono text-[#8D99AE] dark:text-[#B9CAD9]">
+              <span className="text-xs font-mono text-[#806B66] dark:text-[#FFD7C9]">
                 Document: {applicant.name.replace(/\s+/g, '_')}_Resume_2026.pdf (1.4 MB)
               </span>
               <button
                 onClick={() => showToast('Downloaded candidate resume document.')}
-                className="px-3 py-1.5 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] hover:bg-[#EDF2F4] rounded-xl font-semibold flex items-center gap-1.5 transition-colors text-[#2B2D42] dark:text-white"
+                className="px-3 py-1.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] hover:bg-[#FFF0E8] rounded-xl font-semibold flex items-center gap-1.5 transition-colors text-[#252525] dark:text-white"
               >
-                <Download className="w-3.5 h-3.5 text-[#2B2D42]" />
+                <Download className="w-3.5 h-3.5 text-[#252525]" />
                 <span>Download PDF</span>
               </button>
             </div>
 
             {/* Realistic Resume Document Simulation */}
-            <div className="p-8 bg-white dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-2xl shadow-inner space-y-4 font-mono text-[11px] leading-relaxed">
-              <div className="border-b border-[#D7DCE5] dark:border-[#45485E] pb-4">
-                <div className="text-base font-bold text-[#2B2D42] dark:text-white">{applicant.name}</div>
-                <div className="text-[#2B2D42] font-semibold">{applicant.currentDesignation}</div>
-                <div className="text-[#8D99AE] dark:text-[#B9CAD9]">{applicant.email} · {applicant.phone} · {applicant.location}</div>
+            <div className="p-8 bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-inner space-y-4 font-mono text-[11px] leading-relaxed">
+              <div className="border-b border-[#E8C8BE] dark:border-[#3D3634] pb-4">
+                <div className="text-base font-bold text-[#252525] dark:text-white">{applicant.name}</div>
+                <div className="text-[#252525] font-semibold">{applicant.currentDesignation}</div>
+                <div className="text-[#806B66] dark:text-[#FFD7C9]">{applicant.email} · {applicant.phone} · {applicant.location}</div>
               </div>
 
               <div>
-                <div className="font-bold text-[#2B2D42] dark:text-white uppercase">Profile Narrative</div>
-                <p className="text-[#8D99AE] dark:text-[#B9CAD9] mt-1">{applicant.summary}</p>
+                <div className="font-bold text-[#252525] dark:text-white uppercase">Profile Narrative</div>
+                <p className="text-[#806B66] dark:text-[#FFD7C9] mt-1">{applicant.summary}</p>
               </div>
 
               <div>
-                <div className="font-bold text-[#2B2D42] dark:text-white uppercase">Primary Tech Stack</div>
-                <div className="text-[#8D99AE] dark:text-[#B9CAD9] mt-1">{applicant.skills.join(' · ')}</div>
+                <div className="font-bold text-[#252525] dark:text-white uppercase">Primary Tech Stack</div>
+                <div className="text-[#806B66] dark:text-[#FFD7C9] mt-1">{applicant.skills.join(' · ')}</div>
               </div>
 
               <div className="pt-2 text-[10px] text-[#276749] dark:text-[#8AC9A7] font-semibold">
@@ -410,26 +410,26 @@ export const ApplicantDetail: React.FC = () => {
         {/* Tab Content: Timeline */}
         {activeTab === 'timeline' && (
           <div className="space-y-4 text-xs animate-in fade-in">
-            <div className="relative border-l border-[#D7DCE5] dark:border-[#45485E] ml-3 space-y-6">
+            <div className="relative border-l border-[#E8C8BE] dark:border-[#3D3634] ml-3 space-y-6">
               <div className="relative pl-6">
                 <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-[#8AC9A7]" />
-                <div className="font-bold text-[#2B2D42] dark:text-white">Active Stage: {applicant.status}</div>
-                <div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">Candidate progressing according to SLA</div>
+                <div className="font-bold text-[#252525] dark:text-white">Active Stage: {applicant.status}</div>
+                <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">Candidate progressing according to SLA</div>
               </div>
 
               <div className="relative pl-6">
-                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-[#2B2D42]" />
-                <div className="font-bold text-[#2B2D42] dark:text-white">Assigned to Lead Recruiter</div>
-                <div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">{applicant.assignedRecruiter} took ownership</div>
+                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-[#FF6B5E]" />
+                <div className="font-bold text-[#252525] dark:text-white">Assigned to Lead Recruiter</div>
+                <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">{applicant.assignedRecruiter} took ownership</div>
               </div>
 
               <div className="relative pl-6">
-                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-[#2B2D42]" />
-                <div className="font-bold text-[#2B2D42] dark:text-white">Profile Onboarded &amp; Parsed</div>
-                <div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">Source: {applicant.source}</div>
+                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-[#FF6B5E]" />
+                <div className="font-bold text-[#252525] dark:text-white">Profile Onboarded &amp; Parsed</div>
+                <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">Source: {applicant.source}</div>
               </div>
-              {localTasks.map((task) => <div key={task.id} className="relative pl-6"><div className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-[#E5A43B]" /><div className="font-bold text-[#2B2D42] dark:text-white">Task: {task.title}</div><div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">{task.status || 'Open'}{task.dueDate ? ` · due ${task.dueDate}` : ''}</div></div>)}
-              {localActions.map((activity) => <div key={activity.id} className="relative pl-6"><div className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-[#7C6FE8]" /><div className="font-bold text-[#2B2D42] dark:text-white">{activity.action}</div><div className="text-[11px] text-[#8D99AE] dark:text-[#B9CAD9]">{new Date(activity.createdAt).toLocaleString()}</div></div>)}
+              {localTasks.map((task) => <div key={task.id} className="relative pl-6"><div className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-[#E5A43B]" /><div className="font-bold text-[#252525] dark:text-white">Task: {task.title}</div><div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">{task.status || 'Open'}{task.dueDate ? ` · due ${task.dueDate}` : ''}</div></div>)}
+              {localActions.map((activity) => <div key={activity.id} className="relative pl-6"><div className="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-[#7C6FE8]" /><div className="font-bold text-[#252525] dark:text-white">{activity.action}</div><div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">{new Date(activity.createdAt).toLocaleString()}</div></div>)}
             </div>
           </div>
         )}
@@ -437,23 +437,23 @@ export const ApplicantDetail: React.FC = () => {
         {/* Tab Content: Notes */}
         {activeTab === 'notes' && (
           <div className="space-y-4 text-xs animate-in fade-in">
-            <div className="space-y-3 rounded-xl border border-[#D7DCE5] bg-[#F7F9FC] p-4 dark:border-[#45485E] dark:bg-[#36384F]">
-              <div className="grid gap-3 sm:grid-cols-3"><label className="space-y-1 text-[11px] text-[#687789]">Applicant<input value={applicant.name} readOnly className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs text-[#344252] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white" /></label><label className="space-y-1 text-[11px] text-[#687789]">Priority<select value={notePriority} onChange={(e) => setNotePriority(e.target.value)} className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white"><option>Low</option><option>Medium</option><option>High</option></select></label><label className="space-y-1 text-[11px] text-[#687789]">Link to job<input placeholder="Search for a job (optional)" className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white" /></label></div>
-              <textarea rows={4} value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter recruiter note, interview feedback, or next steps..." className="w-full rounded-lg border border-[#D7DCE5] bg-white p-3 text-xs text-[#2B2D42] outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white" />
-              <div className="flex flex-wrap items-center justify-between gap-2"><label className="flex items-center gap-2 text-[11px] text-[#687789]"><input type="checkbox" checked={noteReminder} onChange={(e) => setNoteReminder(e.target.checked)} /> Set reminder for this note</label><button onClick={handleAddNote} className="flex items-center gap-1.5 rounded-lg bg-[#2B2D42] px-4 py-2 font-semibold text-white hover:bg-[#222336]"><Send className="w-3.5 h-3.5" />Save Note</button></div>
+            <div className="space-y-3 rounded-xl border border-[#E8C8BE] bg-[#FFF0E8] p-4 dark:border-[#3D3634] dark:bg-[#48403E]">
+              <div className="grid gap-3 sm:grid-cols-3"><label className="space-y-1 text-[11px] text-[#806B66]">Applicant<input value={applicant.name} readOnly className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs text-[#4D4140] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white" /></label><label className="space-y-1 text-[11px] text-[#806B66]">Priority<select value={notePriority} onChange={(e) => setNotePriority(e.target.value)} className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><option>Low</option><option>Medium</option><option>High</option></select></label><label className="space-y-1 text-[11px] text-[#806B66]">Link to job<input placeholder="Search for a job (optional)" className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs dark:border-[#3D3634] dark:bg-[#252525] dark:text-white" /></label></div>
+              <textarea rows={4} value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Enter recruiter note, interview feedback, or next steps..." className="w-full rounded-lg border border-[#E8C8BE] bg-white p-3 text-xs text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white" />
+              <div className="flex flex-wrap items-center justify-between gap-2"><label className="flex items-center gap-2 text-[11px] text-[#806B66]"><input type="checkbox" checked={noteReminder} onChange={(e) => setNoteReminder(e.target.checked)} /> Set reminder for this note</label><button onClick={handleAddNote} className="flex items-center gap-1.5 rounded-lg bg-[#FF6B5E] px-4 py-2 font-semibold text-white hover:bg-[#E85249]"><Send className="w-3.5 h-3.5" />Save Note</button></div>
             </div>
 
             <div className="space-y-2.5">
               {(applicant.notes || []).map((n) => (
                 <div
                   key={n.id}
-                  className="p-3 bg-[#EDF2F4] dark:bg-[#36384F] border border-[#D7DCE5] dark:border-[#45485E] rounded-xl space-y-1"
+                  className="p-3 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl space-y-1"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#2B2D42] dark:text-white">{n.author}</span>
-                    <span className="font-mono text-[10px] text-[#8D99AE]">{n.date}</span>
+                    <span className="font-bold text-[#252525] dark:text-white">{n.author}</span>
+                    <span className="font-mono text-[10px] text-[#806B66]">{n.date}</span>
                   </div>
-                  <p className="text-[#8D99AE] dark:text-[#B9CAD9]">{n.text}</p>
+                  <p className="text-[#806B66] dark:text-[#FFD7C9]">{n.text}</p>
                 </div>
               ))}
             </div>
@@ -462,17 +462,17 @@ export const ApplicantDetail: React.FC = () => {
       </div>
 
       {dialog && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-        <div className="w-full max-w-xl rounded-2xl border border-[#D7DCE5] bg-white shadow-2xl dark:border-[#45485E] dark:bg-[#2B2D42]" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between border-b border-[#E7EDF3] px-5 py-4 dark:border-[#45485E]"><div><h2 className="font-bold text-[#2B2D42] dark:text-white">{dialog === 'task' ? 'Create New Task' : dialog === 'resume-builder' ? 'Create Resume Builder' : dialog === 'matching-jobs' ? 'Matching Jobs' : dialog === 'bench-jobs' ? 'Bench Marketing Jobs' : dialog === 'upload' ? 'Upload Applicant Document' : dialog === 'edit' ? 'Edit Applicant' : 'Notifications Center'}</h2><p className="mt-1 text-[11px] text-[#7B8794]">{applicant.name} · recruiter workspace</p></div><button onClick={() => setDialog(null)} aria-label="Close"><X className="h-5 w-5 text-[#7B8794]" /></button></div>
+        <div className="w-full max-w-xl rounded-2xl border border-[#E8C8BE] bg-white shadow-2xl dark:border-[#3D3634] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between border-b border-[#FFE6DD] px-5 py-4 dark:border-[#3D3634]"><div><h2 className="font-bold text-[#252525] dark:text-white">{dialog === 'task' ? 'Create New Task' : dialog === 'resume-builder' ? 'Create Resume Builder' : dialog === 'matching-jobs' ? 'Matching Jobs' : dialog === 'bench-jobs' ? 'Bench Marketing Jobs' : dialog === 'upload' ? 'Upload Applicant Document' : dialog === 'edit' ? 'Edit Applicant' : 'Notifications Center'}</h2><p className="mt-1 text-[11px] text-[#806B66]">{applicant.name} · recruiter workspace</p></div><button onClick={() => setDialog(null)} aria-label="Close"><X className="h-5 w-5 text-[#806B66]" /></button></div>
           <div className="space-y-4 p-5 text-xs">
-            {dialog === 'task' && <><label className="block space-y-1 text-[#687789]">Task title<input autoFocus value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="e.g. Follow up after technical interview" className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white" /></label><div className="grid gap-3 sm:grid-cols-2"><label className="block space-y-1 text-[#687789]">Task type<select value={taskType} onChange={(e) => setTaskType(e.target.value)} className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"><option>Follow-up</option><option>Call</option><option>Email</option><option>Interview</option><option>Document request</option><option>Other</option></select></label><label className="block space-y-1 text-[#687789]">Assigned to<select value={taskAssignedTo} onChange={(e) => setTaskAssignedTo(e.target.value)} className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"><option>Priya Sharma</option><option>Marcus Vance</option></select></label></div><label className="block space-y-1 text-[#687789]">Due date<input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white" /></label><div className="rounded-lg bg-[#EDF2F4] p-3 text-[11px] text-[#6D7988] dark:bg-[#36384F]">Task is attached to {applicant.name} and saved in this browser.</div></>}
-            {dialog === 'resume-builder' && <><div className="flex items-center gap-3 rounded-xl border border-[#D7DCE5] bg-[#F7F9FC] p-4 dark:border-[#45485E] dark:bg-[#36384F]"><FilePlus2 className="h-8 w-8 text-[#2B2D42]" /><div><div className="font-semibold text-[#344252] dark:text-white">Build a client-ready resume</div><p className="mt-1 text-[11px] text-[#7B8794]">Create a formatted copy from the candidate profile and selected experience.</p></div></div><label className="block space-y-1 text-[#687789]">Resume template<select className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"><option>Professional — Modern</option><option>Technical — Detailed</option><option>Consulting — Compact</option></select></label><label className="flex items-center gap-2 text-[#526173]"><input type="checkbox" defaultChecked /> Include contact details and skills</label></>}
-            {(dialog === 'matching-jobs' || dialog === 'bench-jobs') && <div className="space-y-2">{dialog === 'bench-jobs' && <p className="rounded-lg bg-[#EDF2F4] p-3 text-[11px] text-[#6D7988] dark:bg-[#36384F]">Review jobs where this applicant can be marketed and track their bench status.</p>}{[{ id: 'job-3', title: 'Principal Cloud AI Architect', client: 'CloudScale Enterprises', score: Math.min(98, applicant.matchScore + 2), tags: applicant.skills.slice(0, 2) }, { id: 'job-1', title: 'Staff Distributed Systems Engineer', client: 'NovaPay Distributed Systems', score: Math.max(72, applicant.matchScore - 4), tags: applicant.skills.slice(1, 3) }, { id: 'job-2', title: 'Senior Platform Engineer', client: 'FinEdge Global Capital', score: Math.max(68, applicant.matchScore - 11), tags: applicant.skills.slice(0, 2) }].map((job) => <div key={job.title} className="flex items-center justify-between gap-4 rounded-xl border border-[#D7DCE5] p-3 dark:border-[#45485E]"><div><div className="font-semibold text-[#344252] dark:text-white">{job.title}</div><div className="mt-1 text-[11px] text-[#7B8794]">{job.client} · {job.tags.join(', ')}</div></div><div className="text-right"><div className="font-mono font-bold text-[#276749]">{job.score}%</div><button onClick={async () => { const updated = { ...applicant, assignedJobId: job.id, assignedJobTitle: job.title }; setApplicant(updated); await ApiService.updateApplicant(applicant.id, { assignedJobId: job.id, assignedJobTitle: job.title }); setDialog(null); showToast(`Candidate matched to ${job.title}.`); }} className="mt-1 rounded-md bg-[#EDF2F4] px-2 py-1 text-[10px] font-semibold text-[#2B2D42] dark:bg-[#36384F]">{dialog === 'bench-jobs' ? 'Market candidate' : 'Match to job'}</button></div></div>)}</div>}
-            {dialog === 'upload' && <div className="space-y-3"><p className="text-[11px] text-[#6D7988]">Add a resume, certificate, or other applicant document to the dossier.</p><input type="file" multiple onChange={(e) => setUploadedName(Array.from(e.target.files || []).map((f) => f.name).join(', '))} className="block w-full rounded-lg border border-[#D7DCE5] p-3 text-xs dark:border-[#45485E]" />{uploadedName && <p className="text-[11px] text-[#2B2D42]">Selected: {uploadedName}</p>}</div>}
-            {dialog === 'edit' && <><div className="grid gap-3 sm:grid-cols-2">{editFields.map((field) => <label key={field.label} className="block space-y-1 text-[#687789]">{field.label}<input value={field.value} onChange={(e) => field.setValue(e.target.value)} className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white" /></label>)}</div><label className="block space-y-1 text-[#687789]">Candidate summary<textarea rows={4} value={editSummary} onChange={(e) => setEditSummary(e.target.value)} className="w-full resize-y rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white" /></label></>}
-            {dialog === 'notification' && <div className="rounded-xl border border-[#D7DCE5] bg-[#F7F9FC] p-5 text-center dark:border-[#45485E] dark:bg-[#36384F]"><Bell className="mx-auto mb-2 h-7 w-7 text-[#2B2D42]" /><div className="font-semibold text-[#344252] dark:text-white">No new notifications</div><p className="mt-1 text-[11px] text-[#7B8794]">Applicant updates and recruiter reminders will appear here.</p></div>}
+            {dialog === 'task' && <><label className="block space-y-1 text-[#806B66]">Task title<input autoFocus value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="e.g. Follow up after technical interview" className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white" /></label><div className="grid gap-3 sm:grid-cols-2"><label className="block space-y-1 text-[#806B66]">Task type<select value={taskType} onChange={(e) => setTaskType(e.target.value)} className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white"><option>Follow-up</option><option>Call</option><option>Email</option><option>Interview</option><option>Document request</option><option>Other</option></select></label><label className="block space-y-1 text-[#806B66]">Assigned to<select value={taskAssignedTo} onChange={(e) => setTaskAssignedTo(e.target.value)} className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white"><option>Priya Sharma</option><option>Marcus Vance</option></select></label></div><label className="block space-y-1 text-[#806B66]">Due date<input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white" /></label><div className="rounded-lg bg-[#FFF0E8] p-3 text-[11px] text-[#6D7988] dark:bg-[#48403E]">Task is attached to {applicant.name} and saved in this browser.</div></>}
+            {dialog === 'resume-builder' && <><div className="flex items-center gap-3 rounded-xl border border-[#E8C8BE] bg-[#FFF0E8] p-4 dark:border-[#3D3634] dark:bg-[#48403E]"><FilePlus2 className="h-8 w-8 text-[#252525]" /><div><div className="font-semibold text-[#4D4140] dark:text-white">Build a client-ready resume</div><p className="mt-1 text-[11px] text-[#806B66]">Create a formatted copy from the candidate profile and selected experience.</p></div></div><label className="block space-y-1 text-[#806B66]">Resume template<select className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white"><option>Professional — Modern</option><option>Technical — Detailed</option><option>Consulting — Compact</option></select></label><label className="flex items-center gap-2 text-[#65534F]"><input type="checkbox" defaultChecked /> Include contact details and skills</label></>}
+            {(dialog === 'matching-jobs' || dialog === 'bench-jobs') && <div className="space-y-2">{dialog === 'bench-jobs' && <p className="rounded-lg bg-[#FFF0E8] p-3 text-[11px] text-[#6D7988] dark:bg-[#48403E]">Review jobs where this applicant can be marketed and track their bench status.</p>}{[{ id: 'job-3', title: 'Principal Cloud AI Architect', client: 'CloudScale Enterprises', score: Math.min(98, applicant.matchScore + 2), tags: applicant.skills.slice(0, 2) }, { id: 'job-1', title: 'Staff Distributed Systems Engineer', client: 'NovaPay Distributed Systems', score: Math.max(72, applicant.matchScore - 4), tags: applicant.skills.slice(1, 3) }, { id: 'job-2', title: 'Senior Platform Engineer', client: 'FinEdge Global Capital', score: Math.max(68, applicant.matchScore - 11), tags: applicant.skills.slice(0, 2) }].map((job) => <div key={job.title} className="flex items-center justify-between gap-4 rounded-xl border border-[#E8C8BE] p-3 dark:border-[#3D3634]"><div><div className="font-semibold text-[#4D4140] dark:text-white">{job.title}</div><div className="mt-1 text-[11px] text-[#806B66]">{job.client} · {job.tags.join(', ')}</div></div><div className="text-right"><div className="font-mono font-bold text-[#276749]">{job.score}%</div><button onClick={async () => { const updated = { ...applicant, assignedJobId: job.id, assignedJobTitle: job.title }; setApplicant(updated); await ApiService.updateApplicant(applicant.id, { assignedJobId: job.id, assignedJobTitle: job.title }); setDialog(null); showToast(`Candidate matched to ${job.title}.`); }} className="mt-1 rounded-md bg-[#FFF0E8] px-2 py-1 text-[10px] font-semibold text-[#252525] dark:bg-[#48403E]">{dialog === 'bench-jobs' ? 'Market candidate' : 'Match to job'}</button></div></div>)}</div>}
+            {dialog === 'upload' && <div className="space-y-3"><p className="text-[11px] text-[#6D7988]">Add a resume, certificate, or other applicant document to the dossier.</p><input type="file" multiple onChange={(e) => setUploadedName(Array.from(e.target.files || []).map((f) => f.name).join(', '))} className="block w-full rounded-lg border border-[#E8C8BE] p-3 text-xs dark:border-[#3D3634]" />{uploadedName && <p className="text-[11px] text-[#252525]">Selected: {uploadedName}</p>}</div>}
+            {dialog === 'edit' && <><div className="grid gap-3 sm:grid-cols-2">{editFields.map((field) => <label key={field.label} className="block space-y-1 text-[#806B66]">{field.label}<input value={field.value} onChange={(e) => field.setValue(e.target.value)} className="w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white" /></label>)}</div><label className="block space-y-1 text-[#806B66]">Candidate summary<textarea rows={4} value={editSummary} onChange={(e) => setEditSummary(e.target.value)} className="w-full resize-y rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white" /></label></>}
+            {dialog === 'notification' && <div className="rounded-xl border border-[#E8C8BE] bg-[#FFF0E8] p-5 text-center dark:border-[#3D3634] dark:bg-[#48403E]"><Bell className="mx-auto mb-2 h-7 w-7 text-[#252525]" /><div className="font-semibold text-[#4D4140] dark:text-white">No new notifications</div><p className="mt-1 text-[11px] text-[#806B66]">Applicant updates and recruiter reminders will appear here.</p></div>}
           </div>
-          <div className="flex justify-end gap-2 border-t border-[#E7EDF3] px-5 py-4 dark:border-[#45485E]"><button onClick={() => setDialog(null)} className="rounded-lg border border-[#D7DCE5] px-3 py-2 text-xs font-semibold text-[#526173] dark:border-[#45485E] dark:text-white">{['notification', 'matching-jobs', 'bench-jobs'].includes(dialog) ? 'Close' : 'Cancel'}</button>{dialog === 'task' && <button onClick={handleCreateTask} className="rounded-lg bg-[#2B2D42] px-4 py-2 text-xs font-semibold text-white">Create Task</button>}{dialog === 'resume-builder' && <button onClick={() => { const drafts = JSON.parse(localStorage.getItem('ats_resume_builder_drafts') || '[]'); localStorage.setItem('ats_resume_builder_drafts', JSON.stringify([{ applicantId: applicant.id, applicantName: applicant.name, template: 'Professional — Modern', createdAt: new Date().toISOString() }, ...drafts])); setDialog(null); showToast('Resume builder draft created.'); }} className="rounded-lg bg-[#2B2D42] px-4 py-2 text-xs font-semibold text-white">Create Draft</button>}{dialog === 'edit' && <button onClick={handleSaveEdit} className="rounded-lg bg-[#2B2D42] px-4 py-2 text-xs font-semibold text-white">Save Changes</button>}{dialog === 'upload' && <button disabled={!uploadedName} onClick={async () => { const additions = uploadedName.split(', ').map((name) => ({ name, size: 'Local file', date: new Date().toISOString().slice(0, 10), type: 'Applicant Document' })); const documents = [...(applicant.documents || []), ...additions]; setApplicant({ ...applicant, documents }); await ApiService.updateApplicant(applicant.id, { documents }); setUploadedName(''); setDialog(null); showToast('Document added to applicant dossier.'); }} className="rounded-lg bg-[#2B2D42] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Add Document</button>}</div>
+          <div className="flex justify-end gap-2 border-t border-[#FFE6DD] px-5 py-4 dark:border-[#3D3634]"><button onClick={() => setDialog(null)} className="rounded-lg border border-[#E8C8BE] px-3 py-2 text-xs font-semibold text-[#65534F] dark:border-[#3D3634] dark:text-white">{['notification', 'matching-jobs', 'bench-jobs'].includes(dialog) ? 'Close' : 'Cancel'}</button>{dialog === 'task' && <button onClick={handleCreateTask} className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white">Create Task</button>}{dialog === 'resume-builder' && <button onClick={() => { const drafts = JSON.parse(localStorage.getItem('ats_resume_builder_drafts') || '[]'); localStorage.setItem('ats_resume_builder_drafts', JSON.stringify([{ applicantId: applicant.id, applicantName: applicant.name, template: 'Professional — Modern', createdAt: new Date().toISOString() }, ...drafts])); setDialog(null); showToast('Resume builder draft created.'); }} className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white">Create Draft</button>}{dialog === 'edit' && <button onClick={handleSaveEdit} className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white">Save Changes</button>}{dialog === 'upload' && <button disabled={!uploadedName} onClick={async () => { const additions = uploadedName.split(', ').map((name) => ({ name, size: 'Local file', date: new Date().toISOString().slice(0, 10), type: 'Applicant Document' })); const documents = [...(applicant.documents || []), ...additions]; setApplicant({ ...applicant, documents }); await ApiService.updateApplicant(applicant.id, { documents }); setUploadedName(''); setDialog(null); showToast('Document added to applicant dossier.'); }} className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Add Document</button>}</div>
         </div>
       </div>}
     </div>

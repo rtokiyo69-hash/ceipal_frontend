@@ -23,9 +23,9 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', collaps
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       {/* Hex prism brand mark */}
       <div className={`relative ${iconSizes[size]} flex items-center justify-center shrink-0`}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#2B2D42] via-[#8D99AE] to-[#2B2D42] rounded-xl rotate-6 opacity-95 shadow-md shadow-[#2B2D42]/30 group-hover:rotate-12 transition-transform" />
-        <div className="absolute inset-0.5 bg-[#2B2D42] rounded-[10px] flex items-center justify-center">
-          <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#8D99AE] to-[#EDF2F4] rounded-sm" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#FF6B5E] via-[#806B66] to-[#FF6B5E] rounded-xl rotate-6 opacity-95 shadow-md shadow-[#FF6B5E]/30 group-hover:rotate-12 transition-transform" />
+        <div className="absolute inset-0.5 bg-[#FF6B5E] rounded-[10px] flex items-center justify-center">
+          <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#806B66] to-[#FFF0E8] rounded-sm" />
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', collaps
           <span className={`font-display font-extrabold text-white ${textSizes[size]}`}>
             ATS
           </span>
-          <span className="w-1.5 h-1.5 bg-[#2B2D42] rounded-full ml-1" />
+          <span className="w-1.5 h-1.5 bg-[#FF6B5E] rounded-full ml-1" />
         </div>
       )}
     </div>
