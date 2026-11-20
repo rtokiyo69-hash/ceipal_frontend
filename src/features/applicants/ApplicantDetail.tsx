@@ -184,7 +184,7 @@ export const ApplicantDetail: React.FC = () => {
 
   if (!applicant) {
     return (
-      <div className="flex h-96 items-center justify-center p-8 text-xs text-[#806B66]">
+      <div className="flex h-96 items-center justify-center p-8 text-xs text-[#64748B]">
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2F80ED] border-t-transparent" />
           <span>Loading applicant profile dossier...</span>
@@ -396,7 +396,7 @@ export const ApplicantDetail: React.FC = () => {
       )}
 
       {/* Top Sub-Navigation Tabs Bar */}
-      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
         <div className="flex flex-wrap items-center gap-1 overflow-x-auto text-xs">
           <button
             type="button"
@@ -473,7 +473,7 @@ export const ApplicantDetail: React.FC = () => {
               <ChevronDown className="h-3 w-3" />
             </button>
             {submitMenuOpen && (
-              <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#252525]">
+              <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]">
                 <button
                   type="button"
                   onClick={() => {
@@ -532,7 +532,7 @@ export const ApplicantDetail: React.FC = () => {
       <div className={`p-3 transition-all ${sidebarCollapsed ? 'pr-4' : 'lg:pr-[318px]'}`}>
         <div className="space-y-3.5">
           {/* 1. Candidate Header Card */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
               {/* Left Candidate Info */}
               <div className="flex items-start gap-3.5">
@@ -633,7 +633,7 @@ export const ApplicantDetail: React.FC = () => {
                         <ChevronDown className="h-3 w-3" />
                       </button>
                       {actionMenuOpen && (
-                        <div className="absolute left-0 top-full z-40 mt-1 max-h-64 w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#252525]">
+                        <div className="absolute left-0 top-full z-40 mt-1 max-h-64 w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]">
                           {[
                             'Bench Marketing Jobs',
                             'Create Task',
@@ -777,7 +777,7 @@ export const ApplicantDetail: React.FC = () => {
           {activeSubTab === 'Snapshot' && (
             <>
               {/* 2. Notes Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-[#1F2937] dark:text-white">Notes</span>
@@ -862,7 +862,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 3. Documents Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Documents</span>
               <div className="flex items-center gap-2.5 text-[#666] dark:text-[#AAA]">
@@ -912,7 +912,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 4. Submissions Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions</span>
               <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
@@ -1033,7 +1033,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 5. eInterviews Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">eInterviews</span>
             </div>
@@ -1060,19 +1060,19 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 6. eForms Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <span className="text-xs font-bold text-[#1F2937] dark:text-white">eForms</span>
             <p className="mt-2 text-center text-xs text-[#888]">No data available</p>
           </div>
 
           {/* 7. Submissions eForms Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions eForms</span>
             <p className="mt-2 text-center text-xs text-[#888]">No data available</p>
           </div>
 
           {/* 8. Task Manager Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Task Manager</span>
               <button
@@ -1109,7 +1109,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 9. Call Logs Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Call Logs</span>
               <button
@@ -1147,7 +1147,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 10. Meeting Schedules Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Meeting Schedules</span>
               <button
@@ -1189,7 +1189,7 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* PERSONAL DETAILS TAB (Image 1 Replication) */}
           {activeSubTab === 'Personal Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
                 <button
@@ -1604,7 +1604,7 @@ export const ApplicantDetail: React.FC = () => {
           {activeSubTab === 'Profession Details' && (
             <div className="space-y-4">
               {/* 1. Education Details Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Education Details</h3>
                   <button
@@ -1649,7 +1649,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               {/* 2. Add Certification Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Add Certification</h3>
                 </div>
@@ -1732,7 +1732,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               {/* 3. Work Experience Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Work Experience</h3>
                   <button
@@ -1755,7 +1755,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               {/* 4. Add Language Details Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Add Language Details</h3>
                 </div>
@@ -1858,7 +1858,7 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* EMPLOYER DETAILS TAB (Image 3 Replication) */}
           {activeSubTab === 'Employer Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Employer Details</h3>
                 <button
@@ -1909,7 +1909,7 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* EMPLOYMENT TEST RESULTS TAB */}
           {activeSubTab === 'Employment Test Results' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Employment Test Results</h3>
                 <button
@@ -1929,7 +1929,7 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* ACTIVITIES TAB */}
           {activeSubTab === 'Activities' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Activities</h3>
               </div>
@@ -1957,7 +1957,7 @@ export const ApplicantDetail: React.FC = () => {
 
       {/* RIGHT SIDEBAR (Fixed / Sticky Right Panel matching Ceipal reference) */}
       <aside
-        className={`fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#333] dark:bg-[#252525] ${
+        className={`fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#333] dark:bg-[#1E293B] ${
           sidebarCollapsed ? 'w-0 overflow-hidden border-none' : 'w-[305px] overflow-y-auto'
         }`}
       >
@@ -2151,7 +2151,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Edit Applicant Modal */}
       {dialog === 'edit' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Edit Applicant Profile</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2245,7 +2245,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* View Resume Modal */}
       {dialog === 'resume' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <div>
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Resume Document — {applicant.name}</h2>
@@ -2290,7 +2290,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Add Note Modal */}
       {dialog === 'note' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Recruiter Note</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2345,7 +2345,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Add Task Modal */}
       {dialog === 'task' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Create Recruiter Task</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2411,7 +2411,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Add Tag Modal */}
       {dialog === 'tag' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Tag</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2454,7 +2454,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Matching Jobs Modal */}
       {dialog === 'matching-jobs' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <div>
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Matching Requisitions</h2>
@@ -2508,7 +2508,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Edit Status Modal */}
       {dialog === 'status' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Change Applicant Status</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2546,7 +2546,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Modal: Add Education */}
       {dialog === 'add-education' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#252525]">
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Education Details</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2605,7 +2605,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Modal: Add Work Experience */}
       {dialog === 'add-work-exp' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#252525]">
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Work Experience</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2664,7 +2664,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Modal: Add Employer Details */}
       {dialog === 'add-employer' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#252525]">
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Employer Details</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">

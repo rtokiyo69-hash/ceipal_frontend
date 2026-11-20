@@ -33,6 +33,8 @@ import { PlatformSettings } from './features/settings/PlatformSettings';
 export default function App() {
   const { currentRoute, isAuthenticated, isDark, currentUser } = useAppStore();
   const isRecruiter = currentUser?.role === 'recruiter';
+  const isAdminApplicants = currentUser?.role === 'admin' && currentRoute === 'applicants';
+  const useBlueClayTheme = isAuthenticated;
 
   useEffect(() => {
     if (isDark) {
@@ -99,7 +101,7 @@ export default function App() {
   };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-[#FFF0E8] dark:bg-[#C94039] text-[#252525] dark:text-[#FFF0E8] ${isRecruiter ? 'recruiter-shell' : ''}`}>
+    <div className={`flex h-screen w-screen overflow-hidden bg-[#FFFFFF] dark:bg-[#1E40AF] text-[#1E293B] dark:text-[#FFFFFF] ${isRecruiter ? 'recruiter-shell' : ''} ${useBlueClayTheme ? 'blue-clay-theme' : ''}`}>
       {!isRecruiter && <Sidebar />}
 
       {/* Main Workspace Frame */}
@@ -108,8 +110,8 @@ export default function App() {
         <TopBar />
 
         {/* Viewport Content */}
-        <main className={`flex-1 overflow-y-auto ${isRecruiter || currentRoute === 'applicant-detail' ? 'p-0' : 'p-6 md:p-8'}`}>
-          <div className={isRecruiter || currentRoute === 'applicant-detail' ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
+        <main className={`flex-1 overflow-y-auto ${isRecruiter || currentRoute === 'applicant-detail' ? 'p-0' : isAdminApplicants ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : 'p-6 md:p-8'}`}>
+          <div className={isRecruiter || currentRoute === 'applicant-detail' || isAdminApplicants ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
         </main>
       </div>
 

@@ -80,7 +80,7 @@ const renderSafeDescription = (description: string): React.ReactNode => {
         : tagName === 'p'
           ? 'my-1.5'
           : tagName === 'h3' || tagName === 'h4'
-            ? 'font-bold text-xs text-[#252525] dark:text-white mt-2 mb-1'
+            ? 'font-bold text-xs text-[#1E293B] dark:text-white mt-2 mb-1'
             : undefined;
     return React.createElement(tagName, { key, className }, children);
   };
@@ -414,7 +414,7 @@ export const JobDetail: React.FC = () => {
 
   if (!job) {
     return (
-      <div className="p-16 text-center text-xs text-[#806B66]">
+      <div className="p-16 text-center text-xs text-[#64748B]">
         Loading job posting dossier...
       </div>
     );
@@ -461,17 +461,17 @@ export const JobDetail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF0E8] dark:bg-[#171717] text-[#252525] dark:text-[#E9D8D1] pb-16">
+    <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#0F172A] text-[#1E293B] dark:text-[#E2E8F0] pb-16">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#FF6B5E] text-white border border-[#FF6B5E] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#2563EB] text-white border border-[#2563EB] px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Top Secondary Navigation Tabs (Ceipal Authenticity) */}
-      <div className="bg-white dark:bg-[#48403E] border-b border-[#E8C8BE] dark:border-[#373131] sticky top-0 z-30 shadow-xs">
+      <div className="bg-white dark:bg-[#475569] border-b border-[#D8E3F1] dark:border-[#1F2937] sticky top-0 z-30 shadow-xs">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 flex items-center justify-between h-11 text-xs">
           {/* Navigation Links */}
           <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
@@ -488,8 +488,8 @@ export const JobDetail: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`px-3 py-2 font-semibold transition-colors border-b-2 whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'border-[#FF6B5E] text-[#252525] dark:text-[#FF8F82]'
-                    : 'border-transparent text-[#806B66] dark:text-[#B68F87] hover:text-[#252525] dark:hover:text-white'
+                    ? 'border-[#2563EB] text-[#1E293B] dark:text-[#60A5FA]'
+                    : 'border-transparent text-[#64748B] dark:text-[#64748B] hover:text-[#1E293B] dark:hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -503,23 +503,23 @@ export const JobDetail: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setIsGearMenuOpen(!isGearMenuOpen)}
-                className="p-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#B68F87] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-1"
+                className="p-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-1"
                 title="Job Settings"
               >
                 <Settings className="w-3.5 h-3.5" />
-                <ChevronDown className="w-3 h-3 text-[#806B66]" />
+                <ChevronDown className="w-3 h-3 text-[#64748B]" />
               </button>
 
               {isGearMenuOpen && (
-                <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl shadow-xl py-1 text-xs z-40 animate-in fade-in">
+                <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl shadow-xl py-1 text-xs z-40 animate-in fade-in">
                   <button
                     onClick={() => {
                       setIsAddNoteModalOpen(true);
                       setIsGearMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-2"
                   >
-                    <FileText className="w-3.5 h-3.5 text-[#252525]" />
+                    <FileText className="w-3.5 h-3.5 text-[#1E293B]" />
                     <span>Add Notes</span>
                   </button>
                   <button
@@ -527,9 +527,9 @@ export const JobDetail: React.FC = () => {
                       setIsUploadDocModalOpen(true);
                       setIsGearMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-2"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#252525]" />
+                    <Download className="w-3.5 h-3.5 text-[#1E293B]" />
                     <span>Upload Document</span>
                   </button>
                   <button
@@ -538,9 +538,9 @@ export const JobDetail: React.FC = () => {
                       showToast('Job requisition link copied to clipboard');
                       setIsGearMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-2"
                   >
-                    <Share2 className="w-3.5 h-3.5 text-[#252525]" />
+                    <Share2 className="w-3.5 h-3.5 text-[#1E293B]" />
                     <span>Share Job</span>
                   </button>
                   <button
@@ -548,9 +548,9 @@ export const JobDetail: React.FC = () => {
                       window.print();
                       setIsGearMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-2"
                   >
-                    <Printer className="w-3.5 h-3.5 text-[#252525]" />
+                    <Printer className="w-3.5 h-3.5 text-[#1E293B]" />
                     <span>Print Requisition</span>
                   </button>
                 </div>
@@ -561,15 +561,15 @@ export const JobDetail: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setIsJobBoardsMenuOpen(!isJobBoardsMenuOpen)}
-                className="px-2.5 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#E8C8BE] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-1 font-medium"
+                className="px-2.5 py-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#D8E3F1] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-1 font-medium"
               >
                 <span>Job Boards</span>
-                <ChevronDown className="w-3 h-3 text-[#806B66]" />
+                <ChevronDown className="w-3 h-3 text-[#64748B]" />
               </button>
 
               {isJobBoardsMenuOpen && (
-                <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl shadow-xl py-1 text-xs z-40">
-                  <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-[#806B66]">Broadcast To</div>
+                <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl shadow-xl py-1 text-xs z-40">
+                  <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-[#64748B]">Broadcast To</div>
                   {['LinkedIn Recruiter', 'Indeed Direct', 'Monster Worldwide', 'Dice Tech', 'CareerBuilder'].map((board) => (
                     <button
                       key={board}
@@ -577,7 +577,7 @@ export const JobDetail: React.FC = () => {
                         showToast(`Broadcast queued for ${board}`);
                         setIsJobBoardsMenuOpen(false);
                       }}
-                      className="w-full text-left px-3 py-1.5 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center justify-between"
+                      className="w-full text-left px-3 py-1.5 hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center justify-between"
                     >
                       <span>{board}</span>
                       <Check className="w-3 h-3 text-[#8AC9A7]" />
@@ -591,21 +591,21 @@ export const JobDetail: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
-                className="px-2.5 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#E8C8BE] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] flex items-center gap-1 font-medium"
+                className="px-2.5 py-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#D8E3F1] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] flex items-center gap-1 font-medium"
               >
                 <span>Share</span>
-                <ChevronDown className="w-3 h-3 text-[#806B66]" />
+                <ChevronDown className="w-3 h-3 text-[#64748B]" />
               </button>
 
               {isShareMenuOpen && (
-                <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl shadow-xl py-1 text-xs z-40">
+                <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl shadow-xl py-1 text-xs z-40">
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(window.location.href);
                       showToast('Direct requisition URL copied');
                       setIsShareMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                    className="w-full text-left px-3 py-2 hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                   >
                     Copy Direct URL
                   </button>
@@ -617,7 +617,7 @@ export const JobDetail: React.FC = () => {
                       showToast('Candidate pitch copied');
                       setIsShareMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                    className="w-full text-left px-3 py-2 hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                   >
                     Copy Candidate Pitch
                   </button>
@@ -642,7 +642,7 @@ export const JobDetail: React.FC = () => {
                 setJob({ ...job, status: 'Active' });
                 showToast('Job marked as Active Requisition');
               }}
-              className="text-[11px] font-bold text-[#252525] hover:underline cursor-pointer"
+              className="text-[11px] font-bold text-[#1E293B] hover:underline cursor-pointer"
             >
               Publish Requisition Now
             </button>
@@ -656,7 +656,7 @@ export const JobDetail: React.FC = () => {
             <span className="font-mono text-[11px] font-semibold">Priority: {job.priority}</span>
           </div>
         ) : (
-          <div className="bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#FFD7C9] px-4 py-2 rounded-lg text-xs flex items-center justify-between">
+          <div className="bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#BFDBFE] px-4 py-2 rounded-lg text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               <span>This requisition is {job.status}.</span>
@@ -674,25 +674,25 @@ export const JobDetail: React.FC = () => {
           {/* ========================================================= */}
           <div className="w-full lg:w-[69%] space-y-4">
             {/* Top Job Hero Card */}
-            <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
               {/* Header Row */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2.5">
                   <button
                     onClick={() => navigate('jobs')}
-                    className="p-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#B68F87] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                    className="p-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                     title="Back to Job Postings"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-md bg-[#FF6B5E] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                    <span className="w-5 h-5 rounded-md bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
                       ★
                     </span>
-                    <h1 className="text-base sm:text-lg font-bold text-[#252525] dark:text-white flex items-center gap-1.5">
+                    <h1 className="text-base sm:text-lg font-bold text-[#1E293B] dark:text-white flex items-center gap-1.5">
                       <span>{job.code} - {job.title}</span>
-                      <Search className="w-3.5 h-3.5 text-[#806B66] cursor-pointer hover:text-[#252525]" />
+                      <Search className="w-3.5 h-3.5 text-[#64748B] cursor-pointer hover:text-[#1E293B]" />
                     </h1>
                   </div>
                 </div>
@@ -701,14 +701,14 @@ export const JobDetail: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handlePrevJob}
-                    className="p-1 rounded-md border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                    className="p-1 rounded-md border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                     title="Previous Job"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleNextJob}
-                    className="p-1 rounded-md border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                    className="p-1 rounded-md border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                     title="Next Job"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -718,8 +718,8 @@ export const JobDetail: React.FC = () => {
 
               {/* Sub-header details & action buttons */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 flex-wrap text-[#806B66] dark:text-[#B68F87]">
-                  <span className="flex items-center gap-1 font-semibold text-[#252525] dark:text-[#FF8F82]">
+                <div className="flex items-center gap-2 flex-wrap text-[#64748B] dark:text-[#64748B]">
+                  <span className="flex items-center gap-1 font-semibold text-[#1E293B] dark:text-[#60A5FA]">
                     <ExternalLink className="w-3.5 h-3.5" />
                     {job.client}
                   </span>
@@ -735,7 +735,7 @@ export const JobDetail: React.FC = () => {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => navigate('job-new')}
-                    className="px-3 py-1.5 rounded-lg border border-[#FF6B5E] text-[#252525] dark:text-[#FF8F82] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] font-semibold text-xs transition-colors"
+                    className="px-3 py-1.5 rounded-lg border border-[#2563EB] text-[#1E293B] dark:text-[#60A5FA] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] font-semibold text-xs transition-colors"
                   >
                     Edit Job
                   </button>
@@ -751,20 +751,20 @@ export const JobDetail: React.FC = () => {
               </div>
 
               {/* 4-Column Key Metrics Card (Ceipal exact layout) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#E8C8BE] dark:border-[#373131] text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#D8E3F1] dark:border-[#1F2937] text-xs">
                 <div>
-                  <div className="text-[11px] text-[#806B66]">Recruitment Manager</div>
-                  <div className="font-semibold text-[#252525] dark:text-white mt-0.5 truncate">
+                  <div className="text-[11px] text-[#64748B]">Recruitment Manager</div>
+                  <div className="font-semibold text-[#1E293B] dark:text-white mt-0.5 truncate">
                     {job.recruitmentManager || 'Sachin Wadeyar'}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[11px] text-[#806B66] flex items-center gap-1">
+                  <div className="text-[11px] text-[#64748B] flex items-center gap-1">
                     <span>Client Bill Rate / Salary</span>
-                    <HelpCircle className="w-3 h-3 text-[#252525]" />
+                    <HelpCircle className="w-3 h-3 text-[#1E293B]" />
                   </div>
-                  <div className="font-semibold text-[#252525] dark:text-white mt-0.5">
+                  <div className="font-semibold text-[#1E293B] dark:text-white mt-0.5">
                     {job.billRate && job.billRate > 0
                       ? `${job.currency === 'INR' ? '₹' : '$'}${job.billRate} / hr`
                       : 'N/A'}
@@ -772,30 +772,30 @@ export const JobDetail: React.FC = () => {
                 </div>
 
                 <div>
-                  <div className="text-[11px] text-[#806B66]">Created By &amp; On</div>
-                  <div className="font-semibold text-[#252525] dark:text-white mt-0.5">
+                  <div className="text-[11px] text-[#64748B]">Created By &amp; On</div>
+                  <div className="font-semibold text-[#1E293B] dark:text-white mt-0.5">
                     <div>{job.assignedRecruiter || 'Ganesh Godse'}</div>
-                    <div className="text-[10px] text-[#806B66]">On {job.createdDate || '10/11/2026'}</div>
+                    <div className="text-[10px] text-[#64748B]">On {job.createdDate || '10/11/2026'}</div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[11px] text-[#806B66]">Business Unit</div>
-                  <div className="font-semibold text-[#252525] dark:text-white mt-0.5 truncate">
+                  <div className="text-[11px] text-[#64748B]">Business Unit</div>
+                  <div className="font-semibold text-[#1E293B] dark:text-white mt-0.5 truncate">
                     {job.businessUnit || 'Ampcus Tech Pvt Ltd.'}
                   </div>
                 </div>
               </div>
 
               {/* Job Description Card with More/Less toggle */}
-              <div className="pt-3 border-t border-[#E8C8BE] dark:border-[#373131] text-xs space-y-1.5">
-                <div className="flex items-center gap-1 font-semibold text-[#252525] dark:text-white">
+              <div className="pt-3 border-t border-[#D8E3F1] dark:border-[#1F2937] text-xs space-y-1.5">
+                <div className="flex items-center gap-1 font-semibold text-[#1E293B] dark:text-white">
                   <span>Job Description</span>
-                  <FileText className="w-3.5 h-3.5 text-[#252525]" />
+                  <FileText className="w-3.5 h-3.5 text-[#1E293B]" />
                 </div>
 
                 <div
-                  className={`text-[#806B66] dark:text-[#B68F87] leading-relaxed ${
+                  className={`text-[#64748B] dark:text-[#64748B] leading-relaxed ${
                     !isDescExpanded ? 'line-clamp-2' : ''
                   }`}
                 >
@@ -805,7 +805,7 @@ export const JobDetail: React.FC = () => {
                 <div className="flex items-center gap-3 pt-1">
                   <button
                     onClick={() => setIsDescExpanded(!isDescExpanded)}
-                    className="text-[#252525] hover:underline font-semibold flex items-center gap-1 text-[11px]"
+                    className="text-[#1E293B] hover:underline font-semibold flex items-center gap-1 text-[11px]"
                   >
                     <span>{isDescExpanded ? '^ Less' : 'More ∨'}</span>
                   </button>
@@ -826,15 +826,15 @@ export const JobDetail: React.FC = () => {
                 {/* ========================================================= */}
                 {/* SUBMISSIONS TABLE SECTION */}
                 {/* ========================================================= */}
-                <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl shadow-xs overflow-hidden">
+                <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl shadow-xs overflow-hidden">
                   {/* Submissions Header & Filters */}
-                  <div className="p-4 border-b border-[#E8C8BE] dark:border-[#373131] space-y-3">
+                  <div className="p-4 border-b border-[#D8E3F1] dark:border-[#1F2937] space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-bold text-[#252525] dark:text-white">Submissions</h2>
+                        <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">Submissions</h2>
                         <button
                           onClick={() => setIsSubmitCandidateModalOpen(true)}
-                          className="px-2 py-1 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#FF6B5E]/40 text-[#252525] dark:text-[#FF8F82] rounded-md text-[11px] font-bold hover:bg-[#FF6B5E] hover:text-white transition-colors flex items-center gap-1"
+                          className="px-2 py-1 bg-[#FFFFFF] dark:bg-[#475569] border border-[#2563EB]/40 text-[#1E293B] dark:text-[#60A5FA] rounded-md text-[11px] font-bold hover:bg-[#2563EB] hover:text-white transition-colors flex items-center gap-1"
                         >
                           <Plus className="w-3 h-3" />
                           <span>Submit Candidate</span>
@@ -848,13 +848,13 @@ export const JobDetail: React.FC = () => {
                           value={submissionSearch}
                           onChange={(e) => setSubmissionSearch(e.target.value)}
                           placeholder="Search candidate name or ID..."
-                          className="w-full pl-8 pr-3 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+                          className="w-full pl-8 pr-3 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                         />
-                        <Search className="w-3.5 h-3.5 text-[#806B66] absolute left-2.5 top-2.5" />
+                        <Search className="w-3.5 h-3.5 text-[#64748B] absolute left-2.5 top-2.5" />
                         {submissionSearch && (
                           <button
                             onClick={() => setSubmissionSearch('')}
-                            className="absolute right-2.5 top-2 text-[#806B66] hover:text-black dark:hover:text-white text-xs"
+                            className="absolute right-2.5 top-2 text-[#64748B] hover:text-black dark:hover:text-white text-xs"
                           >
                             ×
                           </button>
@@ -880,8 +880,8 @@ export const JobDetail: React.FC = () => {
                             onClick={() => setSubmissionFilterTab(tab.id as typeof submissionFilterTab)}
                             className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
                               isActive
-                                ? 'bg-[#FF6B5E] text-white shadow-xs'
-                                : 'bg-[#FFF0E8] dark:bg-[#252525] text-[#806B66] dark:text-[#B68F87] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]'
+                                ? 'bg-[#2563EB] text-white shadow-xs'
+                                : 'bg-[#FFFFFF] dark:bg-[#1E293B] text-[#64748B] dark:text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]'
                             }`}
                           >
                             <span>{tab.label}</span>
@@ -889,7 +889,7 @@ export const JobDetail: React.FC = () => {
                               className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                                 isActive
                                   ? 'bg-white/20 text-white'
-                                  : 'bg-[#E8C8BE] dark:bg-[#4D4140] text-[#252525] dark:text-white'
+                                  : 'bg-[#D8E3F1] dark:bg-[#334155] text-[#1E293B] dark:text-white'
                               }`}
                             >
                               {tab.count}
@@ -904,7 +904,7 @@ export const JobDetail: React.FC = () => {
                   <div className="overflow-x-auto ceipal-table-scroll">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="bg-[#FFF0E8]/60 dark:bg-[#252525] border-b border-[#E8C8BE] dark:border-[#373131] text-[11px] font-bold text-[#806B66] dark:text-[#B68F87] uppercase tracking-wider">
+                        <tr className="bg-[#FFFFFF]/60 dark:bg-[#1E293B] border-b border-[#D8E3F1] dark:border-[#1F2937] text-[11px] font-bold text-[#64748B] dark:text-[#64748B] uppercase tracking-wider">
                           <th className="py-2.5 px-4">NAME</th>
                           <th className="py-2.5 px-4">SUBMITTED BY / ON</th>
                           <th className="py-2.5 px-4">CONTACT / LOCATION</th>
@@ -913,15 +913,15 @@ export const JobDetail: React.FC = () => {
                           <th className="py-2.5 px-4 text-right">ACTIONS</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E8C8BE] dark:divide-[#373131]">
+                      <tbody className="divide-y divide-[#D8E3F1] dark:divide-[#1F2937]">
                         {filteredSubmissions.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="py-12 text-center text-xs text-[#806B66]">
+                            <td colSpan={6} className="py-12 text-center text-xs text-[#64748B]">
                               <div className="space-y-2">
                                 <p>No data available</p>
                                 <button
                                   onClick={() => setIsSubmitCandidateModalOpen(true)}
-                                  className="text-[#252525] dark:text-[#FF8F82] font-semibold hover:underline"
+                                  className="text-[#1E293B] dark:text-[#60A5FA] font-semibold hover:underline"
                                 >
                                   + Submit a candidate to this requisition
                                 </button>
@@ -934,7 +934,7 @@ export const JobDetail: React.FC = () => {
                             return (
                               <tr
                                 key={sub.id}
-                                className="hover:bg-[#FFF0E8] dark:hover:bg-[#252525]/60 transition-colors"
+                                className="hover:bg-[#FFFFFF] dark:hover:bg-[#1E293B]/60 transition-colors"
                               >
                                 {/* Name column */}
                                 <td className="py-3 px-4">
@@ -945,7 +945,7 @@ export const JobDetail: React.FC = () => {
                                         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250'
                                       }
                                       alt={sub.applicantName}
-                                      className="w-9 h-9 rounded-full object-cover ring-1 ring-[#E8C8BE] shrink-0"
+                                      className="w-9 h-9 rounded-full object-cover ring-1 ring-[#D8E3F1] shrink-0"
                                     />
                                     <div>
                                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -953,15 +953,15 @@ export const JobDetail: React.FC = () => {
                                           onClick={() => {
                                             if (cand) setResumeApplicant(cand);
                                           }}
-                                          className="font-bold text-[#252525] dark:text-[#FF8F82] hover:underline text-xs"
+                                          className="font-bold text-[#1E293B] dark:text-[#60A5FA] hover:underline text-xs"
                                         >
                                           {sub.applicantName}
                                         </button>
-                                        <span className="font-mono text-[10px] text-[#806B66] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-800">
+                                        <span className="font-mono text-[10px] text-[#64748B] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-800">
                                           {cand?.applicantId || sub.submissionId}
                                         </span>
                                       </div>
-                                      <div className="text-[11px] text-[#806B66] dark:text-[#B68F87]">
+                                      <div className="text-[11px] text-[#64748B] dark:text-[#64748B]">
                                         {cand?.currentDesignation || 'Software Specialist'}
                                       </div>
                                       <div className="flex items-center gap-2 mt-0.5">
@@ -974,7 +974,7 @@ export const JobDetail: React.FC = () => {
                                           onClick={() => {
                                             if (cand) setResumeApplicant(cand);
                                           }}
-                                          className="text-[10px] text-[#252525] hover:underline font-semibold flex items-center gap-0.5"
+                                          className="text-[10px] text-[#1E293B] hover:underline font-semibold flex items-center gap-0.5"
                                         >
                                           <Eye className="w-3 h-3" />
                                           <span>View Resume</span>
@@ -986,10 +986,10 @@ export const JobDetail: React.FC = () => {
 
                                 {/* Submitted by / on */}
                                 <td className="py-3 px-4">
-                                  <div className="font-semibold text-[#252525] dark:text-white">
+                                  <div className="font-semibold text-[#1E293B] dark:text-white">
                                     {sub.recruiter}
                                   </div>
-                                  <div className="text-[10px] text-[#806B66] flex items-center gap-1 mt-0.5">
+                                  <div className="text-[10px] text-[#64748B] flex items-center gap-1 mt-0.5">
                                     <Clock className="w-3 h-3" />
                                     <span>{sub.submittedDate}</span>
                                   </div>
@@ -997,15 +997,15 @@ export const JobDetail: React.FC = () => {
 
                                 {/* Contact / Location */}
                                 <td className="py-3 px-4">
-                                  <div className="flex items-center gap-1 text-[#252525] dark:text-white font-medium">
-                                    <Phone className="w-3 h-3 text-[#252525]" />
+                                  <div className="flex items-center gap-1 text-[#1E293B] dark:text-white font-medium">
+                                    <Phone className="w-3 h-3 text-[#1E293B]" />
                                     <span>{cand?.phone || '+91 9423022606'}</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-[11px] text-[#806B66] dark:text-[#B68F87] mt-0.5 truncate max-w-[200px]">
-                                    <Mail className="w-3 h-3 text-[#806B66]" />
+                                  <div className="flex items-center gap-1 text-[11px] text-[#64748B] dark:text-[#64748B] mt-0.5 truncate max-w-[200px]">
+                                    <Mail className="w-3 h-3 text-[#64748B]" />
                                     <span>{cand?.email || 'candidate@example.com'}</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-[10px] text-[#806B66] mt-0.5">
+                                  <div className="flex items-center gap-1 text-[10px] text-[#64748B] mt-0.5">
                                     <MapPin className="w-3 h-3 text-[#8AC9A7]" />
                                     <span>{cand?.location || 'Nashik, India'}</span>
                                   </div>
@@ -1013,12 +1013,12 @@ export const JobDetail: React.FC = () => {
 
                                 {/* Pay Rate / Work Auth */}
                                 <td className="py-3 px-4">
-                                  <div className="font-mono font-semibold text-[#252525] dark:text-white">
+                                  <div className="font-mono font-semibold text-[#1E293B] dark:text-white">
                                     {sub.payRate > 0
                                       ? `$${sub.payRate}/hr`
                                       : cand?.expectedSalary || 'INR - 0.00..'}
                                   </div>
-                                  <div className="text-[10px] text-[#806B66] mt-0.5">
+                                  <div className="text-[10px] text-[#64748B] mt-0.5">
                                     Notice: {cand?.noticePeriod || '15 Days'}
                                   </div>
                                 </td>
@@ -1027,11 +1027,11 @@ export const JobDetail: React.FC = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     onClick={() => handleOpenStatusModal(sub)}
-                                    className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#FFF0E8] dark:bg-[#48403E] border border-[#FF6B5E]/40 text-[#252525] dark:text-[#FF8F82] hover:bg-[#FF6B5E] hover:text-white transition-colors cursor-pointer text-left block"
+                                    className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#FFFFFF] dark:bg-[#475569] border border-[#2563EB]/40 text-[#1E293B] dark:text-[#60A5FA] hover:bg-[#2563EB] hover:text-white transition-colors cursor-pointer text-left block"
                                     title="Click to change application status"
                                   >
                                     <span>{sub.status}</span>
-                                    <span className="block text-[9px] text-[#806B66] dark:text-[#B68F87] font-normal mt-0.5">
+                                    <span className="block text-[9px] text-[#64748B] dark:text-[#64748B] font-normal mt-0.5">
                                       Click to update ▾
                                     </span>
                                   </button>
@@ -1044,7 +1044,7 @@ export const JobDetail: React.FC = () => {
                                       onClick={() => {
                                         if (cand) setSkillMatrixApplicant(cand);
                                       }}
-                                      className="p-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#252525] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                                      className="p-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#1E293B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                                       title="Open Skill Matrix"
                                     >
                                       <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -1052,7 +1052,7 @@ export const JobDetail: React.FC = () => {
 
                                     <button
                                       onClick={() => handleOpenStatusModal(sub)}
-                                      className="p-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#276749] hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                                      className="p-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#276749] hover:bg-emerald-50 dark:hover:bg-emerald-950"
                                       title="Update Status"
                                     >
                                       <UserCheck className="w-3.5 h-3.5" />
@@ -1062,7 +1062,7 @@ export const JobDetail: React.FC = () => {
                                       onClick={() => {
                                         if (cand) setResumeApplicant(cand);
                                       }}
-                                      className="p-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                                      className="p-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                                       title="View Resume"
                                     >
                                       <FileText className="w-3.5 h-3.5" />
@@ -1072,7 +1072,7 @@ export const JobDetail: React.FC = () => {
                                       onClick={() => {
                                         showToast(`Email drafted for ${sub.applicantName}`);
                                       }}
-                                      className="p-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E]"
+                                      className="p-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]"
                                       title="Send Email"
                                     >
                                       <Mail className="w-3.5 h-3.5" />
@@ -1091,17 +1091,17 @@ export const JobDetail: React.FC = () => {
                 {/* ========================================================= */}
                 {/* NOTES SECTION */}
                 {/* ========================================================= */}
-                <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl shadow-xs overflow-hidden">
-                  <div className="p-4 border-b border-[#E8C8BE] dark:border-[#373131] flex items-center justify-between">
+                <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl shadow-xs overflow-hidden">
+                  <div className="p-4 border-b border-[#D8E3F1] dark:border-[#1F2937] flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <h2 className="text-sm font-bold text-[#252525] dark:text-white">Notes</h2>
+                      <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">Notes</h2>
                       <div className="flex items-center gap-1 text-xs">
                         <button
                           onClick={() => setNotesTab('job_posting')}
                           className={`px-2.5 py-1 rounded-md font-semibold text-[11px] ${
                             notesTab === 'job_posting'
-                              ? 'bg-[#FF6B5E] text-white'
-                              : 'bg-[#FFF0E8] dark:bg-[#252525] text-[#806B66]'
+                              ? 'bg-[#2563EB] text-white'
+                              : 'bg-[#FFFFFF] dark:bg-[#1E293B] text-[#64748B]'
                           }`}
                         >
                           Job Posting ({job.notes?.filter((n) => n.category === 'Job Posting').length || 0})
@@ -1110,8 +1110,8 @@ export const JobDetail: React.FC = () => {
                           onClick={() => setNotesTab('applicant_reference')}
                           className={`px-2.5 py-1 rounded-md font-semibold text-[11px] ${
                             notesTab === 'applicant_reference'
-                              ? 'bg-[#FF6B5E] text-white'
-                              : 'bg-[#FFF0E8] dark:bg-[#252525] text-[#806B66]'
+                              ? 'bg-[#2563EB] text-white'
+                              : 'bg-[#FFFFFF] dark:bg-[#1E293B] text-[#64748B]'
                           }`}
                         >
                           Applicant Reference ({job.notes?.filter((n) => n.category === 'Applicant Reference').length || 0})
@@ -1124,7 +1124,7 @@ export const JobDetail: React.FC = () => {
                         onClick={() => {
                           setIsAddNoteModalOpen(true);
                         }}
-                        className="px-2.5 py-1 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-md text-xs font-semibold flex items-center gap-1 shadow-xs"
+                        className="px-2.5 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-md text-xs font-semibold flex items-center gap-1 shadow-xs"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Add</span>
@@ -1135,16 +1135,16 @@ export const JobDetail: React.FC = () => {
                   {/* Notes Table */}
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-[#FFF0E8]/60 dark:bg-[#252525] border-b border-[#E8C8BE] dark:border-[#373131] text-[11px] font-bold text-[#806B66] dark:text-[#B68F87] uppercase">
+                      <tr className="bg-[#FFFFFF]/60 dark:bg-[#1E293B] border-b border-[#D8E3F1] dark:border-[#1F2937] text-[11px] font-bold text-[#64748B] dark:text-[#64748B] uppercase">
                         <th className="py-2.5 px-4 w-48">ADDED BY / ON</th>
                         <th className="py-2.5 px-4">NOTES / DESCRIPTION</th>
                         <th className="py-2.5 px-4 w-24 text-right">ACTION</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E8C8BE] dark:divide-[#373131]">
+                    <tbody className="divide-y divide-[#D8E3F1] dark:divide-[#1F2937]">
                       {(!job.notes || job.notes.filter((n) => (n.category || 'Job Posting') === (notesTab === 'job_posting' ? 'Job Posting' : 'Applicant Reference')).length === 0) ? (
                         <tr>
-                          <td colSpan={3} className="py-6 text-center text-xs text-[#806B66]">
+                          <td colSpan={3} className="py-6 text-center text-xs text-[#64748B]">
                             No data available
                           </td>
                         </tr>
@@ -1152,12 +1152,12 @@ export const JobDetail: React.FC = () => {
                         job.notes
                           .filter((n) => (n.category || 'Job Posting') === (notesTab === 'job_posting' ? 'Job Posting' : 'Applicant Reference'))
                           .map((note) => (
-                            <tr key={note.id} className="hover:bg-[#FFF0E8] dark:hover:bg-[#252525]/60">
+                            <tr key={note.id} className="hover:bg-[#FFFFFF] dark:hover:bg-[#1E293B]/60">
                               <td className="py-2.5 px-4">
-                                <div className="font-semibold text-[#252525] dark:text-white">{note.author}</div>
-                                <div className="text-[10px] text-[#806B66]">{note.date}</div>
+                                <div className="font-semibold text-[#1E293B] dark:text-white">{note.author}</div>
+                                <div className="text-[10px] text-[#64748B]">{note.date}</div>
                               </td>
-                              <td className="py-2.5 px-4 text-[#806B66] dark:text-[#E8C8BE] whitespace-pre-wrap">
+                              <td className="py-2.5 px-4 text-[#64748B] dark:text-[#D8E3F1] whitespace-pre-wrap">
                                 {note.text}
                               </td>
                               <td className="py-2.5 px-4 text-right">
@@ -1179,12 +1179,12 @@ export const JobDetail: React.FC = () => {
                 {/* ========================================================= */}
                 {/* DOCUMENTS SECTION */}
                 {/* ========================================================= */}
-                <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl shadow-xs overflow-hidden">
-                  <div className="p-4 border-b border-[#E8C8BE] dark:border-[#373131] flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-[#252525] dark:text-white">Documents</h2>
+                <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl shadow-xs overflow-hidden">
+                  <div className="p-4 border-b border-[#D8E3F1] dark:border-[#1F2937] flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">Documents</h2>
                     <button
                       onClick={() => setIsUploadDocModalOpen(true)}
-                      className="px-2.5 py-1 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-md text-xs font-semibold flex items-center gap-1 shadow-xs"
+                      className="px-2.5 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-md text-xs font-semibold flex items-center gap-1 shadow-xs"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add</span>
@@ -1192,25 +1192,25 @@ export const JobDetail: React.FC = () => {
                   </div>
 
                   {(!job.documents || job.documents.length === 0) ? (
-                    <div className="py-8 text-center text-xs text-[#806B66]">
+                    <div className="py-8 text-center text-xs text-[#64748B]">
                       No data available
                     </div>
                   ) : (
-                    <div className="divide-y divide-[#E8C8BE] dark:divide-[#373131]">
+                    <div className="divide-y divide-[#D8E3F1] dark:divide-[#1F2937]">
                       {job.documents.map((doc) => (
                         <div
                           key={doc.id}
-                          className="p-3.5 px-4 flex items-center justify-between hover:bg-[#FFF0E8] dark:hover:bg-[#252525]/60 transition-colors"
+                          className="p-3.5 px-4 flex items-center justify-between hover:bg-[#FFFFFF] dark:hover:bg-[#1E293B]/60 transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-[#FFF0E8] dark:bg-[#48403E] text-[#252525] dark:text-[#FF8F82]">
+                            <div className="p-2 rounded-lg bg-[#FFFFFF] dark:bg-[#475569] text-[#1E293B] dark:text-[#60A5FA]">
                               <FileText className="w-4 h-4" />
                             </div>
                             <div>
-                              <div className="text-xs font-bold text-[#252525] dark:text-white">
+                              <div className="text-xs font-bold text-[#1E293B] dark:text-white">
                                 {doc.name}
                               </div>
-                              <div className="text-[10px] text-[#806B66]">
+                              <div className="text-[10px] text-[#64748B]">
                                 {(doc.size / 1024).toFixed(1)} KB · {doc.type || 'Document'}
                               </div>
                             </div>
@@ -1219,7 +1219,7 @@ export const JobDetail: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => void handleDownloadDocument(doc)}
-                              className="px-2.5 py-1 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-[#252525] dark:text-[#FF8F82] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] rounded-md text-xs font-semibold flex items-center gap-1"
+                              className="px-2.5 py-1 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] text-[#1E293B] dark:text-[#60A5FA] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] rounded-md text-xs font-semibold flex items-center gap-1"
                             >
                               <Download className="w-3 h-3" />
                               <span>Download</span>
@@ -1244,112 +1244,112 @@ export const JobDetail: React.FC = () => {
             {activeTab === 'job_details' && (
               <div className="space-y-4">
                 {/* Job Details Card */}
-                <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+                <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                     Requisition Specifications &amp; Parameters
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs">
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Job Start Date</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Job Start Date</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.startDate || '10/11/2026'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Job End Date</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Job End Date</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.endDate || '31/12/2026'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Remote Job</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Remote Job</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.remoteJob || 'No'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Turnaround Time</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Turnaround Time</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.turnaroundTime ? `${job.turnaroundTime} ${job.turnaroundUnit || 'Days'}` : 'N/A'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Duration</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Duration</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.duration || '1 month 22 day(s)'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Application Form</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Application Form</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         General Application
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Respond By</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Respond By</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.respondBy || 'Open Until Filled'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Client</span>
-                      <span className="font-semibold text-[#252525] dark:text-[#FF8F82]">
+                      <span className="text-[11px] text-[#64748B] block">Client</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-[#60A5FA]">
                         {job.client}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Client Manager</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Client Manager</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.clientManager || 'N/A'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Priority</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Priority</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.priority}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Client Job ID</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Client Job ID</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.clientJobId || 'N/A'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">CEIPAL Ref #</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">CEIPAL Ref #</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         2026-12219
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Job Type</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Job Type</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.type}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Notice Period</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Notice Period</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.noticePeriod || '1 Month'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Post Job on Career Portal</span>
+                      <span className="text-[11px] text-[#64748B] block">Post Job on Career Portal</span>
                       <div className="flex items-center gap-2 mt-0.5">
                         <button
                           onClick={async () => {
@@ -1372,35 +1372,35 @@ export const JobDetail: React.FC = () => {
                 </div>
 
                 {/* Skills Breakdown */}
-                <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+                <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                     Skills &amp; Education Matrix
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs">
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Industry</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Industry</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.industry || 'Information Technology & Services'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Experience</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Experience</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.minExperience ? `${job.minExperience}-${job.maxExperience} Years` : '2-5 Years'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Degree</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Degree</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.degree || "Bachelor's Degree in Computer Science or IT"}
                       </span>
                     </div>
 
                     <div className="sm:col-span-3">
-                      <span className="text-[11px] text-[#806B66] block">Primary Skills</span>
+                      <span className="text-[11px] text-[#64748B] block">Primary Skills</span>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {(job.primarySkills && job.primarySkills.length > 0
                           ? job.primarySkills
@@ -1408,7 +1408,7 @@ export const JobDetail: React.FC = () => {
                         ).map((sk) => (
                           <span
                             key={sk}
-                            className="px-2 py-0.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#FF6B5E]/40 text-[#252525] dark:text-[#FF8F82] rounded-md font-mono text-xs font-semibold"
+                            className="px-2 py-0.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#2563EB]/40 text-[#1E293B] dark:text-[#60A5FA] rounded-md font-mono text-xs font-semibold"
                           >
                             {sk}
                           </span>
@@ -1417,19 +1417,19 @@ export const JobDetail: React.FC = () => {
                     </div>
 
                     <div className="sm:col-span-3">
-                      <span className="text-[11px] text-[#806B66] block">Secondary Skills</span>
+                      <span className="text-[11px] text-[#64748B] block">Secondary Skills</span>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {(job.secondarySkills && job.secondarySkills.length > 0) ? (
                           job.secondarySkills.map((sk) => (
                             <span
                               key={sk}
-                              className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-[#806B66] dark:text-[#E8C8BE] rounded-md font-mono text-xs"
+                              className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-[#64748B] dark:text-[#D8E3F1] rounded-md font-mono text-xs"
                             >
                               {sk}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[#806B66] italic">N/A</span>
+                          <span className="text-[#64748B] italic">N/A</span>
                         )}
                       </div>
                     </div>
@@ -1437,50 +1437,50 @@ export const JobDetail: React.FC = () => {
                 </div>
 
                 {/* Organizational Information */}
-                <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+                <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                     Organizational Information &amp; Stakeholders
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs">
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Number of Positions</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Number of Positions</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.openings || 1}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Sales Manager</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Sales Manager</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.salesManager || 'David Miller'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Comments</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Comments</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.comments || 'N/A'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Assigned To</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Assigned To</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.assignedTo || job.assignedRecruiter || 'Ganesh Godse'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Account Manager</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Account Manager</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.accountManager || 'Rajesh Ramanathan'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-[#806B66] block">Maximum Allowed Submissions</span>
-                      <span className="font-semibold text-[#252525] dark:text-white">
+                      <span className="text-[11px] text-[#64748B] block">Maximum Allowed Submissions</span>
+                      <span className="font-semibold text-[#1E293B] dark:text-white">
                         {job.maxSubmissions || 5}
                       </span>
                     </div>
@@ -1491,25 +1491,25 @@ export const JobDetail: React.FC = () => {
 
             {/* Sub-Tab 3: Additional Details */}
             {activeTab === 'additional_details' && (
-              <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+              <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                   Additional Job Details &amp; Compliance Specifications
                 </h3>
-                <div className="p-4 bg-[#FFF0E8] dark:bg-[#171717] rounded-xl text-xs space-y-3 leading-relaxed">
+                <div className="p-4 bg-[#FFFFFF] dark:bg-[#0F172A] rounded-xl text-xs space-y-3 leading-relaxed">
                   <div>
-                    <span className="font-bold text-[#252525] dark:text-white">Full Job Description:</span>
+                    <span className="font-bold text-[#1E293B] dark:text-white">Full Job Description:</span>
                     <div className="mt-1 whitespace-pre-wrap">{job.description}</div>
                   </div>
-                  <div className="pt-2 border-t border-[#E8C8BE] dark:border-[#373131]">
-                    <span className="font-bold text-[#252525] dark:text-white">Cost Center: </span>
+                  <div className="pt-2 border-t border-[#D8E3F1] dark:border-[#1F2937]">
+                    <span className="font-bold text-[#1E293B] dark:text-white">Cost Center: </span>
                     <span>{job.costCenter || 'CC-1049'}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-[#252525] dark:text-white">Department Code: </span>
+                    <span className="font-bold text-[#1E293B] dark:text-white">Department Code: </span>
                     <span>{job.departmentCode || 'ENG-SW-02'}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-[#252525] dark:text-white">Client PO: </span>
+                    <span className="font-bold text-[#1E293B] dark:text-white">Client PO: </span>
                     <span>{job.poNumber || 'PO-88921-X'}</span>
                   </div>
                 </div>
@@ -1518,21 +1518,21 @@ export const JobDetail: React.FC = () => {
 
             {/* Sub-Tab 4: Task Manager */}
             {activeTab === 'task_manager' && (
-              <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
+              <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                     Requisition Task Manager
                   </h3>
                   <button
                     onClick={() => showToast('New task created')}
-                    className="px-2.5 py-1 bg-[#FF6B5E] text-white text-xs font-bold rounded-lg flex items-center gap-1"
+                    className="px-2.5 py-1 bg-[#2563EB] text-white text-xs font-bold rounded-lg flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Task</span>
                   </button>
                 </div>
 
-                <div className="divide-y divide-[#E8C8BE] dark:divide-[#373131] text-xs">
+                <div className="divide-y divide-[#D8E3F1] dark:divide-[#1F2937] text-xs">
                   {[
                     { id: 't1', title: 'Review 5 Python/PostgreSQL profiles from LinkedIn pipeline', due: 'Tomorrow', assigned: 'Ganesh Godse', status: 'Pending' },
                     { id: 't2', title: 'Schedule Client Hiring Manager Interview for Demo User', due: 'In 2 days', assigned: 'Sachin Wadeyar', status: 'In Progress' },
@@ -1543,13 +1543,13 @@ export const JobDetail: React.FC = () => {
                         <input
                           type="checkbox"
                           defaultChecked={t.status === 'Completed'}
-                          className="rounded text-[#252525]"
+                          className="rounded text-[#1E293B]"
                         />
                         <div>
-                          <div className={`font-semibold ${t.status === 'Completed' ? 'line-through text-[#806B66]' : 'text-[#252525] dark:text-white'}`}>
+                          <div className={`font-semibold ${t.status === 'Completed' ? 'line-through text-[#64748B]' : 'text-[#1E293B] dark:text-white'}`}>
                             {t.title}
                           </div>
-                          <div className="text-[10px] text-[#806B66]">Due: {t.due} · Assigned: {t.assigned}</div>
+                          <div className="text-[10px] text-[#64748B]">Due: {t.due} · Assigned: {t.assigned}</div>
                         </div>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -1565,8 +1565,8 @@ export const JobDetail: React.FC = () => {
 
             {/* Sub-Tab 5: Activities */}
             {activeTab === 'activities' && (
-              <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+              <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                   Requisition Audit Trail &amp; Activity Log
                 </h3>
 
@@ -1576,11 +1576,11 @@ export const JobDetail: React.FC = () => {
                     { time: '10/11/2026 20:07:23', user: 'Ganesh Godse', desc: 'Updated requisition parameters and boolean search criteria' },
                     { time: '10/11/2026 20:00:51', user: 'Ganesh Godse', desc: 'Created requisition AMP12262 - Demo Job Test for client ampcustech' }
                   ].map((act, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-3 bg-[#FFF0E8] dark:bg-[#171717] rounded-lg">
-                      <div className="w-2 h-2 rounded-full bg-[#FF6B5E] mt-1.5 shrink-0"></div>
+                    <div key={idx} className="flex items-start gap-3 p-3 bg-[#FFFFFF] dark:bg-[#0F172A] rounded-lg">
+                      <div className="w-2 h-2 rounded-full bg-[#2563EB] mt-1.5 shrink-0"></div>
                       <div>
-                        <div className="font-semibold text-[#252525] dark:text-white">{act.desc}</div>
-                        <div className="text-[10px] text-[#806B66] mt-0.5">By {act.user} · {act.time}</div>
+                        <div className="font-semibold text-[#1E293B] dark:text-white">{act.desc}</div>
+                        <div className="text-[10px] text-[#64748B] mt-0.5">By {act.user} · {act.time}</div>
                       </div>
                     </div>
                   ))}
@@ -1590,16 +1590,16 @@ export const JobDetail: React.FC = () => {
 
             {/* Sub-Tab 6: Email Merges */}
             {activeTab === 'email_merges' && (
-              <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-5 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82]">
+              <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA]">
                   Candidate Email Merge &amp; Campaign Center
                 </h3>
-                <p className="text-xs text-[#806B66] dark:text-[#B68F87]">
+                <p className="text-xs text-[#64748B] dark:text-[#64748B]">
                   Dispatch tailored candidate outreach email campaigns using smart merge tokens.
                 </p>
 
-                <div className="p-4 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#373131] rounded-xl space-y-3 text-xs">
-                  <div className="font-bold text-[#252525] dark:text-white">
+                <div className="p-4 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl space-y-3 text-xs">
+                  <div className="font-bold text-[#1E293B] dark:text-white">
                     Available Merge Tags:
                   </div>
                   <div className="flex flex-wrap gap-2 text-[11px] font-mono">
@@ -1612,7 +1612,7 @@ export const JobDetail: React.FC = () => {
 
                   <button
                     onClick={() => showToast('Email merge sequence initiated')}
-                    className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-xs"
+                    className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-xs"
                   >
                     <Mail className="w-4 h-4" />
                     <span>Launch Requisition Email Campaign</span>
@@ -1627,9 +1627,9 @@ export const JobDetail: React.FC = () => {
           {/* ========================================================= */}
           <div className="w-full lg:w-[31%] space-y-4">
             {/* Search Criteria Box */}
-            <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-4 shadow-xs space-y-3 text-xs">
+            <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-4 shadow-xs space-y-3 text-xs">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[#252525] dark:text-white text-xs">Search Criteria</h3>
+                <h3 className="font-bold text-[#1E293B] dark:text-white text-xs">Search Criteria</h3>
                 <button
                   onClick={() => {
                     if (job.primarySkills && job.primarySkills.length > 0) {
@@ -1639,7 +1639,7 @@ export const JobDetail: React.FC = () => {
                       showToast('Search criteria reset to primary skills');
                     }
                   }}
-                  className="text-[#806B66] hover:text-[#252525]"
+                  className="text-[#64748B] hover:text-[#1E293B]"
                   title="Reset Search Criteria"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -1652,20 +1652,20 @@ export const JobDetail: React.FC = () => {
                   value={booleanQuery}
                   onChange={(e) => setBooleanQuery(e.target.value)}
                   rows={4}
-                  className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg font-mono text-[11px] text-[#252525] dark:text-[#E9D8D1] leading-relaxed focus:outline-none focus:border-[#FF6B5E]"
+                  className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg font-mono text-[11px] text-[#1E293B] dark:text-[#E2E8F0] leading-relaxed focus:outline-none focus:border-[#2563EB]"
                 />
 
                 <div className="flex justify-end mt-1 relative">
                   <button
                     onClick={() => setIsStringBuilderOpen(!isStringBuilderOpen)}
-                    className="text-[#252525] dark:text-[#FF8F82] font-semibold text-[11px] flex items-center gap-1 hover:underline"
+                    className="text-[#1E293B] dark:text-[#60A5FA] font-semibold text-[11px] flex items-center gap-1 hover:underline"
                   >
                     <span>String Builder</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
 
                   {isStringBuilderOpen && (
-                    <div className="absolute right-0 top-6 w-36 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg shadow-xl py-1 z-40 text-xs">
+                    <div className="absolute right-0 top-6 w-36 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg shadow-xl py-1 z-40 text-xs">
                       {['AND', 'OR', 'NOT', 'NEAR/5', '("...")'].map((op) => (
                         <button
                           key={op}
@@ -1673,7 +1673,7 @@ export const JobDetail: React.FC = () => {
                             setBooleanQuery((prev) => `${prev} ${op} `);
                             setIsStringBuilderOpen(false);
                           }}
-                          className="w-full text-left px-3 py-1.5 hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] font-mono text-[11px]"
+                          className="w-full text-left px-3 py-1.5 hover:bg-[#FFFFFF] dark:hover:bg-[#475569] font-mono text-[11px]"
                         >
                           + {op}
                         </button>
@@ -1685,34 +1685,34 @@ export const JobDetail: React.FC = () => {
 
               {/* Job Title */}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-[#806B66] block">JOB TITLE</label>
+                <label className="text-[10px] uppercase font-bold text-[#64748B] block">JOB TITLE</label>
                 <input
                   type="text"
                   value={searchJobTitle}
                   onChange={(e) => setSearchJobTitle(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                  className="w-full px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
                 />
-                <label className="flex items-center gap-2 text-[11px] text-[#806B66] dark:text-[#B68F87] cursor-pointer mt-1">
+                <label className="flex items-center gap-2 text-[11px] text-[#64748B] dark:text-[#64748B] cursor-pointer mt-1">
                   <input
                     type="checkbox"
                     checked={recentJobTitleOnly}
                     onChange={(e) => setRecentJobTitleOnly(e.target.checked)}
-                    className="rounded text-[#252525]"
+                    className="rounded text-[#1E293B]"
                   />
                   <span>Recent Job Title</span>
                 </label>
               </div>
 
               {/* Location Details */}
-              <div className="space-y-2 pt-2 border-t border-[#E8C8BE] dark:border-[#373131]">
-                <label className="text-[10px] uppercase font-bold text-[#806B66] block">LOCATION DETAILS</label>
+              <div className="space-y-2 pt-2 border-t border-[#D8E3F1] dark:border-[#1F2937]">
+                <label className="text-[10px] uppercase font-bold text-[#64748B] block">LOCATION DETAILS</label>
 
                 <div>
-                  <span className="text-[10px] text-[#806B66] block">Country</span>
+                  <span className="text-[10px] text-[#64748B] block">Country</span>
                   <select
                     value={searchCountry}
                     onChange={(e) => setSearchCountry(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                    className="w-full px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
                   >
                     <option value="India">India</option>
                     <option value="United States">United States</option>
@@ -1722,11 +1722,11 @@ export const JobDetail: React.FC = () => {
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-[#806B66] block">State</span>
+                  <span className="text-[10px] text-[#64748B] block">State</span>
                   <select
                     value={searchState}
                     onChange={(e) => setSearchState(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                    className="w-full px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
                   >
                     <option value="Maharashtra">Maharashtra</option>
                     <option value="Karnataka">Karnataka</option>
@@ -1738,60 +1738,60 @@ export const JobDetail: React.FC = () => {
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-1 text-[10px] text-[#806B66]">
+                  <div className="flex items-center gap-1 text-[10px] text-[#64748B]">
                     <span>City</span>
-                    <HelpCircle className="w-3 h-3 text-[#252525]" />
+                    <HelpCircle className="w-3 h-3 text-[#1E293B]" />
                   </div>
                   <input
                     type="text"
                     value={searchCity}
                     onChange={(e) => setSearchCity(e.target.value)}
                     placeholder="Search city name"
-                    className="w-full px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                    className="w-full px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
                   />
                 </div>
 
-                <label className="flex items-center gap-2 text-[11px] text-[#806B66] dark:text-[#B68F87] cursor-pointer mt-1">
+                <label className="flex items-center gap-2 text-[11px] text-[#64748B] dark:text-[#64748B] cursor-pointer mt-1">
                   <input
                     type="checkbox"
                     checked={includeNoCountry}
                     onChange={(e) => setIncludeNoCountry(e.target.checked)}
-                    className="rounded text-[#252525]"
+                    className="rounded text-[#1E293B]"
                   />
                   <span>Include Applicants Without Country</span>
                 </label>
               </div>
 
               {/* Filters */}
-              <div className="space-y-2 pt-2 border-t border-[#E8C8BE] dark:border-[#373131]">
-                <label className="text-[10px] uppercase font-bold text-[#806B66] block">FILTERS</label>
+              <div className="space-y-2 pt-2 border-t border-[#D8E3F1] dark:border-[#1F2937]">
+                <label className="text-[10px] uppercase font-bold text-[#64748B] block">FILTERS</label>
 
                 <div>
-                  <span className="text-[10px] text-[#806B66] block">Total Experience (Years)</span>
+                  <span className="text-[10px] text-[#64748B] block">Total Experience (Years)</span>
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="number"
                       value={minExp}
                       onChange={(e) => setMinExp(Number(e.target.value))}
-                      className="w-14 px-2 py-1 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-md text-xs text-center font-mono"
+                      className="w-14 px-2 py-1 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-md text-xs text-center font-mono"
                     />
-                    <span className="text-xs text-[#806B66]">to</span>
+                    <span className="text-xs text-[#64748B]">to</span>
                     <input
                       type="number"
                       value={maxExp}
                       onChange={(e) => setMaxExp(Number(e.target.value))}
-                      className="w-14 px-2 py-1 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-md text-xs text-center font-mono"
+                      className="w-14 px-2 py-1 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-md text-xs text-center font-mono"
                     />
-                    <span className="text-xs text-[#806B66]">years</span>
+                    <span className="text-xs text-[#64748B]">years</span>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-[#806B66] block">Educational Details</span>
+                  <span className="text-[10px] text-[#64748B] block">Educational Details</span>
                   <select
                     value={educationDetails}
                     onChange={(e) => setEducationDetails(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                    className="w-full px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
                   >
                     <option value="Bachelor's Degree">Bachelor's Degree</option>
                     <option value="Master's Degree">Master's Degree</option>
@@ -1801,27 +1801,27 @@ export const JobDetail: React.FC = () => {
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-[#806B66] block">Employer</span>
+                  <span className="text-[10px] text-[#64748B] block">Employer</span>
                   <input
                     type="text"
                     value={employer}
                     onChange={(e) => setEmployer(e.target.value)}
                     placeholder="Search employer..."
-                    className="w-full px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                    className="w-full px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
                   />
-                  <label className="flex items-center gap-2 text-[11px] text-[#806B66] dark:text-[#B68F87] cursor-pointer mt-1">
+                  <label className="flex items-center gap-2 text-[11px] text-[#64748B] dark:text-[#64748B] cursor-pointer mt-1">
                     <input
                       type="checkbox"
                       checked={mostRecentEmployerOnly}
                       onChange={(e) => setMostRecentEmployerOnly(e.target.checked)}
-                      className="rounded text-[#252525]"
+                      className="rounded text-[#1E293B]"
                     />
                     <span>Most Recent Employer</span>
                   </label>
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-[#806B66] block">Willing to Relocate</span>
+                  <span className="text-[10px] text-[#64748B] block">Willing to Relocate</span>
                   <div className="flex items-center gap-4 mt-1 text-xs">
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -1850,7 +1850,7 @@ export const JobDetail: React.FC = () => {
                     onClick={() => {
                       showToast('Search criteria updated and saved to requisition');
                     }}
-                    className="w-full py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white font-bold rounded-lg text-xs shadow-xs transition-colors"
+                    className="w-full py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-lg text-xs shadow-xs transition-colors"
                   >
                     Save
                   </button>
@@ -1858,7 +1858,7 @@ export const JobDetail: React.FC = () => {
                     onClick={() => {
                       setIsAiMatchingOpen(true);
                     }}
-                    className="w-full py-2 bg-white dark:bg-[#252525] border border-[#FF6B5E] text-[#252525] dark:text-[#FF8F82] font-bold rounded-lg text-xs hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] transition-colors"
+                    className="w-full py-2 bg-white dark:bg-[#1E293B] border border-[#2563EB] text-[#1E293B] dark:text-[#60A5FA] font-bold rounded-lg text-xs hover:bg-[#FFFFFF] dark:hover:bg-[#475569] transition-colors"
                   >
                     Save and Search
                   </button>
@@ -1866,7 +1866,7 @@ export const JobDetail: React.FC = () => {
                     onClick={() => {
                       setIsJobBoardsMenuOpen(true);
                     }}
-                    className="w-full py-2 bg-white dark:bg-[#252525] border border-[#FF6B5E] text-[#252525] dark:text-[#FF8F82] font-bold rounded-lg text-xs hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] transition-colors"
+                    className="w-full py-2 bg-white dark:bg-[#1E293B] border border-[#2563EB] text-[#1E293B] dark:text-[#60A5FA] font-bold rounded-lg text-xs hover:bg-[#FFFFFF] dark:hover:bg-[#475569] transition-colors"
                   >
                     Search Job Boards
                   </button>
@@ -1875,46 +1875,46 @@ export const JobDetail: React.FC = () => {
             </div>
 
             {/* Job Details Card */}
-            <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-4 shadow-xs space-y-3 text-xs">
-              <h3 className="font-bold text-[#252525] dark:text-white">Job Details</h3>
+            <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-4 shadow-xs space-y-3 text-xs">
+              <h3 className="font-bold text-[#1E293B] dark:text-white">Job Details</h3>
               <div>
-                <span className="text-[10px] text-[#806B66] flex items-center gap-1">
+                <span className="text-[10px] text-[#64748B] flex items-center gap-1">
                   <span>Job Category</span>
-                  <HelpCircle className="w-3 h-3 text-[#252525]" />
+                  <HelpCircle className="w-3 h-3 text-[#1E293B]" />
                 </span>
-                <span className="font-semibold text-[#252525] dark:text-white mt-0.5 block">
+                <span className="font-semibold text-[#1E293B] dark:text-white mt-0.5 block">
                   {job.category || 'Non Niche'}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#806B66] flex items-center gap-1">
+                <span className="text-[10px] text-[#64748B] flex items-center gap-1">
                   <span>Job Skill Type</span>
-                  <HelpCircle className="w-3 h-3 text-[#252525]" />
+                  <HelpCircle className="w-3 h-3 text-[#1E293B]" />
                 </span>
-                <span className="font-semibold text-[#252525] dark:text-white mt-0.5 block">
+                <span className="font-semibold text-[#1E293B] dark:text-white mt-0.5 block">
                   {job.skillType || 'IT'}
                 </span>
               </div>
             </div>
 
             {/* User Defined Fields */}
-            <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#373131] rounded-xl p-4 shadow-xs space-y-3 text-xs">
-              <h3 className="font-bold text-[#252525] dark:text-white">User Defined Fields</h3>
+            <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#1F2937] rounded-xl p-4 shadow-xs space-y-3 text-xs">
+              <h3 className="font-bold text-[#1E293B] dark:text-white">User Defined Fields</h3>
               <div>
-                <span className="text-[10px] text-[#806B66] block">Cost Center</span>
-                <span className="font-mono font-semibold text-[#252525] dark:text-white mt-0.5 block">
+                <span className="text-[10px] text-[#64748B] block">Cost Center</span>
+                <span className="font-mono font-semibold text-[#1E293B] dark:text-white mt-0.5 block">
                   {job.costCenter || 'CC-1049'}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#806B66] block">Department Code</span>
-                <span className="font-mono font-semibold text-[#252525] dark:text-white mt-0.5 block">
+                <span className="text-[10px] text-[#64748B] block">Department Code</span>
+                <span className="font-mono font-semibold text-[#1E293B] dark:text-white mt-0.5 block">
                   {job.departmentCode || 'ENG-SW-02'}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#806B66] block">PO Number</span>
-                <span className="font-mono font-semibold text-[#252525] dark:text-white mt-0.5 block">
+                <span className="text-[10px] text-[#64748B] block">PO Number</span>
+                <span className="font-mono font-semibold text-[#1E293B] dark:text-white mt-0.5 block">
                   {job.poNumber || 'PO-88921-X'}
                 </span>
               </div>
@@ -1928,20 +1928,20 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {skillMatrixApplicant && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="p-5 border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between">
+            <div className="p-5 border-b border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-display font-bold text-[#252525] dark:text-white">
+                <h2 className="text-xl font-display font-bold text-[#1E293B] dark:text-white">
                   Skill Matrix
                 </h2>
-                <p className="text-xs text-[#806B66] dark:text-[#B68F87]">
+                <p className="text-xs text-[#64748B] dark:text-[#64748B]">
                   Verified skills and years of experience for {skillMatrixApplicant.name} ({skillMatrixApplicant.applicantId})
                 </p>
               </div>
               <button
                 onClick={() => setSkillMatrixApplicant(null)}
-                className="p-1.5 rounded-lg text-[#806B66] hover:text-[#252525] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="p-1.5 rounded-lg text-[#64748B] hover:text-[#1E293B] dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1951,11 +1951,11 @@ export const JobDetail: React.FC = () => {
             <div className="p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2.5 text-xs font-mono">
                 {/* Column Headers */}
-                <div className="flex justify-between font-sans font-bold text-[#806B66] dark:text-[#B68F87] pb-1 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+                <div className="flex justify-between font-sans font-bold text-[#64748B] dark:text-[#64748B] pb-1 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <span>Skill</span>
                   <span>Experience</span>
                 </div>
-                <div className="hidden md:flex justify-between font-sans font-bold text-[#806B66] dark:text-[#B68F87] pb-1 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+                <div className="hidden md:flex justify-between font-sans font-bold text-[#64748B] dark:text-[#64748B] pb-1 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <span>Skill</span>
                   <span>Experience</span>
                 </div>
@@ -1963,11 +1963,11 @@ export const JobDetail: React.FC = () => {
                 {/* Skill Matrix Rows */}
                 {getCandidateSkillMatrix(skillMatrixApplicant).map((item, index) => (
                   <div key={index} className="flex items-baseline justify-between gap-2 py-1">
-                    <span className="bg-[#FFF0E8] dark:bg-[#252525] px-1.5 py-0.5 rounded text-[#252525] dark:text-white shrink-0">
+                    <span className="bg-[#FFFFFF] dark:bg-[#1E293B] px-1.5 py-0.5 rounded text-[#1E293B] dark:text-white shrink-0">
                       {item.skill}
                     </span>
                     <span className="flex-1 border-b border-dotted border-gray-400 dark:border-gray-600 mx-1"></span>
-                    <span className="text-[#806B66] dark:text-[#E8C8BE] shrink-0 font-semibold">
+                    <span className="text-[#64748B] dark:text-[#D8E3F1] shrink-0 font-semibold">
                       {item.exp}
                     </span>
                   </div>
@@ -1976,10 +1976,10 @@ export const JobDetail: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-[#E8C8BE] dark:border-[#3D3634] bg-[#FFF0E8] dark:bg-[#171717] flex justify-end">
+            <div className="p-4 border-t border-[#D8E3F1] dark:border-[#334155] bg-[#FFFFFF] dark:bg-[#0F172A] flex justify-end">
               <button
                 onClick={() => setSkillMatrixApplicant(null)}
-                className="px-5 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-bold rounded-xl shadow-xs"
+                className="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl shadow-xs"
               >
                 Close Matrix
               </button>
@@ -1993,15 +1993,15 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {statusModalSubmission && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="p-4 px-6 border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between">
-              <h2 className="text-base font-bold text-[#252525] dark:text-white">
+            <div className="p-4 px-6 border-b border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between">
+              <h2 className="text-base font-bold text-[#1E293B] dark:text-white">
                 Application Status
               </h2>
               <button
                 onClick={() => setStatusModalSubmission(null)}
-                className="text-[#806B66] hover:text-[#252525] dark:hover:text-white"
+                className="text-[#64748B] hover:text-[#1E293B] dark:hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2010,19 +2010,19 @@ export const JobDetail: React.FC = () => {
             {/* Modal Body */}
             <div className="p-6 space-y-4 text-xs">
               <div>
-                <label className="block text-[11px] font-semibold text-[#806B66] dark:text-[#B68F87] mb-1">
-                  Candidate: <strong className="text-[#252525] dark:text-white">{statusModalSubmission.applicantName}</strong> (Sub #{statusModalSubmission.submissionId})
+                <label className="block text-[11px] font-semibold text-[#64748B] dark:text-[#64748B] mb-1">
+                  Candidate: <strong className="text-[#1E293B] dark:text-white">{statusModalSubmission.applicantName}</strong> (Sub #{statusModalSubmission.submissionId})
                 </label>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#806B66] dark:text-[#B68F87] mb-1">
+                <label className="block text-[11px] font-semibold text-[#64748B] dark:text-[#64748B] mb-1">
                   Application Status
                 </label>
                 <select
                   value={selectedStatusValue}
                   onChange={(e) => setSelectedStatusValue(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-semibold text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                 >
                   {CEIPAL_STATUS_OPTIONS.map((st) => (
                     <option key={st} value={st}>
@@ -2033,7 +2033,7 @@ export const JobDetail: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#806B66] dark:text-[#B68F87] mb-1">
+                <label className="block text-[11px] font-semibold text-[#64748B] dark:text-[#64748B] mb-1">
                   Comments
                 </label>
                 <textarea
@@ -2041,22 +2041,22 @@ export const JobDetail: React.FC = () => {
                   onChange={(e) => setStatusComment(e.target.value)}
                   rows={4}
                   placeholder="Enter comments or evaluation notes for this application status change..."
-                  className="w-full p-3 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+                  className="w-full p-3 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                 />
               </div>
             </div>
 
             {/* Modal Footer with Ceipal Buttons */}
-            <div className="p-4 px-6 border-t border-[#E8C8BE] dark:border-[#3D3634] bg-[#FFF0E8] dark:bg-[#171717] flex justify-end gap-2">
+            <div className="p-4 px-6 border-t border-[#D8E3F1] dark:border-[#334155] bg-[#FFFFFF] dark:bg-[#0F172A] flex justify-end gap-2">
               <button
                 onClick={handleUpdateSubmissionStatus}
-                className="px-5 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-bold rounded-lg shadow-xs"
+                className="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-lg shadow-xs"
               >
                 Update
               </button>
               <button
                 onClick={() => setStatusModalSubmission(null)}
-                className="px-4 py-2 border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-semibold rounded-lg"
+                className="px-4 py-2 border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-semibold rounded-lg"
               >
                 Cancel
               </button>
@@ -2070,29 +2070,29 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {resumeApplicant && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex justify-end animate-in fade-in">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#48403E] border-l border-[#E8C8BE] dark:border-[#3D3634] shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-200">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#475569] border-l border-[#D8E3F1] dark:border-[#334155] shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
-            <div className="p-4 px-6 border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between">
+            <div className="p-4 px-6 border-b border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="p-1 rounded-full bg-[#FFF0E8] dark:bg-[#48403E] text-[#252525]">
+                <span className="p-1 rounded-full bg-[#FFFFFF] dark:bg-[#475569] text-[#1E293B]">
                   👤
                 </span>
-                <h2 className="text-sm font-bold text-[#252525] dark:text-white flex items-center gap-1.5">
+                <h2 className="text-sm font-bold text-[#1E293B] dark:text-white flex items-center gap-1.5">
                   <span>{resumeApplicant.applicantId} - {resumeApplicant.name}</span>
-                  <Search className="w-3.5 h-3.5 text-[#806B66]" />
+                  <Search className="w-3.5 h-3.5 text-[#64748B]" />
                 </h2>
               </div>
               <button
                 onClick={() => setResumeApplicant(null)}
-                className="p-1 text-[#806B66] hover:text-[#252525] dark:hover:text-white"
+                className="p-1 text-[#64748B] hover:text-[#1E293B] dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Fast Action Bar */}
-            <div className="p-3 px-6 bg-[#FFF0E8] dark:bg-[#171717] border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3 text-[#806B66] dark:text-[#B68F87]">
+            <div className="p-3 px-6 bg-[#FFFFFF] dark:bg-[#0F172A] border-b border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3 text-[#64748B] dark:text-[#64748B]">
                 <span>{resumeApplicant.location}</span>
                 <span>·</span>
                 <span>{resumeApplicant.phone}</span>
@@ -2105,7 +2105,7 @@ export const JobDetail: React.FC = () => {
                   onClick={() => {
                     setSkillMatrixApplicant(resumeApplicant);
                   }}
-                  className="px-2.5 py-1 bg-white dark:bg-[#252525] border border-[#FF6B5E] text-[#252525] dark:text-[#FF8F82] rounded-md font-semibold text-[11px]"
+                  className="px-2.5 py-1 bg-white dark:bg-[#1E293B] border border-[#2563EB] text-[#1E293B] dark:text-[#60A5FA] rounded-md font-semibold text-[11px]"
                 >
                   Skill Matrix
                 </button>
@@ -2113,7 +2113,7 @@ export const JobDetail: React.FC = () => {
                   onClick={() => {
                     showToast(`Resume file exported for ${resumeApplicant.name}`);
                   }}
-                  className="px-2.5 py-1 bg-[#FF6B5E] text-white rounded-md font-semibold text-[11px] flex items-center gap-1"
+                  className="px-2.5 py-1 bg-[#2563EB] text-white rounded-md font-semibold text-[11px] flex items-center gap-1"
                 >
                   <Download className="w-3 h-3" />
                   <span>Download</span>
@@ -2125,24 +2125,24 @@ export const JobDetail: React.FC = () => {
             <div className="p-6 overflow-y-auto space-y-6 text-xs flex-1">
               {/* Summary */}
               <div>
-                <h3 className="font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82] mb-1.5">
+                <h3 className="font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA] mb-1.5">
                   Professional Summary
                 </h3>
-                <p className="p-3 bg-[#FFF0E8] dark:bg-[#171717] rounded-xl text-[#806B66] dark:text-[#E8C8BE] leading-relaxed">
+                <p className="p-3 bg-[#FFFFFF] dark:bg-[#0F172A] rounded-xl text-[#64748B] dark:text-[#D8E3F1] leading-relaxed">
                   {resumeApplicant.summary || 'Full Stack Engineer with 5+ years experience in building high-scale Python, React and PostgreSQL enterprise applications.'}
                 </p>
               </div>
 
               {/* Skills Badges */}
               <div>
-                <h3 className="font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82] mb-2">
+                <h3 className="font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA] mb-2">
                   Technical Competencies ({resumeApplicant.skills?.length || 0})
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {resumeApplicant.skills?.map((sk) => (
                     <span
                       key={sk}
-                      className="px-2.5 py-1 rounded-lg bg-[#FFF0E8] dark:bg-[#48403E] border border-[#FF6B5E]/30 font-mono text-[11px] font-semibold text-[#252525] dark:text-[#FF8F82]"
+                      className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] dark:bg-[#475569] border border-[#2563EB]/30 font-mono text-[11px] font-semibold text-[#1E293B] dark:text-[#60A5FA]"
                     >
                       {sk}
                     </span>
@@ -2152,7 +2152,7 @@ export const JobDetail: React.FC = () => {
 
               {/* Work Experience */}
               <div>
-                <h3 className="font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82] mb-3">
+                <h3 className="font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA] mb-3">
                   Work History
                 </h3>
                 <div className="space-y-4">
@@ -2163,13 +2163,13 @@ export const JobDetail: React.FC = () => {
                         { role: 'Junior Software Developer', company: 'Acme Logistics Pvt Ltd', duration: 'July 2021 - Feb 2023', summary: 'Maintained order management tracking dashboards and logistics data pipelines.' }
                       ]
                   ).map((exp, idx) => (
-                    <div key={idx} className="p-3.5 bg-[#FFF0E8] dark:bg-[#171717] rounded-xl space-y-1">
-                      <div className="flex items-center justify-between font-bold text-[#252525] dark:text-white">
+                    <div key={idx} className="p-3.5 bg-[#FFFFFF] dark:bg-[#0F172A] rounded-xl space-y-1">
+                      <div className="flex items-center justify-between font-bold text-[#1E293B] dark:text-white">
                         <span>{exp.role}</span>
-                        <span className="text-[11px] text-[#806B66] font-normal">{exp.duration}</span>
+                        <span className="text-[11px] text-[#64748B] font-normal">{exp.duration}</span>
                       </div>
-                      <div className="text-[11px] font-semibold text-[#252525]">{exp.company}</div>
-                      <p className="text-[#806B66] dark:text-[#B68F87] text-[11px] mt-1">{exp.summary}</p>
+                      <div className="text-[11px] font-semibold text-[#1E293B]">{exp.company}</div>
+                      <p className="text-[#64748B] dark:text-[#64748B] text-[11px] mt-1">{exp.summary}</p>
                     </div>
                   ))}
                 </div>
@@ -2177,14 +2177,14 @@ export const JobDetail: React.FC = () => {
 
               {/* Education */}
               <div>
-                <h3 className="font-bold uppercase tracking-wider text-[#252525] dark:text-[#FF8F82] mb-2">
+                <h3 className="font-bold uppercase tracking-wider text-[#1E293B] dark:text-[#60A5FA] mb-2">
                   Education &amp; Qualifications
                 </h3>
-                <div className="p-3 bg-[#FFF0E8] dark:bg-[#171717] rounded-xl">
-                  <div className="font-bold text-[#252525] dark:text-white">
+                <div className="p-3 bg-[#FFFFFF] dark:bg-[#0F172A] rounded-xl">
+                  <div className="font-bold text-[#1E293B] dark:text-white">
                     {resumeApplicant.education?.[0]?.degree || 'Bachelor of Engineering in Computer Science'}
                   </div>
-                  <div className="text-[11px] text-[#806B66] dark:text-[#B68F87]">
+                  <div className="text-[11px] text-[#64748B] dark:text-[#64748B]">
                     {resumeApplicant.education?.[0]?.school || 'Savitribai Phule Pune University, Pune'} · {resumeApplicant.education?.[0]?.year || '2017'}
                   </div>
                 </div>
@@ -2199,18 +2199,18 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {isAiMatchingOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-4 px-6 border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between">
+            <div className="p-4 px-6 border-b border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#8B5CF6]" />
-                <h2 className="text-base font-bold text-[#252525] dark:text-white">
+                <h2 className="text-base font-bold text-[#1E293B] dark:text-white">
                   AI Matching Candidates for {job.code} ({job.title})
                 </h2>
               </div>
               <button
                 onClick={() => setIsAiMatchingOpen(false)}
-                className="text-[#806B66] hover:text-[#252525] dark:hover:text-white"
+                className="text-[#64748B] hover:text-[#1E293B] dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2219,9 +2219,9 @@ export const JobDetail: React.FC = () => {
             {/* Body Split: Sliders on Left + Candidate List on Right */}
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
               {/* Left Score Sliders */}
-              <div className="w-full md:w-64 p-5 border-r border-[#E8C8BE] dark:border-[#3D3634] space-y-6 text-xs bg-[#FFF0E8] dark:bg-[#171717]">
+              <div className="w-full md:w-64 p-5 border-r border-[#D8E3F1] dark:border-[#334155] space-y-6 text-xs bg-[#FFFFFF] dark:bg-[#0F172A]">
                 <div>
-                  <h3 className="font-bold text-[#252525] dark:text-white text-xs mb-3">
+                  <h3 className="font-bold text-[#1E293B] dark:text-white text-xs mb-3">
                     Matching Scores
                   </h3>
 
@@ -2229,7 +2229,7 @@ export const JobDetail: React.FC = () => {
                     <div>
                       <div className="flex justify-between font-semibold mb-1">
                         <span>Job Title Weight</span>
-                        <span className="text-[#252525] font-mono">{aiJobTitleWeight}%</span>
+                        <span className="text-[#1E293B] font-mono">{aiJobTitleWeight}%</span>
                       </div>
                       <input
                         type="range"
@@ -2237,7 +2237,7 @@ export const JobDetail: React.FC = () => {
                         max="100"
                         value={aiJobTitleWeight}
                         onChange={(e) => setAiJobTitleWeight(Number(e.target.value))}
-                        className="w-full accent-[#FF6B5E]"
+                        className="w-full accent-[#2563EB]"
                       />
                     </div>
 
@@ -2258,9 +2258,9 @@ export const JobDetail: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-[#E8C8BE] dark:border-[#3D3634] space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-[#806B66] block">Candidate Pool</span>
-                  <div className="font-semibold text-[#252525] dark:text-white">
+                <div className="pt-4 border-t border-[#D8E3F1] dark:border-[#334155] space-y-2">
+                  <span className="text-[10px] uppercase font-bold text-[#64748B] block">Candidate Pool</span>
+                  <div className="font-semibold text-[#1E293B] dark:text-white">
                     {applicants.length} Total Sourced Profiles
                   </div>
                 </div>
@@ -2268,44 +2268,44 @@ export const JobDetail: React.FC = () => {
 
               {/* Right Candidates List */}
               <div className="flex-1 p-5 overflow-y-auto space-y-3">
-                <div className="flex items-center justify-between text-xs text-[#806B66] pb-2 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+                <div className="flex items-center justify-between text-xs text-[#64748B] pb-2 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <span>Showing top matching candidates from ATS repository</span>
-                  <span className="font-bold text-[#252525]">Sorted by AI Compatibility Score</span>
+                  <span className="font-bold text-[#1E293B]">Sorted by AI Compatibility Score</span>
                 </div>
 
-                <div className="divide-y divide-[#E8C8BE] dark:divide-[#3D3634]">
+                <div className="divide-y divide-[#D8E3F1] dark:divide-[#334155]">
                   {applicants.slice(0, 8).map((cand) => {
                     const score = Math.min(99, Math.max(70, cand.matchScore || 73));
                     return (
                       <div
                         key={cand.id}
-                        className="py-3 flex items-center justify-between gap-4 hover:bg-[#FFF0E8] dark:hover:bg-[#252525] px-3 rounded-xl transition-colors"
+                        className="py-3 flex items-center justify-between gap-4 hover:bg-[#FFFFFF] dark:hover:bg-[#1E293B] px-3 rounded-xl transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex flex-col items-center">
                             <span className="text-sm font-bold font-mono text-[#276749] dark:text-[#8AC9A7] bg-[#8AC9A7]/20 border border-[#8AC9A7]/40 px-2 py-0.5 rounded">
                               {score}%
                             </span>
-                            <span className="text-[9px] text-[#806B66] mt-0.5">Match</span>
+                            <span className="text-[9px] text-[#64748B] mt-0.5">Match</span>
                           </div>
 
                           <img
                             src={cand.avatar}
                             alt={cand.name}
-                            className="w-10 h-10 rounded-full object-cover ring-1 ring-[#E8C8BE]"
+                            className="w-10 h-10 rounded-full object-cover ring-1 ring-[#D8E3F1]"
                           />
 
                           <div>
-                            <div className="font-bold text-xs text-[#252525] dark:text-white">
+                            <div className="font-bold text-xs text-[#1E293B] dark:text-white">
                               {cand.name}
                             </div>
-                            <div className="text-[11px] text-[#806B66] dark:text-[#B68F87]">
+                            <div className="text-[11px] text-[#64748B] dark:text-[#64748B]">
                               {cand.currentDesignation} · {cand.experienceYears} Years Exp · {cand.location}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] text-[#806B66]">{cand.email}</span>
+                              <span className="text-[10px] text-[#64748B]">{cand.email}</span>
                               <span>·</span>
-                              <span className="text-[10px] text-[#806B66]">{cand.phone}</span>
+                              <span className="text-[10px] text-[#64748B]">{cand.phone}</span>
                             </div>
                           </div>
                         </div>
@@ -2315,14 +2315,14 @@ export const JobDetail: React.FC = () => {
                             onClick={() => {
                               setResumeApplicant(cand);
                             }}
-                            className="px-2.5 py-1.5 border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] hover:bg-[#FFF0E8] rounded-lg text-xs font-semibold"
+                            className="px-2.5 py-1.5 border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] hover:bg-[#FFFFFF] rounded-lg text-xs font-semibold"
                           >
                             View
                           </button>
 
                           <button
                             onClick={() => void handleAiMatchingSubmit(cand)}
-                            className="px-3 py-1.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1"
+                            className="px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1"
                           >
                             <Plus className="w-3.5 h-3.5" />
                             <span>Submit to Job</span>
@@ -2336,10 +2336,10 @@ export const JobDetail: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 px-6 border-t border-[#E8C8BE] dark:border-[#3D3634] bg-[#FFF0E8] dark:bg-[#171717] flex justify-end">
+            <div className="p-4 px-6 border-t border-[#D8E3F1] dark:border-[#334155] bg-[#FFFFFF] dark:bg-[#0F172A] flex justify-end">
               <button
                 onClick={() => setIsAiMatchingOpen(false)}
-                className="px-5 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-white text-xs font-bold rounded-xl"
+                className="px-5 py-2 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-white text-xs font-bold rounded-xl"
               >
                 Close
               </button>
@@ -2353,43 +2353,43 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {isPublicDetailsModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b pb-3 border-[#E8C8BE] dark:border-[#3D3634]">
-              <h2 className="text-sm font-bold text-[#252525] dark:text-white">
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b pb-3 border-[#D8E3F1] dark:border-[#334155]">
+              <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">
                 Add Public Job Details (Career Portal Spec)
               </h2>
               <button onClick={() => setIsPublicDetailsModalOpen(false)}>
-                <X className="w-4 h-4 text-[#806B66]" />
+                <X className="w-4 h-4 text-[#64748B]" />
               </button>
             </div>
 
-            <p className="text-[#806B66] dark:text-[#B68F87]">
+            <p className="text-[#64748B] dark:text-[#64748B]">
               Configure sanitized job overview for external candidate career site view.
             </p>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
                 Public Header Headline
               </label>
               <input
                 type="text"
                 defaultValue={`${job.title} - Career Opportunity`}
-                className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
                 Candidate Summary Pitch
               </label>
               <textarea
                 rows={4}
                 defaultValue={`We are hiring a passionate ${job.title} to join our engineering organization. Key stack includes ${(job.primarySkills || job.skills).slice(0, 3).join(', ')}.`}
-                className="w-full p-3 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                className="w-full p-3 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E8C8BE] dark:border-[#3D3634]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#D8E3F1] dark:border-[#334155]">
               <button
                 onClick={() => {
                   showToast('Public job specification updated');
@@ -2415,20 +2415,20 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {isAddNoteModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b pb-3 border-[#E8C8BE] dark:border-[#3D3634]">
-              <h2 className="text-sm font-bold text-[#252525] dark:text-white">Add Requisition Note</h2>
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b pb-3 border-[#D8E3F1] dark:border-[#334155]">
+              <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">Add Requisition Note</h2>
               <button onClick={() => setIsAddNoteModalOpen(false)}>
-                <X className="w-4 h-4 text-[#806B66]" />
+                <X className="w-4 h-4 text-[#64748B]" />
               </button>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">Note Category</label>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Note Category</label>
               <select
                 value={newNoteCategory}
                 onChange={(e) => setNewNoteCategory(e.target.value as typeof newNoteCategory)}
-                className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-semibold"
+                className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-semibold"
               >
                 <option value="Job Posting">Job Posting</option>
                 <option value="Applicant Reference">Applicant Reference</option>
@@ -2436,20 +2436,20 @@ export const JobDetail: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">Note Content</label>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Note Content</label>
               <textarea
                 value={newNoteText}
                 onChange={(e) => setNewNoteText(e.target.value)}
                 rows={4}
                 placeholder="Enter requisition notes, client feedback, or sourcing instructions..."
-                className="w-full p-3 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                className="w-full p-3 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E8C8BE] dark:border-[#3D3634]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#D8E3F1] dark:border-[#334155]">
               <button
                 onClick={handleAddNote}
-                className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white font-bold rounded-lg text-xs"
+                className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-lg text-xs"
               >
                 Save Note
               </button>
@@ -2469,20 +2469,20 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {isUploadDocModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b pb-3 border-[#E8C8BE] dark:border-[#3D3634]">
-              <h2 className="text-sm font-bold text-[#252525] dark:text-white">Upload Job Document</h2>
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b pb-3 border-[#D8E3F1] dark:border-[#334155]">
+              <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">Upload Job Document</h2>
               <button onClick={() => setIsUploadDocModalOpen(false)}>
-                <X className="w-4 h-4 text-[#806B66]" />
+                <X className="w-4 h-4 text-[#64748B]" />
               </button>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">Document Category</label>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Document Category</label>
               <select
                 value={newDocCategory}
                 onChange={(e) => setNewDocCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
               >
                 <option value="Client Job Spec (SOW)">Client Job Spec (SOW)</option>
                 <option value="Assessment Rubric">Assessment Rubric</option>
@@ -2492,20 +2492,20 @@ export const JobDetail: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">Document Name / File</label>
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Document Name / File</label>
               <input
                 type="text"
                 value={newDocName}
                 onChange={(e) => setNewDocName(e.target.value)}
                 placeholder="e.g. AMP12262_Client_Job_Spec.pdf"
-                className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E8C8BE] dark:border-[#3D3634]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#D8E3F1] dark:border-[#334155]">
               <button
                 onClick={handleUploadDocument}
-                className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white font-bold rounded-lg text-xs"
+                className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-lg text-xs"
               >
                 Attach Document
               </button>
@@ -2525,24 +2525,24 @@ export const JobDetail: React.FC = () => {
       {/* ========================================================= */}
       {isSubmitCandidateModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b pb-3 border-[#E8C8BE] dark:border-[#3D3634]">
-              <h2 className="text-sm font-bold text-[#252525] dark:text-white">
+          <div className="bg-white dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b pb-3 border-[#D8E3F1] dark:border-[#334155]">
+              <h2 className="text-sm font-bold text-[#1E293B] dark:text-white">
                 Submit Candidate to {job.code}
               </h2>
               <button onClick={() => setIsSubmitCandidateModalOpen(false)}>
-                <X className="w-4 h-4 text-[#806B66]" />
+                <X className="w-4 h-4 text-[#64748B]" />
               </button>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#806B66] mb-1">
+              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">
                 Select Candidate from Repository
               </label>
               <select
                 value={submitApplicantId}
                 onChange={(e) => setSubmitApplicantId(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-semibold"
+                className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-semibold"
               >
                 <option value="">-- Choose Candidate --</option>
                 {applicants.map((a) => (
@@ -2555,31 +2555,31 @@ export const JobDetail: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-[#806B66] mb-1">Bill Rate ($/hr)</label>
+                <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Bill Rate ($/hr)</label>
                 <input
                   type="number"
                   value={submitBillRate || job.billRate}
                   onChange={(e) => setSubmitBillRate(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#806B66] mb-1">Pay Rate ($/hr)</label>
+                <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Pay Rate ($/hr)</label>
                 <input
                   type="number"
                   value={submitPayRate || job.payRate}
                   onChange={(e) => setSubmitPayRate(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#171717] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-mono"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E8C8BE] dark:border-[#3D3634]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#D8E3F1] dark:border-[#334155]">
               <button
                 onClick={handleQuickSubmitCandidate}
                 disabled={!submitApplicantId}
-                className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-xs"
+                className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-xs"
               >
                 Submit Application
               </button>

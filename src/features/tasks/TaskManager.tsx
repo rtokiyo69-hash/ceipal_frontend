@@ -56,17 +56,17 @@ export const TaskManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#252525] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#1E293B] dark:text-white">
             Task Manager &amp; SLA Reminders
           </h1>
-          <p className="text-xs text-[#806B66]">
+          <p className="text-xs text-[#64748B]">
             Action items, interview follow-ups, offer letter releases, and compliance milestones
           </p>
         </div>
 
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#FF6B5E]/30 transition-all flex items-center gap-1.5"
+          className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2563EB]/30 transition-all flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" />
           <span>New Action Item</span>
@@ -74,15 +74,15 @@ export const TaskManager: React.FC = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-xl w-fit text-xs font-semibold">
+      <div className="flex items-center gap-1 p-1 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-xl w-fit text-xs font-semibold">
         {(['All', 'Pending', 'In Progress', 'Completed'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
             className={`px-3 py-1.5 rounded-lg transition-colors ${
               filter === tab
-                ? 'bg-[#FFF0E8] dark:bg-[#252525]/30 text-[#252525] dark:text-[#FFF0E8] shadow-xs'
-                : 'text-[#806B66] hover:text-[#252525] dark:hover:text-white'
+                ? 'bg-[#FFFFFF] dark:bg-[#1E293B]/30 text-[#1E293B] dark:text-[#FFFFFF] shadow-xs'
+                : 'text-[#64748B] hover:text-[#1E293B] dark:hover:text-white'
             }`}
           >
             {tab}
@@ -91,32 +91,32 @@ export const TaskManager: React.FC = () => {
       </div>
 
       {/* Task List */}
-      <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs divide-y divide-[#E8C8BE] dark:divide-slate-800 overflow-hidden">
+      <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-2xl shadow-xs divide-y divide-[#D8E3F1] dark:divide-slate-800 overflow-hidden">
         {filteredTasks.map((t) => (
           <div
             key={t.id}
             onClick={() => handleToggle(t.id)}
-            className="p-4 flex items-center justify-between gap-4 hover:bg-[#FFF0E8]/40 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
+            className="p-4 flex items-center justify-between gap-4 hover:bg-[#FFFFFF]/40 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
               <input
                 type="checkbox"
                 checked={t.status === 'Completed'}
                 onChange={() => {}}
-                className="rounded border-[#E8C8BE] text-[#252525] focus:ring-[#FF6B5E] shrink-0"
+                className="rounded border-[#D8E3F1] text-[#1E293B] focus:ring-[#2563EB] shrink-0"
               />
               <div className="min-w-0">
                 <div
                   className={`text-xs font-semibold truncate ${
                     t.status === 'Completed'
-                      ? 'line-through text-[#806B66]'
-                      : 'text-[#252525] dark:text-white'
+                      ? 'line-through text-[#64748B]'
+                      : 'text-[#1E293B] dark:text-white'
                   }`}
                 >
                   {t.title}
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-[#806B66] mt-0.5">
-                  <span className="font-mono flex items-center gap-1 text-[#252525] dark:text-[#806B66] font-medium">
+                <div className="flex items-center gap-3 text-[11px] text-[#64748B] mt-0.5">
+                  <span className="font-mono flex items-center gap-1 text-[#1E293B] dark:text-[#64748B] font-medium">
                     <Clock className="w-3 h-3" />
                     Due: {t.dueDate}
                   </span>
@@ -134,8 +134,8 @@ export const TaskManager: React.FC = () => {
                   t.priority === 'Urgent'
                     ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
                     : t.priority === 'High'
-                    ? 'bg-[#FF6B5E]/10 text-[#252525] border border-[#FF6B5E]/30'
-                    : 'bg-[#FFF0E8] dark:bg-slate-800 text-[#806B66] dark:text-slate-300 border border-[#E8C8BE] dark:border-slate-700'
+                    ? 'bg-[#2563EB]/10 text-[#1E293B] border border-[#2563EB]/30'
+                    : 'bg-[#FFFFFF] dark:bg-slate-800 text-[#64748B] dark:text-slate-300 border border-[#D8E3F1] dark:border-slate-700'
                 }`}
               >
                 {t.priority}
@@ -145,7 +145,7 @@ export const TaskManager: React.FC = () => {
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium border ${
                   t.status === 'Completed'
                     ? 'bg-[#8AC9A7]/15 text-[#2E7D5B] border-[#8AC9A7]/30 dark:bg-[#8AC9A7]/20 dark:text-[#8AC9A7]'
-                    : 'bg-[#FFF0E8] text-[#252525] border-[#FF6B5E]/30 dark:bg-[#252525]/20 dark:text-[#FFF0E8]'
+                    : 'bg-[#FFFFFF] text-[#1E293B] border-[#2563EB]/30 dark:bg-[#1E293B]/20 dark:text-[#FFFFFF]'
                 }`}
               >
                 {t.status}
@@ -158,47 +158,47 @@ export const TaskManager: React.FC = () => {
       {/* New Task Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-[#252525] dark:text-white">
+              <h3 className="text-base font-bold text-[#1E293B] dark:text-white">
                 Create Action Item
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-[#806B66] hover:text-[#252525] dark:hover:text-white">
+              <button onClick={() => setModalOpen(false)} className="text-[#64748B] hover:text-[#1E293B] dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateTask} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Task Description</label>
+                <label className="block text-[#1E293B] dark:text-slate-400 mb-1 font-medium">Task Description</label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Follow up on offer package for Devon Sterling"
-                  className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E] focus:ring-1 focus:ring-[#FF6B5E]"
+                  className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-slate-800 border border-[#D8E3F1] dark:border-slate-700 rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Due Date</label>
+                  <label className="block text-[#1E293B] dark:text-slate-400 mb-1 font-medium">Due Date</label>
                   <input
                     type="date"
                     required
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+                    className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-slate-800 border border-[#D8E3F1] dark:border-slate-700 rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Priority</label>
+                  <label className="block text-[#1E293B] dark:text-slate-400 mb-1 font-medium">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as Priority)}
-                    className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+                    className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-slate-800 border border-[#D8E3F1] dark:border-slate-700 rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                   >
                     <option value="Urgent">Urgent</option>
                     <option value="High">High</option>
@@ -209,11 +209,11 @@ export const TaskManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[#252525] dark:text-slate-400 mb-1 font-medium">Workflow Category</label>
+                <label className="block text-[#1E293B] dark:text-slate-400 mb-1 font-medium">Workflow Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as TaskItem['category'])}
-                  className="w-full px-3 py-2 bg-[#FFF0E8] dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-xl text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+                  className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-slate-800 border border-[#D8E3F1] dark:border-slate-700 rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                 >
                   <option value="Interview Follow-up">Interview Follow-up</option>
                   <option value="Offer Release">Offer Release</option>
@@ -226,13 +226,13 @@ export const TaskManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-3.5 py-2 border border-[#E8C8BE] dark:border-slate-700 text-[#806B66] hover:text-[#252525] dark:text-slate-300 rounded-xl hover:bg-[#FFF0E8] dark:hover:bg-slate-800 transition-colors"
+                  className="px-3.5 py-2 border border-[#D8E3F1] dark:border-slate-700 text-[#64748B] hover:text-[#1E293B] dark:text-slate-300 rounded-xl hover:bg-[#FFFFFF] dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white font-semibold rounded-xl shadow-xs transition-colors"
+                  className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-xl shadow-xs transition-colors"
                 >
                   Create Task
                 </button>

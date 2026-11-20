@@ -37,10 +37,10 @@ export const PlacementList: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#252525] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#1E293B] dark:text-white">
             Placement &amp; Workforce Billing
           </h1>
-          <p className="text-xs text-[#806B66]">
+          <p className="text-xs text-[#64748B]">
             Active contractor placements, contract tenures, bill-pay spreads, and gross profitability
           </p>
         </div>
@@ -49,24 +49,24 @@ export const PlacementList: React.FC = () => {
       {/* Financial Health Strip */}
       {/* KPI Summary Cards */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <div className="p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs">
-          <div className="text-xs text-[#806B66] font-medium">Active Placements</div>
-          <div className="text-2xl font-bold font-mono text-[#252525] dark:text-white mt-1 tabular-nums">
+        <div className="p-4 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-2xl shadow-xs">
+          <div className="text-xs text-[#64748B] font-medium">Active Placements</div>
+          <div className="text-2xl font-bold font-mono text-[#1E293B] dark:text-white mt-1 tabular-nums">
             {placements.length}
           </div>
           <div className="text-[11px] text-[#2E7D5B] dark:text-[#8AC9A7] mt-0.5">100% On-Bill Retainers</div>
         </div>
 
-        <div className="p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs">
-          <div className="text-xs text-[#806B66] font-medium">Estimated Monthly Run-Rate</div>
-          <div className="text-2xl font-bold font-mono text-[#252525] dark:text-[#806B66] mt-1 tabular-nums">
+        <div className="p-4 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-2xl shadow-xs">
+          <div className="text-xs text-[#64748B] font-medium">Estimated Monthly Run-Rate</div>
+          <div className="text-2xl font-bold font-mono text-[#1E293B] dark:text-[#64748B] mt-1 tabular-nums">
             ${totalMonthlyBilling.toLocaleString()}
           </div>
-          <div className="text-[11px] text-[#806B66] mt-0.5">Calculated at 160 hrs / mo</div>
+          <div className="text-[11px] text-[#64748B] mt-0.5">Calculated at 160 hrs / mo</div>
         </div>
 
-        <div className="p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs">
-          <div className="text-xs text-[#806B66] font-medium">Net Monthly Gross Margin</div>
+        <div className="p-4 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-2xl shadow-xs">
+          <div className="text-xs text-[#64748B] font-medium">Net Monthly Gross Margin</div>
           <div className="text-2xl font-bold font-mono text-[#2E7D5B] dark:text-[#8AC9A7] mt-1 tabular-nums">
             ${totalMonthlyGrossProfit.toLocaleString()}
           </div>
@@ -75,11 +75,11 @@ export const PlacementList: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#FFF0E8] dark:bg-slate-800/60 border-b border-[#E8C8BE] dark:border-slate-800 text-[#806B66] dark:text-slate-400">
+              <tr className="bg-[#FFFFFF] dark:bg-slate-800/60 border-b border-[#D8E3F1] dark:border-slate-800 text-[#64748B] dark:text-slate-400">
                 <th className="p-3.5 font-semibold">Placement ID &amp; Candidate</th>
                 <th className="p-3.5 font-semibold">Position Title</th>
                 <th className="p-3.5 font-semibold">Client Organization</th>
@@ -90,31 +90,31 @@ export const PlacementList: React.FC = () => {
                 <th className="p-3.5 font-semibold">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8C8BE] dark:divide-slate-800">
+            <tbody className="divide-y divide-[#D8E3F1] dark:divide-slate-800">
               {filtered.map((p) => (
                 <tr
                   key={p.id}
-                  className="hover:bg-[#FFF0E8]/50 dark:hover:bg-slate-800/40 transition-colors"
+                  className="hover:bg-[#FFFFFF]/50 dark:hover:bg-slate-800/40 transition-colors"
                 >
                   <td className="p-3.5">
-                    <div className="font-bold text-[#252525] dark:text-white">{p.applicantName}</div>
-                    <div className="font-mono text-[11px] text-[#252525] dark:text-[#806B66] font-semibold">{p.placementId}</div>
+                    <div className="font-bold text-[#1E293B] dark:text-white">{p.applicantName}</div>
+                    <div className="font-mono text-[11px] text-[#1E293B] dark:text-[#64748B] font-semibold">{p.placementId}</div>
                   </td>
 
-                  <td className="p-3.5 font-medium text-[#252525] dark:text-white">{p.jobTitle}</td>
+                  <td className="p-3.5 font-medium text-[#1E293B] dark:text-white">{p.jobTitle}</td>
 
-                  <td className="p-3.5 text-[#806B66]">{p.client}</td>
+                  <td className="p-3.5 text-[#64748B]">{p.client}</td>
 
-                  <td className="p-3.5 font-mono text-[11px] text-[#806B66]">
+                  <td className="p-3.5 font-mono text-[11px] text-[#64748B]">
                     <div>{p.startDate}</div>
-                    <div className="text-[10px] text-[#806B66]/70">to {p.endDate}</div>
+                    <div className="text-[10px] text-[#64748B]/70">to {p.endDate}</div>
                   </td>
 
-                  <td className="p-3.5 font-mono font-bold text-[#252525] dark:text-white tabular-nums">
+                  <td className="p-3.5 font-mono font-bold text-[#1E293B] dark:text-white tabular-nums">
                     ${p.billRate}/hr
                   </td>
 
-                  <td className="p-3.5 font-mono text-[#806B66] tabular-nums">${p.payRate}/hr</td>
+                  <td className="p-3.5 font-mono text-[#64748B] tabular-nums">${p.payRate}/hr</td>
 
                   <td className="p-3.5 font-mono font-bold text-[#2E7D5B] dark:text-[#8AC9A7] tabular-nums">
                     ${p.billRate - p.payRate}/hr ({p.margin}%)

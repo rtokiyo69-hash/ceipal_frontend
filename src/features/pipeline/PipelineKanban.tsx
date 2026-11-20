@@ -74,7 +74,7 @@ export const PipelineKanban: React.FC = () => {
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-[#FF6B5E] text-white border border-[#FF6B5E] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
+        <div className="fixed top-20 right-6 z-50 bg-[#2563EB] text-white border border-[#2563EB] px-4 py-2 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle className="w-4 h-4 text-[#8AC9A7]" />
           <span>{toastMessage}</span>
         </div>
@@ -83,22 +83,22 @@ export const PipelineKanban: React.FC = () => {
       {/* Header & Job Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#252525] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-[#1E293B] dark:text-white">
             Candidate Pipeline Kanban
           </h1>
-          <p className="text-xs text-[#806B66] dark:text-[#FFD7C9]">
+          <p className="text-xs text-[#64748B] dark:text-[#BFDBFE]">
             Visual recruitment funnel across all 8 hiring stages
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-[#806B66] dark:text-[#FFD7C9]">
-            <Briefcase className="w-3.5 h-3.5 text-[#252525]" />
+          <div className="flex items-center gap-1.5 text-xs text-[#64748B] dark:text-[#BFDBFE]">
+            <Briefcase className="w-3.5 h-3.5 text-[#1E293B]" />
             <span>Filter by Requisition:</span>
             <select
               value={selectedJobFilter}
               onChange={(e) => setSelectedJobFilter(e.target.value)}
-              className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl px-3 py-1.5 text-xs text-[#252525] dark:text-white focus:outline-none focus:border-[#FF6B5E]"
+              className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl px-3 py-1.5 text-xs text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
             >
               <option value="all">All Requisitions ({applicants.length} Candidates)</option>
               {jobs.map((j) => (
@@ -112,7 +112,7 @@ export const PipelineKanban: React.FC = () => {
           {/* Primary action */}
           <button
             onClick={() => navigate('applicant-new')}
-            className="px-4 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-semibold rounded-xl shadow-xs shadow-[#FF6B5E]/30 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold rounded-xl shadow-xs shadow-[#2563EB]/30 transition-all flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Add Candidate</span>
@@ -129,10 +129,10 @@ export const PipelineKanban: React.FC = () => {
             return (
               <div
                 key={stageName}
-                className="w-72 shrink-0 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl p-3 flex flex-col max-h-[75vh]"
+                className="w-72 shrink-0 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl p-3 flex flex-col max-h-[75vh]"
               >
                 {/* Column Header */}
-                <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+                <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <div className="flex items-center gap-2">
                     <span
                       className={`w-2.5 h-2.5 rounded-full ${
@@ -141,30 +141,30 @@ export const PipelineKanban: React.FC = () => {
                           : stageName === 'Rejected'
                           ? 'bg-rose-500'
                           : stageName === 'Offered' || stageName === 'Selected'
-                          ? 'bg-[#FF6B5E]'
-                          : 'bg-[#FF6B5E]'
+                          ? 'bg-[#2563EB]'
+                          : 'bg-[#2563EB]'
                       }`}
                     />
-                    <span className="text-xs font-bold text-[#252525] dark:text-white">
+                    <span className="text-xs font-bold text-[#1E293B] dark:text-white">
                       {stageName}
                     </span>
                   </div>
-                  <span className="text-xs font-mono font-bold text-[#252525] bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#65534F] px-2 py-0.5 rounded-full tabular-nums">
+                  <span className="text-xs font-mono font-bold text-[#1E293B] bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#475569] px-2 py-0.5 rounded-full tabular-nums">
                     {columnCandidates.length}
                   </span>
                 </div>
 
-                {/* Candidate Cards in Column: White #FFFFFF, Light Grey #E8C8BE */}
+                {/* Candidate Cards in Column: White #FFFFFF, Light Grey #D8E3F1 */}
                 <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                   {columnCandidates.length === 0 ? (
-                    <div className="py-8 text-center text-[11px] text-[#806B66]">
+                    <div className="py-8 text-center text-[11px] text-[#64748B]">
                       No candidates in {stageName}
                     </div>
                   ) : (
                     columnCandidates.map((candidate) => (
                       <div
                         key={candidate.id}
-                        className="p-3 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] hover:border-[#FF6B5E] rounded-xl shadow-xs transition-all space-y-2.5 group"
+                        className="p-3 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] hover:border-[#2563EB] rounded-xl shadow-xs transition-all space-y-2.5 group"
                       >
                         {/* Candidate Header */}
                         <div className="flex items-start justify-between gap-2">
@@ -172,16 +172,16 @@ export const PipelineKanban: React.FC = () => {
                             <img
                               src={candidate.avatar}
                               alt={candidate.name}
-                              className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-[#E8C8BE]"
+                              className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-[#D8E3F1]"
                             />
                             <div className="min-w-0">
                               <div
                                 onClick={() => navigate('applicant-detail', candidate.id)}
-                                className="text-xs font-bold text-[#252525] dark:text-white hover:text-[#252525] cursor-pointer truncate"
+                                className="text-xs font-bold text-[#1E293B] dark:text-white hover:text-[#1E293B] cursor-pointer truncate"
                               >
                                 {candidate.name}
                               </div>
-                              <div className="text-[10px] text-[#806B66] dark:text-[#FFD7C9] truncate">
+                              <div className="text-[10px] text-[#64748B] dark:text-[#BFDBFE] truncate">
                                 {candidate.currentDesignation}
                               </div>
                             </div>
@@ -196,7 +196,7 @@ export const PipelineKanban: React.FC = () => {
                         </div>
 
                         {/* Linked requisition */}
-                        <div className="text-[10px] font-mono text-[#252525] dark:text-[#FFF0E8] bg-[#FFF0E8] dark:bg-[#48403E] p-1.5 rounded-lg truncate border border-[#E8C8BE] dark:border-[#65534F]">
+                        <div className="text-[10px] font-mono text-[#1E293B] dark:text-[#FFFFFF] bg-[#FFFFFF] dark:bg-[#475569] p-1.5 rounded-lg truncate border border-[#D8E3F1] dark:border-[#475569]">
                           {candidate.assignedJobTitle || 'General Pool'}
                         </div>
 
@@ -205,24 +205,24 @@ export const PipelineKanban: React.FC = () => {
                           {candidate.skills.slice(0, 2).map((sk) => (
                             <span
                               key={sk}
-                              className="px-1.5 py-0.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded text-[9px] font-mono text-[#806B66] dark:text-[#FFD7C9]"
+                              className="px-1.5 py-0.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded text-[9px] font-mono text-[#64748B] dark:text-[#BFDBFE]"
                             >
                               {sk}
                             </span>
                           ))}
                           {candidate.skills.length > 2 && (
-                            <span className="text-[9px] text-[#806B66] self-center">
+                            <span className="text-[9px] text-[#64748B] self-center">
                               +{candidate.skills.length - 2}
                             </span>
                           )}
                         </div>
 
                         {/* Stage Transition Controls */}
-                        <div className="pt-2 border-t border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between">
+                        <div className="pt-2 border-t border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between">
                           <button
                             disabled={colIdx === 0}
                             onClick={() => handleMoveStage(candidate.id, stageName, 'prev')}
-                            className="p-1 rounded text-[#806B66] hover:text-[#252525] disabled:opacity-20 disabled:hover:text-[#806B66]"
+                            className="p-1 rounded text-[#64748B] hover:text-[#1E293B] disabled:opacity-20 disabled:hover:text-[#64748B]"
                             title="Move to previous stage"
                           >
                             <ArrowLeft className="w-3.5 h-3.5" />
@@ -230,7 +230,7 @@ export const PipelineKanban: React.FC = () => {
 
                           <button
                             onClick={() => navigate('applicant-detail', candidate.id)}
-                            className="text-[10px] text-[#806B66] hover:text-[#252525] font-semibold"
+                            className="text-[10px] text-[#64748B] hover:text-[#1E293B] font-semibold"
                           >
                             Dossier
                           </button>
@@ -238,7 +238,7 @@ export const PipelineKanban: React.FC = () => {
                           <button
                             disabled={colIdx === STAGES.length - 1}
                             onClick={() => handleMoveStage(candidate.id, stageName, 'next')}
-                            className="p-1 rounded text-[#806B66] hover:text-[#252525] disabled:opacity-20 disabled:hover:text-[#806B66]"
+                            className="p-1 rounded text-[#64748B] hover:text-[#1E293B] disabled:opacity-20 disabled:hover:text-[#64748B]"
                             title="Advance to next stage"
                           >
                             <ArrowRight className="w-3.5 h-3.5" />
