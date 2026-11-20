@@ -128,6 +128,7 @@ export const INITIAL_JOBS: Job[] = [
     type: 'Full-Time',
     status: 'Active',
     priority: 'Urgent',
+    vmsName: 'Beeline',
     assignedRecruiter: 'Ganesh Godse',
     recruiterId: 'usr-ganesh',
     createdDate: '10/11/2026 20:00:51',

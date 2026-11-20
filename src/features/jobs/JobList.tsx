@@ -39,7 +39,8 @@ import {
   Upload,
   ChevronLeft,
   ArrowLeft,
-  Download
+  Download,
+  CloudDownload
 } from 'lucide-react';
 import { useAppStore, getJobDetailUrl } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -2535,6 +2536,11 @@ export const JobList: React.FC = () => {
                   const isExpanded = expandedJobIds.has(j.id);
                   const jobSubmissions = submissions.filter((s) => s.jobId === j.id);
                   const countSubmissions = jobSubmissions.length;
+                  // Pipeline color is based on the candidate's current stage, not on whether this row is open.
+                  const pipelineCandidateCount = jobSubmissions.filter((submission) =>
+                    ['Waiting for Evaluation by Internal Reviewer', 'Pending Review', 'Submitted'].includes(submission.status)
+                  ).length;
+                  const hasPipelineCandidates = pipelineCandidateCount > 0;
                   const selectedJobSubmissions = jobSubmissions.filter((submission) =>
                     selectedSubmissionIds.includes(submission.id)
                   );
@@ -2577,17 +2583,26 @@ export const JobList: React.FC = () => {
                               type="button"
                               onClick={() => toggleRowExpansion(j.id)}
                               aria-expanded={isExpanded}
-                              aria-label={`${isExpanded ? 'Collapse' : 'Expand'} submissions for ${j.code} (${countSubmissions})`}
-                              className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-0.5 ${
-                                isExpanded
-                                  ? 'bg-[#FF6B5E] text-white shadow-xs'
-                                  : 'bg-[#FFF0E8] dark:bg-[#48403E] text-[#252525] dark:text-[#FFF0E8] border border-[#FF6B5E]/30 hover:bg-[#FF6B5E] hover:text-white'
+                              aria-label={`${isExpanded ? 'Collapse' : 'Expand'} submissions for ${j.code} (${countSubmissions}). ${pipelineCandidateCount} in pipeline.`}
+                              className={`flex items-center justify-center gap-0.5 rounded border px-2 py-0.5 font-mono text-[11px] font-bold transition-all ${
+                                hasPipelineCandidates
+                                  ? 'border-[#F5BDB8] bg-[#FDE8E7] text-[#B42318] shadow-xs hover:bg-[#FAD8D5] dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-[#555] dark:bg-[#303030] dark:text-slate-300'
                               }`}
-                              title={isExpanded ? 'Collapse submissions' : 'Expand applicant submissions'}
+                              title={hasPipelineCandidates ? `${pipelineCandidateCount} candidate${pipelineCandidateCount === 1 ? '' : 's'} in pipeline` : 'Normal candidate stage'}
                             >
                               <span>{isExpanded ? '−' : '+'}</span>
                               <span>{countSubmissions}</span>
                             </button>
+                            {j.vmsName && (
+                              <span
+                                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-violet-200 bg-violet-50 text-violet-600 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
+                                title={`Imported from VMS: ${j.vmsName}`}
+                                aria-label={`Imported from VMS: ${j.vmsName}`}
+                              >
+                                <CloudDownload className="h-3 w-3" aria-hidden="true" />
+                              </span>
+                            )}
                           </div>
                         </td>
 
