@@ -39,8 +39,8 @@ const AccountMenu: React.FC<AccountMenuProps> = ({ user, variant, onLogout, onOp
   const isRecruiter = variant === 'recruiter';
   const buttonClassName = isRecruiter
     ? 'flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white'
-    : 'flex items-center gap-2 rounded-xl border border-[#E8C8BE] bg-white px-2.5 py-1.5 text-[#252525] transition-colors hover:bg-[#FFF0E8] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white dark:hover:bg-[#48403E]';
-  const menuItemClassName = 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs text-[#252525] transition-colors hover:bg-[#FFF0E8] dark:text-white dark:hover:bg-[#48403E]';
+    : 'flex items-center gap-2 rounded-xl border border-[#D8E3F1] bg-white px-2.5 py-1.5 text-[#1E293B] transition-colors hover:bg-[#FFFFFF] dark:border-[#334155] dark:bg-[#1E293B] dark:text-white dark:hover:bg-[#475569]';
+  const menuItemClassName = 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs text-[#1E293B] transition-colors hover:bg-[#FFFFFF] dark:text-white dark:hover:bg-[#475569]';
 
   const openPanel = (panel: Exclude<AccountPanel, null>) => {
     setIsOpen(false);
@@ -65,46 +65,46 @@ const AccountMenu: React.FC<AccountMenuProps> = ({ user, variant, onLogout, onOp
         <div
           role="menu"
           aria-label="Account options"
-          className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[#E8C8BE] bg-white text-[#252525] shadow-xl dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"
+          className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[#D8E3F1] bg-white text-[#1E293B] shadow-xl dark:border-[#334155] dark:bg-[#1E293B] dark:text-white"
         >
-          <div className="flex items-start gap-3 border-b border-[#E8C8BE] px-4 py-3 dark:border-[#3D3634]">
+          <div className="flex items-start gap-3 border-b border-[#D8E3F1] px-4 py-3 dark:border-[#334155]">
             <img src={user.avatar} alt="" className="h-9 w-9 rounded-full object-cover" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-semibold">{user.name}</div>
-              <div className="text-[11px] capitalize text-[#806B66] dark:text-[#FFD7C9]">{user.role.replace(/_/g, ' ')}</div>
+              <div className="text-[11px] capitalize text-[#64748B] dark:text-[#BFDBFE]">{user.role.replace(/_/g, ' ')}</div>
             </div>
-            <button type="button" onClick={() => setIsOpen(false)} aria-label="Close account menu" className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] dark:text-[#FFD7C9] dark:hover:bg-[#48403E]">
+            <button type="button" onClick={() => setIsOpen(false)} aria-label="Close account menu" className="rounded p-1 text-[#64748B] hover:bg-[#FFFFFF] dark:text-[#BFDBFE] dark:hover:bg-[#475569]">
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div className="p-2">
             <button type="button" role="menuitem" onClick={() => openPanel('profile')} className={menuItemClassName}>
-              <UserRound className="h-4 w-4 text-[#806B66]" />
+              <UserRound className="h-4 w-4 text-[#64748B]" />
               View Profile
             </button>
             <button type="button" role="menuitem" onClick={() => openPanel('password')} className={menuItemClassName}>
-              <KeyRound className="h-4 w-4 text-[#806B66]" />
+              <KeyRound className="h-4 w-4 text-[#64748B]" />
               Change Password
             </button>
             <button type="button" role="menuitem" onClick={() => openPanel('otp')} className={menuItemClassName}>
-              <ShieldCheck className="h-4 w-4 text-[#806B66]" />
+              <ShieldCheck className="h-4 w-4 text-[#64748B]" />
               Generate OTP
             </button>
             <button type="button" role="menuitem" onClick={() => openPanel('guide')} className={menuItemClassName}>
-              <BookOpen className="h-4 w-4 text-[#806B66]" />
+              <BookOpen className="h-4 w-4 text-[#64748B]" />
               User Guide
             </button>
           </div>
 
-          <div className="border-t border-[#E8C8BE] p-2 dark:border-[#3D3634]">
+          <div className="border-t border-[#D8E3F1] p-2 dark:border-[#334155]">
             <button type="button" role="menuitem" onClick={() => { setIsOpen(false); onLogout(); }} className={`${menuItemClassName} font-semibold`}>
               <LogOut className="h-4 w-4 text-[#E05252]" />
               Sign Out
             </button>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#FFF0E8] px-4 py-3 text-xs font-semibold text-[#2B2D42] dark:bg-[#48403E] dark:text-[#FFF0E8]">
+          <div className="flex items-center gap-2 bg-[#FFFFFF] px-4 py-3 text-xs font-semibold text-[#2B2D42] dark:bg-[#475569] dark:text-[#FFFFFF]">
             <Building2 className="h-4 w-4" />
             Ampcus Tech Pvt Ltd.
           </div>
@@ -163,11 +163,11 @@ const AccountDialog: React.FC<AccountDialogProps> = ({ panel, user, onClose, onN
         aria-modal="true"
         aria-labelledby="account-dialog-title"
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#E8C8BE] bg-white text-[#252525] shadow-2xl dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#D8E3F1] bg-white text-[#1E293B] shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] dark:text-white"
       >
-        <div className="flex items-center justify-between border-b border-[#E8C8BE] px-5 py-4 dark:border-[#3D3634]">
+        <div className="flex items-center justify-between border-b border-[#D8E3F1] px-5 py-4 dark:border-[#334155]">
           <h2 id="account-dialog-title" className="text-base font-bold">{titles[panel]}</h2>
-          <button type="button" onClick={onClose} aria-label="Close dialog" className="rounded-lg p-2 text-[#806B66] hover:bg-[#FFF0E8] dark:text-[#FFD7C9] dark:hover:bg-[#48403E]">
+          <button type="button" onClick={onClose} aria-label="Close dialog" className="rounded-lg p-2 text-[#64748B] hover:bg-[#FFFFFF] dark:text-[#BFDBFE] dark:hover:bg-[#475569]">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -176,17 +176,17 @@ const AccountDialog: React.FC<AccountDialogProps> = ({ panel, user, onClose, onN
           {panel === 'profile' && (
             <>
               <div className="flex items-center gap-4">
-                <img src={user.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-[#E8C8BE]" />
+                <img src={user.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-[#D8E3F1]" />
                 <div>
                   <div className="font-semibold">{user.name}</div>
-                  <div className="capitalize text-[#806B66] dark:text-[#FFD7C9]">{user.role.replace(/_/g, ' ')}</div>
+                  <div className="capitalize text-[#64748B] dark:text-[#BFDBFE]">{user.role.replace(/_/g, ' ')}</div>
                 </div>
               </div>
-              <dl className="grid gap-3 rounded-xl bg-[#FFF0E8] p-4 text-xs dark:bg-[#48403E] sm:grid-cols-2">
-                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Title</dt><dd className="mt-1 font-medium">{user.title || 'Not provided'}</dd></div>
-                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Email</dt><dd className="mt-1 break-all font-medium">{user.email || 'Not provided'}</dd></div>
-                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Business unit</dt><dd className="mt-1 font-medium">{user.businessUnit || 'Not provided'}</dd></div>
-                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Phone</dt><dd className="mt-1 font-medium">{user.phone || 'Not provided'}</dd></div>
+              <dl className="grid gap-3 rounded-xl bg-[#FFFFFF] p-4 text-xs dark:bg-[#475569] sm:grid-cols-2">
+                <div><dt className="text-[#64748B] dark:text-[#BFDBFE]">Title</dt><dd className="mt-1 font-medium">{user.title || 'Not provided'}</dd></div>
+                <div><dt className="text-[#64748B] dark:text-[#BFDBFE]">Email</dt><dd className="mt-1 break-all font-medium">{user.email || 'Not provided'}</dd></div>
+                <div><dt className="text-[#64748B] dark:text-[#BFDBFE]">Business unit</dt><dd className="mt-1 font-medium">{user.businessUnit || 'Not provided'}</dd></div>
+                <div><dt className="text-[#64748B] dark:text-[#BFDBFE]">Phone</dt><dd className="mt-1 font-medium">{user.phone || 'Not provided'}</dd></div>
               </dl>
             </>
           )}
@@ -195,34 +195,34 @@ const AccountDialog: React.FC<AccountDialogProps> = ({ panel, user, onClose, onN
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <label className="block text-xs font-medium">
                 Current password
-                <input type="password" autoComplete="current-password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#2B2D42] dark:text-white" />
+                <input type="password" autoComplete="current-password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#D8E3F1] bg-white px-3 py-2 text-[#1E293B] outline-none focus:border-[#2563EB] dark:border-[#334155] dark:bg-[#2B2D42] dark:text-white" />
               </label>
               <label className="block text-xs font-medium">
                 New password
-                <input type="password" autoComplete="new-password" required minLength={8} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#2B2D42] dark:text-white" />
+                <input type="password" autoComplete="new-password" required minLength={8} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#D8E3F1] bg-white px-3 py-2 text-[#1E293B] outline-none focus:border-[#2563EB] dark:border-[#334155] dark:bg-[#2B2D42] dark:text-white" />
               </label>
               <label className="block text-xs font-medium">
                 Confirm new password
-                <input type="password" autoComplete="new-password" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#2B2D42] dark:text-white" />
+                <input type="password" autoComplete="new-password" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#D8E3F1] bg-white px-3 py-2 text-[#1E293B] outline-none focus:border-[#2563EB] dark:border-[#334155] dark:bg-[#2B2D42] dark:text-white" />
               </label>
-              {passwordMessage && <p role="status" className="rounded-lg bg-[#FFF0E8] p-3 text-xs text-[#806B66] dark:bg-[#48403E] dark:text-[#FFD7C9]">{passwordMessage}</p>}
-              <button type="submit" className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#E85249]">Validate password change</button>
-              <p className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">Front-end demo only. A secure authentication service is required to save a password.</p>
+              {passwordMessage && <p role="status" className="rounded-lg bg-[#FFFFFF] p-3 text-xs text-[#64748B] dark:bg-[#475569] dark:text-[#BFDBFE]">{passwordMessage}</p>}
+              <button type="submit" className="rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1D4ED8]">Validate password change</button>
+              <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">Front-end demo only. A secure authentication service is required to save a password.</p>
             </form>
           )}
 
           {panel === 'otp' && (
             <div className="space-y-4">
-              <p className="text-xs text-[#806B66] dark:text-[#FFD7C9]">Generate a visual preview code for this demo account.</p>
-              <button type="button" onClick={handleGenerateOtp} className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#E85249]">Generate preview code</button>
-              {otpPreview && <div className="rounded-xl bg-[#FFF0E8] p-4 text-center dark:bg-[#48403E]"><div className="font-mono text-2xl font-bold tracking-[0.3em]">{otpPreview}</div></div>}
-              <p role="note" className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">Demo only: this code is not sent, stored, or accepted for authentication. OTP delivery and verification require a backend.</p>
+              <p className="text-xs text-[#64748B] dark:text-[#BFDBFE]">Generate a visual preview code for this demo account.</p>
+              <button type="button" onClick={handleGenerateOtp} className="rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1D4ED8]">Generate preview code</button>
+              {otpPreview && <div className="rounded-xl bg-[#FFFFFF] p-4 text-center dark:bg-[#475569]"><div className="font-mono text-2xl font-bold tracking-[0.3em]">{otpPreview}</div></div>}
+              <p role="note" className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">Demo only: this code is not sent, stored, or accepted for authentication. OTP delivery and verification require a backend.</p>
             </div>
           )}
 
           {panel === 'guide' && (
             <div className="space-y-4">
-              <p className="text-xs text-[#806B66] dark:text-[#FFD7C9]">Choose a workspace area to get started. Your role determines which actions are available.</p>
+              <p className="text-xs text-[#64748B] dark:text-[#BFDBFE]">Choose a workspace area to get started. Your role determines which actions are available.</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {([
                   ['Dashboard', 'dashboard'],
@@ -234,7 +234,7 @@ const AccountDialog: React.FC<AccountDialogProps> = ({ panel, user, onClose, onN
                     key={route}
                     type="button"
                     onClick={() => onNavigate(route)}
-                    className="rounded-lg border border-[#E8C8BE] px-3 py-2.5 text-left text-xs font-medium hover:bg-[#FFF0E8] dark:border-[#3D3634] dark:hover:bg-[#48403E]"
+                    className="rounded-lg border border-[#D8E3F1] px-3 py-2.5 text-left text-xs font-medium hover:bg-[#FFFFFF] dark:border-[#334155] dark:hover:bg-[#475569]"
                   >
                     {label}
                   </button>
@@ -267,9 +267,13 @@ export const TopBar: React.FC = () => {
   const getBreadcrumbs = () => {
     switch (currentRoute) {
       case 'dashboard':
-        return ['Talent Operations', 'Executive Dashboard'];
+        return currentUser?.role === 'admin'
+          ? ['Administration', 'Global Settings']
+          : ['Talent Operations', 'Executive Dashboard'];
       case 'jobs':
-        return ['Job Posting', 'All Job Postings'];
+        return currentUser?.role === 'admin'
+          ? ['Recruitment', 'Requisitions']
+          : ['Job Posting', 'All Job Postings'];
       case 'job-new':
         return ['Job Posting', 'New Job Posting'];
       case 'job-detail':
@@ -301,7 +305,7 @@ export const TopBar: React.FC = () => {
       case 'admin-users':
         return ['Governance', 'Users, Roles & Access Control'];
       case 'settings':
-        return ['System', 'Platform Configuration'];
+        return ['Administration', 'Global Settings'];
       default:
         return ['Talent Operations'];
     }
@@ -327,7 +331,7 @@ export const TopBar: React.FC = () => {
     };
 
     return (
-      <header className="h-[52px] px-3 sm:px-5 bg-[#FF6B5E] text-white flex items-center gap-3 sm:gap-6 z-20 shrink-0 shadow-sm">
+      <header className="h-[52px] px-3 sm:px-5 bg-[#2563EB] text-white flex items-center gap-3 sm:gap-6 z-20 shrink-0 shadow-sm">
         <button
           onClick={() => navigate('dashboard')}
           className="flex items-center shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded"
@@ -385,7 +389,7 @@ export const TopBar: React.FC = () => {
               <Plus className="w-5 h-5" />
             </button>
             {quickCreateOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white text-[#252525] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
+              <div className="absolute right-0 mt-2 w-48 bg-white text-[#1E293B] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
                 <button onClick={() => { navigate('job-new'); setQuickCreateOpen(false); }} className="w-full px-3 py-2 text-left hover:bg-[#EEF5FC]">New Job Posting</button>
                 <button onClick={() => { navigate('applicant-new'); setQuickCreateOpen(false); }} className="w-full px-3 py-2 text-left hover:bg-[#EEF5FC]">Add Applicant</button>
               </div>
@@ -401,12 +405,12 @@ export const TopBar: React.FC = () => {
               aria-expanded={notificationsOpen}
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#FF6B5E] rounded-full" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#2563EB] rounded-full" />
             </button>
             {notificationsOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white text-[#252525] border border-[#D5DCE5] rounded shadow-lg p-3 z-50">
-                <div className="text-xs font-semibold pb-2 border-b border-[#E8C8BE]">Notifications</div>
-                <p className="text-xs text-[#806B66] pt-3">You’re all caught up.</p>
+              <div className="absolute right-0 mt-2 w-72 bg-white text-[#1E293B] border border-[#D5DCE5] rounded shadow-lg p-3 z-50">
+                <div className="text-xs font-semibold pb-2 border-b border-[#D8E3F1]">Notifications</div>
+                <p className="text-xs text-[#64748B] pt-3">You’re all caught up.</p>
               </div>
             )}
           </div>
@@ -438,17 +442,17 @@ export const TopBar: React.FC = () => {
   }
 
   return (
-    <header className="h-16 px-6 bg-white dark:bg-[#252525] border-b border-[#E8C8BE] dark:border-[#3D3634] flex items-center justify-between gap-6 z-20 shrink-0">
+    <header className="h-16 px-6 bg-white dark:bg-[#1E293B] border-b border-[#D8E3F1] dark:border-[#334155] flex items-center justify-between gap-6 z-20 shrink-0">
       {/* Zone 1: Contextual breadcrumb trail */}
-      <div className="flex items-center gap-2 text-xs font-medium text-[#806B66] dark:text-[#FFD7C9] truncate">
+      <div className="flex items-center gap-2 text-xs font-medium text-[#64748B] dark:text-[#BFDBFE] truncate">
         {breadcrumbs.map((crumb, idx) => (
           <React.Fragment key={idx}>
-            {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-[#806B66] shrink-0" />}
+            {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-[#64748B] shrink-0" />}
             <span
               className={
                 idx === breadcrumbs.length - 1
-                  ? 'text-[#252525] dark:text-[#FFF0E8] font-semibold truncate'
-                  : 'hover:text-[#252525] cursor-pointer transition-colors'
+                  ? 'text-[#1E293B] dark:text-[#FFFFFF] font-semibold truncate'
+                  : 'hover:text-[#1E293B] cursor-pointer transition-colors'
               }
             >
               {crumb}
@@ -462,11 +466,11 @@ export const TopBar: React.FC = () => {
         {/* Global Search Pill (Off-white bg, Light Grey border, Charcoal text) */}
         <button
           onClick={() => setGlobalSearch(true)}
-          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs text-[#806B66] dark:text-[#FFD7C9] hover:border-[#FF6B5E] hover:bg-[#FFF0E8]/50 transition-colors w-64"
+          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs text-[#64748B] dark:text-[#BFDBFE] hover:border-[#2563EB] hover:bg-[#FFFFFF]/50 transition-colors w-64"
         >
-          <Search className="w-3.5 h-3.5 text-[#806B66]" />
+          <Search className="w-3.5 h-3.5 text-[#64748B]" />
           <span className="flex-1 text-left truncate">Search candidates, jobs, clients...</span>
-          <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-[#2B243B] text-[#806B66] dark:text-[#FFF0E8] border border-[#E8C8BE] dark:border-[#65534F] rounded">
+          <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-[#2B243B] text-[#64748B] dark:text-[#FFFFFF] border border-[#D8E3F1] dark:border-[#475569] rounded">
             ⌘K
           </kbd>
         </button>
@@ -475,22 +479,22 @@ export const TopBar: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setQuickCreateOpen(!quickCreateOpen)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white text-xs font-semibold rounded-xl shadow-xs shadow-[#FF6B5E]/25 transition-all whitespace-nowrap shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold rounded-xl shadow-xs shadow-[#2563EB]/25 transition-all whitespace-nowrap shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create</span>
           </button>
 
           {quickCreateOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xl py-1.5 z-50 text-xs">
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-xl py-1.5 z-50 text-xs">
               <button
                 onClick={() => {
                   navigate('job-new');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#1E293B] dark:text-[#FFFFFF] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] hover:text-[#1E293B] transition-colors"
               >
-                <Briefcase className="w-4 h-4 text-[#252525]" />
+                <Briefcase className="w-4 h-4 text-[#1E293B]" />
                 <span>New Job Posting</span>
               </button>
 
@@ -499,7 +503,7 @@ export const TopBar: React.FC = () => {
                   navigate('applicant-new');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#1E293B] dark:text-[#FFFFFF] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] hover:text-[#1E293B] transition-colors"
               >
                 <UserPlus className="w-4 h-4 text-[#8AC9A7]" />
                 <span>Add &amp; Parse Candidate</span>
@@ -510,9 +514,9 @@ export const TopBar: React.FC = () => {
                   navigate('interviews');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#1E293B] dark:text-[#FFFFFF] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] hover:text-[#1E293B] transition-colors"
               >
-                <Calendar className="w-4 h-4 text-[#252525]" />
+                <Calendar className="w-4 h-4 text-[#1E293B]" />
                 <span>Schedule Interview</span>
               </button>
 
@@ -521,9 +525,9 @@ export const TopBar: React.FC = () => {
                   navigate('clients');
                   setQuickCreateOpen(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#252525] dark:text-[#FFF0E8] hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] hover:text-[#252525] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[#1E293B] dark:text-[#FFFFFF] hover:bg-[#FFFFFF] dark:hover:bg-[#475569] hover:text-[#1E293B] transition-colors"
               >
-                <Building2 className="w-4 h-4 text-[#252525]" />
+                <Building2 className="w-4 h-4 text-[#1E293B]" />
                 <span>Add Enterprise Client</span>
               </button>
             </div>
@@ -534,50 +538,50 @@ export const TopBar: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="relative p-2 text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] dark:hover:text-[#FFF0E8] rounded-xl hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] transition-colors border border-transparent hover:border-[#E8C8BE]"
+            className="relative p-2 text-[#64748B] dark:text-[#BFDBFE] hover:text-[#1E293B] dark:hover:text-[#FFFFFF] rounded-xl hover:bg-[#FFFFFF] dark:hover:bg-[#475569] transition-colors border border-transparent hover:border-[#D8E3F1]"
             title="Notifications"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF6B5E] rounded-full" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#2563EB] rounded-full" />
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xl p-3 z-50">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E8C8BE] dark:border-[#3D3634]">
-                <span className="text-xs font-semibold text-[#252525] dark:text-white">Live Activity Alerts</span>
-                <span className="text-[10px] text-[#252525] font-mono font-semibold bg-[#FFF0E8] dark:bg-[#48403E] px-2 py-0.5 rounded-full">
+            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-xl p-3 z-50">
+              <div className="flex items-center justify-between pb-2 border-b border-[#D8E3F1] dark:border-[#334155]">
+                <span className="text-xs font-semibold text-[#1E293B] dark:text-white">Live Activity Alerts</span>
+                <span className="text-[10px] text-[#1E293B] font-mono font-semibold bg-[#FFFFFF] dark:bg-[#475569] px-2 py-0.5 rounded-full">
                   3 Unread
                 </span>
               </div>
-              <div className="divide-y divide-[#E8C8BE] dark:divide-[#3D3634] max-h-72 overflow-y-auto">
+              <div className="divide-y divide-[#D8E3F1] dark:divide-[#334155] max-h-72 overflow-y-auto">
                 <div className="py-2.5">
-                  <div className="text-xs font-medium text-[#252525] dark:text-white">
+                  <div className="text-xs font-medium text-[#1E293B] dark:text-white">
                     Round 2 Confirmed: Ananya Deshmukh
                   </div>
-                  <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
+                  <div className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
                     CloudScale VP confirmed 2:00 PM PST session.
                   </div>
                   <div className="text-[10px] font-mono text-[#8AC9A7] mt-1 font-semibold">12m ago</div>
                 </div>
 
                 <div className="py-2.5">
-                  <div className="text-xs font-medium text-[#252525] dark:text-white">
+                  <div className="text-xs font-medium text-[#1E293B] dark:text-white">
                     Offer Letter Released: Devon Sterling
                   </div>
-                  <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
+                  <div className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
                     FinEdge Capital extended formal offer ($165k).
                   </div>
-                  <div className="text-[10px] font-mono text-[#252525] mt-1 font-semibold">1h ago</div>
+                  <div className="text-[10px] font-mono text-[#1E293B] mt-1 font-semibold">1h ago</div>
                 </div>
 
                 <div className="py-2.5">
-                  <div className="text-xs font-medium text-[#252525] dark:text-white">
+                  <div className="text-xs font-medium text-[#1E293B] dark:text-white">
                     Submission Approval Needed
                   </div>
-                  <div className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
+                  <div className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
                     Nora Al-Mansoor submitted to NovaPay Systems.
                   </div>
-                  <div className="text-[10px] font-mono text-[#252525] mt-1 font-semibold">3h ago</div>
+                  <div className="text-[10px] font-mono text-[#1E293B] mt-1 font-semibold">3h ago</div>
                 </div>
               </div>
             </div>
@@ -587,15 +591,15 @@ export const TopBar: React.FC = () => {
         {/* Theme Toggle (Light/Dark) */}
         <button
           onClick={toggleTheme}
-          className="p-2 text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] dark:hover:text-[#FFF0E8] rounded-xl hover:bg-[#FFF0E8] dark:hover:bg-[#48403E] transition-colors border border-transparent hover:border-[#E8C8BE]"
+          className="p-2 text-[#64748B] dark:text-[#BFDBFE] hover:text-[#1E293B] dark:hover:text-[#FFFFFF] rounded-xl hover:bg-[#FFFFFF] dark:hover:bg-[#475569] transition-colors border border-transparent hover:border-[#D8E3F1]"
           title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
         >
-          {isDark ? <Sun className="w-4 h-4 text-[#252525]" /> : <Moon className="w-4 h-4 text-[#252525]" />}
+          {isDark ? <Sun className="w-4 h-4 text-[#1E293B]" /> : <Moon className="w-4 h-4 text-[#1E293B]" />}
         </button>
 
         {/* Role badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-[#FFF0E8] dark:bg-[#48403E] rounded-xl border border-[#E8C8BE] dark:border-[#65534F] text-[11px] font-mono font-semibold text-[#252525] dark:text-[#FFF0E8]">
-          <Sparkles className="w-3 h-3 text-[#252525]" />
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] dark:bg-[#475569] rounded-xl border border-[#D8E3F1] dark:border-[#475569] text-[11px] font-mono font-semibold text-[#1E293B] dark:text-[#FFFFFF]">
+          <Sparkles className="w-3 h-3 text-[#1E293B]" />
           <span className="uppercase">{currentUser?.role?.replace('_', ' ') || 'RECRUITER'}</span>
         </div>
         {currentUser && (

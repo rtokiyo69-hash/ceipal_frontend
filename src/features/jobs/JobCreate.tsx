@@ -87,7 +87,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   const [selectedFormat, setSelectedFormat] = useState('Normal');
   const [selectedStyle, setSelectedStyle] = useState('Styles');
   const [isSourceMode, setIsSourceMode] = useState(false);
-  const [editorTextColor, setEditorTextColor] = useState('#252525');
+  const [editorTextColor, setEditorTextColor] = useState('#1E293B');
   const [editorHighlightColor, setEditorHighlightColor] = useState('#FFFF00');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
@@ -104,7 +104,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   const [parseFormat, setParseFormat] = useState('Normal');
   const [parseStyle, setParseStyle] = useState('Styles');
   const [parseSourceMode, setParseSourceMode] = useState(false);
-  const [parseTextColor, setParseTextColor] = useState('#252525');
+  const [parseTextColor, setParseTextColor] = useState('#1E293B');
   const [parseHighlightColor, setParseHighlightColor] = useState('#FFFF00');
   const [showParseColorPicker, setShowParseColorPicker] = useState(false);
   const [showParseHighlightPicker, setShowParseHighlightPicker] = useState(false);
@@ -635,7 +635,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
         <div className="flex items-center justify-between pb-2">
           <button
             onClick={() => navigate('jobs')}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-semibold text-[#252525] dark:text-white hover:bg-slate-50 dark:hover:bg-[#48403E] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white hover:bg-slate-50 dark:hover:bg-[#475569] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Job Postings</span>
@@ -646,20 +646,20 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           <button
             type="button"
             onClick={() => setCreationMode('select')}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg text-xs font-semibold text-[#252525] dark:text-white hover:bg-slate-50 dark:hover:bg-[#48403E] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white hover:bg-slate-50 dark:hover:bg-[#475569] shadow-2xs hover:shadow transition-all hover:scale-[1.02]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Methods</span>
           </button>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E8C8BE] dark:border-[#3D3634] pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D8E3F1] dark:border-[#334155] pb-4">
           <div className="flex items-center gap-3">
             {creationMode !== 'manual' && (
               <button
                 type="button"
                 onClick={() => setCreationMode('select')}
-                className="p-2 rounded-xl bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] hover:bg-[#FFF0E8] transition-colors"
+                className="p-2 rounded-xl bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#BFDBFE] hover:text-[#1E293B] hover:bg-[#FFFFFF] transition-colors"
                 title="Back"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -667,14 +667,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFF0E8] dark:bg-[#083F70] text-[#252525] dark:text-[#FFF0E8]">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFFFFF] dark:bg-[#24456C] text-[#1E293B] dark:text-[#FFFFFF]">
                   Job Posting Management
                 </span>
-                <span className="text-xs font-mono font-bold text-[#806B66]">
+                <span className="text-xs font-mono font-bold text-[#64748B]">
                   {code}
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-display font-bold text-[#252525] dark:text-white mt-0.5">
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-[#1E293B] dark:text-white mt-0.5">
                 {creationMode === 'manual' && 'Manual Job Creation'}
                 {creationMode === 'template' && (selectedTemplateKey ? `New Job from Template: ${title}` : 'Job Template Selection')}
               </h1>
@@ -688,14 +688,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 <button
                   type="button"
                   onClick={() => setCreationMode('select')}
-                  className="px-3 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] hover:bg-[#FFF0E8] transition-colors"
+                  className="px-3 py-2 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#BFDBFE] hover:bg-[#FFFFFF] transition-colors"
                 >
                   Switch Method
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('jobs')}
-                  className="px-3.5 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] hover:bg-slate-100 transition-colors"
+                  className="px-3.5 py-2 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#BFDBFE] hover:bg-slate-100 transition-colors"
                 >
                   Cancel
                 </button>
@@ -705,7 +705,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <button
                 onClick={() => { void saveJob(); }}
                 disabled={isSubmitting}
-                className="px-5 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#FF6B5E]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2563EB]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 <span>{isSubmitting ? 'Publishing...' : 'Save & Publish'}</span>
@@ -730,7 +730,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             {/* 1. Manual Creation */}
             <div
               onClick={() => setCreationMode('manual')}
-              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#252525]/50 hover:bg-white/80 dark:hover:bg-[#FF6B5E]/80 border border-white/80 dark:border-white/10 hover:border-blue-400/50 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 w-64 h-64 select-none"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1E293B]/50 hover:bg-white/80 dark:hover:bg-[#2563EB]/80 border border-white/80 dark:border-white/10 hover:border-blue-400/50 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 w-64 h-64 select-none"
             >
               {/* Ambient Glow */}
               <div className="absolute inset-0 rounded-3xl bg-radial from-blue-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -747,7 +747,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     </filter>
                     <linearGradient id="sheet-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FFFFFF" />
-                      <stop offset="100%" stopColor="#FFF0E8" />
+                      <stop offset="100%" stopColor="#FFFFFF" />
                     </linearGradient>
                     <linearGradient id="pencil-body" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FB923C" />
@@ -760,10 +760,10 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   
                   {/* Front sheet with shadow */}
                   <g filter="url(#card-shadow-1)">
-                    <rect x="26" y="22" width="74" height="92" rx="16" fill="url(#sheet-grad)" stroke="#E9D8D1" strokeWidth="1.5" />
-                    <rect x="38" y="38" width="36" height="8" rx="4" fill="#252525" />
-                    <rect x="38" y="54" width="30" height="6" rx="3" fill="#806B66" />
-                    <rect x="38" y="68" width="22" height="6" rx="3" fill="#806B66" />
+                    <rect x="26" y="22" width="74" height="92" rx="16" fill="url(#sheet-grad)" stroke="#E2E8F0" strokeWidth="1.5" />
+                    <rect x="38" y="38" width="36" height="8" rx="4" fill="#1E293B" />
+                    <rect x="38" y="54" width="30" height="6" rx="3" fill="#64748B" />
+                    <rect x="38" y="68" width="22" height="6" rx="3" fill="#64748B" />
                   </g>
 
                   {/* 3D Pencil across page */}
@@ -771,7 +771,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     {/* Pencil eraser */}
                     <path d="M-6 -26 h12 a6 6 0 0 1 6 6 v6 h-24 v-6 a6 6 0 0 1 6 -6 z" fill="#0D9488" />
                     {/* Ferrule collar */}
-                    <rect x="-12" y="-14" width="24" height="6" rx="1" fill="#FFFFFF" stroke="#E8C8BE" strokeWidth="0.5" />
+                    <rect x="-12" y="-14" width="24" height="6" rx="1" fill="#FFFFFF" stroke="#D8E3F1" strokeWidth="0.5" />
                     {/* Pencil Body (Orange) */}
                     <rect x="-12" y="-8" width="24" height="34" rx="2" fill="url(#pencil-body)" />
                     {/* Highlight reflection stripe on pencil */}
@@ -779,7 +779,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     {/* Wooden sharpened cone */}
                     <path d="M-12 26 L0 46 L12 26 Z" fill="#FDE68A" />
                     {/* Graphite lead tip */}
-                    <path d="M-4 39 L0 46 L4 39 Z" fill="#252525" />
+                    <path d="M-4 39 L0 46 L4 39 Z" fill="#1E293B" />
                   </g>
                 </svg>
               </div>
@@ -788,7 +788,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-blue-500/30 transition-all duration-300" />
 
               {/* Label */}
-              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#252525] dark:text-white group-hover:text-[#252525] dark:group-hover:text-[#FF8F82] tracking-tight transition-colors text-center">
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-[#1E293B] dark:group-hover:text-[#60A5FA] tracking-tight transition-colors text-center">
                 Manual Creation
               </h3>
             </div>
@@ -796,7 +796,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             {/* 2. Use Job Template */}
             <div
               onClick={() => setCreationMode('template')}
-              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#252525]/50 hover:bg-white/80 dark:hover:bg-[#FF6B5E]/80 border border-white/80 dark:border-white/10 hover:border-teal-400/50 shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 w-64 h-64 select-none"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1E293B]/50 hover:bg-white/80 dark:hover:bg-[#2563EB]/80 border border-white/80 dark:border-white/10 hover:border-teal-400/50 shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 w-64 h-64 select-none"
             >
               {/* Ambient Glow */}
               <div className="absolute inset-0 rounded-3xl bg-radial from-teal-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -812,7 +812,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       <feDropShadow dx="1" dy="4" stdDeviation="4" floodOpacity="0.25" />
                     </filter>
                     <linearGradient id="badge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FFF0E8" />
+                      <stop offset="0%" stopColor="#FFFFFF" />
                       <stop offset="100%" stopColor="#0F766E" />
                     </linearGradient>
                   </defs>
@@ -822,18 +822,18 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                   {/* Front sheet with shadow */}
                   <g filter="url(#card-shadow-2)">
-                    <rect x="28" y="22" width="76" height="94" rx="16" fill="#FFFFFF" stroke="#E9D8D1" strokeWidth="1.5" />
+                    <rect x="28" y="22" width="76" height="94" rx="16" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1.5" />
                     
                     {/* Dark top header bar */}
-                    <rect x="40" y="38" width="40" height="9" rx="4.5" fill="#252525" />
+                    <rect x="40" y="38" width="40" height="9" rx="4.5" fill="#1E293B" />
                     
                     {/* Two colorful content blocks */}
                     <rect x="40" y="54" width="22" height="20" rx="5" fill="#FFEDD5" stroke="#FED7AA" strokeWidth="1" />
                     <rect x="66" y="54" width="22" height="20" rx="5" fill="#CCFBF1" stroke="#99F6E4" strokeWidth="1" />
                     
                     {/* Bottom content lines */}
-                    <rect x="40" y="82" width="48" height="5" rx="2.5" fill="#E9D8D1" />
-                    <rect x="40" y="92" width="30" height="4" rx="2" fill="#FFE6DD" />
+                    <rect x="40" y="82" width="48" height="5" rx="2.5" fill="#E2E8F0" />
+                    <rect x="40" y="92" width="30" height="4" rx="2" fill="#F1F5F9" />
                   </g>
 
                   {/* Top-Right Green Checkmark Badge */}
@@ -848,7 +848,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-teal-500/30 transition-all duration-300" />
 
               {/* Label */}
-              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#252525] dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 tracking-tight transition-colors text-center">
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 tracking-tight transition-colors text-center">
                 Use Job Template
               </h3>
             </div>
@@ -856,7 +856,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
             {/* 3. Parse Job Details */}
             <div
               onClick={() => setCreationMode('parse')}
-              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#252525]/50 hover:bg-white/80 dark:hover:bg-[#FF6B5E]/80 border border-white/80 dark:border-white/10 hover:border-orange-400/50 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 w-64 h-64 select-none"
+              className="group relative flex flex-col items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 hover:-translate-y-2 backdrop-blur-xl bg-white/50 dark:bg-[#1E293B]/50 hover:bg-white/80 dark:hover:bg-[#2563EB]/80 border border-white/80 dark:border-white/10 hover:border-orange-400/50 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 w-64 h-64 select-none"
             >
               {/* Ambient Glow */}
               <div className="absolute inset-0 rounded-3xl bg-radial from-orange-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -877,7 +877,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     </linearGradient>
                     <linearGradient id="glass-card" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FFFFFF" />
-                      <stop offset="100%" stopColor="#FFE6DD" />
+                      <stop offset="100%" stopColor="#F1F5F9" />
                     </linearGradient>
                   </defs>
 
@@ -896,10 +896,10 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     </g>
 
                     {/* Bottom Dark Navy Card */}
-                    <rect x="38" y="66" width="64" height="42" rx="12" fill="#252525" />
+                    <rect x="38" y="66" width="64" height="42" rx="12" fill="#1E293B" />
                     {/* Data chips / lines inside dark card */}
                     <rect x="46" y="76" width="34" height="4.5" rx="2.25" fill="#2DD4BF" />
-                    <rect x="46" y="85" width="48" height="4.5" rx="2.25" fill="#806B66" />
+                    <rect x="46" y="85" width="48" height="4.5" rx="2.25" fill="#64748B" />
                     <rect x="46" y="94" width="24" height="4.5" rx="2.25" fill="#2DD4BF" />
                   </g>
                 </svg>
@@ -909,7 +909,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <div className="w-24 h-3 bg-slate-400/25 dark:bg-black/40 rounded-full blur-md mx-auto mt-2 group-hover:scale-115 group-hover:bg-orange-500/30 transition-all duration-300" />
 
               {/* Label */}
-              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#252525] dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight transition-colors text-center">
+              <h3 className="mt-5 text-sm sm:text-base font-bold text-[#1E293B] dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight transition-colors text-center">
                 Parse Job Details
               </h3>
             </div>
@@ -921,11 +921,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
       {/* 2. JOB TEMPLATE SELECTOR (Opens full form directly on same page) */}
       {/* ========================================================================= */}
       {creationMode === 'template' && (
-        <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+        <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFF0E8] dark:bg-[#083F70] text-[#252525] dark:text-[#FFF0E8]">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFFFFF] dark:bg-[#24456C] text-[#1E293B] dark:text-[#FFFFFF]">
                   5.2.2 Job Template Selection
                 </span>
                 {selectedTemplateKey && (
@@ -934,10 +934,10 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   </span>
                 )}
               </div>
-              <h2 className="text-base font-bold text-[#252525] dark:text-white mt-1">
+              <h2 className="text-base font-bold text-[#1E293B] dark:text-white mt-1">
                 Choose Business Unit &amp; Job Template
               </h2>
-              <p className="text-xs text-[#806B66] dark:text-[#FFD7C9] mt-0.5">
+              <p className="text-xs text-[#64748B] dark:text-[#BFDBFE] mt-0.5">
                 Selecting a template directly opens and populates all requisition details, skills, billing rates, and job description on this page.
               </p>
             </div>
@@ -946,14 +946,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="flex items-center h-[30px] mb-1.5">
-                <label className="block text-xs font-bold text-[#252525] dark:text-[#FFF0E8]">
+                <label className="block text-xs font-bold text-[#1E293B] dark:text-[#FFFFFF]">
                   Business Unit
                 </label>
               </div>
               <select
                 value={businessUnit}
                 onChange={(e) => setBusinessUnit(e.target.value)}
-                className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#252525] dark:text-white"
+                className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold text-[#1E293B] dark:text-white"
               >
                 <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
                 <option value="Cloud & AI Practice">Cloud &amp; AI Practice</option>
@@ -964,14 +964,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
             <div>
               <div className="flex items-center justify-between h-[30px] mb-1.5">
-                <label className="block text-xs font-bold text-[#252525] dark:text-[#FFF0E8]">
+                <label className="block text-xs font-bold text-[#1E293B] dark:text-[#FFFFFF]">
                   Job Templates *
                 </label>
                 {selectedTemplateKey && (
                   <button
                     type="button"
                     onClick={() => handleSelectTemplate('')}
-                    className="px-3 py-1 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#FF6B5E]/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#2563EB]/30 transition-all flex items-center gap-1.5 cursor-pointer"
                     title="Clear selected template"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -982,7 +982,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <select
                 value={selectedTemplateKey}
                 onChange={(e) => handleSelectTemplate(e.target.value)}
-                className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#252525] dark:text-white focus:ring-2 focus:ring-[#FF6B5E]/20 focus:border-[#FF6B5E]"
+                className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]"
               >
                 <option value="">-- Select Template --</option>
                 {templatesList.map(t => (
@@ -993,14 +993,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           </div>
 
           {!selectedTemplateKey && (
-            <div className="p-8 text-center border-2 border-dashed border-[#E8C8BE] dark:border-[#3D3634] rounded-xl bg-slate-50/50 dark:bg-slate-900/20 space-y-2">
-              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#252525] flex items-center justify-center mx-auto text-lg">
+            <div className="p-8 text-center border-2 border-dashed border-[#D8E3F1] dark:border-[#334155] rounded-xl bg-slate-50/50 dark:bg-slate-900/20 space-y-2">
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#1E293B] flex items-center justify-center mx-auto text-lg">
                 📋
               </div>
-              <h3 className="text-xs font-bold text-[#252525] dark:text-white">
+              <h3 className="text-xs font-bold text-[#1E293B] dark:text-white">
                 Select a template from the dropdown above
               </h3>
-              <p className="text-[11px] text-[#64748B] dark:text-[#B68F87] max-w-md mx-auto">
+              <p className="text-[11px] text-[#64748B] dark:text-[#64748B] max-w-md mx-auto">
                 Once chosen, the entire job creation form will open immediately below on this page with all fields pre-filled for you to edit.
               </p>
             </div>
@@ -1015,13 +1015,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
         <div className="space-y-4 animate-in fade-in">
           {/* Ceipal Top Row: Business Unit */}
           <div className="max-w-xs space-y-1">
-            <label className="block text-xs font-bold text-[#65534F] dark:text-[#B68F87]">
+            <label className="block text-xs font-bold text-[#475569] dark:text-[#64748B]">
               Business Unit
             </label>
             <select
               value={businessUnit}
               onChange={(e) => setBusinessUnit(e.target.value)}
-              className="w-full px-3 py-1.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded text-xs font-semibold text-[#252525] dark:text-white shadow-2xs focus:outline-none focus:border-[#FF6B5E]"
+              className="w-full px-3 py-1.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded text-xs font-semibold text-[#1E293B] dark:text-white shadow-2xs focus:outline-none focus:border-[#2563EB]"
             >
               <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
               <option value="Cloud & AI Practice">Cloud &amp; AI Practice</option>
@@ -1032,32 +1032,32 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* Ceipal Header: New Job */}
           <div>
-            <h2 className="text-xl font-bold text-[#252525] dark:text-white">
+            <h2 className="text-xl font-bold text-[#1E293B] dark:text-white">
               New Job
             </h2>
           </div>
 
           {/* Ceipal Main Card: Paste Job Details */}
-          <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg p-5 shadow-2xs space-y-2.5">
-            <div className="text-xs font-bold text-[#64748B] dark:text-[#B68F87]">
+          <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg p-5 shadow-2xs space-y-2.5">
+            <div className="text-xs font-bold text-[#64748B] dark:text-[#64748B]">
               Paste Job Details
             </div>
 
             {/* Ceipal CKEditor Container */}
-            <div className="border border-[#E8C8BE] dark:border-[#3D3634] rounded-md overflow-hidden bg-white dark:bg-[#48403E] shadow-2xs">
+            <div className="border border-[#D8E3F1] dark:border-[#334155] rounded-md overflow-hidden bg-white dark:bg-[#475569] shadow-2xs">
               {/* CKEditor Toolbar Row 1 */}
-              <div className="flex items-center justify-between flex-wrap gap-1 px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#252525] border-b border-[#E9D8D1] dark:border-[#4D4140] text-xs">
-                <div className="flex items-center gap-0.5 flex-wrap text-[#65534F] dark:text-[#E8C8BE]">
+              <div className="flex items-center justify-between flex-wrap gap-1 px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] text-xs">
+                <div className="flex items-center gap-0.5 flex-wrap text-[#475569] dark:text-[#D8E3F1]">
                   {/* Clean / Magic wand */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Clean Format">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Clean Format">
                     <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                   </button>
                   {/* Cut */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('cut')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Cut">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('cut')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Cut">
                     <Scissors className="w-3.5 h-3.5" />
                   </button>
                   {/* Copy */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('copy')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Copy">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('copy')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Copy">
                     <Copy className="w-3.5 h-3.5" />
                   </button>
                   {/* Paste */}
@@ -1066,7 +1066,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       const text = await navigator.clipboard.readText();
                       document.execCommand('insertText', false, text);
                     } catch {}
-                  }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Paste">
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste">
                     <FileText className="w-3.5 h-3.5" />
                   </button>
                   {/* Paste from Word */}
@@ -1075,27 +1075,27 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       const text = await navigator.clipboard.readText();
                       document.execCommand('insertText', false, text);
                     } catch {}
-                  }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Paste from Word">
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste from Word">
                     <FileCode className="w-3.5 h-3.5 text-[#0061D5]" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Undo / Redo */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('undo')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Undo">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('undo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Undo">
                     <Undo2 className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('redo')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Redo">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('redo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Redo">
                     <Redo2 className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Find */}
                   <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
                     const term = prompt('Find text:');
                     if (term && (window as any).find) (window as any).find(term);
-                  }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Find">
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Find">
                     <Search className="w-3.5 h-3.5" />
                   </button>
                   {/* Replace */}
@@ -1108,99 +1108,99 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                         setRawJdText(parseEditorRef.current.innerHTML);
                       }
                     }
-                  }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Replace">
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Replace">
                     <RefreshCw className="w-3.5 h-3.5" />
                   </button>
                   {/* Select All */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('selectAll')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Select All">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('selectAll')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Select All">
                     <CheckSquare className="w-3.5 h-3.5" />
                   </button>
                   {/* Remove Format */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Remove Format">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Remove Format">
                     <RemoveFormatting className="w-3.5 h-3.5 text-red-500" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Bold / Italic / Underline / Strike */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('bold')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] font-bold" title="Bold">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('bold')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-bold" title="Bold">
                     <Bold className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('italic')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] italic" title="Italic">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('italic')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] italic" title="Italic">
                     <Italic className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('underline')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] underline" title="Underline">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('underline')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] underline" title="Underline">
                     <Underline className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('strikeThrough')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] line-through" title="Strikethrough">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('strikeThrough')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] line-through" title="Strikethrough">
                     <Strikethrough className="w-3.5 h-3.5" />
                   </button>
                   {/* Subscript / Superscript */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('subscript')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Subscript">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('subscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Subscript">
                     <Subscript className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('superscript')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Superscript">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('superscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Superscript">
                     <Superscript className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Lists */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertOrderedList')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Numbered List">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertOrderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Numbered List">
                     <ListOrdered className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertUnorderedList')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Bulleted List">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertUnorderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Bulleted List">
                     <List className="w-3.5 h-3.5" />
                   </button>
                   {/* Indent / Outdent */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('outdent')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Decrease Indent">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('outdent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Decrease Indent">
                     <Outdent className="w-3.5 h-3.5" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('indent')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Increase Indent">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('indent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Increase Indent">
                     <Indent className="w-3.5 h-3.5" />
                   </button>
                   {/* Blockquote */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('formatBlock', false, 'blockquote')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Blockquote">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('formatBlock', false, 'blockquote')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Blockquote">
                     <Quote className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Link */}
-                  <button type="button" onClick={() => setShowParseLinkInput(!showParseLinkInput)} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Insert Link">
+                  <button type="button" onClick={() => setShowParseLinkInput(!showParseLinkInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Insert Link">
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
                   {/* Unlink */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('unlink')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Unlink">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('unlink')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Unlink">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                   {/* Anchor */}
                   <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
                     const name = prompt('Anchor name:');
                     if (name) document.execCommand('insertHTML', false, `<a name="${name}"></a>`);
-                  }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Anchor">
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Anchor">
                     <Anchor className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Image */}
                   <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
                     const url = prompt('Image URL:');
                     if (url) document.execCommand('insertImage', false, url);
-                  }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Image">
+                  }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Image">
                     <Image className="w-3.5 h-3.5" />
                   </button>
                   {/* Table */}
-                  <button type="button" onClick={() => setShowParseTableInput(!showParseTableInput)} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Table">
+                  <button type="button" onClick={() => setShowParseTableInput(!showParseTableInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Table">
                     <Table className="w-3.5 h-3.5" />
                   </button>
                   {/* Horizontal Rule */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertHorizontalRule')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Horizontal Rule">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertHorizontalRule')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Horizontal Rule">
                     <Minus className="w-3.5 h-3.5" />
                   </button>
                   {/* Special Character */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertText', false, 'Ω')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] font-serif text-xs font-bold" title="Special Character (Ω)">
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertText', false, 'Ω')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-serif text-xs font-bold" title="Special Character (Ω)">
                     Ω
                   </button>
                 </div>
@@ -1211,8 +1211,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   onClick={() => setParseSourceMode(!parseSourceMode)}
                   className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors ${
                     parseSourceMode
-                      ? 'bg-[#FF6B5E] text-white'
-                      : 'hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] text-[#65534F] dark:text-[#E8C8BE]'
+                      ? 'bg-[#2563EB] text-white'
+                      : 'hover:bg-[#E2E8F0] dark:hover:bg-[#334155] text-[#475569] dark:text-[#D8E3F1]'
                   }`}
                   title="Toggle HTML Source Code View"
                 >
@@ -1222,34 +1222,34 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               </div>
 
               {/* CKEditor Toolbar Row 2: Alignment, Fonts, Colors AND Action Buttons on Right */}
-              <div className="flex items-center justify-between flex-wrap gap-2 px-2.5 py-1 bg-[#FFE6DD] dark:bg-[#48403E] border-b border-[#E9D8D1] dark:border-[#4D4140] text-xs">
+              <div className="flex items-center justify-between flex-wrap gap-2 px-2.5 py-1 bg-[#F1F5F9] dark:bg-[#475569] border-b border-[#E2E8F0] dark:border-[#334155] text-xs">
                 {/* Left side: Formatting tools */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {/* Alignment */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyLeft')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Align Left">
-                    <AlignLeft className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyLeft')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Left">
+                    <AlignLeft className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyCenter')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Align Center">
-                    <AlignCenter className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyCenter')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Center">
+                    <AlignCenter className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyRight')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Align Right">
-                    <AlignRight className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyRight')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Right">
+                    <AlignRight className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyFull')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Justify">
-                    <AlignJustify className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyFull')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Justify">
+                    <AlignJustify className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Text Color A */}
                   <div className="relative">
-                    <button type="button" onClick={() => { setShowParseColorPicker(!showParseColorPicker); setShowParseHighlightPicker(false); }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] flex items-center gap-0.5" title="Text Color">
-                      <Type className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                    <button type="button" onClick={() => { setShowParseColorPicker(!showParseColorPicker); setShowParseHighlightPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Text Color">
+                      <Type className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                       <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: parseTextColor }}></span>
                     </button>
                     {showParseColorPicker && (
-                      <div className="absolute top-7 left-0 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg shadow-xl p-2 z-50 grid grid-cols-7 gap-1 w-[160px]">
-                        {['#000000','#333333','#666666','#999999','#CCCCCC','#FFFFFF','#E05252','#D97706','#16A34A','#2563EB','#7C3AED','#DB2777','#FF6B5E','#FF6B5E'].map((c) => (
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg shadow-xl p-2 z-50 grid grid-cols-7 gap-1 w-[160px]">
+                        {['#000000','#333333','#666666','#999999','#CCCCCC','#FFFFFF','#E05252','#D97706','#16A34A','#2563EB','#7C3AED','#DB2777','#2563EB','#2563EB'].map((c) => (
                           <button key={c} type="button" onClick={() => { setParseTextColor(c); document.execCommand('foreColor', false, c); setShowParseColorPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
                         ))}
                       </div>
@@ -1258,12 +1258,12 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                   {/* Highlight Color */}
                   <div className="relative">
-                    <button type="button" onClick={() => { setShowParseHighlightPicker(!showParseHighlightPicker); setShowParseColorPicker(false); }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] flex items-center gap-0.5" title="Background Color">
-                      <Highlighter className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                    <button type="button" onClick={() => { setShowParseHighlightPicker(!showParseHighlightPicker); setShowParseColorPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Background Color">
+                      <Highlighter className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                       <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: parseHighlightColor }}></span>
                     </button>
                     {showParseHighlightPicker && (
-                      <div className="absolute top-7 left-0 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg shadow-xl p-2 z-50 grid grid-cols-6 gap-1 w-[140px]">
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg shadow-xl p-2 z-50 grid grid-cols-6 gap-1 w-[140px]">
                         {['#FFFF00','#00FF00','#00FFFF','#FF69B4','#FFA500','#FF6347','#E6E6FA','#98FB98','#87CEEB','#FFFFFF'].map((c) => (
                           <button key={c} type="button" onClick={() => { setParseHighlightColor(c); document.execCommand('hiliteColor', false, c); setShowParseHighlightPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
                         ))}
@@ -1271,13 +1271,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     )}
                   </div>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Styles */}
                   <select
                     value={parseStyle}
                     onChange={(e) => setParseStyle(e.target.value)}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="Styles">Styles</option>
                     <option value="lead">Lead Paragraph</option>
@@ -1293,7 +1293,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       const tag = e.target.value === 'Normal' ? 'P' : e.target.value === 'Heading 1' ? 'H1' : e.target.value === 'Heading 2' ? 'H2' : e.target.value === 'Heading 3' ? 'H3' : 'P';
                       document.execCommand('formatBlock', false, tag);
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="Normal">Format</option>
                     <option value="Heading 1">Heading 1</option>
@@ -1309,7 +1309,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       setParseFont(e.target.value);
                       document.execCommand('fontName', false, e.target.value);
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="Arial">Font</option>
                     <option value="Comic Sans MS">Comic Sans MS</option>
@@ -1329,7 +1329,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       setParseFontSize(e.target.value);
                       document.execCommand('fontSize', false, e.target.value);
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="3">Size</option>
                     <option value="1">8</option>
@@ -1364,14 +1364,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
               {/* Popovers for Link & Table */}
               {showParseLinkInput && (
-                <div className="p-2.5 bg-[#FFF0E8] dark:bg-[#252525] border-b border-[#E9D8D1] dark:border-[#4D4140] flex items-center gap-2 text-xs">
-                  <span className="text-[11px] font-semibold text-[#65534F]">URL:</span>
+                <div className="p-2.5 bg-[#FFFFFF] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-2 text-xs">
+                  <span className="text-[11px] font-semibold text-[#475569]">URL:</span>
                   <input
                     type="url"
                     value={parseLinkUrl}
                     onChange={(e) => setParseLinkUrl(e.target.value)}
                     placeholder="https://..."
-                    className="flex-1 px-2 py-1 bg-white dark:bg-[#48403E] border border-[#E8C8BE] rounded text-xs"
+                    className="flex-1 px-2 py-1 bg-white dark:bg-[#475569] border border-[#D8E3F1] rounded text-xs"
                   />
                   <button
                     type="button"
@@ -1382,7 +1382,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                         setShowParseLinkInput(false);
                       }
                     }}
-                    className="px-3 py-1 bg-[#FF6B5E] text-white text-[11px] font-bold rounded"
+                    className="px-3 py-1 bg-[#2563EB] text-white text-[11px] font-bold rounded"
                   >
                     Insert Link
                   </button>
@@ -1391,8 +1391,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               )}
 
               {showParseTableInput && (
-                <div className="p-2.5 bg-[#FFF0E8] dark:bg-[#252525] border-b border-[#E9D8D1] dark:border-[#4D4140] flex items-center gap-3 text-xs">
-                  <span className="text-[11px] font-semibold text-[#65534F]">Table:</span>
+                <div className="p-2.5 bg-[#FFFFFF] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-3 text-xs">
+                  <span className="text-[11px] font-semibold text-[#475569]">Table:</span>
                   <label className="flex items-center gap-1 text-[11px]">
                     <span>Rows:</span>
                     <input type="number" min={1} max={10} value={parseTableRows} onChange={(e) => setParseTableRows(Number(e.target.value))} className="w-12 px-1 py-0.5 border rounded text-xs text-center" />
@@ -1404,19 +1404,19 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   <button
                     type="button"
                     onClick={() => {
-                      let html = '<table style="border-collapse:collapse;width:100%;border:1px solid #E8C8BE;margin:8px 0"><thead><tr>';
-                      for (let c = 0; c < parseTableCols; c++) html += `<th style="border:1px solid #E8C8BE;padding:6px 10px;background:#FFE6DD;font-weight:bold;text-align:left;font-size:12px">Col ${c + 1}</th>`;
+                      let html = '<table style="border-collapse:collapse;width:100%;border:1px solid #D8E3F1;margin:8px 0"><thead><tr>';
+                      for (let c = 0; c < parseTableCols; c++) html += `<th style="border:1px solid #D8E3F1;padding:6px 10px;background:#F1F5F9;font-weight:bold;text-align:left;font-size:12px">Col ${c + 1}</th>`;
                       html += '</tr></thead><tbody>';
                       for (let r = 0; r < parseTableRows; r++) {
                         html += '<tr>';
-                        for (let c = 0; c < parseTableCols; c++) html += `<td style="border:1px solid #E8C8BE;padding:6px 10px;font-size:12px">&nbsp;</td>`;
+                        for (let c = 0; c < parseTableCols; c++) html += `<td style="border:1px solid #D8E3F1;padding:6px 10px;font-size:12px">&nbsp;</td>`;
                         html += '</tr>';
                       }
                       html += '</tbody></table>';
                       document.execCommand('insertHTML', false, html);
                       setShowParseTableInput(false);
                     }}
-                    className="px-3 py-1 bg-[#FF6B5E] text-white text-[11px] font-bold rounded"
+                    className="px-3 py-1 bg-[#2563EB] text-white text-[11px] font-bold rounded"
                   >
                     Insert
                   </button>
@@ -1430,7 +1430,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   value={rawJdText}
                   onChange={(e) => setRawJdText(e.target.value)}
                   rows={18}
-                  className="w-full p-4 font-mono text-xs text-[#252525] dark:text-white bg-white dark:bg-[#48403E] focus:outline-none min-h-[460px]"
+                  className="w-full p-4 font-mono text-xs text-[#1E293B] dark:text-white bg-white dark:bg-[#475569] focus:outline-none min-h-[460px]"
                   placeholder="<p>Enter HTML source code or paste job details here...</p>"
                 />
               ) : (
@@ -1443,7 +1443,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   aria-multiline="true"
                   onInput={(e) => setRawJdText(e.currentTarget.innerHTML)}
                   data-placeholder="Paste job details or client requirement email here..."
-                  className="min-h-[460px] w-full p-4 text-xs font-sans text-[#252525] dark:text-white bg-white dark:bg-[#48403E] focus:outline-none whitespace-pre-wrap leading-relaxed"
+                  className="min-h-[460px] w-full p-4 text-xs font-sans text-[#1E293B] dark:text-white bg-white dark:bg-[#475569] focus:outline-none whitespace-pre-wrap leading-relaxed"
                   style={{ fontFamily: parseFont }}
                 />
               )}
@@ -1458,17 +1458,17 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
       {(creationMode === 'manual' || (creationMode === 'template' && selectedTemplateKey)) && (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Top Business Unit Header Card */}
-          <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {creationMode === 'manual' ? (
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 <div className="w-full sm:w-60">
-                  <label className="block text-xs font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">
+                  <label className="block text-xs font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">
                     Business Unit
                   </label>
                   <select
                     value={businessUnit}
                     onChange={(e) => setBusinessUnit(e.target.value)}
-                    className="w-full p-2 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#252525] dark:text-white"
+                    className="w-full p-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold text-[#1E293B] dark:text-white"
                   >
                     <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
                     <option value="Cloud & AI Practice">Cloud &amp; AI Practice</option>
@@ -1477,13 +1477,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   </select>
                 </div>
                 <div className="w-full sm:w-64">
-                  <label className="block text-xs font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">
+                  <label className="block text-xs font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">
                     Job Template (Optional)
                   </label>
                   <select
                     value={selectedTemplateKey}
                     onChange={(e) => handleSelectTemplate(e.target.value)}
-                    className="w-full p-2 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#252525] dark:text-white"
+                    className="w-full p-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold text-[#1E293B] dark:text-white"
                   >
                     <option value="">-- Apply a Template --</option>
                     {templatesList.map(t => (
@@ -1498,7 +1498,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <span>Template Active: {title}</span>
                 </span>
-                <span className="text-xs text-[#806B66] dark:text-[#FFD7C9] font-medium hidden sm:inline">
+                <span className="text-xs text-[#64748B] dark:text-[#BFDBFE] font-medium hidden sm:inline">
                   • {businessUnit}
                 </span>
               </div>
@@ -1519,8 +1519,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   onClick={() => setActiveFormSection(sec.id as any)}
                   className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
                     activeFormSection === sec.id
-                      ? 'bg-[#FF6B5E] text-white shadow-xs'
-                      : 'bg-[#FFF0E8] dark:bg-[#48403E] text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525]'
+                      ? 'bg-[#2563EB] text-white shadow-xs'
+                      : 'bg-[#FFFFFF] dark:bg-[#475569] text-[#64748B] dark:text-[#BFDBFE] hover:text-[#1E293B]'
                   }`}
                 >
                   {sec.label}
@@ -1531,16 +1531,16 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* SECTION 1: JOB DETAILS (Ceipal Section 1) */}
           {(activeFormSection === 'all' || activeFormSection === 'details') && (
-            <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-3xl p-6 shadow-xs space-y-5">
-              <div className="flex items-center gap-2 pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
-                <div className="w-8 h-8 rounded-lg bg-[#FF6B5E]/10 text-[#252525] flex items-center justify-center font-bold">
+            <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-3xl p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
+                <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 text-[#1E293B] flex items-center justify-center font-bold">
                   1
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#252525] dark:text-white uppercase tracking-wider">
+                  <h3 className="text-sm font-bold text-[#1E293B] dark:text-white uppercase tracking-wider">
                     Job Details
                   </h3>
-                  <p className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
                     Requisition identity, billing schedule, location, and client specifications
                   </p>
                 </div>
@@ -1549,22 +1549,22 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 {/* Row 1 */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Code *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Code *</label>
                   <input
                     type="text"
                     required
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-mono font-bold text-[#252525] dark:text-[#806B66]"
+                    className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono font-bold text-[#1E293B] dark:text-[#64748B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Facility</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Facility</label>
                   <select
                     value={facility}
                     onChange={(e) => setFacility(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium text-[#252525] dark:text-white"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium text-[#1E293B] dark:text-white"
                   >
                     <option value="Offshore Development Center">Offshore Development Center</option>
                     <option value="Client Onsite HQ">Client Onsite HQ</option>
@@ -1574,27 +1574,27 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Title *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Title *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Lead Software Engineer (React / Node)"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-[#252525] dark:text-white focus:ring-2 focus:ring-[#FF6B5E]/20"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#2563EB]/20"
                   />
                 </div>
 
                 {/* Row 2: Client Bill Rate / Salary */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">
                     Client Bill Rate / Salary
                   </label>
                   <div className="flex gap-1.5">
                     <select
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value)}
-                      className="w-20 p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-xs"
+                      className="w-20 p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-xs"
                     >
                       <option value="USD">USD ($)</option>
                       <option value="INR">INR (₹)</option>
@@ -1606,12 +1606,12 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       placeholder="Amount"
                       value={billRate}
                       onChange={(e) => setBillRate(Number(e.target.value))}
-                      className="flex-1 p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-xs"
+                      className="flex-1 p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-xs"
                     />
                     <select
                       value={rateType}
                       onChange={(e) => setRateType(e.target.value as any)}
-                      className="w-24 p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-semibold text-xs"
+                      className="w-24 p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-semibold text-xs"
                     >
                       <option value="Hourly">Hourly</option>
                       <option value="Yearly">Yearly</option>
@@ -1621,32 +1621,32 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Start Date</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Start Date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job End Date</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job End Date</label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 {/* Row 3 */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Category</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Category</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="IT Software">IT Software</option>
                     <option value="Big Data & Cloud">Big Data &amp; Cloud</option>
@@ -1658,11 +1658,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Skill Type *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Skill Type *</label>
                   <select
                     value={skillType}
                     onChange={(e) => setSkillType(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Technical">Technical</option>
                     <option value="Functional">Functional</option>
@@ -1672,11 +1672,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Respond By</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Respond By</label>
                   <select
                     value={respondBy}
                     onChange={(e) => setRespondBy(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Open Until Filled">Open Until Filled</option>
                     <option value="Within 7 Days">Within 7 Days</option>
@@ -1686,7 +1686,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                 {/* Row 4: Remote Job Radio & Location */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-2">Remote Job</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-2">Remote Job</label>
                   <div className="flex items-center gap-4 pt-1">
                     {(['Yes', 'No', 'Hybrid'] as const).map((r) => (
                       <label key={r} className="flex items-center gap-1.5 cursor-pointer font-medium text-xs">
@@ -1696,7 +1696,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                           value={r}
                           checked={remoteJob === r}
                           onChange={() => setRemoteJob(r)}
-                          className="text-[#252525]"
+                          className="text-[#1E293B]"
                         />
                         <span>{r}</span>
                       </label>
@@ -1705,35 +1705,35 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">States *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">States *</label>
                   <input
                     type="text"
                     value={states}
                     onChange={(e) => setStates(e.target.value)}
                     placeholder="e.g. Maharashtra, Karnataka, CA"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Location *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Location *</label>
                   <input
                     type="text"
                     required
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="Search Location with City or Zip Code"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 {/* Row 5 */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Status *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Status *</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as any)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-[#252525]"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-[#1E293B]"
                   >
                     <option value="Active">Active</option>
                     <option value="Sourcing">Sourcing</option>
@@ -1744,11 +1744,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Job Type *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Job Type *</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as any)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Full-Time">Full-Time</option>
                     <option value="Contract">Contract</option>
@@ -1759,65 +1759,65 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Duration</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Duration</label>
                   <input
                     type="text"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     placeholder="e.g. 6 Months, Permanent"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 {/* Row 6: Client details */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Client *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Client *</label>
                   <input
                     type="text"
                     required
                     value={client}
                     onChange={(e) => setClient(e.target.value)}
                     placeholder="Search for a Client"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-[#252525]"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-[#1E293B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Client Manager</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Client Manager</label>
                   <input
                     type="text"
                     value={clientManager}
                     onChange={(e) => setClientManager(e.target.value)}
                     placeholder="Client point of contact"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Client Job ID</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Client Job ID</label>
                   <input
                     type="text"
                     value={clientJobId}
                     onChange={(e) => setClientJobId(e.target.value)}
                     placeholder="e.g. MOR4JP00025875"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-mono text-xs"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono text-xs"
                   />
                 </div>
 
                 {/* Row 7 */}
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Turnaround Time</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Turnaround Time</label>
                   <div className="flex gap-1.5">
                     <input
                       type="number"
                       value={turnaroundTime}
                       onChange={(e) => setTurnaroundTime(Number(e.target.value))}
-                      className="w-24 p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold"
+                      className="w-24 p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold"
                     />
                     <select
                       value={turnaroundUnit}
                       onChange={(e) => setTurnaroundUnit(e.target.value as any)}
-                      className="flex-1 p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                      className="flex-1 p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                     >
                       <option value="In Days">In Days</option>
                       <option value="In Hours">In Hours</option>
@@ -1826,11 +1826,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Priority *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Priority *</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as any)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-[#252525]"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-[#1E293B]"
                   >
                     <option value="Urgent">🔥 Urgent Priority</option>
                     <option value="High">High</option>
@@ -1840,11 +1840,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Notice Period</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Notice Period</label>
                   <select
                     value={noticePeriod}
                     onChange={(e) => setNoticePeriod(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Immediate">Immediate</option>
                     <option value="15 Days">15 Days</option>
@@ -1856,13 +1856,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                 {/* Address */}
                 <div className="md:col-span-3">
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Address</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Address</label>
                   <textarea
                     rows={2}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Full workplace address"
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
               </div>
@@ -1871,16 +1871,16 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* SECTION 2: SKILLS & QUALIFICATIONS (Ceipal Section 2) */}
           {(activeFormSection === 'all' || activeFormSection === 'skills') && (
-            <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-3xl p-6 shadow-xs space-y-5">
-              <div className="flex items-center gap-2 pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
-                <div className="w-8 h-8 rounded-lg bg-[#FF6B5E]/10 text-[#252525] flex items-center justify-center font-bold">
+            <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-3xl p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
+                <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 text-[#1E293B] flex items-center justify-center font-bold">
                   2
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#252525] dark:text-white uppercase tracking-wider">
+                  <h3 className="text-sm font-bold text-[#1E293B] dark:text-white uppercase tracking-wider">
                     Skills &amp; Qualifications
                   </h3>
-                  <p className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
                     Technical domain prerequisites, education degree, experience boundaries, and primary/secondary skill chips
                   </p>
                 </div>
@@ -1888,11 +1888,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Industry</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Industry</label>
                   <select
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Information Technology">Information Technology</option>
                     <option value="Banking & Financial Services">Banking &amp; Financial Services</option>
@@ -1903,11 +1903,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Degree</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Degree</label>
                   <select
                     value={degree}
                     onChange={(e) => setDegree(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Bachelor's Degree">Bachelor's Degree</option>
                     <option value="Master's Degree">Master's Degree</option>
@@ -1917,31 +1917,31 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Experience *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Experience *</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
                       placeholder="Min"
                       value={minExperience}
                       onChange={(e) => setMinExperience(Number(e.target.value))}
-                      className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold"
+                      className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold"
                     />
-                    <span className="text-[#806B66] font-bold">to</span>
+                    <span className="text-[#64748B] font-bold">to</span>
                     <input
                       type="number"
                       placeholder="Max"
                       value={maxExperience}
                       onChange={(e) => setMaxExperience(Number(e.target.value))}
-                      className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold"
+                      className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold"
                     />
-                    <span className="text-[#806B66] font-semibold whitespace-nowrap">Years</span>
+                    <span className="text-[#64748B] font-semibold whitespace-nowrap">Years</span>
                   </div>
                 </div>
 
                 {/* Primary Skills Chips */}
                 <div className="md:col-span-3 pt-2">
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1.5">
-                    Primary Skills * <span className="text-[11px] text-[#806B66] font-normal">(Press Enter to add skill tag)</span>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1.5">
+                    Primary Skills * <span className="text-[11px] text-[#64748B] font-normal">(Press Enter to add skill tag)</span>
                   </label>
                   <div className="flex gap-2 mb-2">
                     <input
@@ -1950,12 +1950,12 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       value={newPrimarySkill}
                       onChange={(e) => setNewPrimarySkill(e.target.value)}
                       onKeyDown={handleAddPrimarySkill}
-                      className="flex-1 p-2 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold"
+                      className="flex-1 p-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold"
                     />
                     <button
                       type="button"
                       onClick={() => handleAddPrimarySkill()}
-                      className="px-4 py-2 bg-[#FF6B5E] text-white rounded-xl text-xs font-bold hover:bg-[#E85249]"
+                      className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold hover:bg-[#1D4ED8]"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -1964,7 +1964,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     {primarySkills.map((sk, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF6B5E]/10 text-[#252525] dark:text-[#806B66] border border-[#FF6B5E]/20 rounded-xl font-bold text-xs"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2563EB]/10 text-[#1E293B] dark:text-[#64748B] border border-[#2563EB]/20 rounded-xl font-bold text-xs"
                       >
                         <span>{sk}</span>
                         <button
@@ -1981,8 +1981,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                 {/* Secondary Skills Chips */}
                 <div className="md:col-span-3 pt-2">
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1.5">
-                    Secondary Skills <span className="text-[11px] text-[#806B66] font-normal">(Press Enter to add skill tag)</span>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1.5">
+                    Secondary Skills <span className="text-[11px] text-[#64748B] font-normal">(Press Enter to add skill tag)</span>
                   </label>
                   <div className="flex gap-2 mb-2">
                     <input
@@ -1991,12 +1991,12 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       value={newSecondarySkill}
                       onChange={(e) => setNewSecondarySkill(e.target.value)}
                       onKeyDown={handleAddSecondarySkill}
-                      className="flex-1 p-2 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold"
+                      className="flex-1 p-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs font-semibold"
                     />
                     <button
                       type="button"
                       onClick={() => handleAddSecondarySkill()}
-                      className="px-4 py-2 bg-[#FF6B5E] text-white rounded-xl text-xs font-bold hover:bg-[#E85249]"
+                      className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold hover:bg-[#1D4ED8]"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -2005,7 +2005,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     {secondarySkills.map((sk, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF6B5E]/10 text-[#252525] dark:text-[#806B66] border border-[#FF6B5E]/20 rounded-xl font-bold text-xs"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2563EB]/10 text-[#1E293B] dark:text-[#64748B] border border-[#2563EB]/20 rounded-xl font-bold text-xs"
                       >
                         <span>{sk}</span>
                         <button
@@ -2025,16 +2025,16 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* SECTION 3: ORGANIZATIONAL INFORMATION (Ceipal Section 3) */}
           {(activeFormSection === 'all' || activeFormSection === 'org') && (
-            <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-3xl p-6 shadow-xs space-y-5">
-              <div className="flex items-center gap-2 pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
-                <div className="w-8 h-8 rounded-lg bg-[#FF6B5E]/10 text-[#252525] flex items-center justify-center font-bold">
+            <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-3xl p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
+                <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 text-[#1E293B] flex items-center justify-center font-bold">
                   3
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#252525] dark:text-white uppercase tracking-wider">
+                  <h3 className="text-sm font-bold text-[#1E293B] dark:text-white uppercase tracking-wider">
                     Organizational Information
                   </h3>
-                  <p className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
                     Capacity parameters, management routing, account executive ownership, and notifications
                   </p>
                 </div>
@@ -2042,32 +2042,32 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Number of Positions *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Number of Positions *</label>
                   <input
                     type="number"
                     min={1}
                     value={openings}
                     onChange={(e) => setOpenings(Number(e.target.value))}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Maximum Allowed Submissions</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Maximum Allowed Submissions</label>
                   <input
                     type="number"
                     value={maxSubmissions}
                     onChange={(e) => setMaxSubmissions(Number(e.target.value))}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Sales Manager</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Sales Manager</label>
                   <select
                     value={salesManager}
                     onChange={(e) => setSalesManager(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Rajesh Ramanathan">Rajesh Ramanathan</option>
                     <option value="Elena Rostova">Elena Rostova</option>
@@ -2076,11 +2076,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Recruitment Manager *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Recruitment Manager *</label>
                   <select
                     value={recruitmentManager}
                     onChange={(e) => setRecruitmentManager(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Priya Sharma">Priya Sharma</option>
                     <option value="Rajesh Ramanathan">Rajesh Ramanathan</option>
@@ -2088,11 +2088,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Account Manager *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Account Manager *</label>
                   <select
                     value={accountManager}
                     onChange={(e) => setAccountManager(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="David Chen">David Chen</option>
                     <option value="Siddharth Roy">Siddharth Roy</option>
@@ -2101,14 +2101,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Assigned To *</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Assigned To *</label>
                   <select
                     value={assignedTo}
                     onChange={(e) => {
                       setAssignedTo(e.target.value);
                       setAssignedRecruiter(e.target.value);
                     }}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-bold text-[#252525]"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-[#1E293B]"
                   >
                     <option value="Priya Sharma">Priya Sharma</option>
                     <option value="Marcus Vance">Marcus Vance</option>
@@ -2117,11 +2117,11 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Primary Recruiter</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Primary Recruiter</label>
                   <select
                     value={assignedRecruiter}
                     onChange={(e) => setAssignedRecruiter(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Priya Sharma">Priya Sharma</option>
                     <option value="Marcus Vance">Marcus Vance</option>
@@ -2130,33 +2130,33 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Additional Notifications</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Additional Notifications</label>
                   <input
                     type="text"
                     value={additionalNotifications}
                     onChange={(e) => setAdditionalNotifications(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Career Portal Published Date</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Career Portal Published Date</label>
                   <input
                     type="date"
                     value={careerPortalPublishedDate}
                     onChange={(e) => setCareerPortalPublishedDate(e.target.value)}
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block font-bold text-[#252525] dark:text-[#FFF0E8] mb-1">Comments / Sourcing Instructions</label>
+                  <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Comments / Sourcing Instructions</label>
                   <textarea
                     rows={2}
                     value={comments}
                     onChange={(e) => setComments(e.target.value)}
                     placeholder="Recruitment team guidance and screening remarks..."
-                    className="w-full p-2.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   />
                 </div>
               </div>
@@ -2165,26 +2165,26 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* SECTION 4: JOB DESCRIPTION (CEIPAL EXACT REPLICA) */}
           {(activeFormSection === 'all' || activeFormSection === 'description') && (
-            <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl p-6 shadow-xs space-y-3">
-              <label className="block text-xs font-bold text-[#252525] dark:text-white">
+            <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl p-6 shadow-xs space-y-3">
+              <label className="block text-xs font-bold text-[#1E293B] dark:text-white">
                 Job Description <span className="text-red-500">*</span>
               </label>
 
               {/* Ceipal CKEditor Container */}
-              <div className="border border-[#E8C8BE] dark:border-[#3D3634] rounded-md overflow-hidden bg-white dark:bg-[#48403E] shadow-2xs">
+              <div className="border border-[#D8E3F1] dark:border-[#334155] rounded-md overflow-hidden bg-white dark:bg-[#475569] shadow-2xs">
                 {/* CKEditor Toolbar Row 1 */}
-                <div className="flex items-center justify-between flex-wrap gap-1 px-2.5 py-1.5 bg-[#FFF0E8] dark:bg-[#252525] border-b border-[#E9D8D1] dark:border-[#4D4140] text-xs">
-                  <div className="flex items-center gap-0.5 flex-wrap text-[#65534F] dark:text-[#E8C8BE]">
+                <div className="flex items-center justify-between flex-wrap gap-1 px-2.5 py-1.5 bg-[#FFFFFF] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] text-xs">
+                  <div className="flex items-center gap-0.5 flex-wrap text-[#475569] dark:text-[#D8E3F1]">
                     {/* Clean / Magic wand */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Clean Format">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Clean Format">
                       <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                     </button>
                     {/* Cut */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('cut')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Cut">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('cut')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Cut">
                       <Scissors className="w-3.5 h-3.5" />
                     </button>
                     {/* Copy */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('copy')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Copy">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('copy')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Copy">
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     {/* Paste */}
@@ -2195,7 +2195,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       } catch {
                         /* fallback */
                       }
-                    }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Paste">
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste">
                       <FileText className="w-3.5 h-3.5" />
                     </button>
                     {/* Paste from Word */}
@@ -2206,27 +2206,27 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       } catch {
                         /* fallback */
                       }
-                    }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Paste from Word">
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Paste from Word">
                       <FileCode className="w-3.5 h-3.5 text-[#0061D5]" />
                     </button>
 
-                    <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                    <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                     {/* Undo / Redo */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('undo')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Undo">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('undo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Undo">
                       <Undo2 className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('redo')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Redo">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('redo')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Redo">
                       <Redo2 className="w-3.5 h-3.5" />
                     </button>
 
-                    <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                    <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                     {/* Find */}
                     <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
                       const term = prompt('Find text in job description:');
                       if (term && (window as any).find) (window as any).find(term);
-                    }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Find">
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Find">
                       <Search className="w-3.5 h-3.5" />
                     </button>
                     {/* Replace */}
@@ -2236,99 +2236,99 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                         const replaceStr = prompt('Replace with:') || '';
                         applyDescription(description.replaceAll(findStr, replaceStr));
                       }
-                    }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Replace">
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Replace">
                       <RefreshCw className="w-3.5 h-3.5" />
                     </button>
                     {/* Select All */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('selectAll')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Select All">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('selectAll')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Select All">
                       <CheckSquare className="w-3.5 h-3.5" />
                     </button>
                     {/* Remove Format */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Remove Format">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('removeFormat')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Remove Format">
                       <RemoveFormatting className="w-3.5 h-3.5 text-red-500" />
                     </button>
 
-                    <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                    <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                     {/* Bold / Italic / Underline / Strike */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('bold')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] font-bold" title="Bold">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('bold')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-bold" title="Bold">
                       <Bold className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('italic')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] italic" title="Italic">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('italic')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] italic" title="Italic">
                       <Italic className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('underline')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] underline" title="Underline">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('underline')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] underline" title="Underline">
                       <Underline className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('strikeThrough')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] line-through" title="Strikethrough">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('strikeThrough')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] line-through" title="Strikethrough">
                       <Strikethrough className="w-3.5 h-3.5" />
                     </button>
                     {/* Subscript / Superscript */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('subscript')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Subscript">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('subscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Subscript">
                       <Subscript className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('superscript')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Superscript">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('superscript')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Superscript">
                       <Superscript className="w-3.5 h-3.5" />
                     </button>
 
-                    <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                    <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                     {/* Lists */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('insertOrderedList')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Numbered List">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('insertOrderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Numbered List">
                       <ListOrdered className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('insertUnorderedList')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Bulleted List">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatDescription('insertUnorderedList')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Bulleted List">
                       <List className="w-3.5 h-3.5" />
                     </button>
                     {/* Indent / Outdent */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('outdent')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Decrease Indent">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('outdent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Decrease Indent">
                       <Outdent className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('indent')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Increase Indent">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('indent')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Increase Indent">
                       <Indent className="w-3.5 h-3.5" />
                     </button>
                     {/* Blockquote */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('formatBlock', false, 'blockquote')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Blockquote">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('formatBlock', false, 'blockquote')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Blockquote">
                       <Quote className="w-3.5 h-3.5" />
                     </button>
 
-                    <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                    <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                     {/* Link */}
-                    <button type="button" onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Insert Link">
+                    <button type="button" onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Insert Link">
                       <Link2 className="w-3.5 h-3.5" />
                     </button>
                     {/* Unlink */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('unlink')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Unlink">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('unlink')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Unlink">
                       <Unlink className="w-3.5 h-3.5" />
                     </button>
                     {/* Anchor */}
                     <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
                       const name = prompt('Anchor name:');
                       if (name) document.execCommand('insertHTML', false, `<a name="${name}"></a>`);
-                    }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Anchor">
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Anchor">
                       <Anchor className="w-3.5 h-3.5" />
                     </button>
 
-                    <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                    <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                     {/* Image */}
                     <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => {
                       const url = prompt('Image URL:');
                       if (url) document.execCommand('insertImage', false, url);
-                    }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Image">
+                    }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Image">
                       <Image className="w-3.5 h-3.5" />
                     </button>
                     {/* Table */}
-                    <button type="button" onClick={() => setShowTableInput(!showTableInput)} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Table">
+                    <button type="button" onClick={() => setShowTableInput(!showTableInput)} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Table">
                       <Table className="w-3.5 h-3.5" />
                     </button>
                     {/* Horizontal Rule */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertHorizontalRule')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Horizontal Rule">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertHorizontalRule')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Horizontal Rule">
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     {/* Special Character */}
-                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertText', false, '©')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] font-serif text-xs font-bold" title="Special Character (Ω)">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('insertText', false, '©')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] font-serif text-xs font-bold" title="Special Character (Ω)">
                       Ω
                     </button>
                   </div>
@@ -2339,8 +2339,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     onClick={() => setIsSourceMode(!isSourceMode)}
                     className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors ${
                       isSourceMode
-                        ? 'bg-[#FF6B5E] text-white'
-                        : 'hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] text-[#65534F] dark:text-[#E8C8BE]'
+                        ? 'bg-[#2563EB] text-white'
+                        : 'hover:bg-[#E2E8F0] dark:hover:bg-[#334155] text-[#475569] dark:text-[#D8E3F1]'
                     }`}
                     title="Toggle HTML Source Code View"
                   >
@@ -2350,32 +2350,32 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 {/* CKEditor Toolbar Row 2 */}
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FFE6DD] dark:bg-[#48403E] border-b border-[#E9D8D1] dark:border-[#4D4140] text-xs flex-wrap">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F1F5F9] dark:bg-[#475569] border-b border-[#E2E8F0] dark:border-[#334155] text-xs flex-wrap">
                   {/* Alignment */}
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyLeft')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Align Left">
-                    <AlignLeft className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyLeft')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Left">
+                    <AlignLeft className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyCenter')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Align Center">
-                    <AlignCenter className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyCenter')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Center">
+                    <AlignCenter className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyRight')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Align Right">
-                    <AlignRight className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyRight')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Align Right">
+                    <AlignRight className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyFull')} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140]" title="Justify">
-                    <AlignJustify className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => document.execCommand('justifyFull')} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155]" title="Justify">
+                    <AlignJustify className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                   </button>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Text Color A */}
                   <div className="relative">
-                    <button type="button" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] flex items-center gap-0.5" title="Text Color">
-                      <Type className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                    <button type="button" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Text Color">
+                      <Type className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                       <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: editorTextColor }}></span>
                     </button>
                     {showColorPicker && (
-                      <div className="absolute top-7 left-0 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg shadow-xl p-2 z-50 grid grid-cols-7 gap-1 w-[160px]">
-                        {['#000000','#333333','#666666','#999999','#CCCCCC','#FFFFFF','#E05252','#D97706','#16A34A','#2563EB','#7C3AED','#DB2777','#FF6B5E','#FF6B5E'].map((c) => (
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg shadow-xl p-2 z-50 grid grid-cols-7 gap-1 w-[160px]">
+                        {['#000000','#333333','#666666','#999999','#CCCCCC','#FFFFFF','#E05252','#D97706','#16A34A','#2563EB','#7C3AED','#DB2777','#2563EB','#2563EB'].map((c) => (
                           <button key={c} type="button" onClick={() => { setEditorTextColor(c); document.execCommand('foreColor', false, c); setShowColorPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
                         ))}
                       </div>
@@ -2384,12 +2384,12 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                   {/* Highlight Color */}
                   <div className="relative">
-                    <button type="button" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); }} className="p-1 rounded hover:bg-[#E9D8D1] dark:hover:bg-[#4D4140] flex items-center gap-0.5" title="Background Color">
-                      <Highlighter className="w-3.5 h-3.5 text-[#65534F] dark:text-[#E8C8BE]" />
+                    <button type="button" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); }} className="p-1 rounded hover:bg-[#E2E8F0] dark:hover:bg-[#334155] flex items-center gap-0.5" title="Background Color">
+                      <Highlighter className="w-3.5 h-3.5 text-[#475569] dark:text-[#D8E3F1]" />
                       <span className="w-2.5 h-1 rounded-full" style={{ backgroundColor: editorHighlightColor }}></span>
                     </button>
                     {showHighlightPicker && (
-                      <div className="absolute top-7 left-0 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg shadow-xl p-2 z-50 grid grid-cols-6 gap-1 w-[140px]">
+                      <div className="absolute top-7 left-0 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-lg shadow-xl p-2 z-50 grid grid-cols-6 gap-1 w-[140px]">
                         {['#FFFF00','#00FF00','#00FFFF','#FF69B4','#FFA500','#FF6347','#E6E6FA','#98FB98','#87CEEB','#FFFFFF'].map((c) => (
                           <button key={c} type="button" onClick={() => { setEditorHighlightColor(c); document.execCommand('hiliteColor', false, c); setShowHighlightPicker(false); }} className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 hover:scale-125 transition-transform" style={{ backgroundColor: c }} />
                         ))}
@@ -2397,13 +2397,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     )}
                   </div>
 
-                  <span className="w-px h-4 bg-[#E8C8BE] dark:bg-[#65534F] mx-1"></span>
+                  <span className="w-px h-4 bg-[#D8E3F1] dark:bg-[#475569] mx-1"></span>
 
                   {/* Styles Dropdown */}
                   <select
                     value={selectedStyle}
                     onChange={(e) => setSelectedStyle(e.target.value)}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="Styles">Styles</option>
                     <option value="lead">Lead Paragraph</option>
@@ -2419,7 +2419,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       const tag = e.target.value === 'Normal' ? 'P' : e.target.value === 'Heading 1' ? 'H1' : e.target.value === 'Heading 2' ? 'H2' : e.target.value === 'Heading 3' ? 'H3' : 'P';
                       document.execCommand('formatBlock', false, tag);
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="Normal">Format (Normal)</option>
                     <option value="Heading 1">Heading 1</option>
@@ -2435,7 +2435,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       setSelectedFont(e.target.value);
                       formatDescription('fontName');
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="Arial">Font (Arial)</option>
                     <option value="Comic Sans MS">Comic Sans MS</option>
@@ -2455,7 +2455,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                       setSelectedFontSize(e.target.value);
                       formatDescription('fontSize');
                     }}
-                    className="px-2 py-0.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#65534F] rounded text-[11px] text-[#4D4140] dark:text-white"
+                    className="px-2 py-0.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#475569] rounded text-[11px] text-[#334155] dark:text-white"
                   >
                     <option value="1">Size (8)</option>
                     <option value="2">9</option>
@@ -2474,14 +2474,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                 {/* Popovers for Link & Table */}
                 {showLinkInput && (
-                  <div className="p-2.5 bg-[#FFF0E8] dark:bg-[#252525] border-b border-[#E9D8D1] dark:border-[#4D4140] flex items-center gap-2 text-xs">
-                    <span className="text-[11px] font-semibold text-[#65534F]">URL:</span>
+                  <div className="p-2.5 bg-[#FFFFFF] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-2 text-xs">
+                    <span className="text-[11px] font-semibold text-[#475569]">URL:</span>
                     <input
                       type="url"
                       value={linkUrl}
                       onChange={(e) => setLinkUrl(e.target.value)}
                       placeholder="https://..."
-                      className="flex-1 px-2 py-1 bg-white dark:bg-[#48403E] border border-[#E8C8BE] rounded text-xs"
+                      className="flex-1 px-2 py-1 bg-white dark:bg-[#475569] border border-[#D8E3F1] rounded text-xs"
                     />
                     <button
                       type="button"
@@ -2492,7 +2492,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                           setShowLinkInput(false);
                         }
                       }}
-                      className="px-3 py-1 bg-[#FF6B5E] text-white text-[11px] font-bold rounded"
+                      className="px-3 py-1 bg-[#2563EB] text-white text-[11px] font-bold rounded"
                     >
                       Insert Link
                     </button>
@@ -2501,8 +2501,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 )}
 
                 {showTableInput && (
-                  <div className="p-2.5 bg-[#FFF0E8] dark:bg-[#252525] border-b border-[#E9D8D1] dark:border-[#4D4140] flex items-center gap-3 text-xs">
-                    <span className="text-[11px] font-semibold text-[#65534F]">Table:</span>
+                  <div className="p-2.5 bg-[#FFFFFF] dark:bg-[#1E293B] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center gap-3 text-xs">
+                    <span className="text-[11px] font-semibold text-[#475569]">Table:</span>
                     <label className="flex items-center gap-1 text-[11px]">
                       <span>Rows:</span>
                       <input type="number" min={1} max={10} value={tableRows} onChange={(e) => setTableRows(Number(e.target.value))} className="w-12 px-1 py-0.5 border rounded text-xs text-center" />
@@ -2514,19 +2514,19 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     <button
                       type="button"
                       onClick={() => {
-                        let html = '<table style="border-collapse:collapse;width:100%;border:1px solid #E8C8BE;margin:8px 0"><thead><tr>';
-                        for (let c = 0; c < tableCols; c++) html += `<th style="border:1px solid #E8C8BE;padding:6px 10px;background:#FFE6DD;font-weight:bold;text-align:left;font-size:12px">Col ${c + 1}</th>`;
+                        let html = '<table style="border-collapse:collapse;width:100%;border:1px solid #D8E3F1;margin:8px 0"><thead><tr>';
+                        for (let c = 0; c < tableCols; c++) html += `<th style="border:1px solid #D8E3F1;padding:6px 10px;background:#F1F5F9;font-weight:bold;text-align:left;font-size:12px">Col ${c + 1}</th>`;
                         html += '</tr></thead><tbody>';
                         for (let r = 0; r < tableRows; r++) {
                           html += '<tr>';
-                          for (let c = 0; c < tableCols; c++) html += `<td style="border:1px solid #E8C8BE;padding:6px 10px;font-size:12px">&nbsp;</td>`;
+                          for (let c = 0; c < tableCols; c++) html += `<td style="border:1px solid #D8E3F1;padding:6px 10px;font-size:12px">&nbsp;</td>`;
                           html += '</tr>';
                         }
                         html += '</tbody></table>';
                         document.execCommand('insertHTML', false, html);
                         setShowTableInput(false);
                       }}
-                      className="px-3 py-1 bg-[#FF6B5E] text-white text-[11px] font-bold rounded"
+                      className="px-3 py-1 bg-[#2563EB] text-white text-[11px] font-bold rounded"
                     >
                       Insert
                     </button>
@@ -2540,7 +2540,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={12}
-                    className="w-full p-4 font-mono text-xs text-[#252525] dark:text-white bg-white dark:bg-[#48403E] focus:outline-none"
+                    className="w-full p-4 font-mono text-xs text-[#1E293B] dark:text-white bg-white dark:bg-[#475569] focus:outline-none"
                     placeholder="<p>Enter HTML source code here...</p>"
                   />
                 ) : (
@@ -2553,7 +2553,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     aria-multiline="true"
                     onInput={(e) => setDescription(e.currentTarget.innerHTML)}
                     data-placeholder="Enter job description..."
-                    className="min-h-[280px] w-full p-4 text-xs font-sans text-[#252525] dark:text-white bg-white dark:bg-[#48403E] focus:outline-none whitespace-pre-wrap leading-relaxed"
+                    className="min-h-[280px] w-full p-4 text-xs font-sans text-[#1E293B] dark:text-white bg-white dark:bg-[#475569] focus:outline-none whitespace-pre-wrap leading-relaxed"
                     style={{ fontFamily: selectedFont }}
                   />
                 )}
@@ -2571,30 +2571,30 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               </div>
 
               {/* Career Portal Toggle & Secondary Managers */}
-              <div className="pt-3 border-t border-[#E8C8BE] dark:border-[#3D3634] grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-xs">
+              <div className="pt-3 border-t border-[#D8E3F1] dark:border-[#334155] grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-xs">
                 <div>
-                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[#252525] dark:text-white">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[#1E293B] dark:text-white">
                     <input
                       type="checkbox"
                       checked={postJobOnCareerPortal}
                       onChange={(e) => setPostJobOnCareerPortal(e.target.checked)}
-                      className="w-4 h-4 rounded border-[#E8C8BE] text-[#252525] focus:ring-[#FF6B5E]"
+                      className="w-4 h-4 rounded border-[#D8E3F1] text-[#1E293B] focus:ring-[#2563EB]"
                     />
                     <span>Post Job on Career Portal</span>
                   </label>
-                  <p className="text-[11px] text-[#806B66] dark:text-[#FFD7C9] pl-6 mt-0.5">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE] pl-6 mt-0.5">
                     Broadcast position to your company careers page
                   </p>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">
+                  <label className="block font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">
                     Secondary Sales Manager
                   </label>
                   <select
                     value={secondarySalesManager}
                     onChange={(e) => setSecondarySalesManager(e.target.value)}
-                    className="w-full p-2 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Marcus Vance">Marcus Vance</option>
                     <option value="Elena Rostova">Elena Rostova</option>
@@ -2602,13 +2602,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">
+                  <label className="block font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">
                     Secondary Recruitment Manager
                   </label>
                   <select
                     value={secondaryRecruitmentManager}
                     onChange={(e) => setSecondaryRecruitmentManager(e.target.value)}
-                    className="w-full p-2 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-medium"
+                    className="w-full p-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium"
                   >
                     <option value="Elena Rostova">Elena Rostova</option>
                     <option value="Rajesh Ramanathan">Rajesh Ramanathan</option>
@@ -2619,46 +2619,46 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           )}
 
           {/* SECTION 5: USER DEFINED FIELDS */}
-          <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-3xl p-6 shadow-xs space-y-4">
-            <h4 className="text-xs font-bold text-[#252525] dark:text-white uppercase tracking-wider">
+          <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-3xl p-6 shadow-xs space-y-4">
+            <h4 className="text-xs font-bold text-[#1E293B] dark:text-white uppercase tracking-wider">
               5. User Defined Fields
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">Cost Center</label>
+                <label className="block font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">Cost Center</label>
                 <input
                   type="text"
                   value={costCenter}
                   onChange={(e) => setCostCenter(e.target.value)}
-                  className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-mono text-xs"
+                  className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono text-xs"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">Department Code</label>
+                <label className="block font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">Department Code</label>
                 <input
                   type="text"
                   value={departmentCode}
                   onChange={(e) => setDepartmentCode(e.target.value)}
-                  className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-mono text-xs"
+                  className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono text-xs"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-[#806B66] dark:text-[#FFD7C9] mb-1">PO Number</label>
+                <label className="block font-bold text-[#64748B] dark:text-[#BFDBFE] mb-1">PO Number</label>
                 <input
                   type="text"
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
-                  className="w-full p-2.5 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl font-mono text-xs"
+                  className="w-full p-2.5 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono text-xs"
                 />
               </div>
             </div>
           </div>
 
           {/* SECTION 6: DOCUMENTS (CEIPAL EXACT REPLICA: LOCAL DRIVE, DROPBOX, BOX) */}
-          <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl p-6 shadow-xs space-y-4">
-            <h3 className="text-sm font-bold text-[#252525] dark:text-white">
+          <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl p-6 shadow-xs space-y-4">
+            <h3 className="text-sm font-bold text-[#1E293B] dark:text-white">
               Documents
             </h3>
 
@@ -2668,13 +2668,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
               <div className="relative group">
                 <label
                   htmlFor="local-drive-upload"
-                  className="w-10 h-10 rounded border border-[#E8C8BE] dark:border-[#65534F] bg-white dark:bg-[#252525] flex items-center justify-center cursor-pointer hover:border-[#B68F87] hover:bg-[#FFF0E8] dark:hover:bg-[#4D4140] transition-all shadow-2xs"
+                  className="w-10 h-10 rounded border border-[#D8E3F1] dark:border-[#475569] bg-white dark:bg-[#1E293B] flex items-center justify-center cursor-pointer hover:border-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#334155] transition-all shadow-2xs"
                 >
                   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-                    <rect x="2.5" y="3.5" width="19" height="13" rx="1.5" stroke="#4D4140" strokeWidth="1.4" fill="#0084FF" />
+                    <rect x="2.5" y="3.5" width="19" height="13" rx="1.5" stroke="#334155" strokeWidth="1.4" fill="#0084FF" />
                     <path d="M4 4.5h8l-5 11H4z" fill="white" fillOpacity="0.25" />
-                    <path d="M12 16.5v3" stroke="#4D4140" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M8.5 19.5h7" stroke="#4D4140" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M12 16.5v3" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M8.5 19.5h7" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                   <input
                     id="local-drive-upload"
@@ -2691,8 +2691,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </label>
                 {/* Tooltip: Local Drive */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
-                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#252525]"></div>
-                  <div className="bg-[#252525] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#1E293B]"></div>
+                  <div className="bg-[#1E293B] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
                     Local Drive
                   </div>
                 </div>
@@ -2703,7 +2703,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 <button
                   type="button"
                   onClick={() => setActiveDocModal('dropbox')}
-                  className="w-10 h-10 rounded border border-[#E8C8BE] dark:border-[#65534F] bg-white dark:bg-[#252525] flex items-center justify-center cursor-pointer hover:border-[#B68F87] hover:bg-[#FFF0E8] dark:hover:bg-[#4D4140] transition-all shadow-2xs"
+                  className="w-10 h-10 rounded border border-[#D8E3F1] dark:border-[#475569] bg-white dark:bg-[#1E293B] flex items-center justify-center cursor-pointer hover:border-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#334155] transition-all shadow-2xs"
                 >
                   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#0061FE]">
                     <path d="M6.033 2.5 0 6.666l6.033 4.167 6.034-4.167L6.033 2.5zm11.934 0-6.034 4.166 6.034 4.167L24 6.666 17.967 2.5zM0 15l6.033 4.167 6.034-4.167-6.034-4.167L0 15zm17.967-4.167-6.034 4.167 6.034 4.167L24 15l-6.033-4.167zM6.033 20.25 12 16.146l5.967 4.104L12 24.354l-5.967-4.104z" />
@@ -2711,8 +2711,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </button>
                 {/* Tooltip: Dropbox */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
-                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#252525]"></div>
-                  <div className="bg-[#252525] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#1E293B]"></div>
+                  <div className="bg-[#1E293B] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
                     Dropbox
                   </div>
                 </div>
@@ -2723,7 +2723,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 <button
                   type="button"
                   onClick={() => setActiveDocModal('box')}
-                  className="w-10 h-10 rounded border border-[#E8C8BE] dark:border-[#65534F] bg-white dark:bg-[#252525] flex items-center justify-center cursor-pointer hover:border-[#B68F87] hover:bg-[#FFF0E8] dark:hover:bg-[#4D4140] transition-all shadow-2xs"
+                  className="w-10 h-10 rounded border border-[#D8E3F1] dark:border-[#475569] bg-white dark:bg-[#1E293B] flex items-center justify-center cursor-pointer hover:border-[#64748B] hover:bg-[#FFFFFF] dark:hover:bg-[#334155] transition-all shadow-2xs"
                 >
                   <span className="text-[#0061D5] font-black text-base tracking-tighter leading-none lowercase select-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                     box
@@ -2731,8 +2731,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </button>
                 {/* Tooltip: Box */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
-                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#252525]"></div>
-                  <div className="bg-[#252525] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
+                  <div className="w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-[#1E293B]"></div>
+                  <div className="bg-[#1E293B] text-white text-[11px] font-medium py-1 px-2.5 rounded shadow-lg whitespace-nowrap">
                     Box
                   </div>
                 </div>
@@ -2741,9 +2741,9 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
             {/* Attached Documents List */}
             {documents.length > 0 && (
-              <div className="space-y-2 pt-3 border-t border-[#E8C8BE] dark:border-[#3D3634]">
-                <div className="flex items-center justify-between text-xs text-[#806B66] dark:text-[#FFD7C9]">
-                  <span className="font-bold text-[#252525] dark:text-white">
+              <div className="space-y-2 pt-3 border-t border-[#D8E3F1] dark:border-[#334155]">
+                <div className="flex items-center justify-between text-xs text-[#64748B] dark:text-[#BFDBFE]">
+                  <span className="font-bold text-[#1E293B] dark:text-white">
                     Attached Files ({documents.length})
                   </span>
                   <span>
@@ -2751,21 +2751,21 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   </span>
                 </div>
 
-                <div className="divide-y divide-[#E8C8BE] dark:border-[#3D3634] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl overflow-hidden bg-white dark:bg-[#48403E]">
+                <div className="divide-y divide-[#D8E3F1] dark:border-[#334155] border border-[#D8E3F1] dark:border-[#334155] rounded-xl overflow-hidden bg-white dark:bg-[#475569]">
                   {documents.map((file, index) => {
                     const src = documentSources[file.name] || 'Local Drive';
                     return (
                       <div
                         key={`${file.name}-${index}`}
-                        className="p-2.5 flex items-center justify-between gap-3 text-xs hover:bg-[#FFF0E8] dark:hover:bg-[#252525] transition-colors"
+                        className="p-2.5 flex items-center justify-between gap-3 text-xs hover:bg-[#FFFFFF] dark:hover:bg-[#1E293B] transition-colors"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <FileText className="w-4 h-4 text-[#252525] shrink-0" />
+                          <FileText className="w-4 h-4 text-[#1E293B] shrink-0" />
                           <div className="min-w-0">
-                            <span className="font-semibold text-[#252525] dark:text-white truncate block">
+                            <span className="font-semibold text-[#1E293B] dark:text-white truncate block">
                               {file.name}
                             </span>
-                            <div className="flex items-center gap-2 text-[10px] text-[#806B66]">
+                            <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
                               <span>{(file.size / 1024).toFixed(0)} KB</span>
                               <span>•</span>
                               <span className="px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-800 font-medium">
@@ -2784,7 +2784,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                                 [file.name]: e.target.value
                               });
                             }}
-                            className="px-2 py-1 bg-[#FFF0E8] dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded text-xs text-[#252525] dark:text-white"
+                            className="px-2 py-1 bg-[#FFFFFF] dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded text-xs text-[#1E293B] dark:text-white"
                           >
                             <option value="Client Job Spec (SOW)">Client Job Spec (SOW)</option>
                             <option value="Assessment Rubric">Assessment Rubric</option>
@@ -2801,7 +2801,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                               setDocuments((current) => current.filter((_, fileIndex) => fileIndex !== index))
                             }
                             aria-label={`Remove ${file.name}`}
-                            className="p-1 text-[#806B66] hover:text-[#E05252] rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                            className="p-1 text-[#64748B] hover:text-[#E05252] rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -2817,30 +2817,30 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           {/* Dropbox File Selection Modal */}
           {activeDocModal === 'dropbox' && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-              <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+              <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <div className="flex items-center gap-2">
                     <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#0061FE]">
                       <path d="M6.033 2.5 0 6.666l6.033 4.167 6.034-4.167L6.033 2.5zm11.934 0-6.034 4.166 6.034 4.167L24 6.666 17.967 2.5zM0 15l6.033 4.167 6.034-4.167-6.034-4.167L0 15zm17.967-4.167-6.034 4.167 6.034 4.167L24 15l-6.033-4.167zM6.033 20.25 12 16.146l5.967 4.104L12 24.354l-5.967-4.104z" />
                     </svg>
-                    <h3 className="text-sm font-bold text-[#252525] dark:text-white">
+                    <h3 className="text-sm font-bold text-[#1E293B] dark:text-white">
                       Dropbox File Chooser
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => { setActiveDocModal(null); setDropboxSelectedFiles([]); }}
-                    className="text-[#806B66] hover:text-[#252525] p-1 text-xs"
+                    className="text-[#64748B] hover:text-[#1E293B] p-1 text-xs"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="text-xs text-[#806B66] dark:text-[#FFD7C9]">
+                <div className="text-xs text-[#64748B] dark:text-[#BFDBFE]">
                   Select files from your Dropbox account to attach to this job:
                 </div>
 
-                <div className="divide-y divide-[#E8C8BE] dark:divide-[#3D3634] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl max-h-60 overflow-y-auto bg-[#FFF0E8] dark:bg-[#48403E]">
+                <div className="divide-y divide-[#D8E3F1] dark:divide-[#334155] border border-[#D8E3F1] dark:border-[#334155] rounded-xl max-h-60 overflow-y-auto bg-[#FFFFFF] dark:bg-[#475569]">
                   {[
                     { name: `${client ? client.replace(/\s+/g, '_') : 'Client'}_Master_SOW_Spec.pdf`, size: 184320, type: 'application/pdf', category: 'Client Job Spec (SOW)' },
                     { name: `${title ? title.replace(/\s+/g, '_') : 'Software_Eng'}_Technical_Matrix.xlsx`, size: 84992, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', category: 'Technical Matrix' },
@@ -2866,8 +2866,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                           <input type="checkbox" checked={isSelected} readOnly className="rounded text-[#0061FE]" />
                           <FileText className="w-4 h-4 text-[#0061FE]" />
                           <div>
-                            <div className="font-semibold text-[#252525] dark:text-white">{f.name}</div>
-                            <div className="text-[10px] text-[#806B66]">{(f.size / 1024).toFixed(0)} KB • {f.category}</div>
+                            <div className="font-semibold text-[#1E293B] dark:text-white">{f.name}</div>
+                            <div className="text-[10px] text-[#64748B]">{(f.size / 1024).toFixed(0)} KB • {f.category}</div>
                           </div>
                         </div>
                       </div>
@@ -2876,14 +2876,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-[11px] text-[#806B66]">
+                  <span className="text-[11px] text-[#64748B]">
                     {dropboxSelectedFiles.length} file(s) selected
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => { setActiveDocModal(null); setDropboxSelectedFiles([]); }}
-                      className="px-3 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#806B66]"
+                      className="px-3 py-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-xs font-semibold text-[#64748B]"
                     >
                       Cancel
                     </button>
@@ -2913,30 +2913,30 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           {/* Box File Selection Modal */}
           {activeDocModal === 'box' && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-              <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+              <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl max-w-lg w-full p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <div className="flex items-center gap-2">
                     <span className="text-[#0061D5] font-extrabold text-lg tracking-tight lowercase">
                       box
                     </span>
-                    <h3 className="text-sm font-bold text-[#252525] dark:text-white">
+                    <h3 className="text-sm font-bold text-[#1E293B] dark:text-white">
                       Box File Chooser
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => { setActiveDocModal(null); setBoxSelectedFiles([]); }}
-                    className="text-[#806B66] hover:text-[#252525] p-1 text-xs"
+                    className="text-[#64748B] hover:text-[#1E293B] p-1 text-xs"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="text-xs text-[#806B66] dark:text-[#FFD7C9]">
+                <div className="text-xs text-[#64748B] dark:text-[#BFDBFE]">
                   Select files from your Box enterprise repository:
                 </div>
 
-                <div className="divide-y divide-[#E8C8BE] dark:divide-[#3D3634] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl max-h-60 overflow-y-auto bg-[#FFF0E8] dark:bg-[#48403E]">
+                <div className="divide-y divide-[#D8E3F1] dark:divide-[#334155] border border-[#D8E3F1] dark:border-[#334155] rounded-xl max-h-60 overflow-y-auto bg-[#FFFFFF] dark:bg-[#475569]">
                   {[
                     { name: `${client ? client.replace(/\s+/g, '_') : 'Enterprise'}_Staffing_Rate_Card.pdf`, size: 245760, type: 'application/pdf', category: 'Rate Card / Agreement' },
                     { name: `${title ? title.replace(/\s+/g, '_') : 'Engineering'}_Requirement_Brief.docx`, size: 69632, type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', category: 'Client Job Spec (SOW)' },
@@ -2962,8 +2962,8 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                           <input type="checkbox" checked={isSelected} readOnly className="rounded text-[#0061D5]" />
                           <FileText className="w-4 h-4 text-[#0061D5]" />
                           <div>
-                            <div className="font-semibold text-[#252525] dark:text-white">{f.name}</div>
-                            <div className="text-[10px] text-[#806B66]">{(f.size / 1024).toFixed(0)} KB • {f.category}</div>
+                            <div className="font-semibold text-[#1E293B] dark:text-white">{f.name}</div>
+                            <div className="text-[10px] text-[#64748B]">{(f.size / 1024).toFixed(0)} KB • {f.category}</div>
                           </div>
                         </div>
                       </div>
@@ -2972,14 +2972,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-[11px] text-[#806B66]">
+                  <span className="text-[11px] text-[#64748B]">
                     {boxSelectedFiles.length} file(s) selected
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => { setActiveDocModal(null); setBoxSelectedFiles([]); }}
-                      className="px-3 py-1.5 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#806B66]"
+                      className="px-3 py-1.5 rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-xs font-semibold text-[#64748B]"
                     >
                       Cancel
                     </button>
@@ -3009,23 +3009,23 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           {/* Ceipal Feature Modal: Public Job Details */}
           {isPublicJdOpen && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-              <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+              <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-[#252525]" />
-                    <h3 className="text-base font-bold text-[#252525] dark:text-white">
+                    <Globe className="w-5 h-5 text-[#1E293B]" />
+                    <h3 className="text-base font-bold text-[#1E293B] dark:text-white">
                       Public Job Details (Career Portal Sanitized)
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsPublicJdOpen(false)}
-                    className="text-[#806B66] hover:text-[#252525] p-1"
+                    className="text-[#64748B] hover:text-[#1E293B] p-1"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-xs text-[#806B66] dark:text-[#FFD7C9]">
+                <p className="text-xs text-[#64748B] dark:text-[#BFDBFE]">
                   Define public-facing role details without internal bill rates or confidential client names to show on candidate job portals.
                 </p>
                 <textarea
@@ -3033,13 +3033,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   value={publicJobDetails || description.replace(/<[^>]*>/g, '')}
                   onChange={(e) => setPublicJobDetails(e.target.value)}
                   placeholder="Sanitized public job description..."
-                  className="w-full p-3 bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs"
+                  className="w-full p-3 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs"
                 />
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setIsPublicJdOpen(false)}
-                    className="px-4 py-2 bg-[#FF6B5E] text-white font-bold rounded-xl text-xs"
+                    className="px-4 py-2 bg-[#2563EB] text-white font-bold rounded-xl text-xs"
                   >
                     Save Public Details
                   </button>
@@ -3051,34 +3051,34 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           {/* Ceipal Feature Modal: Candidate Email Pitch Preview (Screenshot 201120 / 201212) */}
           {isEmailPreviewOpen && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-              <div className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E8C8BE] dark:border-[#3D3634]">
+              <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-3 border-b border-[#D8E3F1] dark:border-[#334155]">
                   <div className="flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-[#252525]" />
-                    <h3 className="text-base font-bold text-[#252525] dark:text-white">
+                    <Mail className="w-5 h-5 text-[#1E293B]" />
+                    <h3 className="text-base font-bold text-[#1E293B] dark:text-white">
                       Ceipal Email Pitch Preview
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsEmailPreviewOpen(false)}
-                    className="text-[#806B66] hover:text-[#252525] p-1"
+                    className="text-[#64748B] hover:text-[#1E293B] p-1"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="p-3 bg-[#FFF0E8] dark:bg-[#48403E] rounded-xl space-y-1 text-xs">
+                <div className="p-3 bg-[#FFFFFF] dark:bg-[#475569] rounded-xl space-y-1 text-xs">
                   <div><strong>From:</strong> system ({assignedRecruiter.toLowerCase().replace(' ', '.')}@ampcustech.com)</div>
                   <div><strong>Subject:</strong> Job Opportunity: {title || 'Software Engineer'} at {businessUnit} - {location}</div>
                 </div>
 
-                <div className="p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs space-y-3 leading-relaxed">
+                <div className="p-4 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs space-y-3 leading-relaxed">
                   <p>Hello,</p>
                   <p><strong>Candidate Summary:</strong> Attached profile under evaluation.</p>
                   <p><strong>Job Description:</strong></p>
                   <div
-                    className="p-3 bg-gray-50 dark:bg-[#48403E] rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] text-xs whitespace-pre-wrap"
+                    className="p-3 bg-gray-50 dark:bg-[#475569] rounded-lg border border-[#D8E3F1] dark:border-[#334155] text-xs whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{
                       __html: description || '<p>No description entered yet.</p>'
                     }}
@@ -3089,7 +3089,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   <button
                     type="button"
                     onClick={() => setIsEmailPreviewOpen(false)}
-                    className="px-4 py-2 bg-[#FF6B5E] text-white font-bold rounded-xl text-xs"
+                    className="px-4 py-2 bg-[#2563EB] text-white font-bold rounded-xl text-xs"
                   >
                     Close Preview
                   </button>
@@ -3099,14 +3099,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           )}
 
           {/* Footer Submit Buttons */}
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xs">
+          <div className="flex items-center justify-between p-4 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-xs">
             {creationMode === 'manual' ? (
               <>
                 <button
                   type="button"
                   onClick={() => setCreationMode('select')}
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-[#FFF0E8] dark:bg-[#48403E] text-[#806B66] dark:text-[#FFD7C9] rounded-xl text-xs font-semibold hover:text-[#252525] disabled:opacity-50"
+                  className="px-4 py-2 bg-[#FFFFFF] dark:bg-[#475569] text-[#64748B] dark:text-[#BFDBFE] rounded-xl text-xs font-semibold hover:text-[#1E293B] disabled:opacity-50"
                 >
                   Back
                 </button>
@@ -3116,14 +3116,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     type="button"
                     onClick={handleSaveDraft}
                     disabled={isSubmitting}
-                    className="px-4 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] rounded-xl hover:bg-[#FFF0E8] disabled:opacity-50"
+                    className="px-4 py-2 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] text-xs font-semibold text-[#64748B] dark:text-[#BFDBFE] rounded-xl hover:bg-[#FFFFFF] disabled:opacity-50"
                   >
                     {isSubmitting ? 'Saving...' : 'Save as Draft'}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-md shadow-[#FF6B5E]/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                    className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-md shadow-[#2563EB]/20 transition-all flex items-center gap-2 disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
                     <span>{isSubmitting ? 'Saving...' : 'Save'}</span>
@@ -3132,7 +3132,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                     type="button"
                     onClick={() => navigate('jobs')}
                     disabled={isSubmitting}
-                    className="px-4 py-2 text-xs font-semibold text-[#806B66] hover:text-[#252525] disabled:opacity-50"
+                    className="px-4 py-2 text-xs font-semibold text-[#64748B] hover:text-[#1E293B] disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -3143,7 +3143,7 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                 <button
                   type="button"
                   onClick={() => setCreationMode('select')}
-                  className="px-4 py-2 bg-[#FFF0E8] dark:bg-[#48403E] text-[#806B66] dark:text-[#FFD7C9] rounded-xl text-xs font-semibold hover:text-[#252525]"
+                  className="px-4 py-2 bg-[#FFFFFF] dark:bg-[#475569] text-[#64748B] dark:text-[#BFDBFE] rounded-xl text-xs font-semibold hover:text-[#1E293B]"
                 >
                   ← Back to Methods
                 </button>
@@ -3152,14 +3152,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
                   <button
                     type="button"
                     onClick={() => navigate('jobs')}
-                    className="px-4 py-2 text-xs font-semibold text-[#806B66] hover:text-[#252525]"
+                    className="px-4 py-2 text-xs font-semibold text-[#64748B] hover:text-[#1E293B]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-md shadow-[#FF6B5E]/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                    className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-md shadow-[#2563EB]/20 transition-all flex items-center gap-2 disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
                     <span>{isSubmitting ? 'Publishing Requisition...' : 'Save & Publish Job Posting'}</span>

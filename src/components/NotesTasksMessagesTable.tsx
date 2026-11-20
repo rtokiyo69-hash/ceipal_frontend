@@ -143,11 +143,11 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
   const visibleRows = isCompactPreview ? displayedRows.slice(0, 5) : displayedRows;
 
   return (
-    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#E8C8BE] bg-white shadow-sm transition-all duration-300 dark:border-[#3D3634] dark:bg-[#252525] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'} ${
-      isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#FFF0E8] p-2 dark:bg-[#C94039]' : ''
+    <div className={`flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#D8E3F1] bg-white shadow-sm transition-all duration-300 dark:border-[#334155] dark:bg-[#1E293B] ${isCompactPreview ? 'h-auto' : 'h-[590px] max-h-[590px] min-h-[590px]'} ${
+      isFullScreen ? 'fixed inset-4 z-50 h-auto max-h-none overflow-y-auto bg-[#FFFFFF] p-2 dark:bg-[#1E40AF]' : ''
     }`}>
       {/* Table Header Controls */}
-      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#E8C8BE] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#3D3634] dark:bg-[#252525]">
+      <div className="flex shrink-0 flex-col justify-between gap-3 border-b border-[#D8E3F1] bg-white p-3 sm:flex-row sm:items-center sm:p-4 dark:border-[#334155] dark:bg-[#1E293B]">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">
             <CheckSquare className="w-4 h-4" />
@@ -169,7 +169,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
             <button
               type="button"
               onClick={() => setShowAll(value => !value)}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#252525] transition hover:bg-[#FFF0E8] dark:text-[#806B66] dark:hover:bg-[#48403E]"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#1E293B] transition hover:bg-[#FFFFFF] dark:text-[#64748B] dark:hover:bg-[#475569]"
             >
               {showAll ? 'Show less' : 'View all'}
               {showAll ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -249,7 +249,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
               {/* Column 1: User Name */}
               <th
                 onClick={() => handleSort('name')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300 sm:px-4"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 transition-colors hover:text-cyan-600 dark:border-[#334155] dark:bg-[#475569] dark:hover:text-cyan-300 sm:px-4"
               >
                 <div className="flex items-center gap-1">
                   <span>User Name</span>
@@ -260,7 +260,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
               {/* Column 2: Total Notes Count */}
               <th
                 onClick={() => handleSort('notes')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#334155] dark:bg-[#475569] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-end gap-1">
                   <FileText className="w-3 h-3 text-cyan-500/80" />
@@ -272,7 +272,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
               {/* Column 3: Total Tasks Count */}
               <th
                 onClick={() => handleSort('tasks')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#334155] dark:bg-[#475569] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-end gap-1">
                   <CheckSquare className="w-3 h-3 text-teal-500/80" />
@@ -284,7 +284,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
               {/* Column 4: Messages Count */}
               <th
                 onClick={() => handleSort('messages')}
-                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#3D3634] dark:bg-[#48403E] dark:hover:text-cyan-300"
+                className="sticky top-0 z-20 cursor-pointer whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right transition-colors hover:text-cyan-600 dark:border-[#334155] dark:bg-[#475569] dark:hover:text-cyan-300"
               >
                 <div className="flex items-center justify-end gap-1">
                   <MessageSquare className="w-3 h-3 text-sky-500/80" />
@@ -294,7 +294,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
               </th>
 
               {/* Column 5: Actions */}
-              <th className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right dark:border-[#3D3634] dark:bg-[#48403E]`}>
+              <th className={`${isCompactPreview ? 'hidden' : ''} sticky top-0 z-20 whitespace-nowrap border-b border-slate-200 bg-slate-100 px-3 py-2.5 text-right dark:border-[#334155] dark:bg-[#475569]`}>
                 <span>Audit</span>
               </th>
             </tr>
@@ -373,22 +373,22 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
           {/* Sticky Totals Footer */}
           <tfoot className={`${isCompactPreview ? 'hidden' : ''} text-slate-900 dark:text-white font-bold text-xs`}>
             <tr className="h-[44px]">
-              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#48403E]">
+              <td className="sticky bottom-0 z-20 whitespace-nowrap border-t-2 border-cyan-400/50 bg-slate-100 px-3.5 py-2.5 font-['Outfit'] sm:px-4 dark:bg-[#475569]">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
                   <span>TOTAL ACTIVITIES ({displayedRows.length})</span>
                 </div>
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-xs tabular-nums text-cyan-600 sm:text-sm dark:bg-[#48403E] dark:text-cyan-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-xs tabular-nums text-cyan-600 sm:text-sm dark:bg-[#475569] dark:text-cyan-300">
                 {totals.totalNotes}
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-xs tabular-nums text-teal-600 sm:text-sm dark:bg-[#48403E] dark:text-teal-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-xs tabular-nums text-teal-600 sm:text-sm dark:bg-[#475569] dark:text-teal-300">
                 {totals.totalTasks}
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-xs tabular-nums text-sky-600 sm:text-sm dark:bg-[#48403E] dark:text-sky-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-xs tabular-nums text-sky-600 sm:text-sm dark:bg-[#475569] dark:text-sky-300">
                 {totals.totalMessages}
               </td>
-              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#48403E] dark:text-slate-300">
+              <td className="sticky bottom-0 z-20 border-t-2 border-cyan-400/50 bg-slate-100 px-3 py-2.5 text-right font-mono text-[10px] text-slate-600 dark:bg-[#475569] dark:text-slate-300">
                 <span>Verified</span>
               </td>
             </tr>
@@ -397,7 +397,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
       </div>
 
       {/* Bottom Summary Strip */}
-      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#E8C8BE] bg-[#FFF0E8] p-3 text-center sm:p-4 dark:border-[#3D3634] dark:bg-[#48403E]`}>
+      <div className={`${isCompactPreview ? 'hidden' : ''} grid shrink-0 grid-cols-3 gap-2 border-t border-[#D8E3F1] bg-[#FFFFFF] p-3 text-center sm:p-4 dark:border-[#334155] dark:bg-[#475569]`}>
         <div className="space-y-0.5">
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             Total Notes Logged
@@ -429,7 +429,7 @@ export const NotesTasksMessagesTable: React.FC<NotesTasksMessagesTableProps> = (
       {/* Recruiter Activity Audit Modal */}
       {selectedRecruiterData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-xl space-y-5 rounded-2xl border border-[#E8C8BE] bg-white p-6 shadow-2xl dark:border-[#3D3634] dark:bg-[#252525]">
+          <div className="w-full max-w-xl space-y-5 rounded-2xl border border-[#D8E3F1] bg-white p-6 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200/50 dark:border-cyan-500/20">
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${selectedRecruiterData.recruiter.avatarGradient} text-white flex items-center justify-center font-bold text-xs`}>
