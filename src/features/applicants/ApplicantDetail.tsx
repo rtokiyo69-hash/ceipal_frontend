@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   GraduationCap,
@@ -31,7 +32,8 @@ import {
   Clock,
   Calendar,
   Send,
-  FileText
+  FileText,
+  UserPlus
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -42,6 +44,8 @@ export const ApplicantDetail: React.FC = () => {
   const [applicant, setApplicant] = useState<Applicant | null>(null);
   const [allApplicants, setAllApplicants] = useState<Applicant[]>([]);
   const [activeSubTab, setActiveSubTab] = useState('Snapshot');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'messages' | 'documents' | 'downloads'>('all');
+  const [activityPeriod, setActivityPeriod] = useState<'last-6-months' | 'older'>('last-6-months');
   const [skillsExpandedPersonal, setSkillsExpandedPersonal] = useState(false);
 
   // Education state
@@ -112,6 +116,9 @@ export const ApplicantDetail: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const [actionMenuPosition, setActionMenuPosition] = useState({ top: 0, left: 0, maxHeight: 256 });
+  const actionMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
   const [submitMenuOpen, setSubmitMenuOpen] = useState(false);
 
   // Dialog states
@@ -181,6 +188,65 @@ export const ApplicantDetail: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  useLayoutEffect(() => {
+    if (!actionMenuOpen || !actionMenuButtonRef.current || !actionMenuRef.current) return;
+
+    const buttonRect = actionMenuButtonRef.current.getBoundingClientRect();
+    const menuRect = actionMenuRef.current.getBoundingClientRect();
+    const viewportPadding = 8;
+    const preferredHeight = Math.min(256, window.innerHeight - viewportPadding * 2);
+    const availableBelow = window.innerHeight - buttonRect.bottom - viewportPadding;
+    const availableAbove = buttonRect.top - viewportPadding;
+    const openAbove = menuRect.height > availableBelow && availableAbove > availableBelow;
+    const maxHeight = Math.max(0, Math.min(preferredHeight, openAbove ? availableAbove - 4 : availableBelow - 4));
+    const left = Math.max(
+      viewportPadding,
+      Math.min(buttonRect.left, window.innerWidth - menuRect.width - viewportPadding)
+    );
+
+    setActionMenuPosition({
+      top: openAbove ? buttonRect.top - maxHeight - 4 : buttonRect.bottom + 4,
+      left,
+      maxHeight
+    });
+  }, [actionMenuOpen]);
+
+  useEffect(() => {
+    if (!actionMenuOpen) return;
+
+    const closeMenu = () => setActionMenuOpen(false);
+    const handleOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        target instanceof Node &&
+        !actionMenuButtonRef.current?.contains(target) &&
+        !actionMenuRef.current?.contains(target)
+      ) {
+        closeMenu();
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeMenu();
+    };
+    const handleScroll = (event: Event) => {
+      if (!(event.target instanceof Node) || !actionMenuRef.current?.contains(event.target)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutsidePointer);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', closeMenu);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsidePointer);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', closeMenu);
+    };
+  }, [actionMenuOpen]);
 
   if (!applicant) {
     return (
@@ -384,6 +450,76 @@ export const ApplicantDetail: React.FC = () => {
   const skillsList = applicant.skills && applicant.skills.length > 0
     ? applicant.skills
     : ['.NET FRAMEWORK', 'E-Commerce', 'Datadog', 'Root Cause Analysis', 'Salesforce Commerce Cloud'];
+
+  const activityEvents = [
+    {
+      id: 'activity-submitted',
+      category: 'all' as const,
+      date: '20 Nov 2026',
+      time: '16:49:41',
+      description: `Applicant has been submitted to AMP7894 · ${applicant.currentDesignation || 'US IT Recruiter'}`,
+      detail: 'by Jatin Jaiswal',
+      icon: Send,
+      iconClass: 'bg-blue-50 text-[#2F80ED] dark:bg-[#173B67]'
+    },
+    {
+      id: 'activity-resume',
+      category: 'documents' as const,
+      date: '20 Nov 2026',
+      time: '16:49:27',
+      description: 'Uploaded a new resume · Mansi Talware.docx',
+      detail: 'by US IT Recruiter (Night Shift)',
+      icon: FileText,
+      iconClass: 'bg-violet-50 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300'
+    },
+    {
+      id: 'activity-created',
+      category: 'all' as const,
+      date: '20 Nov 2026',
+      time: '16:49:02',
+      description: 'Applicant profile was created and the document was added from Resume Parse.',
+      detail: 'System activity',
+      icon: CheckCircle,
+      iconClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300'
+    },
+    {
+      id: 'activity-message',
+      category: 'messages' as const,
+      date: '19 Nov 2026',
+      time: '11:24:16',
+      description: 'Sent an interview availability message to the applicant.',
+      detail: 'by US IT Recruiter',
+      icon: Mail,
+      iconClass: 'bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-300'
+    },
+    {
+      id: 'activity-download',
+      category: 'downloads' as const,
+      date: '18 Nov 2026',
+      time: '14:08:55',
+      description: 'Downloaded the applicant resume for review.',
+      detail: 'by Ganesh Godse',
+      icon: Download,
+      iconClass: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/50 dark:text-cyan-300'
+    },
+    {
+      id: 'activity-older',
+      category: 'all' as const,
+      date: '03 Apr 2026',
+      time: '09:10:12',
+      description: 'Applicant was added to the recruiting pipeline.',
+      detail: 'System activity',
+      icon: UserPlus,
+      iconClass: 'bg-slate-100 text-slate-600 dark:bg-[#3A3A3A] dark:text-slate-300',
+      older: true
+    }
+  ];
+
+  const visibleActivityEvents = activityEvents.filter((event) => {
+    const matchesCategory = activityFilter === 'all' || event.category === activityFilter;
+    const matchesPeriod = activityPeriod === 'older' ? event.older : !event.older;
+    return matchesCategory && matchesPeriod;
+  });
 
   return (
     <div className="relative min-h-screen bg-[#F4F6F9] text-[#222] dark:bg-[#1A1A1A] dark:text-[#E0E0E0]">
@@ -625,35 +761,39 @@ export const ApplicantDetail: React.FC = () => {
                     {/* More dropdown */}
                     <div className="relative">
                       <button
+                        ref={actionMenuButtonRef}
                         type="button"
                         onClick={() => setActionMenuOpen((prev) => !prev)}
+                        aria-haspopup="menu"
+                        aria-expanded={actionMenuOpen}
                         className="flex items-center gap-1 rounded border border-[#CED4DA] bg-white px-2.5 py-1 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
                       >
                         <span>More</span>
                         <ChevronDown className="h-3 w-3" />
                       </button>
-                      {actionMenuOpen && (
-                        <div className="absolute left-0 top-full z-40 mt-1 max-h-64 w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]">
+                      {actionMenuOpen && createPortal(
+                        <div
+                          ref={actionMenuRef}
+                          role="menu"
+                          aria-label="Applicant actions"
+                          className="fixed z-[100] w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#252525]"
+                          style={{
+                            top: actionMenuPosition.top,
+                            left: actionMenuPosition.left,
+                            maxHeight: actionMenuPosition.maxHeight
+                          }}
+                        >
                           {[
                             'Bench Marketing Jobs',
-                            'Create Task',
-                            'Add Note',
-                            'Send Email',
-                            'Request Resume',
-                            'Upload Document',
-                            'Block Contact On TextToHire',
-                            'Print Dossier'
+                            'Timeline Activities'
                           ].map((item) => (
                             <button
                               key={item}
                               type="button"
+                              role="menuitem"
                               onClick={() => {
                                 setActionMenuOpen(false);
-                                if (item === 'Create Task') setDialog('task');
-                                else if (item === 'Add Note') setDialog('note');
-                                else if (item === 'Matching Jobs') setDialog('matching-jobs');
-                                else if (item === 'Send Email') window.location.href = `mailto:${applicant.email}`;
-                                else if (item === 'Print Dossier') window.print();
+                                if (item === 'Timeline Activities') setActiveSubTab('Activities');
                                 else showToast(`${item} recorded.`);
                               }}
                               className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
@@ -661,7 +801,8 @@ export const ApplicantDetail: React.FC = () => {
                               {item}
                             </button>
                           ))}
-                        </div>
+                        </div>,
+                        document.body
                       )}
                     </div>
                   </div>
@@ -1929,27 +2070,112 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* ACTIVITIES TAB */}
           {activeSubTab === 'Activities' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-              <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
-                <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Activities</h3>
-              </div>
-              <div className="space-y-3 py-4">
-                <div className="flex items-start gap-3 text-xs">
-                  <Clock className="mt-0.5 h-4 w-4 text-[#1877F2]" />
+            <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]" aria-labelledby="activities-title">
+              <div className="border-b border-[#E8EDF3] px-4 py-4 dark:border-[#383838] sm:px-5">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div>
-                    <p className="font-semibold text-[#1F2937] dark:text-white">Profile viewed by Ganesh Godse</p>
-                    <p className="text-[11px] text-[#888]">19/11/2026 18:39:40</p>
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-[#2F80ED] dark:bg-[#1E3A5F]">
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 id="activities-title" className="text-sm font-bold text-[#1F2937] dark:text-white">Activities</h3>
+                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-[#AAA]">A complete record of this applicant’s interactions and updates.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 dark:bg-[#333] sm:w-auto" role="group" aria-label="Activity type filter">
+                      {[
+                        { id: 'all' as const, label: 'Activities' },
+                        { id: 'messages' as const, label: 'Msg Activities' },
+                        { id: 'documents' as const, label: 'Document Activities' },
+                        { id: 'downloads' as const, label: 'Download Activities' }
+                      ].map((filter) => (
+                        <button
+                          key={filter.id}
+                          type="button"
+                          onClick={() => setActivityFilter(filter.id)}
+                          className={`flex-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition sm:flex-none ${
+                            activityFilter === filter.id
+                              ? 'bg-white text-[#2F80ED] shadow-sm dark:bg-[#4A4A4A] dark:text-white'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-[#AAA] dark:hover:text-white'
+                          }`}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                    <label className="relative block">
+                      <span className="sr-only">Activity time period</span>
+                      <select
+                        value={activityPeriod}
+                        onChange={(event) => setActivityPeriod(event.target.value as 'last-6-months' | 'older')}
+                        className="h-9 w-full appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-3 pr-9 text-[11px] font-medium text-slate-700 outline-none transition focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:focus:ring-[#1E3A5F] sm:w-40"
+                      >
+                        <option value="last-6-months">Last 6 months</option>
+                        <option value="older">Older than 6 months</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                    </label>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 text-xs">
-                  <Send className="mt-0.5 h-4 w-4 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-[#1F2937] dark:text-white">Submission created for AMP12294 (E-commerce Production)</p>
-                    <p className="text-[11px] text-[#888]">19/11/2026 18:41:14</p>
-                  </div>
+              </div>
+
+              <div className="px-4 py-3 sm:px-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-[#AAA]">
+                    {visibleActivityEvents.length} {visibleActivityEvents.length === 1 ? 'activity' : 'activities'} found
+                  </p>
+                  <p className="hidden text-[11px] text-slate-400 sm:block">Newest activity first</p>
                 </div>
               </div>
-            </div>
+
+              {visibleActivityEvents.length > 0 ? (
+                <div className="overflow-x-auto border-t border-[#E8EDF3] dark:border-[#383838]">
+                  <table className="min-w-[680px] w-full text-left">
+                    <thead className="bg-slate-50 dark:bg-[#2D2D2D]">
+                      <tr className="border-b border-[#E8EDF3] dark:border-[#383838]">
+                        <th scope="col" className="w-52 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-[#AAA]">Date &amp; time</th>
+                        <th scope="col" className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-[#AAA]">Activity details</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EEF2F6] dark:divide-[#383838]">
+                      {visibleActivityEvents.map((event) => {
+                        const Icon = event.icon;
+                        return (
+                          <tr key={event.id} className="group transition-colors hover:bg-blue-50/40 dark:hover:bg-[#2D3541]">
+                            <td className="px-5 py-4 align-top">
+                              <div className="flex items-start gap-2.5">
+                                <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${event.iconClass}`}>
+                                  <Icon className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-700 dark:text-[#E5E5E5]">{event.date}</p>
+                                  <p className="mt-0.5 text-[11px] text-slate-400">{event.time}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-4 align-top">
+                              <p className="text-xs font-medium leading-5 text-slate-700 dark:text-[#E5E5E5]">{event.description}</p>
+                              <p className="mt-1 text-[11px] text-slate-400 dark:text-[#999]">{event.detail}</p>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex min-h-60 flex-col items-center justify-center border-t border-dashed border-[#E8EDF3] px-5 text-center dark:border-[#444]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-[#333]">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <h4 className="mt-3 text-sm font-semibold text-slate-700 dark:text-white">No activities found</h4>
+                  <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-[#AAA]">There are no matching activities for the selected category and time period.</p>
+                </div>
+              )}
+            </section>
           )}
 
         </div>
@@ -2545,118 +2771,199 @@ export const ApplicantDetail: React.FC = () => {
       )}
       {/* Modal: Add Education */}
       {dialog === 'add-education' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
-              <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Education Details</h3>
-              <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-[2px] sm:p-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="education-dialog-title"
+            className="flex h-[min(46rem,calc(100dvh-1.5rem))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#454545] dark:bg-[#252525] sm:h-[min(46rem,calc(100dvh-3rem))]"
+          >
+            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#3A3A3A] sm:px-7 sm:py-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2F80ED] dark:bg-[#1E3A5F]">
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2F80ED]">Professional details</p>
+                  <h3 id="education-dialog-title" className="text-base font-bold text-[#172033] dark:text-white">Add education</h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Record a qualification to complete the applicant profile.</p>
+                </div>
+              </div>
+              <button type="button" aria-label="Close education form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#333] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-3 py-4 text-xs">
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Degree / Program *</span>
-                <input
-                  placeholder="e.g. Computer Science, B.Tech, M.S."
-                  value={newDegree}
-                  onChange={(e) => setNewDegree(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">College / Institution *</span>
-                <input
-                  placeholder="e.g. Nandha College of Technology, Erode"
-                  value={newInstitution}
-                  onChange={(e) => setNewInstitution(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Year / Graduation Period</span>
-                <input
-                  placeholder="e.g. January 2013"
-                  value={newEduPeriod}
-                  onChange={(e) => setNewEduPeriod(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-            </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
-              <button
-                type="button"
-                onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAddEducation}
-                className="rounded bg-[#2F80ED] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
-              >
-                Save Education
-              </button>
-            </div>
+
+            <form
+              className="flex min-h-0 flex-1 flex-col"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleAddEducation();
+              }}
+            >
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-7 sm:py-8">
+                <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12">
+                  <section aria-labelledby="education-fields-title">
+                    <div className="mb-6 flex items-center justify-between">
+                      <div>
+                        <h4 id="education-fields-title" className="text-sm font-bold text-slate-800 dark:text-white">Qualification information</h4>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Fields marked <span className="font-semibold text-red-500">*</span> are required.</p>
+                      </div>
+                      <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 sm:inline-block dark:bg-[#333] dark:text-[#BBB]">Step 1 of 1</span>
+                    </div>
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <label className="block space-y-2 md:col-span-2">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Degree / program <span className="text-red-500">*</span></span>
+                        <input
+                          autoFocus
+                          required
+                          placeholder="e.g. Bachelor of Technology in Computer Science"
+                          value={newDegree}
+                          onChange={(e) => setNewDegree(e.target.value)}
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                        />
+                      </label>
+                      <label className="block space-y-2 md:col-span-2">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">College / institution <span className="text-red-500">*</span></span>
+                        <input
+                          required
+                          placeholder="e.g. Nandha College of Technology, Erode"
+                          value={newInstitution}
+                          onChange={(e) => setNewInstitution(e.target.value)}
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                        />
+                      </label>
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Graduation period</span>
+                        <input
+                          placeholder="e.g. January 2013"
+                          value={newEduPeriod}
+                          onChange={(e) => setNewEduPeriod(e.target.value)}
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                        />
+                      </label>
+                    </div>
+                  </section>
+
+                  <aside className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-[#444] dark:bg-[#2D2D2D]">
+                    <div className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-white"><FileText className="h-4 w-4 text-[#2F80ED]" /> Profile preview</div>
+                    <div className="border-l-2 border-[#2F80ED] pl-3">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">{newDegree || 'Your degree or program'}</p>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-[#BBB]">{newInstitution || 'Your college or institution'}</p>
+                      <p className="mt-2 text-[11px] font-medium text-slate-400">{newEduPeriod || 'Graduation period'}</p>
+                    </div>
+                    <p className="mt-5 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 dark:border-[#444] dark:text-[#AAA]"></p>
+                  </aside>
+                </div>
+              </div>
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-[#3A3A3A] dark:bg-[#252525]">
+                <p className="text-[11px] text-slate-500 dark:text-[#AAA]">You can add another qualification after saving.</p>
+                <div className="flex items-center justify-end gap-3">
+                  <button type="button" onClick={() => setDialog(null)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-[#555] dark:text-white dark:hover:bg-[#333]">Cancel</button>
+                  <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-[#2F80ED] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1D6FD8] focus:outline-none focus:ring-4 focus:ring-blue-200"><Check className="h-3.5 w-3.5" /> Save education</button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Modal: Add Work Experience */}
       {dialog === 'add-work-exp' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
-              <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Work Experience</h3>
-              <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-[2px] sm:p-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="experience-dialog-title"
+            className="flex h-[min(46rem,calc(100dvh-1.5rem))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#454545] dark:bg-[#252525] sm:h-[min(46rem,calc(100dvh-3rem))]"
+          >
+            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#3A3A3A] sm:px-7 sm:py-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2F80ED] dark:bg-[#1E3A5F]">
+                  <Briefcase className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2F80ED]">Professional details</p>
+                  <h3 id="experience-dialog-title" className="text-base font-bold text-[#172033] dark:text-white">Add work experience</h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Capture a role that shows the applicant’s professional journey.</p>
+                </div>
+              </div>
+              <button type="button" aria-label="Close work experience form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#333] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-3 py-4 text-xs">
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Company Name *</span>
-                <input
-                  placeholder="e.g. Infosys Pvt LTD"
-                  value={newExpCompany}
-                  onChange={(e) => setNewExpCompany(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Role / Designation *</span>
-                <input
-                  placeholder="e.g. Technical Support Engineer (L2)"
-                  value={newExpDesignation}
-                  onChange={(e) => setNewExpDesignation(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Period / Duration</span>
-                <input
-                  placeholder="e.g. Start On October 1, 2021 | Till Date"
-                  value={newExpPeriod}
-                  onChange={(e) => setNewExpPeriod(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-            </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
-              <button
-                type="button"
-                onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAddWorkExp}
-                className="rounded bg-[#2F80ED] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
-              >
-                Save Experience
-              </button>
-            </div>
+
+            <form
+              className="flex min-h-0 flex-1 flex-col"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleAddWorkExp();
+              }}
+            >
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-7 sm:py-8">
+                <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-12">
+                  <section aria-labelledby="experience-fields-title">
+                    <div className="mb-6 flex items-center justify-between">
+                      <div>
+                        <h4 id="experience-fields-title" className="text-sm font-bold text-slate-800 dark:text-white">Role information</h4>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Fields marked <span className="font-semibold text-red-500">*</span> are required.</p>
+                      </div>
+                      <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 sm:inline-block dark:bg-[#333] dark:text-[#BBB]">Step 1 of 1</span>
+                    </div>
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Company name <span className="text-red-500">*</span></span>
+                        <input
+                          autoFocus
+                          required
+                          placeholder="e.g. Infosys Pvt Ltd"
+                          value={newExpCompany}
+                          onChange={(e) => setNewExpCompany(e.target.value)}
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                        />
+                      </label>
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Role / designation <span className="text-red-500">*</span></span>
+                        <input
+                          required
+                          placeholder="e.g. Technical Support Engineer (L2)"
+                          value={newExpDesignation}
+                          onChange={(e) => setNewExpDesignation(e.target.value)}
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                        />
+                      </label>
+                      <label className="block space-y-2 md:col-span-2">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Employment period</span>
+                        <input
+                          placeholder="e.g. October 2021 – Present"
+                          value={newExpPeriod}
+                          onChange={(e) => setNewExpPeriod(e.target.value)}
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                        />
+                        <span className="block text-[11px] text-slate-400 dark:text-[#999]">Use “Present” for a current role.</span>
+                      </label>
+                    </div>
+                  </section>
+
+                  <aside className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-[#444] dark:bg-[#2D2D2D]">
+                    <div className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-white"><Briefcase className="h-4 w-4 text-[#2F80ED]" /> Profile preview</div>
+                    <div className="border-l-2 border-[#2F80ED] pl-3">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">{newExpCompany || 'Company name'}</p>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-[#BBB]">{newExpDesignation || 'Role or designation'}</p>
+                      <p className="mt-2 text-[11px] font-medium text-slate-400">{newExpPeriod || 'Employment period'}</p>
+                    </div>
+                    <p className="mt-5 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 dark:border-[#444] dark:text-[#AAA]"></p>
+                  </aside>
+                </div>
+              </div>
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-[#3A3A3A] dark:bg-[#252525]">
+                <p className="text-[11px] text-slate-500 dark:text-[#AAA]">Keep periods consistent for a clean candidate timeline.</p>
+                <div className="flex items-center justify-end gap-3">
+                  <button type="button" onClick={() => setDialog(null)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-[#555] dark:text-white dark:hover:bg-[#333]">Cancel</button>
+                  <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-[#2F80ED] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1D6FD8] focus:outline-none focus:ring-4 focus:ring-blue-200"><Check className="h-3.5 w-3.5" /> Save experience</button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
