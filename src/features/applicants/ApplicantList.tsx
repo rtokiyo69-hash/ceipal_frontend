@@ -12,7 +12,9 @@ type AdvancedCriteria = { keywords: string; jobTitle: string; country: string; s
 const emptyAdvancedCriteria: AdvancedCriteria = { keywords: '', jobTitle: '', country: '', state: '', city: '', exclude: '', excludeJobTitle: '', includeWithoutCountry: false, recentJobTitle: false, locationMode: 'selected', radius: '25', applicantStatus: '', source: '', recruiter: '', workAuthorization: '', minExperience: '', maxExperience: '', applicantId: '', email: '', phone: '', terms: [] };
 const filterOperators = ['Equals', 'Not Equals', 'Is Null', 'Is Not Null', 'Contains', 'Not Contains', 'Starts With', 'Ends With'];
 const allApplicantColumns = ['Applicant ID', 'Applicant Name', 'Email Address', 'Mobile Number', 'City', 'Source', 'State', 'Applicant Status', 'Current Title/Designation', 'Ownership', 'Work Authorization', 'Created By', 'Created On', 'Created date', 'Key Skills', 'Experience', 'Match Score', 'Current Company', 'Expected CTC', 'Notice Period', 'Applicant Group', 'Alternate Email', 'Alternate Mobile Number', 'Date of Birth', 'Gender', 'Nationality', 'Marital Status', 'Current Address', 'Permanent Address', 'Postal Code', 'Country', 'Total Experience', 'Relevant Experience', 'Highest Qualification', 'Degree', 'Specialization', 'University/Institute', 'Graduation Year', 'Certifications', 'Languages', 'LinkedIn Profile', 'Portfolio / Website', 'GitHub Profile', 'Previous Company', 'Current CTC', 'Availability', 'Preferred Location', 'Preferred Work Mode', 'Employment Type', 'Visa Status', 'Work Permit Expiry', 'Willing to Relocate', 'Current Employer', 'Department', 'Industry', 'Functional Area', 'Secondary Skills', 'Applicant Type', 'Candidate Source Details', 'Campaign', 'Referral Name', 'Vendor', 'Last Contacted On', 'Last Activity', 'Last Modified By', 'Last Modified On', 'Resume Name', 'Resume Updated On', 'GDPR Consent Date', 'GDPR Consent Status', 'Diversity', 'Disability Status', 'Veteran Status', 'Rating', 'Years in Current Role', 'Preferred Salary'];
-const filterFields = ['Applicant ID', 'Applicant Name', 'Last Name as per Aadhaar', 'Email Address', 'Mobile Number', 'LinkedIn Profile URL', 'Work Authorization', 'City', 'State', 'Country', 'Source', 'Skills', 'Experience', 'Applicant Status', 'Gender', 'Race/Ethnicity', 'Veteran Status', 'Disability', 'Created By', 'Created On', ...allApplicantColumns].filter((field, index, fields) => fields.indexOf(field) === index);
+const searchFieldCol1 = ['Search Any', 'Applicant ID', 'Applicant Name', 'Email Address', 'Mobile Number', 'City', 'Source', 'State', 'Ownership', 'Work Authorization', 'Created By'];
+const searchFieldCol2 = ['Created On', 'Technology', 'Updated On', 'Skills', 'Home Phone Number', 'Alternate Email Address', 'Primary Skills', 'Tag', 'Industry', 'Created date', 'Notes'];
+const filterFields = ['Applicant ID', 'Applicant Name', 'Last Name as per Aadhaar', 'Email Address', 'Mobile Number', 'LinkedIn Profile URL', 'Work Authorization', 'City', 'State', 'Country', 'Source', 'Skills', 'Experience', 'Applicant Status', 'Gender', 'Race/Ethnicity', 'Veteran Status', 'Disability', 'Created By', 'Created On', ...searchFieldCol1, ...searchFieldCol2, ...allApplicantColumns].filter((field, index, fields) => fields.indexOf(field) === index);
 const defaultApplicantColumns = allApplicantColumns.slice(0, 14);
 const stages: PipelineStage[] = ['New', 'Screening', 'Submitted', 'Interview', 'Selected', 'Offered', 'Hired', 'Rejected'];
 const fieldClass = 'w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-xs text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white';
@@ -36,6 +38,7 @@ export const ApplicantList: React.FC = () => {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [search, setSearch] = useState('');
   const [searchField, setSearchField] = useState('Search Any');
+  const [searchMenuOpen, setSearchMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [stageFilter, setStageFilter] = useState('All');
@@ -50,7 +53,7 @@ export const ApplicantList: React.FC = () => {
   const [filterRules, setFilterRules] = useState<FilterRule[]>(() => JSON.parse(localStorage.getItem('ats_applicant_filter_rules') || '[]'));
   const [draftRules, setDraftRules] = useState<FilterRule[]>([]);
   const [columnFilterOpen, setColumnFilterOpen] = useState<string | null>(null);
-  const [columnFilterPosition, setColumnFilterPosition] = useState<{ left: number; top: number } | null>(null);
+  const [columnFilterAlign, setColumnFilterAlign] = useState<'left' | 'right'>('left');
   const [columnFilterDraft, setColumnFilterDraft] = useState('');
   const [columnNullDraft, setColumnNullDraft] = useState<'null' | 'not-null' | null>(null);
   const [columnSortDraft, setColumnSortDraft] = useState<'asc' | 'desc' | null>(null);
@@ -80,7 +83,11 @@ export const ApplicantList: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<TextToHireMessage[]>(() => JSON.parse(localStorage.getItem('ats_text_to_hire_messages') || '[]'));
   const [savedViews, setSavedViews] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_views') || '["All Applicants","My Applicants","Favorites"]'));
   const [viewConfigs, setViewConfigs] = useState<Record<string, { stage?: string; location?: string; experience?: string; skill?: string; source?: string; recruiter?: string; columns?: string[]; filters?: FilterRule[]; businessUnit?: string; gdprApproved?: boolean }>>(() => JSON.parse(localStorage.getItem('ats_applicant_view_configs') || '{}'));
-  const [folders, setFolders] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_folders') || '["All Profiles"]'));
+  const [folders, setFolders] = useState<string[]>(() => {
+    const stored = JSON.parse(localStorage.getItem('ats_applicant_folders') || 'null') as string[] | null;
+    if (stored && Array.isArray(stored) && stored.length > 0) return stored;
+    return ['All Profiles', 'Python devloper'];
+  });
   const [folderConfigs, setFolderConfigs] = useState<Record<string, { columns: string[]; businessUnit: string }>>(() => JSON.parse(localStorage.getItem('ats_applicant_folder_configs') || '{}'));
   const [activeView, setActiveView] = useState(() => localStorage.getItem('ats_default_applicant_view') || 'All Applicants');
   const [folderFilter, setFolderFilter] = useState('All Profiles');
@@ -143,10 +150,84 @@ export const ApplicantList: React.FC = () => {
     setApplicants((prev) => prev.map((a) => a.id === id ? { ...a, isFavorite: isFav } : a));
     showToast(isFav ? 'Added candidate to Favorites' : 'Removed from Favorites');
   };
+  const getApplicantSearchValues = (a: Applicant, field: string): (string | undefined | null)[] => {
+    switch (field) {
+      case 'Search Any':
+        return [
+          a.name,
+          a.applicantId,
+          a.email,
+          a.phone,
+          a.currentDesignation,
+          a.location,
+          a.state || a.customFields?.state,
+          a.assignedRecruiter,
+          a.source,
+          a.status,
+          a.workAuthorization || a.customFields?.workAuthorization,
+          a.technology || a.customFields?.technology,
+          a.industry || a.customFields?.industry,
+          ...(a.skills || []),
+          ...(a.primarySkills || []),
+          a.homePhone || a.customFields?.homePhone,
+          a.alternateEmail || a.customFields?.alternateEmail,
+          a.createdBy || a.customFields?.createdBy,
+          a.createdOn || a.customFields?.createdOn,
+          a.createdDate || a.customFields?.createdDate,
+          ...(a.notes ? a.notes.map((n) => n.text) : []),
+          ...(Object.values(a.customFields || {})),
+        ];
+      case 'Applicant ID':
+        return [a.applicantId];
+      case 'Applicant Name':
+        return [a.name];
+      case 'Email Address':
+        return [a.email];
+      case 'Mobile Number':
+        return [a.phone];
+      case 'City':
+        return [a.location ? a.location.split(',')[0].trim() : '', a.location];
+      case 'Source':
+        return [a.source];
+      case 'State':
+        return [a.state || a.customFields?.state];
+      case 'Ownership':
+        return [a.assignedRecruiter, a.customFields?.ownership];
+      case 'Work Authorization':
+        return [a.workAuthorization || a.customFields?.workAuthorization];
+      case 'Created By':
+        return [a.createdBy || a.customFields?.createdBy || a.assignedRecruiter];
+      case 'Created On':
+        return [a.createdOn || a.customFields?.createdOn || a.createdDate];
+      case 'Technology':
+        return [a.technology || a.customFields?.technology];
+      case 'Updated On':
+        return [a.customFields?.updatedOn || a.customFields?.['Updated On']];
+      case 'Skills':
+        return [...(a.skills || []), a.customFields?.skills];
+      case 'Home Phone Number':
+        return [a.homePhone || a.customFields?.homePhone || a.customFields?.['Home Phone Number']];
+      case 'Alternate Email Address':
+        return [a.alternateEmail || a.customFields?.alternateEmail || a.customFields?.['Alternate Email Address']];
+      case 'Primary Skills':
+        return [...(a.primarySkills || a.skills || []), a.customFields?.primarySkills];
+      case 'Tag':
+        return [a.customFields?.tag || a.customFields?.tags];
+      case 'Industry':
+        return [a.industry || a.customFields?.industry];
+      case 'Created date':
+        return [a.createdDate || a.customFields?.createdDate || a.createdOn];
+      case 'Notes':
+        return [...(a.notes ? a.notes.map((n) => n.text) : []), a.applicantRemarks, a.customFields?.notes];
+      default:
+        return [a.customFields?.[field]];
+    }
+  };
+
   const filteredApplicants = useMemo(() => applicants.filter((a) => {
     const q = search.trim().toLowerCase();
-    const searchValues: string[] = searchField === 'Search Any' ? [a.name, a.applicantId, a.email, a.phone, a.currentDesignation, a.location, a.assignedRecruiter, a.source, a.status, ...a.skills] : [({ 'Applicant ID': a.applicantId, 'Applicant Name': a.name, 'Email Address': a.email, 'Mobile Number': a.phone, City: a.location.split(',')[0], Source: a.source, State: a.state || a.customFields?.state || '', 'Applicant Status': a.status, 'Current Title/Designation': a.currentDesignation, Ownership: a.assignedRecruiter, 'Work Authorization': a.workAuthorization || a.customFields?.workAuthorization || '' } as Record<string, string>)[searchField] || a.customFields?.[searchField] || ''];
-    const matchesSearch = !q || searchValues.some((v) => v?.toLowerCase().includes(q));
+    const searchValues = getApplicantSearchValues(a, searchField);
+    const matchesSearch = !q || searchValues.some((v) => v && String(v).toLowerCase().includes(q));
     const matchesStage = stageFilter === 'All' || a.status === stageFilter;
     const matchesExperience = !experienceFilter || (experienceFilter === '10+' ? a.experienceYears >= 10 : a.experienceYears >= Number(experienceFilter));
     const matchesLocation = !locationFilter || a.location.toLowerCase().includes(locationFilter.toLowerCase());
@@ -163,7 +244,16 @@ export const ApplicantList: React.FC = () => {
       City: a.location.split(',')[0], Source: a.source, State: a.state || a.customFields?.state || '',
       'Applicant Status': a.status, 'Current Title/Designation': a.currentDesignation, Ownership: a.assignedRecruiter,
       'Work Authorization': a.workAuthorization || a.customFields?.workAuthorization || '', Skills: a.skills.join(', '),
-      'Years of Experience': String(a.experienceYears), Experience: String(a.experienceYears), 'Business Unit': currentUser?.businessUnit || ''
+      'Years of Experience': String(a.experienceYears), Experience: String(a.experienceYears), 'Business Unit': currentUser?.businessUnit || '',
+      'Created By': a.createdBy || a.assignedRecruiter || '', 'Created On': a.createdOn || '', 'Created date': a.createdDate || a.createdOn || '',
+      'Technology': a.technology || a.customFields?.technology || '',
+      'Updated On': a.customFields?.updatedOn || a.customFields?.['Updated On'] || '',
+      'Home Phone Number': a.homePhone || a.customFields?.homePhone || '',
+      'Alternate Email Address': a.alternateEmail || a.customFields?.alternateEmail || '',
+      'Primary Skills': (a.primarySkills || a.skills).join(', '),
+      'Tag': a.customFields?.tag || a.customFields?.tags || '',
+      'Industry': a.industry || a.customFields?.industry || '',
+      'Notes': (a.notes || []).map((n) => n.text).join(' ') || a.applicantRemarks || a.customFields?.notes || '',
     }[field] || a.customFields?.[field] || '');
     const matchesRules = filterRules.every((rule) => {
       if (!rule.field || !rule.operator) return true;
@@ -217,6 +307,17 @@ export const ApplicantList: React.FC = () => {
         'Applicant Status': applicant.status, 'Current Title/Designation': applicant.currentDesignation, Ownership: applicant.assignedRecruiter,
         'Work Authorization': applicant.workAuthorization || applicant.customFields?.workAuthorization || '', Skills: applicant.skills.join(', '),
         'Years of Experience': String(applicant.experienceYears), Experience: String(applicant.experienceYears),
+        'Created By': applicant.createdBy || applicant.assignedRecruiter || '',
+        'Created On': applicant.createdOn || '',
+        'Created date': applicant.createdDate || applicant.createdOn || '',
+        'Technology': applicant.technology || applicant.customFields?.technology || '',
+        'Updated On': applicant.customFields?.updatedOn || applicant.customFields?.['Updated On'] || '',
+        'Home Phone Number': applicant.homePhone || applicant.customFields?.homePhone || '',
+        'Alternate Email Address': applicant.alternateEmail || applicant.customFields?.alternateEmail || '',
+        'Primary Skills': (applicant.primarySkills || applicant.skills).join(', '),
+        'Tag': applicant.customFields?.tag || applicant.customFields?.tags || '',
+        'Industry': applicant.industry || applicant.customFields?.industry || '',
+        'Notes': (applicant.notes || []).map((n) => n.text).join(' ') || applicant.applicantRemarks || applicant.customFields?.notes || '',
       };
       return (values[sortConfig.field] || String(applicant.customFields?.[sortConfig.field] || '')).toLocaleLowerCase();
     };
@@ -234,9 +335,12 @@ export const ApplicantList: React.FC = () => {
     const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column;
     const existing = filterRules.find((rule) => rule.field === field);
     const bounds = event.currentTarget.getBoundingClientRect();
-    setColumnFilterPosition({ left: Math.max(8, Math.min(bounds.left, window.innerWidth - 480)), top: Math.max(8, Math.min(bounds.bottom + 4, window.innerHeight - 280)) });
-    setColumnFilterDraft(existing?.value || ''); setColumnNullDraft(existing?.operator === 'Is Null' ? 'null' : existing?.operator === 'Is Not Null' ? 'not-null' : null);
-    setColumnSortDraft(sortConfig?.field === field ? sortConfig.direction : null); setColumnFilterOpen(column);
+    const alignRight = bounds.right > window.innerWidth - 440;
+    setColumnFilterAlign(alignRight ? 'right' : 'left');
+    setColumnFilterDraft(existing?.value || '');
+    setColumnNullDraft(existing?.operator === 'Is Null' ? 'null' : existing?.operator === 'Is Not Null' ? 'not-null' : null);
+    setColumnSortDraft(sortConfig?.field === field ? sortConfig.direction : null);
+    setColumnFilterOpen((prev) => (prev === column ? null : column));
   };
   const applyApplicantColumnFilter = (column: string, reset = false) => {
     const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column;
@@ -295,6 +399,7 @@ export const ApplicantList: React.FC = () => {
       if (activeMenu !== 'settings') setSettingsMenuOpen(false);
       if (activeMenu !== 'fetch-contacts') setFetchContactsOpen(false);
       if (activeMenu !== 'column-filter') setColumnFilterOpen(null);
+      if (activeMenu !== 'search-field') setSearchMenuOpen(false);
     };
     document.addEventListener('pointerdown', dismissDropdowns);
     return () => document.removeEventListener('pointerdown', dismissDropdowns);
@@ -307,12 +412,15 @@ export const ApplicantList: React.FC = () => {
     if (field === 'City') return Array.from(new Set(applicants.map((a) => a.location.split(',')[0].trim()).filter(Boolean)));
     if (field === 'State') return Array.from(new Set(applicants.map((a) => a.state || a.customFields?.state || '').filter(Boolean)));
     if (field === 'Work Authorization') return Array.from(new Set(applicants.map((a) => a.workAuthorization || a.customFields?.workAuthorization || '').filter(Boolean)));
+    if (field === 'Technology') return Array.from(new Set(applicants.map((a) => a.technology || a.customFields?.technology || '').filter(Boolean)));
+    if (field === 'Industry') return Array.from(new Set(applicants.map((a) => a.industry || a.customFields?.industry || '').filter(Boolean)));
+    if (field === 'Created By') return Array.from(new Set(applicants.map((a) => a.createdBy || a.assignedRecruiter || '').filter(Boolean)));
     if (field === 'Business Unit') return currentUser?.businessUnit ? [currentUser.businessUnit] : [];
     return [];
   };
   const renderApplicantColumn = (column: string, applicant: Applicant): React.ReactNode => {
     switch (column) {
-      case 'Applicant ID': return <span className="font-mono text-[10px] text-[#252525]">{applicant.applicantId}</span>;
+      case 'Applicant ID': return <button type="button" onClick={() => navigate('applicant-detail', applicant.id)} className="font-mono text-[11px] font-medium text-[#2F80ED] hover:underline dark:text-[#60A5FA]" title={`Open ${applicant.name} (${applicant.applicantId}) dossier`}>{applicant.applicantId}</button>;
       case 'Applicant Name': return <div className="flex items-center gap-1.5"><button onClick={() => navigate('applicant-detail', applicant.id)} className="font-semibold text-[#252525] hover:underline">{applicant.name}</button><button aria-label={`Open ${applicant.name} dossier`} title="Open applicant dossier" onClick={() => navigate('applicant-detail', applicant.id)} className="text-[#6682B2] hover:text-[#252525]"><IdCard className="h-3.5 w-3.5" /></button></div>;
       case 'Email Address': return <a href={`mailto:${applicant.email}`} className="text-[#252525] hover:underline">{applicant.email || '—'}</a>;
       case 'Mobile Number': return <a href={`tel:${applicant.phone}`} className="text-[#252525] hover:underline">{applicant.phone || '—'}</a>;
@@ -325,7 +433,16 @@ export const ApplicantList: React.FC = () => {
       case 'Work Authorization': return applicant.workAuthorization || applicant.customFields?.workAuthorization || '—';
       case 'Created By': return applicant.createdBy || applicant.assignedRecruiter || '—';
       case 'Created On': return applicant.createdOn || '—';
-      case 'Created date': return applicant.createdDate || '—';
+      case 'Created date': return applicant.createdDate || applicant.createdOn || '—';
+      case 'Technology': return applicant.technology || applicant.customFields?.technology || '—';
+      case 'Updated On': return applicant.customFields?.updatedOn || applicant.customFields?.['Updated On'] || applicant.createdOn || '—';
+      case 'Skills': return <div className="flex max-w-56 flex-wrap gap-1">{(applicant.skills || []).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-1.5 py-0.5 font-mono text-[9px] text-[#252525]">{skill}</span>)}</div>;
+      case 'Home Phone Number': return applicant.homePhone || applicant.customFields?.homePhone || applicant.customFields?.['Home Phone Number'] || '—';
+      case 'Alternate Email Address': return applicant.alternateEmail || applicant.customFields?.alternateEmail || applicant.customFields?.['Alternate Email Address'] || '—';
+      case 'Primary Skills': return <div className="flex max-w-56 flex-wrap gap-1">{(applicant.primarySkills || applicant.skills || []).slice(0, 3).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-1.5 py-0.5 font-mono text-[9px] text-[#252525]">{skill}</span>)}</div>;
+      case 'Tag': return applicant.customFields?.tag || applicant.customFields?.tags || '—';
+      case 'Industry': return applicant.industry || applicant.customFields?.industry || '—';
+      case 'Notes': return (applicant.notes && applicant.notes.length > 0) ? applicant.notes[0].text : (applicant.applicantRemarks || applicant.customFields?.notes || '—');
       case 'Key Skills': return <div className="flex max-w-56 flex-wrap gap-1">{applicant.skills.slice(0, 3).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-1.5 py-0.5 font-mono text-[9px] text-[#252525]">{skill}</span>)}</div>;
       case 'Experience': return <span className="font-mono font-semibold">{applicant.experienceYears} yrs</span>;
       case 'Match Score': return <span className="rounded border border-[#8AC9A7]/50 bg-[#8AC9A7]/15 px-2 py-1 font-mono font-bold text-[#276749]">{applicant.matchScore}%</span>;
@@ -399,10 +516,76 @@ export const ApplicantList: React.FC = () => {
 
     <div className="w-full">
       <div className="flex flex-row items-center gap-3">
-        <div className="flex h-8 w-[318px] max-w-full shrink-0 items-center">
-          <select aria-label="Search field" value={searchField} onChange={(e) => setSearchField(e.target.value)} className="w-28 shrink-0 rounded-l-md border border-r-0 border-[#E8C8BE] bg-white px-2.5 py-1.5 text-xs text-[#4D4140] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white"><option>Search Any</option>{['Applicant ID', 'Applicant Name', 'Email Address', 'Mobile Number', 'City', 'Source', 'State', 'Applicant Status', 'Current Title/Designation', 'Ownership', 'Work Authorization'].map((field) => <option key={field}>{field}</option>)}</select>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && setSearch(search.trim())} placeholder="" aria-label="Search applicants" className="min-w-0 flex-1 rounded-none border border-[#E8C8BE] bg-white px-3 py-1.5 text-xs text-[#4D4140] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#48403E] dark:text-white" />
-          <button aria-label="Search applicants" onClick={() => setSearch(search.trim())} className="rounded-r-md border border-[#E8C8BE] bg-white px-2 py-1.5 text-[#4D4140] hover:bg-[#FFF0E8] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><Search className="h-4 w-4" /></button>
+        <div data-applicant-dropdown="search-field" className="relative flex h-8 w-[340px] max-w-full shrink-0 items-center rounded-md border border-[#E8C8BE] bg-white shadow-sm dark:border-[#3D3634] dark:bg-[#48403E]">
+          <button
+            type="button"
+            aria-label="Search filter field"
+            onClick={() => setSearchMenuOpen((open) => !open)}
+            className="flex h-full items-center gap-1.5 border-r border-[#E8C8BE] bg-[#FFF0E8] px-2.5 text-xs text-[#4D4140] hover:bg-[#FFE6DD] dark:border-[#3D3634] dark:bg-[#322C2A] dark:text-white"
+          >
+            <span className="max-w-[110px] truncate">{searchField}</span>
+            <ChevronDown className="h-3 w-3 shrink-0 text-[#65534F] dark:text-white" />
+          </button>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && setSearch(search.trim())}
+            placeholder=""
+            aria-label="Search applicants"
+            className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-xs text-[#4D4140] outline-none dark:text-white"
+          />
+          <button
+            type="button"
+            aria-label="Search applicants"
+            onClick={() => setSearch(search.trim())}
+            className="flex h-full items-center justify-center px-2.5 text-[#806B66] hover:bg-[#FFF0E8] hover:text-[#252525] dark:text-white dark:hover:bg-[#322C2A]"
+          >
+            <Search className="h-3.5 w-3.5" />
+          </button>
+
+          {searchMenuOpen && (
+            <div className="absolute left-0 top-full z-50 mt-1 flex w-[400px] max-w-[calc(100vw-32px)] rounded-md border border-[#CED4DA] bg-white py-1 shadow-2xl dark:border-[#3D3634] dark:bg-[#252525]">
+              <div className="flex-1 py-1">
+                {searchFieldCol1.map((field) => (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => {
+                      setSearchField(field);
+                      setSearchMenuOpen(false);
+                    }}
+                    className={`block w-full px-3.5 py-1.5 text-left text-xs transition-colors hover:bg-[#F2F6FA] dark:hover:bg-[#3D3634] ${
+                      searchField === field
+                        ? 'font-semibold text-[#FF6B5E] dark:text-[#FF8A7E]'
+                        : 'text-[#333333] dark:text-[#E2E8F0]'
+                    }`}
+                  >
+                    {field}
+                  </button>
+                ))}
+              </div>
+              <div className="my-1 w-px bg-[#E2E8F0] dark:bg-[#3D3634]" />
+              <div className="flex-1 py-1">
+                {searchFieldCol2.map((field) => (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => {
+                      setSearchField(field);
+                      setSearchMenuOpen(false);
+                    }}
+                    className={`block w-full px-3.5 py-1.5 text-left text-xs transition-colors hover:bg-[#F2F6FA] dark:hover:bg-[#3D3634] ${
+                      searchField === field
+                        ? 'font-semibold text-[#FF6B5E] dark:text-[#FF8A7E]'
+                        : 'text-[#333333] dark:text-[#E2E8F0]'
+                    }`}
+                  >
+                    {field}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="ml-auto flex items-center justify-end gap-2"><button onClick={() => { setDraftRules(filterRules.length ? filterRules.map((rule) => ({ ...rule })) : [{ id: `filter-${Date.now()}`, field: '', operator: '', value: '' }]); setDraftBusinessUnit(businessUnitFilter); setDraftGdprApproved(gdprApprovedFilter); setSidePanel('edit-filters'); }} title="Edit filters" aria-label="Edit filters" className="rounded-md border border-[#BDD7F0] bg-white p-1.5 text-[#252525] hover:bg-[#FFE6DD] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><SlidersHorizontal className="h-4 w-4" /></button><button onClick={() => { setColumnDraft([...visibleColumns]); setColumnsExpanded(false); setSidePanel('edit-columns'); }} title="Edit columns" aria-label="Edit columns" className="rounded-md border border-[#BDD7F0] bg-white p-1.5 text-[#252525] hover:bg-[#FFE6DD] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><ListFilter className="h-4 w-4" /></button></div>
       </div>
@@ -410,14 +593,148 @@ export const ApplicantList: React.FC = () => {
 
     {selected.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#B7D6F5] bg-[#FFF0E8] px-3 py-2 text-xs dark:border-[#315A7A] dark:bg-[#48403E]"><span className="font-semibold text-[#252525]">{selected.length} applicants selected</span><div className="flex flex-wrap gap-2"><select aria-label="Bulk action" value={bulkAction} onChange={(e) => { setBulkAction(e.target.value); setBulkValue(''); }} className="rounded-lg border border-[#E8C8BE] bg-white px-2.5 py-2 text-xs dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><option value="">Choose action…</option><option>Add to Folder</option><option>Assign to Job</option><option>Change Stage</option><option>Send Email</option><option>Add to Group</option><option>Download Resumes</option><option>Remove from list</option></select>{bulkAction && <><input value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} placeholder={bulkAction === 'Change Stage' ? 'Select stage' : 'Enter value / choose destination'} list="bulk-action-options" className="rounded-lg border border-[#E8C8BE] bg-white px-2.5 py-2 text-xs dark:border-[#3D3634] dark:bg-[#252525] dark:text-white" />{bulkAction === 'Change Stage' && <datalist id="bulk-action-options">{stages.map((s) => <option key={s} value={s} />)}</datalist>}<button onClick={async () => { if (!bulkValue && bulkAction !== 'Download Resumes' && bulkAction !== 'Remove from list') return; if (bulkAction === 'Change Stage') { await Promise.all(selected.map((id) => ApiService.updateApplicantStage(id, bulkValue as PipelineStage))); setApplicants((rows) => rows.map((a) => selected.includes(a.id) ? { ...a, status: bulkValue as PipelineStage } : a)); } if (bulkAction === 'Add to Folder') { const map = JSON.parse(localStorage.getItem('ats_applicant_folder_memberships') || '{}') as Record<string, string[]>; map[bulkValue] = [...new Set([...(map[bulkValue] || []), ...selected])]; localStorage.setItem('ats_applicant_folder_memberships', JSON.stringify(map)); } if (bulkAction === 'Assign to Job') { const next = applicants.map((a) => selected.includes(a.id) ? { ...a, assignedJobTitle: bulkValue } : a); await Promise.all(next.filter((a) => selected.includes(a.id)).map((a) => ApiService.updateApplicant(a.id, { assignedJobTitle: bulkValue }))); setApplicants(next); } if (bulkAction === 'Add to Group') { const next = applicants.map((a) => selected.includes(a.id) ? { ...a, applicantGroup: bulkValue } : a); await Promise.all(next.filter((a) => selected.includes(a.id)).map((a) => ApiService.updateApplicant(a.id, { applicantGroup: bulkValue }))); setApplicants(next); } if (bulkAction === 'Remove from list') { setApplicants((rows) => rows.filter((a) => !selected.includes(a.id))); } if (bulkAction === 'Download Resumes') { const chosen = applicants.filter((a) => selected.includes(a.id)); const content = chosen.map((a) => `${a.name}\n${a.currentDesignation}\n${a.email}\n${a.skills.join(', ')}`).join('\n\n---\n\n'); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' })); link.download = 'applicant-resume-summary.txt'; link.click(); URL.revokeObjectURL(link.href); } if (bulkAction === 'Send Email') { const mails = applicants.filter((a) => selected.includes(a.id)).map((a) => a.email).filter(Boolean).join(';'); window.location.href = `mailto:?bcc=${encodeURIComponent(mails)}&subject=${encodeURIComponent(bulkValue)}`; } setSelected([]); showToast(`${bulkAction} completed for selected applicants.`); setBulkAction(''); }} className="rounded-lg bg-[#FF6B5E] px-3 py-2 font-semibold text-white">Apply</button></>}<button onClick={() => { setSelected([]); setBulkAction(''); }} className="rounded-lg px-2 py-1 text-[#697789] hover:bg-white"><X className="h-4 w-4" /></button></div></div>}
 
-    <div className="overflow-hidden rounded-xl border border-[#E8C8BE] bg-white shadow-sm dark:border-[#3D3634] dark:bg-[#252525]">
-      <div className="overflow-x-auto"><table className="w-full min-w-[1100px] border-collapse text-left text-xs">
-        <thead><tr className="border-b border-[#E8C8BE] bg-[#FFF0E8] text-[10px] uppercase tracking-wide text-[#806B66] dark:border-[#3D3634] dark:bg-[#48403E]">
-          <th className="w-10 px-3 py-3 text-center"><input type="checkbox" aria-label="Select visible applicants" checked={visibleApplicants.length > 0 && visibleApplicants.every((a) => selected.includes(a.id))} onChange={(e) => setSelected(e.target.checked ? [...new Set([...selected, ...visibleApplicants.map((a) => a.id)])] : selected.filter((id) => !visibleApplicants.some((a) => a.id === id)))} /></th>
-          <th className="w-10 px-2 py-3 text-center"><Star className="mx-auto h-3.5 w-3.5" /></th>
-          <th className="w-10 px-2 py-3" />
-          {visibleColumns.map((column) => { const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column; const active = filterRules.some((rule) => rule.field === field && (rule.value.trim() || ['Is Null', 'Is Not Null'].includes(rule.operator))); return <th key={column} className="whitespace-nowrap px-3 py-3"><div className="relative flex items-center gap-1.5">{column}<button aria-label={`Filter by ${column}`} title={`Filter by ${column}`} onClick={(event) => openApplicantColumnFilter(column, event)} className={`rounded p-0.5 ${active ? 'text-[#252525]' : 'text-[#6F8DA7] hover:text-[#252525]'}`}><Filter className="h-3.5 w-3.5 fill-current/10" /></button>{columnFilterOpen === column && columnFilterPosition && <div data-applicant-dropdown="column-filter" className="fixed z-[70] w-[470px] max-w-[calc(100vw-16px)] rounded-md border border-[#E8C8BE] bg-white text-left normal-case tracking-normal text-[#4D4140] shadow-xl dark:border-[#3D3634] dark:bg-[#252525] dark:text-white" style={{ left: columnFilterPosition.left, top: columnFilterPosition.top }}><div className="flex flex-wrap items-center gap-2 border-b border-[#FFE6DD] bg-[#F3F5F7] p-3 dark:border-[#3D3634] dark:bg-[#48403E]">{[{ label: 'SORT A↕', direction: 'asc' as const }, { label: 'SORT Z↕', direction: 'desc' as const }].map((option) => <button key={option.direction} onClick={() => setColumnSortDraft((current) => current === option.direction ? null : option.direction)} className="inline-flex items-center gap-1.5 rounded border border-[#E8C8BE] bg-white px-2 py-1.5 text-[10px] font-semibold text-[#4D4140] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><span className={`flex h-3.5 w-3.5 items-center justify-center border ${columnSortDraft === option.direction ? 'border-[#FF6B5E] bg-[#FF6B5E] text-white' : 'border-[#9CA8B5]'}`}>{columnSortDraft === option.direction ? '✓' : ''}</span>{option.label}</button>)}{[{ label: 'IS NOT NULL', value: 'not-null' as const }, { label: 'IS NULL', value: 'null' as const }].map((option) => <button key={option.value} onClick={() => setColumnNullDraft((current) => current === option.value ? null : option.value)} className="inline-flex items-center gap-1.5 rounded border border-[#E8C8BE] bg-white px-2 py-1.5 text-[10px] font-semibold text-[#4D4140] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><span className={`flex h-3.5 w-3.5 items-center justify-center border ${columnNullDraft === option.value ? 'border-[#FF6B5E] bg-[#FF6B5E] text-white' : 'border-[#9CA8B5]'}`}>{columnNullDraft === option.value ? '✓' : ''}</span>{option.label}</button>)}</div><div className="p-4"><label className="block text-[11px] text-[#6D7988]">Search {column}<input autoFocus value={columnFilterDraft} onChange={(event) => { setColumnFilterDraft(event.target.value); if (event.target.value) setColumnNullDraft(null); }} placeholder={column} className="mt-1.5 block w-full min-w-0 box-border border border-[#FF6B5E] bg-white px-2.5 py-2 text-xs text-[#4D4140] outline-none dark:bg-[#48403E] dark:text-white" /></label></div><div className="flex items-center gap-2 border-t border-[#FFE6DD] px-3 py-2.5 dark:border-[#3D3634]"><button onClick={() => applyApplicantColumnFilter(column)} className="rounded bg-[#FF6B5E] px-3 py-2 text-xs font-semibold text-white">Search</button><button onClick={() => { const next = filterRules.filter((rule) => rule.field !== field); setFilterRules(next); localStorage.setItem('ats_applicant_filter_rules', JSON.stringify(next)); setColumnFilterDraft(''); setColumnNullDraft(null); setColumnSortDraft(null); if (sortConfig?.field === field) setSortConfig(null); }} className="rounded border border-[#E8C8BE] bg-white px-3 py-2 text-xs text-[#6D7988] dark:border-[#3D3634] dark:bg-[#48403E]">Reset</button><button onClick={() => setColumnFilterOpen(null)} className="px-2 py-2 text-xs text-[#252525] hover:underline dark:text-white">Close</button></div></div>}</div></th>; })}
-          <th className="px-3 py-3 text-right">Actions</th>
+    <div className="flex flex-col overflow-hidden rounded-xl border border-[#E8C8BE] bg-white shadow-sm dark:border-[#3D3634] dark:bg-[#252525]">
+      <div className="ceipal-table-scroll max-h-[calc(100vh-270px)] min-h-[360px] overflow-x-auto overflow-y-auto"><table className="w-full min-w-[1100px] border-collapse text-left text-xs">
+        <thead className="sticky top-0 z-20 bg-[#FFF0E8] dark:bg-[#48403E]"><tr className="border-b border-[#E8C8BE] bg-[#FFF0E8] text-[10px] uppercase tracking-wide text-[#806B66] dark:border-[#3D3634] dark:bg-[#48403E]">
+          <th className="sticky top-0 z-20 w-10 bg-[#FFF0E8] px-3 py-3 text-center shadow-[inset_0_-1px_0_#E8C8BE] dark:bg-[#48403E] dark:shadow-[inset_0_-1px_0_#3D3634]"><input type="checkbox" aria-label="Select visible applicants" checked={visibleApplicants.length > 0 && visibleApplicants.every((a) => selected.includes(a.id))} onChange={(e) => setSelected(e.target.checked ? [...new Set([...selected, ...visibleApplicants.map((a) => a.id)])] : selected.filter((id) => !visibleApplicants.some((a) => a.id === id)))} /></th>
+          <th className="sticky top-0 z-20 w-10 bg-[#FFF0E8] px-2 py-3 text-center shadow-[inset_0_-1px_0_#E8C8BE] dark:bg-[#48403E] dark:shadow-[inset_0_-1px_0_#3D3634]"><Star className="mx-auto h-3.5 w-3.5" /></th>
+          <th className="sticky top-0 z-20 w-10 bg-[#FFF0E8] px-2 py-3 shadow-[inset_0_-1px_0_#E8C8BE] dark:bg-[#48403E] dark:shadow-[inset_0_-1px_0_#3D3634]" />
+          {visibleColumns.map((column) => {
+            const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column;
+            const active = filterRules.some((rule) => rule.field === field && (rule.value.trim() || ['Is Null', 'Is Not Null'].includes(rule.operator)));
+            const isFilterOpen = columnFilterOpen === column;
+            return (
+              <th key={column} className="sticky top-0 z-20 whitespace-nowrap bg-[#FFF0E8] px-3 py-3 shadow-[inset_0_-1px_0_#E8C8BE] dark:bg-[#48403E] dark:shadow-[inset_0_-1px_0_#3D3634]">
+                <div className="relative flex items-center gap-1.5">
+                  <span>{column}</span>
+                  <button
+                    aria-label={`Filter by ${column}`}
+                    title={`Filter by ${column}`}
+                    onClick={(event) => openApplicantColumnFilter(column, event)}
+                    className={`rounded p-0.5 transition-colors ${active || isFilterOpen ? 'text-[#2F80ED]' : 'text-[#6F8DA7] hover:text-[#2F80ED]'}`}
+                  >
+                    <Filter className={`h-3.5 w-3.5 ${active || isFilterOpen ? 'fill-[#2F80ED] text-[#2F80ED]' : 'fill-current/10 text-[#6F8DA7]'}`} />
+                  </button>
+
+                  {isFilterOpen && (
+                    <div
+                      data-applicant-dropdown="column-filter"
+                      className={`absolute top-full mt-2.5 z-50 w-[440px] max-w-[calc(100vw-32px)] rounded-lg border border-[#D9DDE2] bg-white text-left normal-case tracking-normal shadow-2xl dark:border-[#3D3634] dark:bg-[#252525] ${
+                        columnFilterAlign === 'right' ? 'right-0' : '-left-2'
+                      }`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Top pointer beak/arrow pointing directly up to the filter icon */}
+                      <div
+                        className={`absolute -top-2 h-0 w-0 border-x-[7px] border-b-[8px] border-x-transparent border-b-[#F3F5F7] dark:border-b-[#322C2A] ${
+                          columnFilterAlign === 'right' ? 'right-4' : 'left-6'
+                        }`}
+                      />
+
+                      {/* Header bar with sort & null filters */}
+                      <div className="flex flex-wrap items-center gap-2 rounded-t-lg border-b border-[#E2E8F0] bg-[#F3F5F7] px-3.5 py-2.5 dark:border-[#3D3634] dark:bg-[#322C2A]">
+                        {[{ label: 'SORT A↕', direction: 'asc' as const }, { label: 'SORT Z↕', direction: 'desc' as const }].map((option) => (
+                          <button
+                            key={option.direction}
+                            type="button"
+                            onClick={() => setColumnSortDraft((current) => current === option.direction ? null : option.direction)}
+                            className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                              columnSortDraft === option.direction
+                                ? 'border-[#2F80ED] bg-[#EFF6FF] text-[#1E40AF] dark:border-[#3B82F6] dark:bg-[#1E293B] dark:text-[#93C5FD]'
+                                : 'border-[#D1D5DB] bg-white text-[#374151] hover:bg-gray-50 dark:border-[#4B5563] dark:bg-[#252525] dark:text-[#E5E7EB]'
+                            }`}
+                          >
+                            <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-xs border text-[10px] ${
+                              columnSortDraft === option.direction
+                                ? 'border-[#2F80ED] bg-[#2F80ED] text-white font-bold'
+                                : 'border-[#9CA3AF] bg-white dark:bg-[#322C2A]'
+                            }`}>
+                              {columnSortDraft === option.direction ? '✓' : ''}
+                            </span>
+                            {option.label}
+                          </button>
+                        ))}
+                        <div className="mx-1 h-5 w-px bg-[#D1D5DB] dark:bg-[#4B5563]" />
+                        {[{ label: 'IS NOT NULL', value: 'not-null' as const }, { label: 'IS NULL', value: 'null' as const }].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setColumnNullDraft((current) => current === option.value ? null : option.value)}
+                            className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                              columnNullDraft === option.value
+                                ? 'border-[#2F80ED] bg-[#EFF6FF] text-[#1E40AF] dark:border-[#3B82F6] dark:bg-[#1E293B] dark:text-[#93C5FD]'
+                                : 'border-[#D1D5DB] bg-white text-[#374151] hover:bg-gray-50 dark:border-[#4B5563] dark:bg-[#252525] dark:text-[#E5E7EB]'
+                            }`}
+                          >
+                            <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-xs border text-[10px] ${
+                              columnNullDraft === option.value
+                                ? 'border-[#2F80ED] bg-[#2F80ED] text-white font-bold'
+                                : 'border-[#9CA3AF] bg-white dark:bg-[#322C2A]'
+                            }`}>
+                              {columnNullDraft === option.value ? '✓' : ''}
+                            </span>
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Middle search input section */}
+                      <div className="p-4">
+                        <label className="block text-xs font-normal text-[#6B7280] dark:text-[#9CA3AF]">
+                          Search {column}
+                          <input
+                            autoFocus
+                            value={columnFilterDraft}
+                            onChange={(event) => {
+                              setColumnFilterDraft(event.target.value);
+                              if (event.target.value) setColumnNullDraft(null);
+                            }}
+                            onKeyDown={(event) => event.key === 'Enter' && applyApplicantColumnFilter(column)}
+                            placeholder={column}
+                            className="mt-1.5 block w-full rounded border border-[#2F80ED] bg-white px-3 py-1.5 text-xs text-[#1F2937] outline-none shadow-xs dark:bg-[#322C2A] dark:text-white"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Bottom action buttons */}
+                      <div className="flex items-center gap-2 border-t border-[#E5E7EB] bg-white px-4 py-2.5 rounded-b-lg dark:border-[#3D3634] dark:bg-[#252525]">
+                        <button
+                          type="button"
+                          onClick={() => applyApplicantColumnFilter(column)}
+                          className="rounded bg-[#2F80ED] px-5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+                        >
+                          Search
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = filterRules.filter((rule) => rule.field !== field);
+                            setFilterRules(next);
+                            localStorage.setItem('ats_applicant_filter_rules', JSON.stringify(next));
+                            setColumnFilterDraft('');
+                            setColumnNullDraft(null);
+                            setColumnSortDraft(null);
+                            if (sortConfig?.field === field) setSortConfig(null);
+                          }}
+                          className="rounded border border-[#D1D5DB] bg-white px-4 py-1.5 text-xs font-medium text-[#6B7280] hover:bg-gray-50 transition-colors dark:border-[#4B5563] dark:bg-[#322C2A] dark:text-[#E5E7EB]"
+                        >
+                          Reset
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setColumnFilterOpen(null)}
+                          className="px-2 py-1.5 text-xs font-medium text-[#2F80ED] hover:underline transition-colors dark:text-[#60A5FA]"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </th>
+            );
+          })}
+          <th className="sticky top-0 z-20 bg-[#FFF0E8] px-3 py-3 text-right shadow-[inset_0_-1px_0_#E8C8BE] dark:bg-[#48403E] dark:shadow-[inset_0_-1px_0_#3D3634]">Actions</th>
         </tr></thead>
         <tbody className="divide-y divide-[#FFE6DD] dark:divide-[#3D3634]">
           {filteredApplicants.length === 0 ? <tr><td colSpan={4 + visibleColumns.length} className="p-10 text-center text-xs text-[#806B66]">No applicants match these filters. Try a different search or clear filters.</td></tr> : visibleApplicants.map((a) => <tr key={a.id} className="transition-colors odd:bg-white even:bg-[#F5F7F8] hover:bg-[#EDF5FA] dark:odd:bg-[#FF6B5E] dark:even:bg-[#1D2D3B] dark:hover:bg-[#48403E]">
@@ -429,7 +746,7 @@ export const ApplicantList: React.FC = () => {
           </tr>)}
         </tbody>
       </table></div>
-      <div className="flex flex-wrap items-center justify-center gap-2 border-t border-[#E8C8BE] px-4 py-2.5 text-[11px] text-[#4D4140] dark:border-[#3D3634] dark:text-[#FFF0E8]"><span className="mr-2 font-semibold">{pageStart} - {pageEnd} of {filteredApplicants.length}</span><button aria-label="First page" title="First page" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronsLeft className="h-4 w-4" /></button><button aria-label="Previous page" title="Previous page" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><span className="rounded bg-[#FF6B5E] px-2.5 py-1 font-semibold text-white">{currentPage}</span><button aria-label="Next page" title="Next page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button><button aria-label="Last page" title="Last page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(pageCount)} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronsRight className="h-4 w-4" /></button><label className="ml-3 flex items-center gap-2 text-[10px] text-[#806B66]">Per Page<select aria-label="Rows per page" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-[#E8C8BE] bg-white px-1.5 py-1 text-[#4D4140] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label></div>
+      <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-center gap-2 rounded-b-xl border-t border-[#E8C8BE] bg-white px-4 py-2.5 text-[11px] text-[#4D4140] shadow-[0_-2px_6px_rgba(0,0,0,0.04)] dark:border-[#3D3634] dark:bg-[#252525] dark:text-[#FFF0E8]"><span className="mr-2 font-semibold">{pageStart} - {pageEnd} of {filteredApplicants.length}</span><button aria-label="First page" title="First page" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronsLeft className="h-4 w-4" /></button><button aria-label="Previous page" title="Previous page" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><span className="rounded bg-[#FF6B5E] px-2.5 py-1 font-semibold text-white">{currentPage}</span><button aria-label="Next page" title="Next page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button><button aria-label="Last page" title="Last page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(pageCount)} className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] disabled:opacity-40"><ChevronsRight className="h-4 w-4" /></button><label className="ml-3 flex items-center gap-2 text-[10px] text-[#806B66]">Per Page<select aria-label="Rows per page" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-[#E8C8BE] bg-white px-1.5 py-1 text-[#4D4140] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label></div>
     </div>
 
     {ticketPanelOpen && ticketView === 'dashboard' && <div className="fixed inset-0 z-[58] flex flex-col bg-[#F5F5F5] text-[#222]">

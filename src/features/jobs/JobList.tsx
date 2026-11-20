@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import {
   Briefcase,
   Search,
   Filter,
   Plus,
-  Download,
   SlidersHorizontal,
   ChevronDown,
   Trash2,
@@ -37,7 +37,9 @@ import {
   Paperclip,
   Settings,
   Upload,
-  ChevronLeft
+  ChevronLeft,
+  ArrowLeft,
+  Download
 } from 'lucide-react';
 import { useAppStore, getJobDetailUrl } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -151,12 +153,15 @@ const EMAIL_THEMES = [
 ];
 
 type JobPostingView = 'list' | 'approvals' | 'import';
+type CsvImportStep = 'upload' | 'preview';
 type ApprovalTab = 'Job Board Approvals' | 'Vendor Approvals' | 'Buddy Portal Approvals' | 'Job Publish Approvals to PW';
 
 interface CsvImportData {
   headers: string[];
   rows: Record<string, string>[];
 }
+
+type DuplicateImportStrategy = 'skip' | 'overwrite';
 
 const CSV_JOB_FIELDS: Record<string, keyof Job> = {
   'job code': 'code',
@@ -195,6 +200,27 @@ const CSV_JOB_FIELDS: Record<string, keyof Job> = {
 const normalizeCsvHeader = (header: string) =>
   header.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
+function parseJobRecords(records: string[][], format: 'CSV' | 'Excel'): CsvImportData {
+  if (records.length < 2) throw new Error(`The ${format} file must contain a header row and at least one job row.`);
+
+  const headers = records[0].map((header) => header.trim());
+  if (headers.some((header) => !header)) throw new Error('Every column must have a header.');
+  const normalizedHeaders = headers.map(normalizeCsvHeader);
+  if (new Set(normalizedHeaders).size !== normalizedHeaders.length) {
+    throw new Error(`The ${format} file contains duplicate column headers.`);
+  }
+
+  const rows = records.slice(1).map((values, index) => {
+    while (values.length > headers.length && !values[values.length - 1].trim()) values.pop();
+    if (values.length > headers.length) {
+      throw new Error(`${format} row ${index + 2} has more values than the header row.`);
+    }
+    return Object.fromEntries(headers.map((header, columnIndex) => [header, (values[columnIndex] || '').trim()]));
+  });
+
+  return { headers, rows };
+}
+
 function parseJobsCsv(content: string): CsvImportData {
   const text = content.replace(/^\uFEFF/, '');
   const records: string[][] = [];
@@ -231,23 +257,17 @@ function parseJobsCsv(content: string): CsvImportData {
   if (quoted) throw new Error('The CSV file contains an unclosed quoted field.');
   record.push(field);
   if (record.some((value) => value.trim())) records.push(record);
-  if (records.length < 2) throw new Error('The CSV file must contain a header row and at least one job row.');
+  return parseJobRecords(records, 'CSV');
+}
 
-  const headers = records[0].map((header) => header.trim());
-  if (headers.some((header) => !header)) throw new Error('Every CSV column must have a header.');
-  const normalizedHeaders = headers.map(normalizeCsvHeader);
-  if (new Set(normalizedHeaders).size !== normalizedHeaders.length) {
-    throw new Error('The CSV file contains duplicate column headers.');
-  }
-
-  const rows = records.slice(1).map((values, index) => {
-    if (values.length > headers.length) {
-      throw new Error(`CSV row ${index + 2} has more values than the header row.`);
-    }
-    return Object.fromEntries(headers.map((header, columnIndex) => [header, (values[columnIndex] || '').trim()]));
-  });
-
-  return { headers, rows };
+function parseJobsExcel(content: ArrayBuffer): CsvImportData {
+  const workbook = XLSX.read(content, { type: 'array', cellDates: true });
+  const firstSheetName = workbook.SheetNames[0];
+  if (!firstSheetName) throw new Error('The Excel workbook does not contain a worksheet.');
+  const sheet = workbook.Sheets[firstSheetName];
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '', raw: false, blankrows: false });
+  const records = rows.map((row) => row.map((cell) => String(cell ?? '').trim()));
+  return parseJobRecords(records, 'Excel');
 }
 
 const escapeHtml = (value: string): string =>
@@ -556,6 +576,8 @@ const getJobColumnValue = (job: Job, key: JobColumnKey): string => {
 export const JobList: React.FC = () => {
   const { navigate, currentRoute, currentUser } = useAppStore();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<Awaited<ReturnType<typeof ApiService.getAllUsers>>>([]);
@@ -564,9 +586,12 @@ export const JobList: React.FC = () => {
   const [approvalSearch, setApprovalSearch] = useState('');
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [csvImportData, setCsvImportData] = useState<CsvImportData | null>(null);
+  const [csvImportStep, setCsvImportStep] = useState<CsvImportStep>('upload');
   const [csvFileName, setCsvFileName] = useState('');
   const [csvImportError, setCsvImportError] = useState<string | null>(null);
   const [isImportingJobs, setIsImportingJobs] = useState(false);
+  const [csvBusinessUnit, setCsvBusinessUnit] = useState(currentUser?.businessUnit || 'Ampcus Tech Pvt Ltd.');
+  const [duplicateImportStrategy, setDuplicateImportStrategy] = useState<DuplicateImportStrategy>('skip');
   const [inlineEdit, setInlineEdit] = useState<{
     entity: 'job' | 'submission';
     id: string;
@@ -588,6 +613,7 @@ export const JobList: React.FC = () => {
   const [draftBusinessUnit, setDraftBusinessUnit] = useState('All');
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const filterRuleIdRef = useRef(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Column Filtering State (Each Column Name has its own filter dropdown)
   const [columnFilters, setColumnFilters] = useState<Partial<Record<JobColumnKey, string[]>>>({});
@@ -749,23 +775,128 @@ export const JobList: React.FC = () => {
   };
 
   const openPostingsView = (view: Exclude<JobPostingView, 'list'>) => {
+    if (view === 'import') {
+      setCsvImportData(null);
+      setCsvImportStep('upload');
+      setCsvFileName('');
+      setCsvImportError(null);
+      setCsvBusinessUnit(currentUser?.businessUnit || 'Ampcus Tech Pvt Ltd.');
+    }
     setPostingsView(view);
     setIsSettingsMenuOpen(false);
+  };
+
+  const handleDownloadSampleTemplate = () => {
+    const sampleHeaders = [
+      'Job Code',
+      'Job Title',
+      'Business Unit',
+      'Client',
+      'Client Job ID',
+      'Location',
+      'States',
+      'Job Status',
+      'Client Bill Rate / Salary',
+      'Recruitment Manager',
+      'Primary Recruiter',
+      'Assigned To',
+      'Description',
+      'Priority',
+      'Job Type'
+    ];
+    const sampleRows = [
+      [
+        'JOB-2026-001',
+        'Senior Software Engineer',
+        csvBusinessUnit || 'Ampcus Tech Pvt Ltd.',
+        'Acme Corporation',
+        'ACME-1029',
+        'Pune, Maharashtra',
+        'Maharashtra',
+        'Active',
+        '$85/hr',
+        currentUser?.name || 'Recruitment Manager',
+        currentUser?.name || 'Primary Recruiter',
+        currentUser?.name || 'Primary Recruiter',
+        'Looking for an experienced Full-Stack Engineer with React and Node.js expertise.',
+        'High',
+        'Contract'
+      ],
+      [
+        'JOB-2026-002',
+        'DevOps Specialist',
+        csvBusinessUnit || 'Ampcus Tech Pvt Ltd.',
+        'Global Financial Corp',
+        'GFC-8821',
+        'Dallas, Texas',
+        'Texas',
+        'Active',
+        '$120,000/yr',
+        currentUser?.name || 'Recruitment Manager',
+        currentUser?.name || 'Primary Recruiter',
+        currentUser?.name || 'Primary Recruiter',
+        'AWS, Terraform, CI/CD pipeline automation specialist.',
+        'Medium',
+        'Direct Hire'
+      ]
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([sampleHeaders, ...sampleRows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Job_Import_Template');
+    XLSX.writeFile(workbook, 'Import_Job_Template.xlsx');
+  };
+
+  const handleCancelImport = () => {
+    setPostingsView('list');
+    setCsvImportData(null);
+    setCsvFileName('');
+    setCsvImportError(null);
+    setCsvImportStep('upload');
+  };
+
+  const handleNextStep = () => {
+    if (!csvFileName) {
+      setCsvImportError('Please select a file to import.');
+      return;
+    }
+    if (!csvImportData) {
+      setCsvImportError('Please select a valid CSV or XLSX file.');
+      return;
+    }
+    setCsvImportError(null);
+    setCsvImportStep('preview');
   };
 
   const handleCsvFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    event.target.value = '';
     setCsvImportError(null);
     setCsvImportData(null);
+    setCsvImportStep('upload');
     setCsvFileName(file.name);
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      setCsvImportError('Choose a CSV file to import job postings.');
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (!extension || !['csv', 'xlsx', 'xls'].includes(extension)) {
+      setCsvImportError('Choose a CSV or Excel file (.csv, .xlsx, or .xls) to import job postings.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCsvImportError('The CSV file must be 5 MB or smaller.');
       return;
     }
 
     try {
-      setCsvImportData(parseJobsCsv(await file.text()));
+      const parsed = extension === 'csv'
+        ? parseJobsCsv(await file.text())
+        : parseJobsExcel(await file.arrayBuffer());
+      const missingHeaders = ['title', 'client', 'location'].filter(
+        (field) => !parsed.headers.some((header) => CSV_JOB_FIELDS[normalizeCsvHeader(header)] === field)
+      );
+      if (missingHeaders.length) {
+        throw new Error(`Required columns are missing: ${missingHeaders.map((field) => field === 'title' ? 'Job Title' : field === 'client' ? 'Client' : 'Location').join(', ')}.`);
+      }
+      setCsvImportData(parsed);
     } catch (error) {
       setCsvImportError(error instanceof Error ? error.message : 'Unable to read this CSV file.');
     }
@@ -780,8 +911,9 @@ export const JobList: React.FC = () => {
     try {
       const clients = await ApiService.getClients();
       const existingJobs = await ApiService.getJobs();
-      const knownCodes = new Set(existingJobs.map((job) => job.code.trim().toLowerCase()));
-      const plans: { payload: Omit<Job, 'id' | 'code' | 'createdDate' | 'applicantsCount' | 'documents'>; sourceCode: string }[] = [];
+      const existingJobsByCode = new Map(existingJobs.map((job) => [job.code.trim().toLowerCase(), job]));
+      const sourceCodes = new Set<string>();
+      const plans: { payload: Omit<Job, 'id' | 'code' | 'createdDate' | 'applicantsCount' | 'documents'>; sourceCode: string; existingJob?: Job; skip: boolean }[] = [];
 
       csvImportData.rows.forEach((row, rowIndex) => {
         const valueFor = (field: keyof Job) =>
@@ -821,10 +953,12 @@ export const JobList: React.FC = () => {
         };
 
         const sourceCode = valueFor('code');
-        if (sourceCode && knownCodes.has(sourceCode.toLowerCase())) {
-          throw new Error(`CSV row ${rowNumber} duplicates existing Job Code "${sourceCode}".`);
+        const normalizedCode = sourceCode.toLowerCase();
+        if (sourceCode && sourceCodes.has(normalizedCode)) {
+          throw new Error(`CSV row ${rowNumber} repeats Job Code "${sourceCode}" from another row in this file.`);
         }
-        if (sourceCode) knownCodes.add(sourceCode.toLowerCase());
+        if (sourceCode) sourceCodes.add(normalizedCode);
+        const existingJob = sourceCode ? existingJobsByCode.get(normalizedCode) : undefined;
 
         const assignedRecruiter = valueFor('assignedRecruiter') || valueFor('assignedTo') || currentUser?.name || 'Unassigned';
         const recruiter = users.find((user) => user.name.toLowerCase() === assignedRecruiter.toLowerCase());
@@ -834,7 +968,7 @@ export const JobList: React.FC = () => {
           title,
           client: clientName,
           clientId: valueFor('clientId') || matchedClient?.clientId || matchingJob?.clientId || clientName,
-          businessUnit: valueFor('businessUnit') || currentUser?.businessUnit || 'General',
+          businessUnit: valueFor('businessUnit') || csvBusinessUnit || currentUser?.businessUnit || 'General',
           location,
           type: type || 'Full-Time',
           status: status || 'Open',
@@ -855,10 +989,27 @@ export const JobList: React.FC = () => {
           currency: valueFor('currency') || 'USD',
           rateType: rateType || undefined
         };
-        plans.push({ payload, sourceCode });
+        plans.push({ payload, sourceCode, existingJob, skip: Boolean(existingJob && duplicateImportStrategy === 'skip') });
       });
 
+      let skippedCount = 0;
+      let overwrittenCount = 0;
       for (const plan of plans) {
+        if (plan.skip) {
+          skippedCount += 1;
+          continue;
+        }
+        if (plan.existingJob) {
+          const updatedJob = await ApiService.updateJob(plan.existingJob.id, {
+            ...plan.payload,
+            code: plan.sourceCode,
+            modifiedDate: new Date().toISOString().slice(0, 10),
+            modifiedBy: currentUser?.name
+          });
+          overwrittenCount += 1;
+          setJobs((currentJobs) => currentJobs.map((job) => job.id === updatedJob.id ? updatedJob : job));
+          continue;
+        }
         const createdJob = await ApiService.createJob(plan.payload);
         importedCount += 1;
         setJobs((currentJobs) => [createdJob, ...currentJobs]);
@@ -869,8 +1020,11 @@ export const JobList: React.FC = () => {
       }
 
       setCsvImportData(null);
+      setCsvImportStep('upload');
       setCsvFileName('');
-      showToast(`Imported ${importedCount} job posting${importedCount === 1 ? '' : 's'}.`);
+      setCsvImportError(null);
+      showToast(`Import complete: ${importedCount} added, ${overwrittenCount} overwritten, ${skippedCount} skipped.`);
+      setPostingsView('list');
     } catch (error) {
       setCsvImportError(
         `${importedCount ? `${importedCount} row${importedCount === 1 ? '' : 's'} imported. ` : ''}${error instanceof Error ? error.message : 'Unable to import jobs.'}`
@@ -1097,6 +1251,22 @@ export const JobList: React.FC = () => {
     activeFilterRules.length +
     (activePredefinedFilter ? 1 : 0) +
     (search ? 1 : 0);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, searchScope, statusFilter, priorityFilter, businessUnitFilter, activePredefinedFilter, activeFilterRules, columnFilters]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredJobs.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, pageCount);
+  const pageStart = filteredJobs.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+  const pageEnd = Math.min(safeCurrentPage * pageSize, filteredJobs.length);
+  const paginatedJobs = useMemo(
+    () => filteredJobs.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize),
+    [filteredJobs, safeCurrentPage, pageSize]
+  );
+  const pageNumbers = Array.from(new Set([1, safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, pageCount])).filter(
+    (page) => page >= 1 && page <= pageCount
+  ).sort((a, b) => a - b);
 
   // Toggle row expansion for inline submissions
   const toggleRowExpansion = (jobId: string) => {
@@ -1385,27 +1555,6 @@ export const JobList: React.FC = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      ['Job Code,Job Title,Business Unit,Client,Client Job ID,Location,States,Status,Priority,Bill Rate,Assigned Recruiter']
-        .concat(
-          filteredJobs.map(
-            (j) =>
-              `"${j.code}","${j.title}","${j.businessUnit || ''}","${j.client}","${j.clientJobId || ''}","${j.location}","${j.states || ''}","${j.status}","${j.priority}","${j.billRate}","${j.assignedRecruiter || j.assignedTo || ''}"`
-          )
-        )
-        .join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Ceipal_JobPostings_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast(`Exported ${filteredJobs.length} job postings to CSV.`);
-  };
-
   const openSendModal = (job?: Job) => {
     const jobsToSend = job
       ? [job]
@@ -1562,6 +1711,10 @@ export const JobList: React.FC = () => {
     (field) => !csvImportData?.headers.some((header) => CSV_JOB_FIELDS[normalizeCsvHeader(header)] === field)
   );
   const importPreviewHeaders = csvImportData?.headers.slice(0, 6) || [];
+  const importBusinessUnits = Array.from(new Set([
+    currentUser?.businessUnit,
+    ...jobs.map((job) => job.businessUnit)
+  ].filter((unit): unit is string => Boolean(unit))));
 
   if (postingsView !== 'list') {
     return (
@@ -1678,16 +1831,56 @@ export const JobList: React.FC = () => {
               ))}
             </div>
 
+            <div className="grid gap-4 rounded-xl border border-[#D7DCE5] bg-[#F8FAFC] p-4 dark:border-[#45485E] dark:bg-[#24263A] sm:grid-cols-2">
+              <label className="space-y-1.5 text-xs font-semibold text-[#465466] dark:text-[#EDF2F4]">
+                <span>Business Unit</span>
+                <select
+                  value={csvBusinessUnit}
+                  onChange={(event) => setCsvBusinessUnit(event.target.value)}
+                  className="w-full rounded-lg border border-[#D7DCE5] bg-white px-3 py-2 text-xs font-normal text-[#2B2D42] outline-none focus:border-[#2B2D42] dark:border-[#45485E] dark:bg-[#36384F] dark:text-white"
+                >
+                  <option value="">Use the business unit in each file row</option>
+                  {importBusinessUnits.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                  {!importBusinessUnits.includes('Ampcus Tech Pvt Ltd.') && <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>}
+                </select>
+                <span className="block text-[10px] font-normal text-[#8D99AE]">Used when a row has no Business Unit value.</span>
+              </label>
+
+              <fieldset className="space-y-1.5 text-xs text-[#465466] dark:text-[#EDF2F4]">
+                <legend className="font-semibold">Duplicate Job Codes</legend>
+                <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+                  <label className="inline-flex items-center gap-2">
+                    <input type="radio" name="duplicate-job-strategy" value="skip" checked={duplicateImportStrategy === 'skip'} onChange={() => setDuplicateImportStrategy('skip')} />
+                    Skip existing jobs
+                  </label>
+                  <label className="inline-flex items-center gap-2">
+                    <input type="radio" name="duplicate-job-strategy" value="overwrite" checked={duplicateImportStrategy === 'overwrite'} onChange={() => setDuplicateImportStrategy('overwrite')} />
+                    Overwrite existing jobs
+                  </label>
+                </div>
+                <span className="block text-[10px] text-[#8D99AE]">Job Code identifies an existing job. Rows without a code are imported as new jobs.</span>
+              </fieldset>
+            </div>
+
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B9CAD9] bg-[#F8FAFC] px-5 py-8 text-center transition-colors hover:border-[#2B2D42] hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#24263A] dark:hover:bg-[#36384F]">
-              <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleCsvFileChange} />
+              <input type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose a CSV or Excel file" className="sr-only" onChange={handleCsvFileChange} />
               <span className="mb-3 rounded-xl bg-white p-3 text-[#2B2D42] shadow-sm dark:bg-[#2B2D42] dark:text-[#8CBCE8]">
                 <Upload className="h-5 w-5" />
               </span>
               <span className="text-sm font-semibold text-[#2B2D42] dark:text-white">
-                {csvFileName || 'Choose a CSV file'}
+                {csvFileName || 'Choose a CSV or Excel file'}
               </span>
               <span className="mt-1 text-xs text-[#8D99AE]">Select a file from your computer to preview it before importing.</span>
             </label>
+
+            <aside className="space-y-2 rounded-xl border border-[#D7DCE5] bg-[#F8FAFC] px-4 py-3 text-[11px] text-[#687786] dark:border-[#45485E] dark:bg-[#24263A] dark:text-[#B9CAD9]">
+              <p className="font-semibold text-[#2B2D42] dark:text-white">Supported format and size</p>
+              <ul className="list-inside list-disc space-y-1">
+                <li>CSV, XLSX, and XLS (Excel 97–2003) files are supported; maximum file size is 5 MB.</li>
+                <li>The first row of the file or first worksheet must contain column names. Job Title, Client, and Location are required for every job.</li>
+                <li>Job Code is optional and must be unique within the file.</li>
+              </ul>
+            </aside>
 
             {csvImportError && (
               <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
@@ -1695,8 +1888,31 @@ export const JobList: React.FC = () => {
               </div>
             )}
 
-            {csvImportData && (
+            {csvImportStep === 'upload' && (
+              <div className="flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setPostingsView('list'); setCsvImportData(null); setCsvFileName(''); setCsvImportError(null); }}
+                  className="rounded-lg border border-[#D7DCE5] bg-white px-4 py-2.5 text-xs font-semibold text-[#465466] transition-colors hover:bg-[#EDF2F4] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white dark:hover:bg-[#36384F]"
+                >Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => { if (csvImportData) setCsvImportStep('preview'); }}
+                  disabled={!csvImportData || isImportingJobs}
+                  className="rounded-lg bg-[#2B2D42] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#222336] disabled:cursor-not-allowed disabled:opacity-50"
+                >Next</button>
+              </div>
+            )}
+
+            {csvImportData && csvImportStep === 'preview' && (
               <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#2B2D42] dark:text-white">Review import</h3>
+                    <p className="text-[11px] text-[#8D99AE]">Confirm the rows below before adding them to Job Postings.</p>
+                  </div>
+                  <button type="button" onClick={() => setCsvImportStep('upload')} className="text-xs font-semibold text-[#2B2D42] hover:underline dark:text-[#8CBCE8]">Back to upload settings</button>
+                </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <p className="text-[#687786] dark:text-[#B9CAD9]">
                     {csvImportData.rows.length} job row{csvImportData.rows.length === 1 ? '' : 's'} detected
@@ -1724,7 +1940,15 @@ export const JobList: React.FC = () => {
                   </table>
                   {csvImportData.rows.length > 5 && <p className="border-t border-[#D7DCE5] px-3 py-2 text-[11px] text-[#8D99AE] dark:border-[#45485E]">Showing the first 5 rows of the preview.</p>}
                 </div>
-                <div className="flex justify-end">
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setPostingsView('list'); setCsvImportData(null); setCsvFileName(''); setCsvImportError(null); setCsvImportStep('upload'); }}
+                    disabled={isImportingJobs}
+                    className="rounded-lg border border-[#D7DCE5] bg-white px-4 py-2.5 text-xs font-semibold text-[#465466] transition-colors hover:bg-[#EDF2F4] disabled:opacity-50 dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white dark:hover:bg-[#36384F]"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="button"
                     onClick={handleImportJobs}
@@ -1818,15 +2042,6 @@ export const JobList: React.FC = () => {
             <span>Send Requirement</span>
           </button>
 
-          {/* Export CSV Button */}
-          <button
-            onClick={handleExportCSV}
-            className="px-3 py-1.5 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] hover:bg-[#FFF0E8] rounded-xl text-xs font-semibold text-[#252525] dark:text-[#FFF0E8] transition-colors flex items-center gap-1.5 shadow-xs"
-          >
-            <Download className="w-3.5 h-3.5 text-[#806B66]" />
-            <span>Export CSV</span>
-          </button>
-
           {/* + New Job Posting */}
           <button
             onClick={() => navigate('job-new')}
@@ -1864,17 +2079,6 @@ export const JobList: React.FC = () => {
         >
           <span>Active Postings</span>
           <span className="w-2 h-2 rounded-full bg-[#8AC9A7]"></span>
-        </button>
-
-        <button
-          onClick={() => { setStatusFilter('Open'); }}
-          className={`px-3 py-1.5 font-semibold rounded-t-lg transition-all border-b-2 flex items-center gap-1.5 ${
-            statusFilter === 'Open'
-              ? 'text-[#252525] border-[#FF6B5E] bg-[#FFF0E8]/60'
-              : 'text-[#806B66] dark:text-[#FFD7C9] border-transparent hover:text-[#252525] dark:hover:text-white'
-          }`}
-        >
-          <span>Open Sourcing</span>
         </button>
 
         <div className="ml-auto flex items-center gap-2">
@@ -2327,7 +2531,7 @@ export const JobList: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredJobs.map((j) => {
+                paginatedJobs.map((j) => {
                   const isExpanded = expandedJobIds.has(j.id);
                   const jobSubmissions = submissions.filter((s) => s.jobId === j.id);
                   const countSubmissions = jobSubmissions.length;
@@ -2867,57 +3071,29 @@ export const JobList: React.FC = () => {
         </div>
 
         {/* Ceipal Pagination Footer Bar */}
-        <div className="p-3 bg-[#FFF0E8] dark:bg-[#48403E] border-t border-[#E8C8BE] dark:border-[#3D3634] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#806B66] dark:text-[#FFD7C9]">
-          <div className="flex items-center gap-2">
-            <span>
-              Showing <strong className="text-[#252525] dark:text-white">1 - {filteredJobs.length}</strong> of{' '}
-              <strong className="text-[#252525] dark:text-white">11,779</strong> results
-            </span>
+        <div className="grid grid-cols-1 items-center gap-3 border-t border-[#D7DCE5] bg-[#EDF2F4] p-3 text-xs text-[#8D99AE] dark:border-[#45485E] dark:bg-[#36384F] dark:text-[#B9CAD9] sm:grid-cols-[1fr_auto_1fr]">
+          <div className="text-center sm:text-left">
+            Showing <strong className="text-[#2B2D42] dark:text-white">{pageStart} - {pageEnd}</strong> of <strong className="text-[#2B2D42] dark:text-white">{filteredJobs.length.toLocaleString()}</strong> results
           </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-              className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white disabled:opacity-50"
-              disabled
-            >
-              « First
-            </button>
-            <button
-              className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white disabled:opacity-50"
-              disabled
-            >
-              ‹ Prev
-            </button>
-            <button className="px-2.5 py-1 rounded-lg bg-[#FF6B5E] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white">
-              2
-            </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white">
-              3
-            </button>
-            <span className="px-1 text-[#806B66]">...</span>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white">
-              472
-            </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white">
-              Next ›
-            </button>
-            <button className="px-2.5 py-1 rounded-lg border border-[#E8C8BE] dark:border-[#3D3634] bg-white dark:bg-[#252525] text-[#252525] dark:text-white">
-              Last »
-            </button>
-
-            <div className="ml-2 flex items-center gap-1">
-              <select
-                aria-label="Items per page"
-                className="bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-lg px-2 py-1 text-xs text-[#252525] dark:text-white focus:outline-none"
-              >
-                <option value="25">25 Per Page</option>
-                <option value="50">50 Per Page</option>
-                <option value="100">100 Per Page</option>
-              </select>
-            </div>
+          <nav aria-label="Job posting pages" className="flex flex-wrap items-center justify-center gap-1.5">
+            <button type="button" onClick={() => setCurrentPage(1)} disabled={safeCurrentPage === 1} className="rounded-lg border border-[#D7DCE5] bg-white px-2.5 py-1 text-[#2B2D42] disabled:opacity-50 dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white">« First</button>
+            <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={safeCurrentPage === 1} className="rounded-lg border border-[#D7DCE5] bg-white px-2.5 py-1 text-[#2B2D42] disabled:opacity-50 dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white">‹ Prev</button>
+            {pageNumbers.map((page, index) => (
+              <React.Fragment key={page}>
+                {index > 0 && page - pageNumbers[index - 1] > 1 && <span className="px-1">…</span>}
+                <button type="button" aria-current={safeCurrentPage === page ? 'page' : undefined} onClick={() => setCurrentPage(page)} className={`rounded-lg border px-2.5 py-1 ${safeCurrentPage === page ? 'border-[#2B2D42] bg-[#2B2D42] font-bold text-white' : 'border-[#D7DCE5] bg-white text-[#2B2D42] dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white'}`}>{page}</button>
+              </React.Fragment>
+            ))}
+            <button type="button" onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))} disabled={safeCurrentPage === pageCount} className="rounded-lg border border-[#D7DCE5] bg-white px-2.5 py-1 text-[#2B2D42] disabled:opacity-50 dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white">Next ›</button>
+            <button type="button" onClick={() => setCurrentPage(pageCount)} disabled={safeCurrentPage === pageCount} className="rounded-lg border border-[#D7DCE5] bg-white px-2.5 py-1 text-[#2B2D42] disabled:opacity-50 dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white">Last »</button>
+          </nav>
+          <div className="flex justify-center sm:justify-end">
+            <select aria-label="Items per page" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setCurrentPage(1); }} className="rounded-lg border border-[#D7DCE5] bg-white px-2 py-1 text-xs text-[#2B2D42] focus:outline-none dark:border-[#45485E] dark:bg-[#2B2D42] dark:text-white">
+              <option value={25}>25 Per Page</option><option value={50}>50 Per Page</option><option value={100}>100 Per Page</option>
+            </select>
           </div>
         </div>
+
       </div>
 
       {isFilterDrawerOpen && (

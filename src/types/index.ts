@@ -138,6 +138,7 @@ export type PipelineStage =
   | 'Rejected';
 
 export interface Applicant {
+  [key: string]: any;
   id: string;
   applicantId: string;
   name: string;
