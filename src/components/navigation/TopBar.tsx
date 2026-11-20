@@ -267,9 +267,13 @@ export const TopBar: React.FC = () => {
   const getBreadcrumbs = () => {
     switch (currentRoute) {
       case 'dashboard':
-        return ['Talent Operations', 'Executive Dashboard'];
+        return currentUser?.role === 'admin'
+          ? ['Administration', 'Global Settings']
+          : ['Talent Operations', 'Executive Dashboard'];
       case 'jobs':
-        return ['Job Posting', 'All Job Postings'];
+        return currentUser?.role === 'admin'
+          ? ['Recruitment', 'Requisitions']
+          : ['Job Posting', 'All Job Postings'];
       case 'job-new':
         return ['Job Posting', 'New Job Posting'];
       case 'job-detail':
@@ -301,7 +305,7 @@ export const TopBar: React.FC = () => {
       case 'admin-users':
         return ['Governance', 'Users, Roles & Access Control'];
       case 'settings':
-        return ['System', 'Platform Configuration'];
+        return ['Administration', 'Global Settings'];
       default:
         return ['Talent Operations'];
     }

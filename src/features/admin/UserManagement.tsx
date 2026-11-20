@@ -107,7 +107,7 @@ export const UserManagement: React.FC = () => {
                     onChange={(e) => handleRoleChange(u.id, e.target.value as UserRole)}
                     className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-[#E8C8BE] dark:border-slate-700 rounded-lg text-xs font-bold text-[#252525] dark:text-[#806B66] focus:outline-none capitalize"
                   >
-                    <option value="super_admin">Super Admin</option>
+                    <option value="admin">Admin</option>
                     <option value="manager">Practice Manager</option>
                     <option value="recruiter">Technical Recruiter</option>
                   </select>
@@ -171,7 +171,7 @@ export const UserManagement: React.FC = () => {
                 <div className="text-[11px] text-[#806B66]">Access immutable platform compliance logs</div>
               </div>
               <span className="font-mono font-bold text-xs">
-                {selectedUser?.role === 'super_admin' ? (
+                {selectedUser?.role === 'admin' ? (
                   <span className="text-[#2E7D5B] dark:text-[#8AC9A7]">FULL ACCESS</span>
                 ) : (
                   <span className="text-rose-600 dark:text-rose-400">RESTRICTED</span>

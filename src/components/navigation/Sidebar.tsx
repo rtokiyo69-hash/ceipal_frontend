@@ -46,31 +46,15 @@ export const Sidebar: React.FC = () => {
   const role = currentUser?.role || 'recruiter';
 
   const getNavGroups = (): NavGroup[] => {
-    if (role === 'super_admin') {
+    if (role === 'admin') {
       return [
         {
-          groupTitle: 'EXECUTIVE OVERVIEW',
+          groupTitle: 'ADMIN MODULES',
           items: [
-            { id: 'dashboard', label: 'Company Overview', icon: LayoutDashboard },
-            { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 }
-          ]
-        },
-        {
-          groupTitle: 'WORKFORCE OPERATIONS',
-          items: [
-            { id: 'jobs', label: 'Job Posting', icon: Briefcase },
-            { id: 'applicants', label: 'Applicant Pool', icon: Users },
-            { id: 'pipeline', label: 'Recruitment Funnel', icon: Kanban },
-            { id: 'clients', label: 'Enterprise Clients', icon: Building2 },
-            { id: 'vendors', label: 'Vendor Agencies', icon: Layers },
-            { id: 'placements', label: 'Active Placements', icon: Award }
-          ]
-        },
-        {
-          groupTitle: 'SYSTEM GOVERNANCE',
-          items: [
-            { id: 'admin-users', label: 'Roles & Access Control', icon: Shield },
-            { id: 'settings', label: 'Enterprise Settings', icon: Settings }
+            { id: 'dashboard', label: 'Global Settings', icon: Settings },
+            { id: 'job-new', label: 'Job Posting', icon: Briefcase },
+            { id: 'applicants', label: 'Applicants', icon: Users },
+            { id: 'jobs', label: 'Requisitions', icon: Layers }
           ]
         }
       ];
@@ -178,7 +162,9 @@ export const Sidebar: React.FC = () => {
               const Icon = item.icon;
               const isActive =
                 currentRoute === item.id ||
-                (item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-detail')) ||
+                (role === 'admin' && item.id === 'dashboard' && currentRoute === 'settings') ||
+                (role === 'admin' && item.id === 'jobs' && currentRoute === 'job-detail') ||
+                (role !== 'admin' && item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-detail')) ||
                 (item.id === 'applicants' && currentRoute === 'applicant-detail');
 
               return (
@@ -241,7 +227,7 @@ export const Sidebar: React.FC = () => {
 
             {roleSwitcherOpen && (
               <div className="mt-1.5 p-1 bg-[#252525] border border-[#3D3634] rounded-lg space-y-1 text-xs shadow-xl">
-                {(['super_admin', 'manager', 'recruiter'] as UserRole[]).map((r) => (
+                {(['admin', 'manager', 'recruiter'] as UserRole[]).map((r) => (
                   <button
                     key={r}
                     onClick={() => {
@@ -252,7 +238,7 @@ export const Sidebar: React.FC = () => {
                       role === r ? 'bg-[#FF6B5E]/20 text-[#FFF0E8] font-medium' : 'text-[#FFF0E8] hover:bg-white/10'
                     }`}
                   >
-                    {r.replace('_', ' ')}
+                    {r === 'admin' ? 'Admin' : r.replace('_', ' ')}
                   </button>
                 ))}
               </div>

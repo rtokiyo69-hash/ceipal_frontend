@@ -12,7 +12,17 @@ import {
 } from 'lucide-react';
 import { ApiService } from '../../services/api';
 
+const workspaceSubmodules = [
+  'Custom Fields',
+  'Email Settings',
+  'Consent Settings',
+  'Lookups',
+  'Mandatory Fields',
+  'Encryption Fields'
+];
+
 export const PlatformSettings: React.FC = () => {
+  const [activeSubmodule, setActiveSubmodule] = useState(workspaceSubmodules[0]);
   const [companyName, setCompanyName] = useState('ATS Technologies Inc.');
   const [timezone, setTimezone] = useState('America/Los_Angeles (PST)');
   const [currency, setCurrency] = useState('USD ($)');
@@ -49,15 +59,26 @@ export const PlatformSettings: React.FC = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#252525] dark:text-white">
-          System &amp; Enterprise Settings
-        </h1>
-        <p className="text-xs text-[#806B66]">
-          Configure tenant organization parameters, API integrations, and local mock store
-        </p>
-      </div>
+      <nav
+        aria-label="Global settings submodules"
+        className="flex overflow-x-auto rounded-xl border border-[#E8C8BE] bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-[#252525]"
+      >
+        {workspaceSubmodules.map((submodule) => (
+          <button
+            key={submodule}
+            type="button"
+            aria-current={activeSubmodule === submodule ? 'page' : undefined}
+            onClick={() => setActiveSubmodule(submodule)}
+            className={`shrink-0 rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors ${
+              activeSubmodule === submodule
+                ? 'bg-[#DCE8FF] text-[#125B97] dark:bg-[#48403E] dark:text-white'
+                : 'text-[#65534F] hover:bg-[#FFF0E8] hover:text-[#252525] dark:text-[#FFD7C9] dark:hover:bg-[#48403E]'
+            }`}
+          >
+            {submodule}
+          </button>
+        ))}
+      </nav>
 
       <form onSubmit={handleSave} className="space-y-6 text-xs">
         {/* Organization Information */}

@@ -2721,7 +2721,7 @@ export const JobList: React.FC = () => {
                             const isEditing = inlineEdit?.entity === 'job' && inlineEdit.id === j.id && inlineEdit.field === field;
                             const recruiterOptions = Array.from(new Set([
                               value === '—' ? '' : value,
-                              ...users.filter((user) => user.role !== 'super_admin').map((user) => user.name)
+                              ...users.filter((user) => user.role !== 'admin').map((user) => user.name)
                             ])).filter(Boolean);
                             return (
                               <td key={col.key} className="p-2.5 border-r border-[#E9D8D1]/30 text-[#5E6B7A] dark:text-[#FFD7C9]">
