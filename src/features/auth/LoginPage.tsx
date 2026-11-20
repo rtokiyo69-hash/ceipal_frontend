@@ -31,7 +31,7 @@ export const LoginPage: React.FC = () => {
   const handleRoleSelect = (r: UserRole) => {
     setRole(r);
     setLoginRole(r);
-    if (r === 'super_admin') {
+    if (r === 'admin') {
       setEmail('elena.rostova@talentember.io');
     } else if (r === 'manager') {
       setEmail('rajesh.r@talentember.io');
@@ -188,25 +188,25 @@ export const LoginPage: React.FC = () => {
               <div className="text-[10px] text-[#806B66] truncate mt-0.5">Rajesh R.</div>
             </div>
 
-            {/* Super Admin */}
+            {/* Admin */}
             <div
-              onClick={() => handleRoleSelect('super_admin')}
+              onClick={() => handleRoleSelect('admin')}
               className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${
-                role === 'super_admin'
+                role === 'admin'
                   ? 'bg-[#FFF0E8] dark:bg-[#252525]/30 border-[#FF6B5E] shadow-xs'
                   : 'bg-white dark:bg-[#252525] border-[#E8C8BE] dark:border-slate-800 hover:border-[#FF6B5E]'
               }`}
             >
               <div
                 className={`w-8 h-8 mx-auto rounded-lg flex items-center justify-center mb-1.5 ${
-                  role === 'super_admin'
+                  role === 'admin'
                     ? 'bg-[#FF6B5E] text-white'
                     : 'bg-[#FFF0E8] dark:bg-slate-800 text-[#806B66]'
                 }`}
               >
                 <Shield className="w-4 h-4" />
               </div>
-              <div className="text-xs font-bold text-[#252525] dark:text-white">Super Admin</div>
+              <div className="text-xs font-bold text-[#252525] dark:text-white">Admin</div>
               <div className="text-[10px] text-[#806B66] truncate mt-0.5">Elena Rostova</div>
             </div>
           </div>
@@ -312,10 +312,10 @@ export const LoginPage: React.FC = () => {
                 Manager Desk
               </button>
               <button
-                onClick={() => loginAs('super_admin')}
+                onClick={() => loginAs('admin')}
                 className="flex-1 py-1.5 bg-[#FFF0E8] dark:bg-slate-900 border border-[#E8C8BE] dark:border-slate-700 hover:border-[#FF6B5E] hover:bg-[#FFF0E8] rounded-lg text-xs font-medium text-[#252525] dark:text-slate-200 transition-colors"
               >
-                Super Admin
+                Admin
               </button>
             </div>
           </div>

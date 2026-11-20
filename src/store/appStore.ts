@@ -67,7 +67,13 @@ if (typeof localStorage !== 'undefined') {
   try {
     const savedUser = localStorage.getItem('talentember_current_user');
     if (savedUser) {
-      initialUser = JSON.parse(savedUser);
+      const parsedUser = JSON.parse(savedUser) as User;
+      if ((parsedUser.role as string) === 'super_admin') {
+        initialUser = { ...parsedUser, role: 'admin' };
+        localStorage.setItem('talentember_current_user', JSON.stringify(initialUser));
+      } else {
+        initialUser = parsedUser;
+      }
       initialAuth = true;
     }
   } catch (e) {

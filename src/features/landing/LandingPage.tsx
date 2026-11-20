@@ -36,7 +36,7 @@ export const LandingPage: React.FC = () => {
     navigate('login');
   };
 
-  const handleStartDemo = (role: 'recruiter' | 'manager' | 'super_admin' = 'recruiter') => {
+  const handleStartDemo = (role: 'recruiter' | 'manager' | 'admin' = 'recruiter') => {
     setLoginRole(role);
     navigate('login');
   };
@@ -554,7 +554,7 @@ export const LandingPage: React.FC = () => {
               <li className="flex items-center gap-2">✓ 24/7 Enterprise SLA &amp; account manager</li>
             </ul>
             <button
-              onClick={() => handleStartDemo('super_admin')}
+              onClick={() => handleStartDemo('admin')}
               className="w-full py-2.5 text-xs font-semibold text-[#252525] dark:text-white border border-[#E8C8BE] dark:border-slate-700 hover:border-[#FF6B5E] rounded-xl transition-colors"
             >
               Contact Sales
@@ -573,7 +573,7 @@ export const LandingPage: React.FC = () => {
             Experience the Unified Talent Platform
           </h2>
           <p className="text-sm text-[#FFF0E8] leading-relaxed max-w-xl mx-auto">
-            Log in directly as Super Admin, Recruitment Practice Manager, or Lead Recruiter to explore the complete workflows with realistic production datasets.
+            Log in directly as Admin, Recruitment Practice Manager, or Lead Recruiter to explore the complete workflows with realistic production datasets.
           </p>
           <div className="pt-2 flex flex-wrap justify-center gap-4">
             <button
@@ -589,10 +589,10 @@ export const LandingPage: React.FC = () => {
               Sign In as Manager
             </button>
             <button
-              onClick={() => handleStartDemo('super_admin')}
+              onClick={() => handleStartDemo('admin')}
               className="px-6 py-3 text-xs font-bold text-white bg-[#083F70] hover:bg-[#C94039] rounded-xl border border-[#FF6B5E]/40 transition-all cursor-pointer"
             >
-              Sign In as Super Admin
+              Sign In as Admin
             </button>
           </div>
         </div>
