@@ -200,7 +200,7 @@ export const ApiService = {
   async getApplicantById(id: string): Promise<Applicant | undefined> {
     await delay(100);
     const applicants = await this.getApplicants();
-    return applicants.find((a) => a.id === id);
+    return applicants.find((a) => a.id === id || a.applicantId === id);
   },
 
   async createApplicant(applicantData: Partial<Applicant>): Promise<Applicant> {

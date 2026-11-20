@@ -108,8 +108,8 @@ export default function App() {
         <TopBar />
 
         {/* Viewport Content */}
-        <main className={`flex-1 overflow-y-auto ${isRecruiter ? 'p-3 md:p-4' : 'p-6 md:p-8'}`}>
-          <div className={isRecruiter ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
+        <main className={`flex-1 overflow-y-auto ${isRecruiter || currentRoute === 'applicant-detail' ? 'p-0' : 'p-6 md:p-8'}`}>
+          <div className={isRecruiter || currentRoute === 'applicant-detail' ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
         </main>
       </div>
 
