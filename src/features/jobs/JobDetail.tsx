@@ -630,15 +630,7 @@ export const JobDetail: React.FC = () => {
 
       {/* Ceipal Status Alert Banner */}
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-3">
-        {job.status === 'Open' || job.status === 'Active' ? (
-          <div className="bg-[#EFF8F3] dark:bg-[#16382B] border border-[#8AC9A7]/60 text-[#276749] dark:text-[#8AC9A7] px-4 py-2 rounded-lg text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#8AC9A7] animate-pulse"></span>
-              <span>Active Requisition — Ready for applicant submissions and sourcing pipeline.</span>
-            </div>
-            <span className="font-mono text-[11px] font-semibold">Priority: {job.priority}</span>
-          </div>
-        ) : (
+        {job.status === 'Draft' ? (
           <div className="bg-[#FFFBEB] dark:bg-[#382D16] border border-[#FDE68A] dark:border-[#785918] text-[#92400E] dark:text-[#FCD34D] px-4 py-2 rounded-lg text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-[#D97706]" />
@@ -654,6 +646,22 @@ export const JobDetail: React.FC = () => {
             >
               Publish Requisition Now
             </button>
+          </div>
+        ) : job.status === 'Open' || job.status === 'Active' ? (
+          <div className="bg-[#EFF8F3] dark:bg-[#16382B] border border-[#8AC9A7]/60 text-[#276749] dark:text-[#8AC9A7] px-4 py-2 rounded-lg text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#8AC9A7] animate-pulse"></span>
+              <span>Active Requisition — Ready for applicant submissions and sourcing pipeline.</span>
+            </div>
+            <span className="font-mono text-[11px] font-semibold">Priority: {job.priority}</span>
+          </div>
+        ) : (
+          <div className="bg-[#FFF0E8] dark:bg-[#48403E] border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#FFD7C9] px-4 py-2 rounded-lg text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              <span>This requisition is {job.status}.</span>
+            </div>
+            <span className="font-mono text-[11px] font-semibold">Priority: {job.priority}</span>
           </div>
         )}
       </div>

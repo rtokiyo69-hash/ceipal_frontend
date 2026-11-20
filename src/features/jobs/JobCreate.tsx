@@ -537,15 +537,14 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     setCreationMode('manual');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) {
+  const saveJob = async (saveAsDraft = false) => {
+    if (!saveAsDraft && !title.trim()) {
       alert('Job Title is required.');
       return;
     }
 
     const descriptionText = descriptionEditorRef.current?.innerText.trim() || description.trim();
-    if (!descriptionText) {
+    if (!saveAsDraft && !descriptionText) {
       alert('Job Description is required.');
       return;
     }
@@ -556,13 +555,13 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
     try {
       await ApiService.createJob({
-        title,
+        title: title.trim() || 'Untitled Job Draft',
         client,
         clientId: 'cli-1',
         businessUnit,
         location,
         type,
-        status,
+        status: saveAsDraft ? 'Draft' : status,
         priority,
         openings: Number(openings),
         billRate: Number(billRate),
@@ -620,6 +619,15 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     }
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void saveJob();
+  };
+
+  const handleSaveDraft = () => {
+    void saveJob(true);
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in">
       {/* Top Header & Navigation Strip */}
@@ -647,13 +655,16 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
       ) : (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E8C8BE] dark:border-[#3D3634] pb-4">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setCreationMode('select')}
-              className="p-2 rounded-xl bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] hover:bg-[#FFF0E8] transition-colors"
-              title="Back"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
+            {creationMode !== 'manual' && (
+              <button
+                type="button"
+                onClick={() => setCreationMode('select')}
+                className="p-2 rounded-xl bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-[#806B66] dark:text-[#FFD7C9] hover:text-[#252525] hover:bg-[#FFF0E8] transition-colors"
+                title="Back"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFF0E8] dark:bg-[#083F70] text-[#252525] dark:text-[#FFF0E8]">
@@ -672,23 +683,27 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* Action Controls */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCreationMode('select')}
-              className="px-3 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] hover:bg-[#FFF0E8] transition-colors"
-            >
-              Switch Method
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('jobs')}
-              className="px-3.5 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] hover:bg-slate-100 transition-colors"
-            >
-              Cancel
-            </button>
-            {(creationMode === 'manual' || (creationMode === 'template' && selectedTemplateKey)) && (
+            {creationMode !== 'manual' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setCreationMode('select')}
+                  className="px-3 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] hover:bg-[#FFF0E8] transition-colors"
+                >
+                  Switch Method
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('jobs')}
+                  className="px-3.5 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-xl text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] hover:bg-slate-100 transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+            {creationMode === 'template' && selectedTemplateKey && (
               <button
-                onClick={handleSubmit}
+                onClick={() => { void saveJob(); }}
                 disabled={isSubmitting}
                 className="px-5 py-2 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-xs shadow-[#FF6B5E]/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
               >
@@ -3085,31 +3100,73 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
           {/* Footer Submit Buttons */}
           <div className="flex items-center justify-between p-4 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] rounded-2xl shadow-xs">
-            <button
-              type="button"
-              onClick={() => setCreationMode('select')}
-              className="px-4 py-2 bg-[#FFF0E8] dark:bg-[#48403E] text-[#806B66] dark:text-[#FFD7C9] rounded-xl text-xs font-semibold hover:text-[#252525]"
-            >
-              ← Back to Methods
-            </button>
+            {creationMode === 'manual' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setCreationMode('select')}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-[#FFF0E8] dark:bg-[#48403E] text-[#806B66] dark:text-[#FFD7C9] rounded-xl text-xs font-semibold hover:text-[#252525] disabled:opacity-50"
+                >
+                  Back
+                </button>
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate('jobs')}
-                className="px-4 py-2 text-xs font-semibold text-[#806B66] hover:text-[#252525]"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-md shadow-[#FF6B5E]/20 transition-all flex items-center gap-2 disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                <span>{isSubmitting ? 'Publishing Requisition...' : 'Save & Publish Job Posting'}</span>
-              </button>
-            </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSaveDraft}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-white dark:bg-[#252525] border border-[#E8C8BE] dark:border-[#3D3634] text-xs font-semibold text-[#806B66] dark:text-[#FFD7C9] rounded-xl hover:bg-[#FFF0E8] disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save as Draft'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-md shadow-[#FF6B5E]/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isSubmitting ? 'Saving...' : 'Save'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('jobs')}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 text-xs font-semibold text-[#806B66] hover:text-[#252525] disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setCreationMode('select')}
+                  className="px-4 py-2 bg-[#FFF0E8] dark:bg-[#48403E] text-[#806B66] dark:text-[#FFD7C9] rounded-xl text-xs font-semibold hover:text-[#252525]"
+                >
+                  ← Back to Methods
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate('jobs')}
+                    className="px-4 py-2 text-xs font-semibold text-[#806B66] hover:text-[#252525]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 bg-[#FF6B5E] hover:bg-[#E85249] text-white rounded-xl text-xs font-bold shadow-md shadow-[#FF6B5E]/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isSubmitting ? 'Publishing Requisition...' : 'Save & Publish Job Posting'}</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </form>
       )}

@@ -98,7 +98,7 @@ const SUBMISSION_ACTIONS: { id: SubmissionAction; label: string }[] = [
 
 const SUBMISSION_GROUPS = ['Shortlist', 'Priority Candidates', 'Client Review', 'Interview Pipeline'];
 
-const JOB_STATUSES: JobStatus[] = ['Open', 'Active', 'Sourcing', 'In Review', 'Closed', 'On Hold'];
+const JOB_STATUSES: JobStatus[] = ['Draft', 'Open', 'Active', 'Sourcing', 'In Review', 'Closed', 'On Hold'];
 const JOB_PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
 const JOB_TYPES: Job['type'][] = ['Full-Time', 'Contract', 'C2H', 'C2C', 'Remote', 'Hybrid', 'On-Site', 'Part-Time'];
 const RATE_TYPES: NonNullable<Job['rateType']>[] = ['Hourly', 'Yearly', 'Monthly', 'Daily'];
@@ -2482,6 +2482,8 @@ export const JobList: React.FC = () => {
                                       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                                         j.status === 'Active' || j.status === 'Open'
                                           ? 'bg-[#8AC9A7]/20 text-[#1E4D36] border-[#8AC9A7]/40 dark:text-[#8AC9A7]'
+                                          : j.status === 'Draft'
+                                          ? 'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A] dark:bg-[#382D16] dark:text-[#FCD34D] dark:border-[#785918]'
                                           : j.status === 'Sourcing'
                                           ? 'bg-[#FFE6DD] text-[#1769AA] border-[#1769AA]/30 dark:bg-[#22384B] dark:text-[#D8E9F7]'
                                           : j.status === 'In Review'
@@ -2489,7 +2491,7 @@ export const JobList: React.FC = () => {
                                           : 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300'
                                       }`}
                                     >
-                                      <span className={`w-1.5 h-1.5 rounded-full ${j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : 'bg-[#1769AA]'}`}></span>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${j.status === 'Active' || j.status === 'Open' ? 'bg-[#276749]' : j.status === 'Draft' ? 'bg-[#D97706]' : 'bg-[#1769AA]'}`}></span>
                                       {j.status}
                                     </span>
                                     <button

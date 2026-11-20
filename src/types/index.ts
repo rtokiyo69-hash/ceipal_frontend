@@ -11,7 +11,7 @@ export interface User {
   phone?: string;
 }
 
-export type JobStatus = 'Open' | 'Active' | 'Sourcing' | 'In Review' | 'Closed' | 'On Hold';
+export type JobStatus = 'Draft' | 'Open' | 'Active' | 'Sourcing' | 'In Review' | 'Closed' | 'On Hold';
 export type JobType = 'Full-Time' | 'Contract' | 'C2H' | 'C2C' | 'Remote' | 'Hybrid' | 'On-Site' | 'Part-Time';
 export type Priority = 'Low' | 'Medium' | 'High' | 'Urgent';
 

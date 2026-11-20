@@ -13,10 +13,240 @@ import {
   Building2,
   CheckCircle2,
   Sparkles,
-  LogOut
+  LogOut,
+  UserRound,
+  KeyRound,
+  ShieldCheck,
+  BookOpen,
+  X
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { Logo } from '../common/Logo';
+import type { AppRoute } from '../../store/appStore';
+import type { User } from '../../types';
+
+type AccountPanel = 'profile' | 'password' | 'otp' | 'guide' | null;
+
+interface AccountMenuProps {
+  user: User;
+  variant: 'recruiter' | 'standard';
+  onLogout: () => void;
+  onOpenPanel: (panel: Exclude<AccountPanel, null>) => void;
+}
+
+const AccountMenu: React.FC<AccountMenuProps> = ({ user, variant, onLogout, onOpenPanel }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const isRecruiter = variant === 'recruiter';
+  const buttonClassName = isRecruiter
+    ? 'flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white'
+    : 'flex items-center gap-2 rounded-xl border border-[#E8C8BE] bg-white px-2.5 py-1.5 text-[#252525] transition-colors hover:bg-[#FFF0E8] dark:border-[#3D3634] dark:bg-[#252525] dark:text-white dark:hover:bg-[#48403E]';
+  const menuItemClassName = 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs text-[#252525] transition-colors hover:bg-[#FFF0E8] dark:text-white dark:hover:bg-[#48403E]';
+
+  const openPanel = (panel: Exclude<AccountPanel, null>) => {
+    setIsOpen(false);
+    onOpenPanel(panel);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className={buttonClassName}
+        aria-label="Open account menu"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+      >
+        <img src={user.avatar} alt="" className="h-7 w-7 rounded-full border border-white/60 object-cover" />
+        <span className={`max-w-32 truncate text-xs ${isRecruiter ? 'hidden sm:block' : 'hidden md:block'}`}>{user.name}</span>
+      </button>
+
+      {isOpen && (
+        <div
+          role="menu"
+          aria-label="Account options"
+          className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[#E8C8BE] bg-white text-[#252525] shadow-xl dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"
+        >
+          <div className="flex items-start gap-3 border-b border-[#E8C8BE] px-4 py-3 dark:border-[#3D3634]">
+            <img src={user.avatar} alt="" className="h-9 w-9 rounded-full object-cover" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-xs font-semibold">{user.name}</div>
+              <div className="text-[11px] capitalize text-[#806B66] dark:text-[#FFD7C9]">{user.role.replace(/_/g, ' ')}</div>
+            </div>
+            <button type="button" onClick={() => setIsOpen(false)} aria-label="Close account menu" className="rounded p-1 text-[#806B66] hover:bg-[#FFF0E8] dark:text-[#FFD7C9] dark:hover:bg-[#48403E]">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="p-2">
+            <button type="button" role="menuitem" onClick={() => openPanel('profile')} className={menuItemClassName}>
+              <UserRound className="h-4 w-4 text-[#806B66]" />
+              View Profile
+            </button>
+            <button type="button" role="menuitem" onClick={() => openPanel('password')} className={menuItemClassName}>
+              <KeyRound className="h-4 w-4 text-[#806B66]" />
+              Change Password
+            </button>
+            <button type="button" role="menuitem" onClick={() => openPanel('otp')} className={menuItemClassName}>
+              <ShieldCheck className="h-4 w-4 text-[#806B66]" />
+              Generate OTP
+            </button>
+            <button type="button" role="menuitem" onClick={() => openPanel('guide')} className={menuItemClassName}>
+              <BookOpen className="h-4 w-4 text-[#806B66]" />
+              User Guide
+            </button>
+          </div>
+
+          <div className="border-t border-[#E8C8BE] p-2 dark:border-[#3D3634]">
+            <button type="button" role="menuitem" onClick={() => { setIsOpen(false); onLogout(); }} className={`${menuItemClassName} font-semibold`}>
+              <LogOut className="h-4 w-4 text-[#E05252]" />
+              Sign Out
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 bg-[#FFF0E8] px-4 py-3 text-xs font-semibold text-[#2B2D42] dark:bg-[#48403E] dark:text-[#FFF0E8]">
+            <Building2 className="h-4 w-4" />
+            Ampcus Tech Pvt Ltd.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface AccountDialogProps {
+  panel: AccountPanel;
+  user: User;
+  onClose: () => void;
+  onNavigate: (route: AppRoute) => void;
+}
+
+const AccountDialog: React.FC<AccountDialogProps> = ({ panel, user, onClose, onNavigate }) => {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [otpPreview, setOtpPreview] = useState('');
+
+  if (!panel) return null;
+
+  const titles: Record<Exclude<AccountPanel, null>, string> = {
+    profile: 'View Profile',
+    password: 'Change Password',
+    otp: 'Generate OTP',
+    guide: 'User Guide'
+  };
+
+  const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (newPassword.length < 8) {
+      setPasswordMessage('Use at least 8 characters for the new password.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('The new password and confirmation do not match.');
+      return;
+    }
+    setPasswordMessage('The form is valid, but this demo has no password service. No password was changed.');
+  };
+
+  const handleGenerateOtp = () => {
+    const randomValue = new Uint32Array(1);
+    window.crypto.getRandomValues(randomValue);
+    setOtpPreview(String(100000 + (randomValue[0] % 900000)));
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4" onClick={onClose}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="account-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#E8C8BE] bg-white text-[#252525] shadow-2xl dark:border-[#3D3634] dark:bg-[#252525] dark:text-white"
+      >
+        <div className="flex items-center justify-between border-b border-[#E8C8BE] px-5 py-4 dark:border-[#3D3634]">
+          <h2 id="account-dialog-title" className="text-base font-bold">{titles[panel]}</h2>
+          <button type="button" onClick={onClose} aria-label="Close dialog" className="rounded-lg p-2 text-[#806B66] hover:bg-[#FFF0E8] dark:text-[#FFD7C9] dark:hover:bg-[#48403E]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5 text-sm">
+          {panel === 'profile' && (
+            <>
+              <div className="flex items-center gap-4">
+                <img src={user.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-[#E8C8BE]" />
+                <div>
+                  <div className="font-semibold">{user.name}</div>
+                  <div className="capitalize text-[#806B66] dark:text-[#FFD7C9]">{user.role.replace(/_/g, ' ')}</div>
+                </div>
+              </div>
+              <dl className="grid gap-3 rounded-xl bg-[#FFF0E8] p-4 text-xs dark:bg-[#48403E] sm:grid-cols-2">
+                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Title</dt><dd className="mt-1 font-medium">{user.title || 'Not provided'}</dd></div>
+                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Email</dt><dd className="mt-1 break-all font-medium">{user.email || 'Not provided'}</dd></div>
+                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Business unit</dt><dd className="mt-1 font-medium">{user.businessUnit || 'Not provided'}</dd></div>
+                <div><dt className="text-[#806B66] dark:text-[#FFD7C9]">Phone</dt><dd className="mt-1 font-medium">{user.phone || 'Not provided'}</dd></div>
+              </dl>
+            </>
+          )}
+
+          {panel === 'password' && (
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <label className="block text-xs font-medium">
+                Current password
+                <input type="password" autoComplete="current-password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#2B2D42] dark:text-white" />
+              </label>
+              <label className="block text-xs font-medium">
+                New password
+                <input type="password" autoComplete="new-password" required minLength={8} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#2B2D42] dark:text-white" />
+              </label>
+              <label className="block text-xs font-medium">
+                Confirm new password
+                <input type="password" autoComplete="new-password" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="mt-1.5 w-full rounded-lg border border-[#E8C8BE] bg-white px-3 py-2 text-[#252525] outline-none focus:border-[#FF6B5E] dark:border-[#3D3634] dark:bg-[#2B2D42] dark:text-white" />
+              </label>
+              {passwordMessage && <p role="status" className="rounded-lg bg-[#FFF0E8] p-3 text-xs text-[#806B66] dark:bg-[#48403E] dark:text-[#FFD7C9]">{passwordMessage}</p>}
+              <button type="submit" className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#E85249]">Validate password change</button>
+              <p className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">Front-end demo only. A secure authentication service is required to save a password.</p>
+            </form>
+          )}
+
+          {panel === 'otp' && (
+            <div className="space-y-4">
+              <p className="text-xs text-[#806B66] dark:text-[#FFD7C9]">Generate a visual preview code for this demo account.</p>
+              <button type="button" onClick={handleGenerateOtp} className="rounded-lg bg-[#FF6B5E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#E85249]">Generate preview code</button>
+              {otpPreview && <div className="rounded-xl bg-[#FFF0E8] p-4 text-center dark:bg-[#48403E]"><div className="font-mono text-2xl font-bold tracking-[0.3em]">{otpPreview}</div></div>}
+              <p role="note" className="text-[11px] text-[#806B66] dark:text-[#FFD7C9]">Demo only: this code is not sent, stored, or accepted for authentication. OTP delivery and verification require a backend.</p>
+            </div>
+          )}
+
+          {panel === 'guide' && (
+            <div className="space-y-4">
+              <p className="text-xs text-[#806B66] dark:text-[#FFD7C9]">Choose a workspace area to get started. Your role determines which actions are available.</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {([
+                  ['Dashboard', 'dashboard'],
+                  ['Job Posting', 'jobs'],
+                  ['Applicants', 'applicants'],
+                  ['Submissions', 'submissions']
+                ] as const).map(([label, route]) => (
+                  <button
+                    key={route}
+                    type="button"
+                    onClick={() => onNavigate(route)}
+                    className="rounded-lg border border-[#E8C8BE] px-3 py-2.5 text-left text-xs font-medium hover:bg-[#FFF0E8] dark:border-[#3D3634] dark:hover:bg-[#48403E]"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
 
 export const TopBar: React.FC = () => {
   const {
@@ -31,7 +261,7 @@ export const TopBar: React.FC = () => {
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [accountPanel, setAccountPanel] = useState<AccountPanel>(null);
   const prefersReducedMotion = useReducedMotion();
 
   const getBreadcrumbs = () => {
@@ -190,30 +420,19 @@ export const TopBar: React.FC = () => {
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          <div className="relative">
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2 pl-1.5 pr-1 rounded hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-              aria-label="Open account menu"
-              aria-expanded={profileOpen}
-            >
-              <img src={currentUser.avatar} alt="" className="w-7 h-7 rounded-full object-cover border border-white/60" />
-              <span className="hidden lg:block max-w-24 truncate text-xs">{currentUser.name}</span>
-            </button>
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white text-[#252525] border border-[#D5DCE5] rounded shadow-lg py-1 z-50 text-xs">
-                <div className="px-3 py-2 border-b border-[#E8C8BE]">
-                  <div className="font-semibold truncate">{currentUser.name}</div>
-                  <div className="text-[#806B66] capitalize">{currentUser.role.replace('_', ' ')}</div>
-                </div>
-                <button onClick={() => { logout(); setProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[#EEF5FC]">
-                  <LogOut className="w-3.5 h-3.5" />
-                  Sign Out
-                </button>
-              </div>
-            )}
-          </div>
+          <AccountMenu
+            user={currentUser}
+            variant="recruiter"
+            onLogout={logout}
+            onOpenPanel={setAccountPanel}
+          />
         </div>
+        <AccountDialog
+          panel={accountPanel}
+          user={currentUser}
+          onClose={() => setAccountPanel(null)}
+          onNavigate={(route) => { setAccountPanel(null); navigate(route); }}
+        />
       </header>
     );
   }
@@ -379,7 +598,23 @@ export const TopBar: React.FC = () => {
           <Sparkles className="w-3 h-3 text-[#252525]" />
           <span className="uppercase">{currentUser?.role?.replace('_', ' ') || 'RECRUITER'}</span>
         </div>
+        {currentUser && (
+          <AccountMenu
+            user={currentUser}
+            variant="standard"
+            onLogout={logout}
+            onOpenPanel={setAccountPanel}
+          />
+        )}
       </div>
+      {currentUser && (
+        <AccountDialog
+          panel={accountPanel}
+          user={currentUser}
+          onClose={() => setAccountPanel(null)}
+          onNavigate={(route) => { setAccountPanel(null); navigate(route); }}
+        />
+      )}
     </header>
   );
 };
