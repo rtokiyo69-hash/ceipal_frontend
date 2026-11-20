@@ -19,8 +19,10 @@ import {
   Plus,
   Filter,
   CheckCircle,
+  AlertCircle,
   X,
   ChevronDown,
+  ChevronUp,
   ChevronLeft,
   ChevronRight,
   MoreVertical,
@@ -104,12 +106,81 @@ export const ApplicantDetail: React.FC = () => {
     write: false
   });
 
-  // Employer Details state
-  const [employerList, setEmployerList] = useState<{ id: string; employeeName: string; employer: string; email: string; status: string }[]>([]);
-  const [newEmpName, setNewEmpName] = useState('');
-  const [newEmpEmployer, setNewEmpEmployer] = useState('');
-  const [newEmpEmail, setNewEmpEmail] = useState('');
-  const [newEmpStatus, setNewEmpStatus] = useState('Active');
+  // Employer Details state (Ceipal Replica)
+  const [employerList, setEmployerList] = useState<{
+    id: string;
+    employeeName: string;
+    employer: string;
+    officeNumber: string;
+    mobile: string;
+    email: string;
+    status: string;
+  }[]>([]);
+  const [empSourceType, setEmpSourceType] = useState<'new' | 'vendor'>('new');
+  const [empFirstName, setEmpFirstName] = useState('');
+  const [empLastName, setEmpLastName] = useState('');
+  const [empEmployerName, setEmpEmployerName] = useState('');
+  const [empOfficeNumber, setEmpOfficeNumber] = useState('');
+  const [empExtension, setEmpExtension] = useState('');
+  const [empEmailId, setEmpEmailId] = useState('');
+  const [empMobileNumber, setEmpMobileNumber] = useState('');
+  const [empTypeSelect, setEmpTypeSelect] = useState('Select Status');
+  const [selectedVendorContact, setSelectedVendorContact] = useState('');
+  const [vendorSearchOpen, setVendorSearchOpen] = useState(false);
+  const [vendorSearchQuery, setVendorSearchQuery] = useState('');
+  const [empModalError, setEmpModalError] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+
+  const [vendorContactList, setVendorContactList] = useState([
+    {
+      id: 'v-gayatri',
+      displayName: 'Gayatri-Vivek Barai (kalaivanangovindh12@gmail.com)',
+      name: 'Gayatri-Vivek Barai',
+      firstName: 'Gayatri',
+      lastName: 'Vivek Barai',
+      company: 'Gayatri',
+      office: '+1 408-555-0188',
+      ext: '102',
+      email: 'kalaivanangovindh12@gmail.com',
+      mobile: '+91 9423022606'
+    },
+    {
+      id: 'v1',
+      displayName: 'Infosys BPM - Sivakrishnan D (hr@infosys.com)',
+      name: 'Infosys BPM',
+      firstName: 'Sivakrishnan',
+      lastName: 'D',
+      company: 'Infosys Pvt LTD',
+      office: '+1 408-555-0199',
+      ext: '104',
+      email: 'hr@infosys.com',
+      mobile: '+1 408-777-8899'
+    },
+    {
+      id: 'v2',
+      displayName: 'Apex Systems Corp - David Miller (dmiller@apexsystems.com)',
+      name: 'Apex Systems Corp',
+      firstName: 'David',
+      lastName: 'Miller',
+      company: 'Apex Systems',
+      office: '+1 804-555-2244',
+      ext: '210',
+      email: 'dmiller@apexsystems.com',
+      mobile: '+1 804-998-1122'
+    },
+    {
+      id: 'v3',
+      displayName: 'TEKsystems Inc - Sarah Connor (sconnor@teksystems.com)',
+      name: 'TEKsystems Inc',
+      firstName: 'Sarah',
+      lastName: 'Connor',
+      company: 'TEKsystems Inc',
+      office: '+1 410-555-8833',
+      ext: '405',
+      email: 'sconnor@teksystems.com',
+      mobile: '+1 410-664-9900'
+    }
+  ]);
   const [activeNotesFilter, setActiveNotesFilter] = useState<'applicants' | 'submissions' | 'pipeline'>('applicants');
   const [activeSubmissionsFilter, setActiveSubmissionsFilter] = useState<'all' | 'client' | 'interview' | 'confirmation' | 'placement' | 'not-joined'>('all');
   const [headerViewMode, setHeaderViewMode] = useState<'applicant' | 'submission'>('applicant');
@@ -122,7 +193,23 @@ export const ApplicantDetail: React.FC = () => {
   const [submitMenuOpen, setSubmitMenuOpen] = useState(false);
 
   // Dialog states
-  const [dialog, setDialog] = useState<'edit' | 'resume' | 'matching-jobs' | 'task' | 'note' | 'call-log' | 'meeting' | 'rating' | 'status' | 'tag' | 'add-education' | 'add-work-exp' | 'add-employer' | null>(null);
+  const [dialog, setDialog] = useState<
+    | 'edit'
+    | 'resume'
+    | 'matching-jobs'
+    | 'task'
+    | 'note'
+    | 'call-log'
+    | 'meeting'
+    | 'rating'
+    | 'status'
+    | 'tag'
+    | 'add-education'
+    | 'add-work-exp'
+    | 'add-employer'
+    | 'confirm-vendor-create'
+    | null
+  >(null);
 
   // Form states
   const [editName, setEditName] = useState('');
@@ -184,9 +271,10 @@ export const ApplicantDetail: React.FC = () => {
     setEditGroupValue(app.applicantGroup || 'N/A');
   };
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setToastType(type);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   useLayoutEffect(() => {
@@ -250,7 +338,7 @@ export const ApplicantDetail: React.FC = () => {
 
   if (!applicant) {
     return (
-      <div className="flex h-96 items-center justify-center p-8 text-xs text-[#806B66]">
+      <div className="flex h-96 items-center justify-center p-8 text-xs text-[#64748B]">
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2F80ED] border-t-transparent" />
           <span>Loading applicant profile dossier...</span>
@@ -423,27 +511,107 @@ export const ApplicantDetail: React.FC = () => {
     showToast('Work experience added successfully');
   };
 
+  const filteredVendors = vendorContactList.filter((v) => {
+    const q = vendorSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      v.displayName.toLowerCase().includes(q) ||
+      v.firstName.toLowerCase().includes(q) ||
+      v.lastName.toLowerCase().includes(q) ||
+      v.company.toLowerCase().includes(q) ||
+      v.email.toLowerCase().includes(q)
+    );
+  });
+
+  const handleSelectVendor = (v: (typeof vendorContactList)[0]) => {
+    setSelectedVendorContact(v.id);
+    setEmpFirstName(v.firstName);
+    setEmpLastName(v.lastName);
+    setEmpEmployerName(v.company);
+    setEmpOfficeNumber(v.office);
+    setEmpExtension(v.ext);
+    setEmpEmailId(v.email);
+    setEmpMobileNumber(v.mobile);
+    setVendorSearchOpen(false);
+    setEmpModalError(null);
+  };
+
   const handleAddEmployer = () => {
-    if (!newEmpName.trim() || !newEmpEmployer.trim()) {
-      showToast('Please enter Employee Name and Employer');
-      return;
-    }
-    setEmployerList((prev) => [
-      ...prev,
-      {
-        id: `emp-${Date.now()}`,
-        employeeName: newEmpName,
-        employer: newEmpEmployer,
-        email: newEmpEmail || 'N/A',
-        status: newEmpStatus
+    if (empSourceType === 'vendor') {
+      if (!selectedVendorContact && !empEmployerName.trim()) {
+        const errMsg = 'Please select a vendor contact or enter employer details';
+        setEmpModalError(errMsg);
+        showToast(errMsg, 'error');
+        return;
       }
-    ]);
-    setNewEmpName('');
-    setNewEmpEmployer('');
-    setNewEmpEmail('');
-    setNewEmpStatus('Active');
+    } else {
+      if (!empFirstName.trim() && !empEmployerName.trim()) {
+        const errMsg = 'Please enter at least First Name or Employer Name';
+        setEmpModalError(errMsg);
+        showToast(errMsg, 'error');
+        return;
+      }
+    }
+    setEmpModalError(null);
+    // Open Ceipal confirmation notification prompt
+    setDialog('confirm-vendor-create');
+  };
+
+  const finalizeEmployerSave = (createVendorContact: boolean) => {
+    const fullName = `${empFirstName} ${empLastName}`.trim();
+    const officeDisplay = empOfficeNumber
+      ? `${empOfficeNumber}${empExtension ? ` Ext: ${empExtension}` : ''}`
+      : '—';
+
+    const newEmp = {
+      id: `emp-${Date.now()}`,
+      employeeName: fullName || empEmployerName || 'Employee',
+      employer: empEmployerName || '—',
+      officeNumber: officeDisplay,
+      mobile: empMobileNumber || '—',
+      email: empEmailId || '—',
+      status: (empTypeSelect === 'Select' || empTypeSelect === 'Select Status') ? 'Active' : empTypeSelect
+    };
+
+    setEmployerList((prev) => [...prev, newEmp]);
+
+    if (createVendorContact) {
+      if (empEmployerName) {
+        setVendorContactList((prev) => [
+          {
+            id: `v-${Date.now()}`,
+            displayName: `${empEmployerName} - ${fullName || empEmployerName} (${empEmailId || 'no email'})`,
+            name: empEmployerName,
+            firstName: empFirstName,
+            lastName: empLastName,
+            company: empEmployerName,
+            office: empOfficeNumber,
+            ext: empExtension,
+            email: empEmailId,
+            mobile: empMobileNumber
+          },
+          ...prev
+        ]);
+      }
+      showToast('Employer details and Vendor contact created successfully', 'success');
+    } else {
+      showToast('Employer details saved successfully', 'success');
+    }
+
+    setEmpFirstName('');
+    setEmpLastName('');
+    setEmpEmployerName('');
+    setEmpOfficeNumber('');
+    setEmpExtension('');
+    setEmpEmailId('');
+    setEmpMobileNumber('');
+    setEmpTypeSelect('Select Status');
+    setSelectedVendorContact('');
+    setEmpSourceType('new');
+    setVendorSearchOpen(false);
+    setVendorSearchQuery('');
+    setEmpModalError(null);
     setDialog(null);
-    showToast('Employer details added successfully');
   };
 
   const notesCount = applicant.notes?.length || 0;
@@ -523,16 +691,35 @@ export const ApplicantDetail: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-[#F4F6F9] text-[#222] dark:bg-[#1A1A1A] dark:text-[#E0E0E0]">
-      {/* Toast Notification */}
+      {/* Toast Notification - z-[9999] so it's always visible above all modals/dialogs */}
       {toastMessage && (
-        <div className="fixed right-6 top-16 z-50 flex items-center gap-2 rounded-xl border border-[#2F80ED] bg-[#2F80ED] px-4 py-2.5 text-xs text-white shadow-xl animate-in fade-in">
-          <CheckCircle className="h-4 w-4 text-white" />
+        <div
+          className={`fixed right-6 top-6 z-[9999] flex items-center gap-2.5 rounded-lg border px-4 py-3 text-xs font-medium text-white shadow-2xl transition-all duration-200 animate-in fade-in slide-in-from-top-4 ${
+            toastType === 'error'
+              ? 'border-red-600 bg-red-600 shadow-red-500/20'
+              : toastType === 'info'
+              ? 'border-blue-600 bg-blue-600 shadow-blue-500/20'
+              : 'border-[#2F80ED] bg-[#2F80ED] shadow-blue-500/20'
+          }`}
+        >
+          {toastType === 'error' ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-white" />
+          ) : (
+            <CheckCircle className="h-4 w-4 shrink-0 text-white" />
+          )}
           <span>{toastMessage}</span>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="ml-2 text-white/80 hover:text-white cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
       {/* Top Sub-Navigation Tabs Bar */}
-      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
         <div className="flex flex-wrap items-center gap-1 overflow-x-auto text-xs">
           <button
             type="button"
@@ -609,7 +796,7 @@ export const ApplicantDetail: React.FC = () => {
               <ChevronDown className="h-3 w-3" />
             </button>
             {submitMenuOpen && (
-              <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#252525]">
+              <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]">
                 <button
                   type="button"
                   onClick={() => {
@@ -668,7 +855,7 @@ export const ApplicantDetail: React.FC = () => {
       <div className={`p-3 transition-all ${sidebarCollapsed ? 'pr-4' : 'lg:pr-[318px]'}`}>
         <div className="space-y-3.5">
           {/* 1. Candidate Header Card */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
               {/* Left Candidate Info */}
               <div className="flex items-start gap-3.5">
@@ -918,7 +1105,7 @@ export const ApplicantDetail: React.FC = () => {
           {activeSubTab === 'Snapshot' && (
             <>
               {/* 2. Notes Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-[#1F2937] dark:text-white">Notes</span>
@@ -1003,7 +1190,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 3. Documents Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Documents</span>
               <div className="flex items-center gap-2.5 text-[#666] dark:text-[#AAA]">
@@ -1053,7 +1240,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 4. Submissions Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions</span>
               <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
@@ -1174,7 +1361,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 5. eInterviews Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">eInterviews</span>
             </div>
@@ -1201,19 +1388,19 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 6. eForms Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <span className="text-xs font-bold text-[#1F2937] dark:text-white">eForms</span>
             <p className="mt-2 text-center text-xs text-[#888]">No data available</p>
           </div>
 
           {/* 7. Submissions eForms Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions eForms</span>
             <p className="mt-2 text-center text-xs text-[#888]">No data available</p>
           </div>
 
           {/* 8. Task Manager Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Task Manager</span>
               <button
@@ -1250,7 +1437,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 9. Call Logs Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Call Logs</span>
               <button
@@ -1288,7 +1475,7 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 10. Meeting Schedules Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Meeting Schedules</span>
               <button
@@ -1330,7 +1517,7 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* PERSONAL DETAILS TAB (Image 1 Replication) */}
           {activeSubTab === 'Personal Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
                 <button
@@ -1745,7 +1932,7 @@ export const ApplicantDetail: React.FC = () => {
           {activeSubTab === 'Profession Details' && (
             <div className="space-y-4">
               {/* 1. Education Details Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Education Details</h3>
                   <button
@@ -1790,7 +1977,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               {/* 2. Add Certification Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Add Certification</h3>
                 </div>
@@ -1873,7 +2060,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               {/* 3. Work Experience Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Work Experience</h3>
                   <button
@@ -1896,7 +2083,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
 
               {/* 4. Add Language Details Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
                 <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Add Language Details</h3>
                 </div>
@@ -1997,15 +2184,30 @@ export const ApplicantDetail: React.FC = () => {
             </div>
           )}
 
-          {/* EMPLOYER DETAILS TAB (Image 3 Replication) */}
+          {/* EMPLOYER DETAILS TAB (Ceipal Replication) */}
           {activeSubTab === 'Employer Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Employer Details</h3>
                 <button
                   type="button"
-                  onClick={() => setDialog('add-employer')}
-                  className="flex items-center gap-1 rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
+                  onClick={() => {
+                    setEmpFirstName('');
+                    setEmpLastName('');
+                    setEmpEmployerName('');
+                    setEmpOfficeNumber('');
+                    setEmpExtension('');
+                    setEmpEmailId('');
+                    setEmpMobileNumber('');
+                    setEmpTypeSelect('Select Status');
+                    setEmpSourceType('new');
+                    setSelectedVendorContact('');
+                    setVendorSearchOpen(false);
+                    setVendorSearchQuery('');
+                    setEmpModalError(null);
+                    setDialog('add-employer');
+                  }}
+                  className="flex items-center gap-1 rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#1D6FD8] cursor-pointer"
                 >
                   <Plus className="h-3 w-3" />
                   <span>Add</span>
@@ -2017,14 +2219,17 @@ export const ApplicantDetail: React.FC = () => {
                     <tr>
                       <th className="px-4 py-2.5">EMPLOYEE NAME</th>
                       <th className="px-4 py-2.5">EMPLOYER</th>
+                      <th className="px-4 py-2.5">OFFICE NUMBER</th>
+                      <th className="px-4 py-2.5">MOBILE NUMBER</th>
                       <th className="px-4 py-2.5">EMAIL</th>
                       <th className="px-4 py-2.5">STATUS</th>
+                      <th className="px-4 py-2.5 text-right">ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
                     {employerList.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-10 text-center text-xs text-[#888]">
+                        <td colSpan={7} className="px-4 py-10 text-center text-xs text-[#888] italic">
                           No data available
                         </td>
                       </tr>
@@ -2033,11 +2238,29 @@ export const ApplicantDetail: React.FC = () => {
                         <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-[#2A2A2A]">
                           <td className="px-4 py-3 font-semibold text-[#1F2937] dark:text-white">{emp.employeeName}</td>
                           <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">{emp.employer}</td>
+                          <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">{emp.officeNumber}</td>
+                          <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">{emp.mobile}</td>
                           <td className="px-4 py-3 text-[#1877F2]">{emp.email}</td>
                           <td className="px-4 py-3">
-                            <span className="inline-flex rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-300">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              emp.status === 'Active'
+                                ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                            }`}>
                               {emp.status}
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEmployerList((prev) => prev.filter((item) => item.id !== emp.id));
+                                showToast('Employer removed');
+                              }}
+                              className="text-xs text-red-500 hover:text-red-700 font-medium cursor-pointer"
+                            >
+                              Delete
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -2050,7 +2273,7 @@ export const ApplicantDetail: React.FC = () => {
 
           {/* EMPLOYMENT TEST RESULTS TAB */}
           {activeSubTab === 'Employment Test Results' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Employment Test Results</h3>
                 <button
@@ -2183,7 +2406,7 @@ export const ApplicantDetail: React.FC = () => {
 
       {/* RIGHT SIDEBAR (Fixed / Sticky Right Panel matching Ceipal reference) */}
       <aside
-        className={`fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#333] dark:bg-[#252525] ${
+        className={`fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#333] dark:bg-[#1E293B] ${
           sidebarCollapsed ? 'w-0 overflow-hidden border-none' : 'w-[305px] overflow-y-auto'
         }`}
       >
@@ -2377,7 +2600,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Edit Applicant Modal */}
       {dialog === 'edit' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Edit Applicant Profile</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2471,7 +2694,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* View Resume Modal */}
       {dialog === 'resume' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <div>
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Resume Document — {applicant.name}</h2>
@@ -2516,7 +2739,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Add Note Modal */}
       {dialog === 'note' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Recruiter Note</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2571,7 +2794,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Add Task Modal */}
       {dialog === 'task' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Create Recruiter Task</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2637,7 +2860,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Add Tag Modal */}
       {dialog === 'tag' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Tag</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2680,7 +2903,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Matching Jobs Modal */}
       {dialog === 'matching-jobs' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <div>
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Matching Requisitions</h2>
@@ -2734,7 +2957,7 @@ export const ApplicantDetail: React.FC = () => {
       {/* Edit Status Modal */}
       {dialog === 'status' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Change Applicant Status</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
@@ -2968,71 +3191,290 @@ export const ApplicantDetail: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Add Employer Details */}
+      {/* Modal: Add Employer (Ceipal 1:1 Replica from user screenshots) */}
       {dialog === 'add-employer' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#252525]">
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Employer Details</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-3 py-4 text-xs">
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Employee Name *</span>
-                <input
-                  placeholder="e.g. Sivakrishnan D"
-                  value={newEmpName}
-                  onChange={(e) => setNewEmpName(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Employer Company *</span>
-                <input
-                  placeholder="e.g. Infosys Pvt LTD"
-                  value={newEmpEmployer}
-                  onChange={(e) => setNewEmpEmployer(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Email Address</span>
-                <input
-                  placeholder="e.g. hr@infosys.com"
-                  value={newEmpEmail}
-                  onChange={(e) => setNewEmpEmail(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Status</span>
-                <select
-                  value={newEmpStatus}
-                  onChange={(e) => setNewEmpStatus(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+
+            {/* Modal Error Alert Banner (clearly visible right inside the modal) */}
+            {empModalError && (
+              <div className="mx-6 mt-3 flex items-center justify-between rounded border border-red-300 bg-red-50 px-3.5 py-2.5 text-xs text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                  <span>{empModalError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEmpModalError(null)}
+                  className="text-red-500 hover:text-red-700 dark:hover:text-red-200 cursor-pointer"
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Pending Verification">Pending Verification</option>
-                </select>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Top Radio Options */}
+            <div className="flex items-center gap-6 px-6 pt-5 pb-3 text-xs">
+              <label className="flex items-center gap-2 cursor-pointer font-medium text-[#374151] dark:text-gray-300">
+                <input
+                  type="radio"
+                  name="empSource"
+                  checked={empSourceType === 'new'}
+                  onChange={() => {
+                    setEmpSourceType('new');
+                    setSelectedVendorContact('');
+                    setVendorSearchOpen(false);
+                    setEmpModalError(null);
+                  }}
+                  className="h-4 w-4 text-[#2F80ED] focus:ring-[#2F80ED]"
+                />
+                <span>New</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer font-medium text-[#374151] dark:text-gray-300">
+                <input
+                  type="radio"
+                  name="empSource"
+                  checked={empSourceType === 'vendor'}
+                  onChange={() => {
+                    setEmpSourceType('vendor');
+                    setEmpModalError(null);
+                  }}
+                  className="h-4 w-4 text-[#2F80ED] focus:ring-[#2F80ED]"
+                />
+                <span>Add from existing Vendor contact records</span>
               </label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
-              <button
-                type="button"
-                onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
-              >
-                Cancel
-              </button>
+
+            {/* Form Fields: 2-column Ceipal layout */}
+            <div className="px-6 py-2 space-y-3">
+              {/* Row 1: (Required Dropdown or First Name) | Last Name */}
+              <div className="grid grid-cols-2 gap-4">
+                {empSourceType === 'vendor' ? (
+                  /* Ceipal Searchable Vendor Trigger & Dropdown */
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setVendorSearchOpen(!vendorSearchOpen)}
+                      className={`w-full flex items-center justify-between rounded border ${
+                        empModalError && !selectedVendorContact
+                          ? 'border-red-400 bg-red-50/20'
+                          : 'border-[#CED4DA] bg-white dark:border-[#444] dark:bg-[#333]'
+                      } px-3 py-2 text-xs text-left outline-none transition-colors hover:border-[#2F80ED] cursor-pointer`}
+                    >
+                      {selectedVendorContact ? (
+                        <span className="truncate text-[#333] dark:text-white font-normal">
+                          {vendorContactList.find((v) => v.id === selectedVendorContact)?.displayName || 'Selected'}
+                        </span>
+                      ) : (
+                        <span className="italic text-[#6B7280]">Required</span>
+                      )}
+                      {vendorSearchOpen ? (
+                        <ChevronUp className="h-4 w-4 text-[#2F80ED] shrink-0" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-500 shrink-0" />
+                      )}
+                    </button>
+
+                    {/* Dropdown with search input & contact list (matches media_1795175851155_5c9bcccc.png) */}
+                    {vendorSearchOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-30"
+                          onClick={() => setVendorSearchOpen(false)}
+                        />
+                        <div className="absolute left-0 right-0 top-full mt-1 z-40 rounded border border-[#CED4DA] bg-white p-2 shadow-2xl dark:border-[#444] dark:bg-[#252525] animate-in fade-in zoom-in-95 duration-100">
+                          {/* Search Input Box */}
+                          <div className="relative mb-2">
+                            <input
+                              type="text"
+                              placeholder=""
+                              value={vendorSearchQuery}
+                              onChange={(e) => setVendorSearchQuery(e.target.value)}
+                              className="w-full rounded border border-[#2F80ED] bg-white px-2.5 py-1.5 pr-8 text-xs text-[#333] outline-none focus:ring-1 focus:ring-[#2F80ED] dark:border-[#2F80ED] dark:bg-[#333] dark:text-white"
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <Search className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                          </div>
+
+                          {/* Filtered Records List */}
+                          <div className="max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-[#333]">
+                            {filteredVendors.length > 0 ? (
+                              filteredVendors.map((v) => (
+                                <div
+                                  key={v.id}
+                                  onClick={() => handleSelectVendor(v)}
+                                  className={`cursor-pointer rounded px-2.5 py-2 text-xs transition-colors ${
+                                    selectedVendorContact === v.id
+                                      ? 'bg-blue-50 text-[#2F80ED] font-medium dark:bg-[#1E3A8A]/30'
+                                      : 'text-[#333] hover:bg-[#F3F4F6] dark:text-gray-200 dark:hover:bg-[#333]'
+                                  }`}
+                                >
+                                  {v.displayName}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-2.5 py-3 text-center text-xs italic text-gray-400">
+                                No matching vendor contacts
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={empFirstName}
+                      onChange={(e) => {
+                        setEmpFirstName(e.target.value);
+                        if (empModalError) setEmpModalError(null);
+                      }}
+                      className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  </div>
+                )}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={empLastName}
+                    onChange={(e) => setEmpLastName(e.target.value)}
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Employer Name | Office Number & Extension */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Employer Name"
+                    value={empEmployerName}
+                    onChange={(e) => {
+                      setEmpEmployerName(e.target.value);
+                      if (empModalError) setEmpModalError(null);
+                    }}
+                    className={`w-full rounded border ${
+                      empModalError && !empEmployerName.trim()
+                        ? 'border-red-400 bg-red-50/20'
+                        : 'border-[#CED4DA] bg-white dark:border-[#444] dark:bg-[#333]'
+                    } px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:text-white`}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Office Number"
+                    value={empOfficeNumber}
+                    onChange={(e) => setEmpOfficeNumber(e.target.value)}
+                    className="flex-1 rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Extension"
+                    value={empExtension}
+                    onChange={(e) => setEmpExtension(e.target.value)}
+                    className="w-24 rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Email ID | Mobile Number */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email ID"
+                    value={empEmailId}
+                    onChange={(e) => setEmpEmailId(e.target.value)}
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Mobile Number"
+                    value={empMobileNumber}
+                    onChange={(e) => setEmpMobileNumber(e.target.value)}
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Row 4: Select Status Dropdown (Active / Inactive) */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <select
+                    value={empTypeSelect}
+                    onChange={(e) => setEmpTypeSelect(e.target.value)}
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer"
+                  >
+                    <option value="Select Status">Select Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+                <div></div>
+              </div>
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-6 py-4 mt-4 dark:border-[#333]">
               <button
                 type="button"
                 onClick={handleAddEmployer}
-                className="rounded bg-[#2F80ED] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
+                className="rounded bg-[#2F80ED] px-6 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] cursor-pointer"
               >
-                Save Employer
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDialog(null);
+                  setVendorSearchOpen(false);
+                  setEmpModalError(null);
+                }}
+                className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Ceipal Vendor Contact Notification Prompt (1:1 Replica from user screenshot) */}
+      {dialog === 'confirm-vendor-create' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-[540px] rounded-xs bg-white px-8 py-10 shadow-2xl dark:bg-[#252525] border border-gray-200 dark:border-[#333] text-center animate-in fade-in zoom-in-95 duration-150">
+            <p className="text-lg sm:text-xl font-light text-[#4A5568] dark:text-[#E2E8F0] leading-relaxed">
+              Do you want to create a vendor contact from the employer details?
+            </p>
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => finalizeEmployerSave(true)}
+                className="min-w-[100px] rounded bg-[#E5484D] px-6 py-2 text-sm font-medium text-white shadow-xs hover:bg-[#D93838] cursor-pointer transition-colors"
+              >
+                Proceed
+              </button>
+              <button
+                type="button"
+                onClick={() => finalizeEmployerSave(false)}
+                className="min-w-[100px] rounded border border-[#CED4DA] bg-white px-6 py-2 text-sm font-medium text-[#4A5568] shadow-2xs hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer transition-colors"
+              >
+                Cancel
               </button>
             </div>
           </div>

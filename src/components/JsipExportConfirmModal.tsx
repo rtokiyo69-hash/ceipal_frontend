@@ -31,11 +31,11 @@ export const JsipExportConfirmModal: React.FC<JsipExportConfirmModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in duration-200">
       <div
-        className="w-full max-w-lg space-y-6 rounded-2xl border border-[#E8C8BE] bg-white p-6 shadow-2xl sm:p-8 dark:border-[#3D3634] dark:bg-[#252525]"
+        className="w-full max-w-lg space-y-6 rounded-2xl border border-[#D8E3F1] bg-white p-6 shadow-2xl sm:p-8 dark:border-[#334155] dark:bg-[#1E293B]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E8C8BE] pb-3 dark:border-[#3D3634]">
+        <div className="flex items-center justify-between border-b border-[#D8E3F1] pb-3 dark:border-[#334155]">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">
               <FileSpreadsheet className="w-5 h-5" />
@@ -58,7 +58,7 @@ export const JsipExportConfirmModal: React.FC<JsipExportConfirmModalProps> = ({
         </div>
 
         {/* Confirmation Scope Summary */}
-        <div className="space-y-3 rounded-xl border border-[#E8C8BE] bg-[#FFF0E8] p-4 text-xs dark:border-[#3D3634] dark:bg-[#48403E]">
+        <div className="space-y-3 rounded-xl border border-[#D8E3F1] bg-[#FFFFFF] p-4 text-xs dark:border-[#334155] dark:bg-[#475569]">
           <div className="flex items-center justify-between">
             <span className="font-medium text-slate-700 dark:text-slate-300">Report Scope:</span>
             <span className="font-semibold text-cyan-700 dark:text-cyan-300">
@@ -71,7 +71,7 @@ export const JsipExportConfirmModal: React.FC<JsipExportConfirmModalProps> = ({
               {rows.length} Active Recruiters
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-2 border-t border-[#E8C8BE] pt-2 text-center dark:border-[#3D3634]">
+          <div className="grid grid-cols-4 gap-2 border-t border-[#D8E3F1] pt-2 text-center dark:border-[#334155]">
             <div>
               <span className="block text-[10px] font-medium uppercase text-slate-600 dark:text-slate-300">Submissions</span>
               <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400 tabular-nums">
@@ -111,7 +111,7 @@ export const JsipExportConfirmModal: React.FC<JsipExportConfirmModalProps> = ({
               className={`p-3 rounded-xl border text-left transition-all ${
                 selectedFormat === 'csv'
                   ? 'border-cyan-600 bg-cyan-50 text-cyan-900 shadow-sm dark:border-cyan-400 dark:bg-cyan-950/60 dark:text-cyan-100'
-                  : 'border-[#E9D8D1] bg-white text-slate-800 dark:border-[#65534F] dark:bg-[#48403E] dark:text-slate-200'
+                  : 'border-[#E2E8F0] bg-white text-slate-800 dark:border-[#475569] dark:bg-[#475569] dark:text-slate-200'
               }`}
             >
               <div className="font-semibold text-xs flex items-center justify-between">
@@ -129,7 +129,7 @@ export const JsipExportConfirmModal: React.FC<JsipExportConfirmModalProps> = ({
               className={`p-3 rounded-xl border text-left transition-all ${
                 selectedFormat === 'excel'
                   ? 'border-cyan-600 bg-cyan-50 text-cyan-900 shadow-sm dark:border-cyan-400 dark:bg-cyan-950/60 dark:text-cyan-100'
-                  : 'border-[#E9D8D1] bg-white text-slate-800 dark:border-[#65534F] dark:bg-[#48403E] dark:text-slate-200'
+                  : 'border-[#E2E8F0] bg-white text-slate-800 dark:border-[#475569] dark:bg-[#475569] dark:text-slate-200'
               }`}
             >
               <div className="font-semibold text-xs flex items-center justify-between">
@@ -150,7 +150,7 @@ export const JsipExportConfirmModal: React.FC<JsipExportConfirmModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-[#E8C8BE] pt-3 dark:border-[#3D3634]">
+        <div className="flex items-center justify-end gap-3 border-t border-[#D8E3F1] pt-3 dark:border-[#334155]">
           <button
             type="button"
             onClick={onClose}
