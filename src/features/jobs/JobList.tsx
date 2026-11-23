@@ -46,7 +46,7 @@ import {
 } from 'lucide-react';
 import { useAppStore, getJobDetailUrl } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Job, JobStatus, Priority, Applicant, Submission, JobNote, Interview } from '../../types';
+import { Job, JobStatus, Priority, Applicant, Submission, JobNote, Interview, SUBMISSION_STATUS_OPTIONS, getSubmissionStageIndex } from '../../types';
 import { EmailRichTextEditor } from '../../components/common/EmailRichTextEditor';
 
 type BulkJobAction =
@@ -107,18 +107,7 @@ const JOB_STATUSES: JobStatus[] = ['Draft', 'Open', 'Active', 'Sourcing', 'In Re
 const JOB_PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
 const JOB_TYPES: Job['type'][] = ['Full-Time', 'Contract', 'C2H', 'C2C', 'Remote', 'Hybrid', 'On-Site', 'Part-Time'];
 const RATE_TYPES: NonNullable<Job['rateType']>[] = ['Hourly', 'Yearly', 'Monthly', 'Daily'];
-const SUBMISSION_STATUSES = [
-  'Submitted to Client',
-  'Client Review',
-  'Interview Requested',
-  'Client Rejected',
-  'Waiting for Evaluation by Internal Reviewer',
-  'Internal Disqualified',
-  'Placed',
-  'Offered',
-  'Not Joined',
-  'Interview Scheduled'
-];
+const SUBMISSION_STATUSES = SUBMISSION_STATUS_OPTIONS;
 const BULK_JOB_ACTIONS: { id: BulkJobAction; label: string }[] = [
   { id: 'notes', label: 'Add Notes' },
   { id: 'folder', label: 'Add to Folder' },
@@ -733,6 +722,22 @@ export const JobList: React.FC = () => {
     ApiService.getAllUsers().then(setUsers);
   }, [currentRoute]);
 
+  useEffect(() => {
+    const syncSubmissions = (event: Event) => {
+      const submissions = (event as CustomEvent<Submission[]>).detail;
+      if (Array.isArray(submissions)) setSubmissions(submissions);
+    };
+    const syncFromOtherTab = (event: StorageEvent) => {
+      if (event.key === 'talentember_submissions') ApiService.getSubmissions().then(setSubmissions);
+    };
+    window.addEventListener('ats:submissions-changed', syncSubmissions);
+    window.addEventListener('storage', syncFromOtherTab);
+    return () => {
+      window.removeEventListener('ats:submissions-changed', syncSubmissions);
+      window.removeEventListener('storage', syncFromOtherTab);
+    };
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -1177,9 +1182,10 @@ export const JobList: React.FC = () => {
       const matchesUnit = businessUnitFilter === 'All' || (j.businessUnit || '').includes(businessUnitFilter);
       const jobSubmissions = submissions.filter((submission) => submission.jobId === j.id);
       const hasSubmissions = jobSubmissions.length > 0;
-      const hasClientSubmissions = jobSubmissions.some((submission) =>
-        ['Submitted to Client', 'Client Review', 'Interview Requested', 'Interview Scheduled', 'Offered', 'Placed'].includes(submission.status)
-      );
+      const hasClientSubmissions = jobSubmissions.some((submission) => {
+        const stage = getSubmissionStageIndex(submission.status);
+        return stage >= 2 && stage <= 5;
+      });
       const matchesPredefinedFilter = !activePredefinedFilter || (() => {
         switch (activePredefinedFilter) {
           case 'Active Jobs': return j.status === 'Active';
@@ -1481,7 +1487,9 @@ export const JobList: React.FC = () => {
               status: 'Scheduled',
               meetingLink: submissionActionForm.meetingLink.trim()
             });
+            await ApiService.updateSubmissionStatus(submission.id, 'Interview Scheduled', `Interview scheduled for ${submissionActionForm.date} at ${submissionActionForm.time}.`);
           }
+          setSubmissions(await ApiService.getSubmissions());
           showToast(`Interview scheduled for ${targets.length} candidate${targets.length === 1 ? '' : 's'}.`);
           break;
         case 'other-job': {

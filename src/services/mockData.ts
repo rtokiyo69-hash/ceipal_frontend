@@ -475,6 +475,80 @@ Salary: As per industry standards and candidate experience.`,
 
 export const INITIAL_APPLICANTS: Applicant[] = [
   {
+    id: 'app-dummy-1',
+    applicantId: '125584',
+    name: 'Test Dummy',
+    email: 'gaurav.mishra@ampcustech.com',
+    phone: '+91 9876543210',
+    currentDesignation: 'Senior QA Engineer',
+    location: 'Pune, India',
+    experienceYears: 6.5,
+    skills: ['Selenium', 'Java', 'TestNG', 'API Testing', 'Automation'],
+    source: 'Direct Career Portal',
+    status: 'Screening',
+    assignedRecruiter: 'Ganesh Kshirsagar',
+    matchScore: 92,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=250',
+    isFavorite: false,
+    documents: [
+      { name: 'Resume_Test_Dummy.pdf', size: '240 KB', date: '20/11/2026', type: 'application/pdf' },
+      { name: 'Cert_ISTQB.pdf', size: '180 KB', date: '20/11/2026', type: 'application/pdf' },
+      { name: 'ID_Proof.pdf', size: '150 KB', date: '20/11/2026', type: 'application/pdf' }
+    ],
+    notes: [
+      {
+        id: 'nt-dummy-1',
+        author: 'Gaurav Ashok Mishra',
+        text: 'Note',
+        action: 'N/A',
+        date: '14/08/2025 07:00:35 pm'
+      }
+    ]
+  },
+  {
+    id: 'app-dummy-2',
+    applicantId: '124903',
+    name: 'Dummy Dummy',
+    email: 'sachin.wadekar@ampcustech.com',
+    phone: '+91 9876501234',
+    currentDesignation: 'Manual Test Engineer',
+    location: 'Mumbai, India',
+    experienceYears: 4.2,
+    skills: ['Manual Testing', 'Jira', 'Regression Testing', 'Bug Tracking'],
+    source: 'LinkedIn',
+    status: 'New',
+    assignedRecruiter: 'Ganesh Godse',
+    matchScore: 78,
+    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=250',
+    isFavorite: false,
+    documents: [
+      { name: 'Resume_Dummy_Dummy.pdf', size: '210 KB', date: '19/11/2026', type: 'application/pdf' },
+      { name: 'Aadhaar_Card.pdf', size: '120 KB', date: '19/11/2026', type: 'application/pdf' }
+    ],
+    notes: []
+  },
+  {
+    id: 'app-durai',
+    applicantId: '165026',
+    name: 'DURAI KANDASAMY',
+    email: 'clive.durai@gmail.com',
+    phone: '+91-9952899914',
+    currentDesignation: 'Sr. IT Manager - Network Security',
+    location: 'Coimbatore, Tamil Nadu, India',
+    experienceYears: 17.8,
+    skills: ['Network Security', 'Cisco PIX', 'Internet Protocol Security (IP SEC)', 'Virtual'],
+    source: 'Naukri',
+    status: 'New',
+    assignedRecruiter: 'Shruti Agale',
+    matchScore: 94,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250',
+    isFavorite: false,
+    documents: [
+      { name: 'Resume - Durai Murugan Kandasamy.docx', size: '320 KB', date: '20/11/2026 12:59:16', type: 'application/docx' }
+    ],
+    notes: []
+  },
+  {
     id: 'app-demo',
     applicantId: '164517',
     name: 'Demo User',

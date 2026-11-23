@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Filter, Plus, Star, Download, Eye, CheckCircle, X, SlidersHorizontal, Upload, Folder, FolderPlus, BookmarkPlus, Ticket, Users, LayoutGrid, ListFilter, ArrowRight, FileSpreadsheet, Settings, GripVertical, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Menu, Home, IdCard, MessageCircle, Send, Bold, Italic, Underline, List, ListOrdered, CircleHelp } from 'lucide-react';
+import { Search, Filter, Plus, Star, Download, Eye, CheckCircle, X, SlidersHorizontal, Upload, Folder, FolderPlus, BookmarkPlus, Ticket, Users, LayoutGrid, ListFilter, ArrowRight, FileSpreadsheet, Settings, GripVertical, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Menu, Home, IdCard, MessageCircle, Send, Bold, Italic, Underline, List, ListOrdered, CircleHelp, Pin, Pencil, Trash2 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, PipelineStage } from '../../types';
@@ -81,6 +81,18 @@ export const ApplicantList: React.FC = () => {
   const [sourceFilter, setSourceFilter] = useState('All');
   const [recruiterFilter, setRecruiterFilter] = useState('All');
   const [quickResumePreview, setQuickResumePreview] = useState<Applicant | null>(null);
+  const [notesDrawerApplicant, setNotesDrawerApplicant] = useState<Applicant | null>(null);
+  const [notesHistoryOpen, setNotesHistoryOpen] = useState(false);
+  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [drawerNoteText, setDrawerNoteText] = useState('');
+  const [drawerNotePriority, setDrawerNotePriority] = useState('Medium');
+  const [drawerNoteJob, setDrawerNoteJob] = useState('');
+  const [drawerNoteClient, setDrawerNoteClient] = useState('');
+  const [drawerNoteAction, setDrawerNoteAction] = useState('N/A');
+  const [drawerNoteSubject, setDrawerNoteSubject] = useState('');
+  const [drawerNoteRemindMe, setDrawerNoteRemindMe] = useState(false);
+  const [drawerNoteAddToTask, setDrawerNoteAddToTask] = useState(false);
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [sidePanel, setSidePanel] = useState<'edit-filters' | 'quick-filters' | 'edit-columns' | null>(null);
   const [filterRules, setFilterRules] = useState<FilterRule[]>(() => JSON.parse(localStorage.getItem('ats_applicant_filter_rules') || '[]'));
@@ -164,10 +176,15 @@ export const ApplicantList: React.FC = () => {
   const [columnDraft, setColumnDraft] = useState<string[]>([]);
   const [columnsExpanded, setColumnsExpanded] = useState(false);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
-  const [bulkAction, setBulkAction] = useState('');
-  const [bulkValue, setBulkValue] = useState('');
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
 
   useEffect(() => { ApiService.getApplicants().then(setApplicants); }, []);
+  useEffect(() => {
+    if (!isAddNoteModalOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsAddNoteModalOpen(false); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [isAddNoteModalOpen]);
   useEffect(() => {
     if (folderFilter !== 'All Profiles') return;
     const config = viewConfigs[activeView];
@@ -182,6 +199,119 @@ export const ApplicantList: React.FC = () => {
     e.stopPropagation(); const isFav = await ApiService.toggleFavorite(id);
     setApplicants((prev) => prev.map((a) => a.id === id ? { ...a, isFavorite: isFav } : a));
     showToast(isFav ? 'Added candidate to Favorites' : 'Removed from Favorites');
+  };
+
+  const handleSaveDrawerNote = async () => {
+    if (!notesDrawerApplicant) return;
+    if (!drawerNoteText.trim() && !drawerNoteSubject.trim()) {
+      showToast('Please enter note contents.');
+      return;
+    }
+
+    const noteContent = drawerNoteText.trim() || drawerNoteSubject.trim();
+    let updatedNotes = [...(notesDrawerApplicant.notes || [])];
+
+    if (editingNoteId) {
+      updatedNotes = updatedNotes.map((n) =>
+        n.id === editingNoteId
+          ? {
+              ...n,
+              text: noteContent,
+              subject: drawerNoteSubject,
+              priority: drawerNotePriority,
+              job: drawerNoteJob || undefined,
+              client: drawerNoteClient || undefined,
+              action: drawerNoteAction,
+              date: new Date().toLocaleString()
+            }
+          : n
+      );
+    } else {
+      const newNote = {
+        id: `nt-${Date.now()}`,
+        author: currentUser?.name || 'Gaurav Ashok Mishra',
+        text: noteContent,
+        subject: drawerNoteSubject,
+        priority: drawerNotePriority,
+        job: drawerNoteJob || undefined,
+        client: drawerNoteClient || undefined,
+        action: drawerNoteAction,
+        date: new Date().toLocaleString()
+      };
+      updatedNotes.unshift(newNote);
+    }
+
+    const updatedApplicant: Applicant = {
+      ...notesDrawerApplicant,
+      notes: updatedNotes
+    };
+
+    setNotesDrawerApplicant(updatedApplicant);
+    setApplicants((prev) =>
+      prev.map((a) => (a.id === updatedApplicant.id || a.applicantId === updatedApplicant.applicantId ? updatedApplicant : a))
+    );
+
+    try {
+      await ApiService.updateApplicant(updatedApplicant.id, { notes: updatedNotes });
+    } catch (e) {
+      console.warn('Persist note error:', e);
+    }
+
+    setIsAddNoteModalOpen(false);
+    setEditingNoteId(null);
+    setDrawerNoteText('');
+    showToast(editingNoteId ? 'Note updated successfully.' : 'Note added successfully.');
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!notesDrawerApplicant) return;
+    const updatedNotes = (notesDrawerApplicant.notes || []).filter((n) => n.id !== noteId);
+    const updatedApplicant: Applicant = {
+      ...notesDrawerApplicant,
+      notes: updatedNotes
+    };
+    setNotesDrawerApplicant(updatedApplicant);
+    setApplicants((prev) =>
+      prev.map((a) => (a.id === updatedApplicant.id || a.applicantId === updatedApplicant.applicantId ? updatedApplicant : a))
+    );
+    try {
+      await ApiService.updateApplicant(updatedApplicant.id, { notes: updatedNotes });
+    } catch (e) {
+      console.warn('Delete note error:', e);
+    }
+    showToast('Note deleted.');
+  };
+
+  const handleTogglePinNote = async (noteId: string) => {
+    if (!notesDrawerApplicant) return;
+    const updatedNotes = (notesDrawerApplicant.notes || []).map((n) =>
+      n.id === noteId ? { ...n, pinned: !(n as any).pinned } : n
+    );
+    const updatedApplicant: Applicant = {
+      ...notesDrawerApplicant,
+      notes: updatedNotes
+    };
+    setNotesDrawerApplicant(updatedApplicant);
+    setApplicants((prev) =>
+      prev.map((a) => (a.id === updatedApplicant.id || a.applicantId === updatedApplicant.applicantId ? updatedApplicant : a))
+    );
+    try {
+      await ApiService.updateApplicant(updatedApplicant.id, { notes: updatedNotes });
+    } catch (e) {
+      console.warn('Pin note error:', e);
+    }
+    showToast('Note updated.');
+  };
+
+  const handleStartEditNote = (note: any) => {
+    setEditingNoteId(note.id);
+    setDrawerNoteText(note.text || '');
+    setDrawerNoteSubject(note.subject || `New Note Created for ${notesDrawerApplicant?.name.toUpperCase()} - ${notesDrawerApplicant?.applicantId}.`);
+    setDrawerNotePriority(note.priority || 'Medium');
+    setDrawerNoteJob(note.job || '');
+    setDrawerNoteClient(note.client || '');
+    setDrawerNoteAction(note.action || 'N/A');
+    setIsAddNoteModalOpen(true);
   };
   const getApplicantSearchValues = (a: Applicant, field: string): (string | undefined | null)[] => {
     switch (field) {
@@ -364,6 +494,49 @@ export const ApplicantList: React.FC = () => {
   const advancedCriteriaCount = [advancedCriteria.keywords, advancedCriteria.jobTitle, advancedCriteria.country, advancedCriteria.state, advancedCriteria.city, advancedCriteria.exclude, advancedCriteria.excludeJobTitle, advancedCriteria.applicantStatus, advancedCriteria.source, advancedCriteria.recruiter, advancedCriteria.workAuthorization, advancedCriteria.minExperience, advancedCriteria.maxExperience, advancedCriteria.applicantId, advancedCriteria.email, advancedCriteria.phone].filter(Boolean).length + advancedCriteria.terms.filter((term) => term.field && term.operator && (['Is Null', 'Is Not Null'].includes(term.operator) || term.value.trim())).length + (advancedCriteria.includeWithoutCountry ? 1 : 0);
   const hasAdvancedCriteria = advancedCriteriaCount > 0;
   const toggleSelected = (id: string) => setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  const applicantActions = [
+    ['Add Notes', 'Add Tag'], ['Add to Folder', 'Add to Bench'], ['Mark as Favorite', 'Remove Favorite Tag'],
+    ['Send Email', 'Submit to Job'], ['Delete', 'Change Ownership'], ['Add to Snip List', 'Add to Group'],
+    ['Add Blacklist', 'Tag to Job'], ['Macro', 'Share Profiles'], ['Share Job via email', 'Share Job via sms'],
+    ['Archive', 'Download Resumes'], ['Send Survey', 'Activate Account'],
+  ];
+  const runApplicantAction = async (action: string) => {
+    const chosen = applicants.filter((applicant) => selected.includes(applicant.id));
+    setActionsMenuOpen(false);
+    if (!chosen.length) return;
+    if (action === 'Add Notes') {
+      setNotesDrawerApplicant(chosen[0]); setNotesHistoryOpen(false); setEditingNoteId(null);
+      setDrawerNoteText(''); setDrawerNoteSubject(''); setDrawerNotePriority('Medium'); setDrawerNoteJob('');
+      setDrawerNoteClient(''); setDrawerNoteAction('N/A'); setDrawerNoteRemindMe(false); setDrawerNoteAddToTask(false);
+      setIsAddNoteModalOpen(true);
+    } else if (action === 'Add to Folder') {
+      const folder = window.prompt('Folder name', folders.find((name) => name !== 'All Profiles') || '');
+      if (!folder?.trim()) return;
+      const memberships = JSON.parse(localStorage.getItem('ats_applicant_folder_memberships') || '{}') as Record<string, string[]>;
+      memberships[folder.trim()] = [...new Set([...(memberships[folder.trim()] || []), ...selected])];
+      localStorage.setItem('ats_applicant_folder_memberships', JSON.stringify(memberships)); showToast(`Added ${chosen.length} applicant(s) to ${folder.trim()}.`);
+    } else if (action === 'Mark as Favorite' || action === 'Remove Favorite Tag') {
+      const desired = action === 'Mark as Favorite';
+      for (const applicant of chosen) if (!!applicant.isFavorite !== desired) await ApiService.toggleFavorite(applicant.id);
+      setApplicants((rows) => rows.map((applicant) => selected.includes(applicant.id) ? { ...applicant, isFavorite: desired } : applicant)); showToast(`${action} completed for selected applicants.`);
+    } else if (action === 'Send Email' || action === 'Share Job via email' || action === 'Share Job via sms') {
+      const addresses = chosen.map((applicant) => action === 'Share Job via sms' ? applicant.phone : applicant.email).filter(Boolean).join(action === 'Share Job via sms' ? ',' : ';');
+      window.location.href = action === 'Share Job via sms' ? `sms:${encodeURIComponent(addresses)}` : `mailto:?bcc=${encodeURIComponent(addresses)}`;
+    } else if (action === 'Download Resumes' || action === 'Share Profiles') {
+      const content = chosen.map((applicant) => `${applicant.name}\n${applicant.currentDesignation}\n${applicant.email}\n${applicant.skills.join(', ')}`).join('\n\n---\n\n');
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' })); link.download = action === 'Share Profiles' ? 'applicant-profiles.txt' : 'applicant-resume-summary.txt'; link.click(); URL.revokeObjectURL(link.href);
+      if (action === 'Share Profiles') showToast('Applicant profiles downloaded for sharing.');
+    } else if (action === 'Delete') {
+      if (window.confirm(`Delete ${chosen.length} selected applicant(s) from this list?`)) { setApplicants((rows) => rows.filter((applicant) => !selected.includes(applicant.id))); setSelected([]); showToast('Selected applicants removed from the list.'); }
+    } else {
+      const field = action === 'Add to Group' ? 'applicantGroup' : action === 'Submit to Job' ? 'assignedJobTitle' : action === 'Change Ownership' ? 'assignedRecruiter' : '';
+      const value = action === 'Archive' ? 'true' : action === 'Activate Account' ? 'active' : window.prompt(`${action}: enter a value`);
+      if (value === null || value === '') return;
+      const fieldName = field || (action === 'Add Tag' || action === 'Tag to Job' ? 'tags' : action === 'Add to Bench' ? 'bench' : action === 'Add to Snip List' ? 'snipList' : action === 'Add Blacklist' ? 'blacklisted' : action === 'Macro' ? 'macro' : action === 'Send Survey' ? 'survey' : 'archived');
+      const updates = await Promise.all(chosen.map((applicant) => ApiService.updateApplicant(applicant.id, { ...(field ? { [field]: value } : {}), customFields: { ...applicant.customFields, [fieldName]: value } })));
+      setApplicants((rows) => rows.map((applicant) => updates.find((updated) => updated.id === applicant.id) || applicant)); showToast(`${action} completed for selected applicants.`);
+    }
+  };
   const openApplicantColumnFilter = (column: string, event: React.MouseEvent<HTMLButtonElement>) => {
     const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column;
     const existing = filterRules.find((rule) => rule.field === field);
@@ -682,14 +855,52 @@ export const ApplicantList: React.FC = () => {
       </div>
     </div>
 
-    {selected.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#B7D6F5] bg-[#FFFFFF] px-3 py-2 text-xs dark:border-[#315A7A] dark:bg-[#475569]"><span className="font-semibold text-[#1E293B]">{selected.length} applicants selected</span><div className="flex flex-wrap gap-2"><select aria-label="Bulk action" value={bulkAction} onChange={(e) => { setBulkAction(e.target.value); setBulkValue(''); }} className="rounded-lg border border-[#D8E3F1] bg-white px-2.5 py-2 text-xs dark:border-[#334155] dark:bg-[#1E293B] dark:text-white"><option value="">Choose action…</option><option>Add to Folder</option><option>Assign to Job</option><option>Change Stage</option><option>Send Email</option><option>Add to Group</option><option>Download Resumes</option><option>Remove from list</option></select>{bulkAction && <><input value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} placeholder={bulkAction === 'Change Stage' ? 'Select stage' : 'Enter value / choose destination'} list="bulk-action-options" className="rounded-lg border border-[#D8E3F1] bg-white px-2.5 py-2 text-xs dark:border-[#334155] dark:bg-[#1E293B] dark:text-white" />{bulkAction === 'Change Stage' && <datalist id="bulk-action-options">{stages.map((s) => <option key={s} value={s} />)}</datalist>}<button onClick={async () => { if (!bulkValue && bulkAction !== 'Download Resumes' && bulkAction !== 'Remove from list') return; if (bulkAction === 'Change Stage') { await Promise.all(selected.map((id) => ApiService.updateApplicantStage(id, bulkValue as PipelineStage))); setApplicants((rows) => rows.map((a) => selected.includes(a.id) ? { ...a, status: bulkValue as PipelineStage } : a)); } if (bulkAction === 'Add to Folder') { const map = JSON.parse(localStorage.getItem('ats_applicant_folder_memberships') || '{}') as Record<string, string[]>; map[bulkValue] = [...new Set([...(map[bulkValue] || []), ...selected])]; localStorage.setItem('ats_applicant_folder_memberships', JSON.stringify(map)); } if (bulkAction === 'Assign to Job') { const next = applicants.map((a) => selected.includes(a.id) ? { ...a, assignedJobTitle: bulkValue } : a); await Promise.all(next.filter((a) => selected.includes(a.id)).map((a) => ApiService.updateApplicant(a.id, { assignedJobTitle: bulkValue }))); setApplicants(next); } if (bulkAction === 'Add to Group') { const next = applicants.map((a) => selected.includes(a.id) ? { ...a, applicantGroup: bulkValue } : a); await Promise.all(next.filter((a) => selected.includes(a.id)).map((a) => ApiService.updateApplicant(a.id, { applicantGroup: bulkValue }))); setApplicants(next); } if (bulkAction === 'Remove from list') { setApplicants((rows) => rows.filter((a) => !selected.includes(a.id))); } if (bulkAction === 'Download Resumes') { const chosen = applicants.filter((a) => selected.includes(a.id)); const content = chosen.map((a) => `${a.name}\n${a.currentDesignation}\n${a.email}\n${a.skills.join(', ')}`).join('\n\n---\n\n'); const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' })); link.download = 'applicant-resume-summary.txt'; link.click(); URL.revokeObjectURL(link.href); } if (bulkAction === 'Send Email') { const mails = applicants.filter((a) => selected.includes(a.id)).map((a) => a.email).filter(Boolean).join(';'); window.location.href = `mailto:?bcc=${encodeURIComponent(mails)}&subject=${encodeURIComponent(bulkValue)}`; } setSelected([]); showToast(`${bulkAction} completed for selected applicants.`); setBulkAction(''); }} className="rounded-lg bg-[#2563EB] px-3 py-2 font-semibold text-white">Apply</button></>}<button onClick={() => { setSelected([]); setBulkAction(''); }} className="rounded-lg px-2 py-1 text-[#697789] hover:bg-white"><X className="h-4 w-4" /></button></div></div>}
-
     <div className="flex flex-col overflow-hidden rounded-xl border border-[#D8E3F1] bg-white shadow-sm dark:border-[#334155] dark:bg-[#1E293B]">
       <div className="ceipal-table-scroll max-h-[calc(100vh-270px)] min-h-[360px] overflow-x-auto overflow-y-auto"><table className="w-full min-w-[1100px] border-collapse text-left text-xs">
         <thead className="sticky top-0 z-20 bg-[#FFFFFF] dark:bg-[#475569]"><tr className="border-b border-[#D8E3F1] bg-[#FFFFFF] text-[10px] uppercase tracking-wide text-[#64748B] dark:border-[#334155] dark:bg-[#475569]">
-          <th className="sticky top-0 z-20 w-10 bg-[#FFFFFF] px-3 py-3 text-center shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]"><input type="checkbox" aria-label="Select visible applicants" checked={visibleApplicants.length > 0 && visibleApplicants.every((a) => selected.includes(a.id))} onChange={(e) => setSelected(e.target.checked ? [...new Set([...selected, ...visibleApplicants.map((a) => a.id)])] : selected.filter((id) => !visibleApplicants.some((a) => a.id === id)))} /></th>
-          <th className="sticky top-0 z-20 w-10 bg-[#FFFFFF] px-2 py-3 text-center shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]"><Star className="mx-auto h-3.5 w-3.5" /></th>
-          <th className="sticky top-0 z-20 w-10 bg-[#FFFFFF] px-2 py-3 shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]" />
+          <th className="sticky top-0 z-20 w-10 bg-[#FFFFFF] px-3 py-3 text-center shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]"><input type="checkbox" aria-label="Select visible applicants" checked={visibleApplicants.length > 0 && visibleApplicants.every((a) => selected.includes(a.id))} onChange={(e) => { setSelected(e.target.checked ? [...new Set([...selected, ...visibleApplicants.map((a) => a.id)])] : selected.filter((id) => !visibleApplicants.some((a) => a.id === id))); if (!e.target.checked) setActionsMenuOpen(false); }} /></th>
+          {selected.length > 0 ? (
+            <th colSpan={2} className="sticky top-0 z-20 bg-[#FFFFFF] px-1 py-2 text-left shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]">
+              <div data-applicant-dropdown="actions" className="relative inline-block">
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={actionsMenuOpen}
+                  title={`${selected.length} applicants selected`}
+                  onClick={() => setActionsMenuOpen((open) => !open)}
+                  className="inline-flex items-center gap-1.5 rounded-sm bg-[#2F80ED] px-2.5 py-1.5 text-xs font-semibold uppercase leading-none text-white shadow-sm hover:bg-[#2475D8]"
+                >
+                  Actions
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+                {actionsMenuOpen && (
+                  <>
+                    <button aria-label="Close actions menu" className="fixed inset-0 z-40 cursor-default" onClick={() => setActionsMenuOpen(false)} />
+                    <div role="menu" className="absolute left-0 top-full z-50 mt-1 grid max-h-[min(70vh,620px)] w-[min(560px,calc(100vw-32px))] grid-flow-col grid-rows-11 overflow-y-auto rounded-md border border-[#D9DDE2] bg-white py-2 text-left normal-case tracking-normal shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+                      {applicantActions.flatMap((row, rowIndex) =>
+                        row.map((action, columnIndex) => (
+                          <button
+                            key={action}
+                            role="menuitem"
+                            onClick={() => void runApplicantAction(action)}
+                            style={{ gridColumnStart: columnIndex + 1, gridRowStart: rowIndex + 1 }}
+                            className="min-h-11 px-5 py-2.5 text-left text-sm font-normal text-[#777777] transition-colors hover:bg-[#F2F6FA] hover:text-[#333333] dark:text-[#E2E8F0] dark:hover:bg-[#334155]"
+                          >
+                            {action}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </th>
+          ) : (
+            <>
+              <th className="sticky top-0 z-20 w-10 bg-[#FFFFFF] px-2 py-3 text-center shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]"><Star className="mx-auto h-3.5 w-3.5" /></th>
+              <th className="sticky top-0 z-20 w-10 bg-[#FFFFFF] px-2 py-3 shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#475569] dark:shadow-[inset_0_-1px_0_#334155]" />
+            </>
+          )}
           {visibleColumns.map((column) => {
             const field = column === 'Key Skills' ? 'Skills' : column === 'Experience' ? 'Years of Experience' : column;
             const active = filterRules.some((rule) => rule.field === field && (rule.value.trim() || ['Is Null', 'Is Not Null'].includes(rule.operator)));
@@ -831,7 +1042,34 @@ export const ApplicantList: React.FC = () => {
           {filteredApplicants.length === 0 ? <tr><td colSpan={4 + visibleColumns.length} className="p-10 text-center text-xs text-[#64748B]">No applicants match these filters. Try a different search or clear filters.</td></tr> : visibleApplicants.map((a) => <tr key={a.id} className="transition-colors odd:bg-white even:bg-[#F5F7F8] hover:bg-[#EDF5FA] dark:odd:bg-[#2563EB] dark:even:bg-[#1D2D3B] dark:hover:bg-[#475569]">
             <td className="px-3 py-3 text-center"><input type="checkbox" aria-label={`Select ${a.name}`} checked={selected.includes(a.id)} onChange={() => toggleSelected(a.id)} /></td>
             <td className="px-2 py-3 text-center"><button aria-label={`${a.isFavorite ? 'Remove' : 'Add'} ${a.name} ${a.isFavorite ? 'from' : 'to'} favorites`} onClick={(e) => handleToggleFavorite(a.id, e)} className={a.isFavorite ? 'text-[#1E293B]' : 'text-[#94A0AE] hover:text-[#1E293B]'}><Star className={`h-4 w-4 ${a.isFavorite ? 'fill-current' : ''}`} /></button></td>
-            <td className="px-2 py-3 text-center"><button aria-label={`Show extra details for ${a.name}`} onClick={() => setQuickResumePreview(a)} className="rounded bg-[#2563EB] px-1 py-0.5 text-[9px] font-bold text-white">+{Math.max(1, a.documents?.length || 1)}</button></td>
+            <td className="px-2 py-3 text-center">
+              <div className="flex items-center justify-center gap-1.5">
+                <button
+                  aria-label={`Show extra details for ${a.name}`}
+                  onClick={() => setQuickResumePreview(a)}
+                  className="rounded bg-[#2563EB] px-1.5 py-0.5 text-[9px] font-bold text-white hover:bg-blue-600 shadow-xs"
+                >
+                  +{Math.max(1, a.documents?.length || 1)}
+                </button>
+                {Boolean((a.notes && a.notes.length > 0) || a.applicantRemarks || a.customFields?.notes) && (
+                  <button
+                    type="button"
+                    title={`Notes (${(a.notes?.length || 0) + (a.applicantRemarks ? 1 : 0)}): ${(a.notes?.[0]?.text || a.applicantRemarks || '').slice(0, 100)}`}
+                    onClick={() => { setNotesDrawerApplicant(a); setNotesHistoryOpen(true); }}
+                    className="inline-flex items-center text-[#E69A19] hover:text-[#C57C0A] transition-colors"
+                    aria-label="View applicant notes"
+                  >
+                    <svg className="h-4 w-4 drop-shadow-xs" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.5L10.5 2H3Z" fill="#F59E0B" stroke="#D97706" strokeWidth="0.8" />
+                      <path d="M10 2V5.5H13.5" fill="#FDE68A" stroke="#D97706" strokeWidth="0.8" />
+                      <line x1="4.5" y1="7.5" x2="11.5" y2="7.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+                      <line x1="4.5" y1="9.5" x2="11.5" y2="9.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+                      <line x1="4.5" y1="11.5" x2="8.5" y2="11.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </td>
             {visibleColumns.map((column) => <td key={column} className="whitespace-nowrap px-3 py-3 text-[#334155] dark:text-[#FFFFFF]">{renderApplicantColumn(column, a)}</td>)}
             <td className="px-3 py-3"><div className="flex items-center justify-end gap-1"><button onClick={() => setQuickResumePreview(a)} title="Quick resume preview" className="rounded-md p-1.5 text-[#64748B] hover:bg-[#FFFFFF] hover:text-[#1E293B]"><Eye className="h-4 w-4" /></button><button onClick={() => navigate('applicant-detail', a.id)} className="rounded-md px-2 py-1.5 font-semibold text-[#1E293B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]">Open dossier</button></div></td>
           </tr>)}
@@ -882,6 +1120,316 @@ export const ApplicantList: React.FC = () => {
     </aside></div>}
 
     {quickResumePreview && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setQuickResumePreview(null)}><div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#D8E3F1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}><div className="flex items-start justify-between border-b border-[#F1F5F9] pb-4 dark:border-[#334155]"><div className="flex items-center gap-3"><img src={quickResumePreview.avatar} alt="" className="h-11 w-11 rounded-full object-cover" /><div><h2 className="font-bold text-[#1E293B] dark:text-white">{quickResumePreview.name}</h2><p className="mt-1 text-xs text-[#6D7988]">{quickResumePreview.currentDesignation} · {quickResumePreview.location}</p></div></div><button onClick={() => setQuickResumePreview(null)} aria-label="Close preview"><X className="h-5 w-5 text-[#64748B]" /></button></div><div className="space-y-4 py-4 text-xs"><div><div className="mb-1 font-semibold">Executive Summary</div><p className="leading-relaxed text-[#64748B]">{quickResumePreview.summary || 'No profile summary has been added.'}</p></div><div><div className="mb-2 font-semibold">Skills</div><div className="flex flex-wrap gap-1.5">{quickResumePreview.skills.map((skill) => <span key={skill} className="rounded-md border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#1E293B]">{skill}</span>)}</div></div><div className={`flex justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]`}><button onClick={() => setQuickResumePreview(null)} className={buttonClass}>Close</button><button onClick={() => { navigate('applicant-detail', quickResumePreview.id); setQuickResumePreview(null); }} className="rounded-lg bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white">Open full dossier</button></div></div></div></div>}
+
+
+    {/* Slide-out Applicant Notes Drawer (Reference Image) */}
+    {notesDrawerApplicant && notesHistoryOpen && (
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-[64] bg-black/25 backdrop-blur-[0.5px] transition-opacity"
+          onClick={() => { setNotesHistoryOpen(false); setNotesDrawerApplicant(null); }}
+        />
+        {/* Drawer */}
+        <aside
+          aria-label="Applicant Notes"
+          className="fixed bottom-0 right-0 top-0 z-[65] flex w-full max-w-[640px] flex-col bg-white shadow-2xl dark:bg-[#1E1E1E] dark:text-white"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Drawer Header: ID - Name, + Add Note button, close X */}
+          <div className="flex items-center justify-between border-b border-[#E5E7EB] px-6 py-4 dark:border-[#333]">
+            <h2 className="text-base font-bold text-[#1F2937] dark:text-white">
+              {notesDrawerApplicant.applicantId || notesDrawerApplicant.id} - {notesDrawerApplicant.name}
+            </h2>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingNoteId(null);
+                  setDrawerNoteText('');
+                  setDrawerNoteSubject(`New Note Created for ${notesDrawerApplicant.name.toUpperCase()} - ${notesDrawerApplicant.applicantId || notesDrawerApplicant.id}.`);
+                  setDrawerNotePriority('Medium');
+                  setDrawerNoteJob('');
+                  setDrawerNoteClient('');
+                  setDrawerNoteAction('N/A');
+                  setDrawerNoteRemindMe(false);
+                  setDrawerNoteAddToTask(false);
+                  setIsAddNoteModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Note
+              </button>
+              <button
+                type="button"
+                onClick={() => { setNotesHistoryOpen(false); setNotesDrawerApplicant(null); }}
+                aria-label="Close notes panel"
+                className="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Sub-tabs: Applicant with count pill and blue bottom indicator line */}
+          <div className="border-b border-[#E5E7EB] px-6 dark:border-[#333]">
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 border-b-2 border-[#2F80ED] pb-2.5 pt-3 text-xs font-semibold text-[#2F80ED]">
+                <span>Applicant</span>
+                <span className="rounded-full bg-[#EBF3FE] px-2 py-0.5 text-[11px] font-bold text-[#2F80ED]">
+                  {notesDrawerApplicant.notes?.length || (notesDrawerApplicant.applicantRemarks ? 1 : 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Drawer Body: Notes List */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {(!notesDrawerApplicant.notes || notesDrawerApplicant.notes.length === 0) && !notesDrawerApplicant.applicantRemarks ? (
+              <div className="py-16 text-center text-xs text-gray-400">
+                No notes available for this applicant. Click "+ Add Note" to create one.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(notesDrawerApplicant.notes || []).map((note) => (
+                  <div key={note.id} className="border-b border-[#E5E7EB] pb-4 last:border-b-0 dark:border-[#333]">
+                    {/* Top Row: Purple Document Icon, Author - Date, Actions */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#6366F1] text-white shadow-xs">
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                          </svg>
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-semibold text-[#1F2937] dark:text-white">
+                            {note.author || 'User'}
+                          </span>
+                          <span className="ml-1 text-[#6B7280] dark:text-[#9CA3AF]">
+                            - {note.date || ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Pin, Edit, Delete Actions */}
+                      <div className="flex items-center gap-2 text-[#2F80ED]">
+                        <button
+                          type="button"
+                          title={note.pinned ? 'Unpin Note' : 'Pin Note'}
+                          onClick={() => handleTogglePinNote(note.id)}
+                          className={`hover:opacity-80 transition-opacity ${note.pinned ? 'text-[#F59E0B]' : 'text-[#2F80ED]'}`}
+                        >
+                          <Pin className={`h-3.5 w-3.5 ${note.pinned ? 'rotate-45 fill-current' : ''}`} />
+                        </button>
+                        <button
+                          type="button"
+                          title="Edit Note"
+                          onClick={() => handleStartEditNote(note)}
+                          className="hover:opacity-80 transition-opacity"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Delete Note"
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Note Text */}
+                    <div className="pl-[34px] pt-1.5">
+                      <p className="text-xs text-[#374151] whitespace-pre-wrap dark:text-[#D1D5DB]">
+                        {note.text}
+                      </p>
+                      <p className="mt-2 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
+                        Action: {note.action || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {(!notesDrawerApplicant.notes || notesDrawerApplicant.notes.length === 0) && notesDrawerApplicant.applicantRemarks && (
+                  <div className="border-b border-[#E5E7EB] pb-4 dark:border-[#333]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#6366F1] text-white shadow-xs">
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                          </svg>
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-semibold text-[#1F2937] dark:text-white">
+                            {notesDrawerApplicant.assignedRecruiter || 'User'}
+                          </span>
+                          <span className="ml-1 text-[#6B7280] dark:text-[#9CA3AF]">
+                            - {notesDrawerApplicant.createdOn || ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pl-[34px] pt-1.5">
+                      <p className="text-xs text-[#374151] whitespace-pre-wrap dark:text-[#D1D5DB]">
+                        {notesDrawerApplicant.applicantRemarks}
+                      </p>
+                      <p className="mt-2 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
+                        Action: N/A
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </aside>
+      </>
+    )}
+
+    {/* Add / Edit Note side panel */}
+    {isAddNoteModalOpen && notesDrawerApplicant && (
+      <div
+        className="fixed inset-0 z-[70] flex justify-end bg-black/50"
+        onClick={() => setIsAddNoteModalOpen(false)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="applicant-note-panel-title"
+          className="flex h-full w-full flex-col border-l border-[#CBD5E1] bg-white shadow-2xl sm:w-[min(46vw,900px)] dark:border-[#444] dark:bg-[#252525]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex shrink-0 items-center justify-between border-b border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+            <h2 id="applicant-note-panel-title" className="text-lg font-bold text-[#1F2937] dark:text-white">
+              {editingNoteId ? 'Edit Note' : 'Add Notes'}
+            </h2>
+            <button
+              type="button"
+              aria-label="Close note panel"
+              onClick={() => { setIsAddNoteModalOpen(false); setEditingNoteId(null); }}
+              className="rounded p-1 text-[#888] hover:bg-[#F1F3F5] hover:text-[#222] dark:hover:bg-[#333] dark:hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="shrink-0 border-b border-[#E2E8F0] px-6 py-3 dark:border-[#333]">
+            <p className="text-sm font-semibold text-[#334155] dark:text-white">{notesDrawerApplicant.name}</p>
+            <p className="mt-1 text-xs text-[#64748B] dark:text-[#AAB2BF]">{notesDrawerApplicant.applicantId || notesDrawerApplicant.id} <span className="px-1">·</span> {notesDrawerApplicant.email}{notesDrawerApplicant.phone ? ` · ${notesDrawerApplicant.phone}` : ''}</p>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 text-xs">
+            <div className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2">
+              <select aria-label="Select Action" value={drawerNoteAction} onChange={(e) => setDrawerNoteAction(e.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-3 py-2.5 text-xs text-[#333] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white">
+                <option value="N/A">Select Action</option>
+                <option value="Added through Submission">Added through Submission</option>
+                <option value="Added Through Tagging">Added Through Tagging</option>
+                <option value="Call">Call</option>
+                <option value="Imported from ResumeInbox">Imported from ResumeInbox</option>
+                <option value="Inbound SMS">Inbound SMS</option>
+                <option value="Incoming Email">Incoming Email</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Outbound Email">Outbound Email</option>
+                <option value="Outbound SMS">Outbound SMS</option>
+                <option value="Prescreen">Prescreen</option>
+                <option value="Submitted">Submitted</option>
+              </select>
+              <select aria-label="Note priority" value={drawerNotePriority} onChange={(e) => setDrawerNotePriority(e.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-3 py-2.5 text-xs text-[#333] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white">
+                <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option>
+              </select>
+            </div>
+
+            {/* Rich text note editor */}
+            <div className="flex min-h-[380px] flex-1 flex-col rounded border border-[#CBD5E1] dark:border-[#444]">
+              {/* Top Toolbar Row */}
+              <div className="flex flex-wrap items-center gap-1 border-b border-[#CBD5E1] bg-[#F8FAFC] p-1.5 text-xs text-[#555] dark:border-[#444] dark:bg-[#202020] dark:text-[#AAA]">
+                <button type="button" title="Cut" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">✂</button>
+                <button type="button" title="Copy" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">📋</button>
+                <button type="button" title="Paste" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">📄</button>
+                <button type="button" title="Undo" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">↩</button>
+                <button type="button" title="Redo" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">↪</button>
+                <span className="text-gray-300">|</span>
+                <button type="button" title="Bold" className="rounded px-1.5 py-0.5 font-bold hover:bg-gray-200 dark:hover:bg-[#333]">B</button>
+                <button type="button" title="Italic" className="rounded px-1.5 py-0.5 italic hover:bg-gray-200 dark:hover:bg-[#333]">I</button>
+                <button type="button" title="Underline" className="rounded px-1.5 py-0.5 underline hover:bg-gray-200 dark:hover:bg-[#333]">U</button>
+                <button type="button" title="Strikethrough" className="rounded px-1.5 py-0.5 line-through hover:bg-gray-200 dark:hover:bg-[#333]">S</button>
+                <button type="button" title="Subscript" className="rounded px-1 text-[10px] hover:bg-gray-200 dark:hover:bg-[#333]">x₂</button>
+                <button type="button" title="Superscript" className="rounded px-1 text-[10px] hover:bg-gray-200 dark:hover:bg-[#333]">x²</button>
+                <span className="text-gray-300">|</span>
+                <button type="button" title="Bulleted list" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">≡</button>
+                <button type="button" title="Numbered list" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">1.</button>
+                <span className="text-gray-300">|</span>
+                <button type="button" title="Special character" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">Ω</button>
+                <button type="button" title="Link" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">🔗</button>
+                <button type="button" title="Source code" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">&lt;/&gt;</button>
+              </div>
+              {/* Second Toolbar Row */}
+              <div className="flex flex-wrap items-center gap-1.5 border-b border-[#CBD5E1] bg-[#F8FAFC] px-1.5 py-1 text-[11px] text-[#555] dark:border-[#444] dark:bg-[#202020] dark:text-[#AAA]">
+                <button type="button" title="Table" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">▦</button>
+                <button type="button" title="Align Left" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">⇠</button>
+                <button type="button" title="Align Center" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">↔</button>
+                <button type="button" title="Align Right" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">⇢</button>
+                <span className="text-gray-300">|</span>
+                <span className="font-bold underline text-blue-600">A</span>
+                <span className="bg-yellow-200 px-1 font-semibold text-black">A</span>
+                <span className="text-gray-300">|</span>
+                <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                  <option>Styles</option>
+                </select>
+                <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                  <option>Format</option>
+                </select>
+                <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                  <option>Font</option>
+                </select>
+                <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                  <option>Size</option>
+                </select>
+              </div>
+              <textarea
+                rows={12}
+                value={drawerNoteText}
+                onChange={(e) => setDrawerNoteText(e.target.value)}
+                placeholder="Enter note contents..."
+                className="min-h-[320px] flex-1 w-full p-3 text-xs outline-none dark:bg-[#252525] dark:text-white"
+              />
+            </div>
+
+            {/* Row 7: Add To Task Checkbox */}
+            <label className="flex items-center gap-2 cursor-pointer pt-0.5">
+              <input
+                type="checkbox"
+                checked={drawerNoteAddToTask}
+                onChange={(e) => setDrawerNoteAddToTask(e.target.checked)}
+                className="rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+              />
+              <span className="text-xs text-[#444] dark:text-[#CCC]">Add To Task</span>
+            </label>
+          </div>
+
+          <div className="flex shrink-0 justify-end gap-2.5 border-t border-[#E2E8F0] bg-white px-6 py-4 dark:border-[#333] dark:bg-[#252525]">
+            <button
+              type="button"
+              onClick={handleSaveDrawerNote}
+              className="rounded bg-[#2F80ED] px-6 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsAddNoteModalOpen(false); setEditingNoteId(null); }}
+              className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {dialog === 'import' && <div className="fixed inset-x-0 bottom-0 top-[56px] z-[60] overflow-y-auto bg-[#EEF1F4] text-[#334155]">
       <div className="flex items-center justify-between px-4 py-4"><h1 className="text-lg font-medium text-[#475569]">Import Applicant from spreadsheet</h1><div className="flex gap-1"><button onClick={() => setDialog(null)} title="Back to applicants" aria-label="Back to applicants" className="rounded border border-[#E2E8F0] bg-white p-2 text-[#536577] hover:bg-[#F7F9FB]"><ArrowRight className="h-4 w-4 rotate-180" /></button><button onClick={() => { const template = 'Name,Email,Phone,Designation,Location,Experience,Skills\n'; const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([template], { type: 'text/csv;charset=utf-8' })); link.download = 'Applicant_Import_Template.csv'; link.click(); URL.revokeObjectURL(link.href); }} title="Download import template" aria-label="Download import template" className="rounded border border-[#E2E8F0] bg-white p-2 text-[#536577] hover:bg-[#F7F9FB]"><Download className="h-4 w-4" /></button></div></div>

@@ -15,6 +15,7 @@ import { DashboardRouter } from './features/dashboard/DashboardRouter';
 import { JobList } from './features/jobs/JobList';
 import { JobCreate } from './features/jobs/JobCreate';
 import { JobDetail } from './features/jobs/JobDetail';
+import { AIMatchingJobs } from './features/jobs/AIMatchingJobs';
 import { ApplicantList } from './features/applicants/ApplicantList';
 import { ApplicantCreate } from './features/applicants/ApplicantCreate';
 import { ApplicantDetail } from './features/applicants/ApplicantDetail';
@@ -68,6 +69,8 @@ export default function App() {
         return <JobCreate key="job-templates" initialMode="template" />;
       case 'job-detail':
         return <JobDetail />;
+      case 'matching-jobs':
+        return <AIMatchingJobs />;
       case 'applicants':
         return <ApplicantList />;
       case 'applicant-new':
@@ -111,8 +114,8 @@ export default function App() {
         <TopBar />
 
         {/* Viewport Content */}
-        <main className={`flex-1 overflow-y-auto ${isRecruiterFullBleed || currentRoute === 'applicant-detail' ? 'p-0' : isAdminApplicants ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : isRecruiter ? 'p-4 sm:p-5 md:p-6' : 'p-6 md:p-8'}`}>
-          <div className={isRecruiter || currentRoute === 'applicant-detail' || isAdminApplicants ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
+        <main className={`flex-1 overflow-y-auto ${isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs' ? 'p-0' : isAdminApplicants ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : isRecruiter ? 'p-4 sm:p-5 md:p-6' : 'p-6 md:p-8'}`}>
+          <div className={isRecruiter || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs' || isAdminApplicants ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
         </main>
       </div>
 
