@@ -44,12 +44,25 @@ import {
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, Job, PipelineStage, Submission, getSubmissionStageIndex } from '../../types';
+import { EmailRichTextEditor } from '../../components/common/EmailRichTextEditor';
 
 export const ApplicantDetail: React.FC = () => {
   const { selectedId, navigate, currentUser } = useAppStore();
   const [applicant, setApplicant] = useState<Applicant | null>(null);
   const [allApplicants, setAllApplicants] = useState<Applicant[]>([]);
   const [activeSubTab, setActiveSubTab] = useState('Snapshot');
+  const [dynamicTab, setDynamicTab] = useState('Activities');
+  const baseSubTabs = [
+    'Snapshot',
+    'Personal Details',
+    'Profession Details',
+    'Employer Details',
+    'Employment Test Results'
+  ];
+  const dynamicSubTabsPool = ['Email Merges', 'Activities', 'Email Activity', 'Hires', 'Surveys'];
+  const currentDynamicTab = dynamicSubTabsPool.includes(activeSubTab) ? activeSubTab : dynamicTab;
+  const [isTimelineDrawerOpen, setIsTimelineDrawerOpen] = useState(false);
+  const [timelineDrawerTab, setTimelineDrawerTab] = useState<'all' | 'tasks' | 'notes' | 'email'>('all');
   const [activityFilter, setActivityFilter] = useState<'all' | 'messages' | 'documents' | 'downloads'>('all');
   const [activityPeriod, setActivityPeriod] = useState<'last-6-months' | 'older'>('last-6-months');
   const [skillsExpandedPersonal, setSkillsExpandedPersonal] = useState(false);
@@ -64,6 +77,8 @@ export const ApplicantDetail: React.FC = () => {
   const [candidateSearchOpen, setCandidateSearchOpen] = useState(false);
   const [candidateSearchQuery, setCandidateSearchQuery] = useState('');
   const submitMenuRef = useRef<HTMLDivElement>(null);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -75,6 +90,9 @@ export const ApplicantDetail: React.FC = () => {
       }
       if (candidateSearchRef.current && !candidateSearchRef.current.contains(event.target as Node)) {
         setCandidateSearchOpen(false);
+      }
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(event.target as Node)) {
+        setAvatarMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -223,6 +241,12 @@ export const ApplicantDetail: React.FC = () => {
     }
   ]);
   const [activeNotesFilter, setActiveNotesFilter] = useState<'applicants' | 'submissions' | 'pipeline'>('applicants');
+  const [notesFilterOpen, setNotesFilterOpen] = useState(false);
+  const [notesSearch, setNotesSearch] = useState('');
+  const [notesAuthorFilter, setNotesAuthorFilter] = useState('');
+  const [notesPriorityFilter, setNotesPriorityFilter] = useState('');
+  const [notesDateFrom, setNotesDateFrom] = useState('');
+  const [notesDateTo, setNotesDateTo] = useState('');
   const [activeSubmissionsFilter, setActiveSubmissionsFilter] = useState<'pipeline' | 'all' | 'client' | 'interview' | 'confirmation' | 'placement' | 'not-joined'>('all');
   const [submissionRecords, setSubmissionRecords] = useState<Submission[]>([]);
   const [quickViewJob, setQuickViewJob] = useState<Job | null>(null);
@@ -235,16 +259,26 @@ export const ApplicantDetail: React.FC = () => {
   const actionMenuButtonRef = useRef<HTMLButtonElement>(null);
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const [submitMenuOpen, setSubmitMenuOpen] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [avatarEditOpen, setAvatarEditOpen] = useState(false);
+  const [avatarZoomOpen, setAvatarZoomOpen] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState('');
 
   // Dialog states
   const [dialog, setDialog] = useState<
     | 'edit'
     | 'resume'
     | 'matching-jobs'
+    | 'submit-to-job'
+    | 'applicant-submission'
+    | 'tag-to-job'
+    | 'quick-tag-to-job'
+    | 'quick-submit'
     | 'task'
     | 'note'
     | 'call-log'
     | 'meeting'
+    | 'email'
     | 'rating'
     | 'status'
     | 'tag'
@@ -265,10 +299,75 @@ export const ApplicantDetail: React.FC = () => {
   const [editExperience, setEditExperience] = useState(0);
   const [editSkills, setEditSkills] = useState('');
   const [newNoteText, setNewNoteText] = useState('');
+  const [noteEditorResetKey, setNoteEditorResetKey] = useState(0);
   const [newNotePriority, setNewNotePriority] = useState('Medium');
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
   const [newTaskType, setNewTaskType] = useState('Follow-up');
+  const [newTaskCategory, setNewTaskCategory] = useState('');
+  const [newTaskStatus, setNewTaskStatus] = useState('Not Started');
+  const [newTaskAssignee, setNewTaskAssignee] = useState('Me');
+  const [newTaskReminder, setNewTaskReminder] = useState('None');
+  const [applicantTasks, setApplicantTasks] = useState<{ title: string; description: string; due: string; status: string; assignee: string }[]>([]);
+  const [newCallType, setNewCallType] = useState('Call');
+  const [newCallDate, setNewCallDate] = useState('');
+  const [newCallComments, setNewCallComments] = useState('');
+  const [newCallFollowUp, setNewCallFollowUp] = useState('');
+  const [newMeetingTitle, setNewMeetingTitle] = useState('');
+  const [newMeetingDescription, setNewMeetingDescription] = useState('');
+  const [newMeetingMode, setNewMeetingMode] = useState('');
+  const [newMeetingDate, setNewMeetingDate] = useState('');
+  const [newMeetingTime, setNewMeetingTime] = useState('');
+  const [newMeetingDuration, setNewMeetingDuration] = useState('30 mins');
+  const [newMeetingGuests, setNewMeetingGuests] = useState('');
+  const [emailFrom, setEmailFrom] = useState('System (noreply@ats.local)');
+  const [emailTo, setEmailTo] = useState('');
+  const [emailCc, setEmailCc] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
+  const [emailTheme, setEmailTheme] = useState('');
+  const [emailSalutation, setEmailSalutation] = useState('Hi [FirstName]');
+  const [emailTemplate, setEmailTemplate] = useState('');
+  const [emailEditorResetKey, setEmailEditorResetKey] = useState(0);
+  const [emailActivityTypeFilter, setEmailActivityTypeFilter] = useState('All Types');
+  const [emailActivityPeriod, setEmailActivityPeriod] = useState('Last 6 Months');
+  const [emailActivitySearch, setEmailActivitySearch] = useState('');
+  const [emailActivityPageSize, setEmailActivityPageSize] = useState(10);
+  const [emailActivityPage, setEmailActivityPage] = useState(0);
+  const [emailActivityExpandedId, setEmailActivityExpandedId] = useState<string | null>(null);
+  const [submissionJobs, setSubmissionJobs] = useState<Job[]>([]);
+  const [submissionJobSearch, setSubmissionJobSearch] = useState('');
+  const [submissionBusinessUnit, setSubmissionBusinessUnit] = useState('Ampcus Tech Pvt Ltd.');
+  const [submissionAssignedJobsOnly, setSubmissionAssignedJobsOnly] = useState(false);
+  const [selectedSubmissionJobIds, setSelectedSubmissionJobIds] = useState<string[]>([]);
+  const [submissionNoticePeriod, setSubmissionNoticePeriod] = useState('');
+  const [submissionRelocation, setSubmissionRelocation] = useState<'Yes' | 'No'>('Yes');
+  const [submissionVideoLink, setSubmissionVideoLink] = useState('');
+  const [submissionCurrency, setSubmissionCurrency] = useState('INR');
+  const [submissionBillRate, setSubmissionBillRate] = useState('');
+  const [submissionRateType, setSubmissionRateType] = useState('Yearly');
+  const [submissionResumeName, setSubmissionResumeName] = useState('');
+  const [submissionResumeFile, setSubmissionResumeFile] = useState<File | null>(null);
+  const [submissionAdditionalAttachments, setSubmissionAdditionalAttachments] = useState<File[]>([]);
+  const [submissionEForm, setSubmissionEForm] = useState('');
+  const [submissionRecipients, setSubmissionRecipients] = useState('');
+  const [submissionNotifiers, setSubmissionNotifiers] = useState('');
+  const [submissionOtherEmails, setSubmissionOtherEmails] = useState('');
+  const [submissionComments, setSubmissionComments] = useState('');
+  const [submissionSkillsExpanded, setSubmissionSkillsExpanded] = useState(false);
+  const [submissionReferenceExpanded, setSubmissionReferenceExpanded] = useState(false);
+  const [submissionEmployerExpanded, setSubmissionEmployerExpanded] = useState(false);
+  const [submissionDocumentsExpanded, setSubmissionDocumentsExpanded] = useState(false);
+  const [submissionEmailPreviewOpen, setSubmissionEmailPreviewOpen] = useState(false);
+  const [submissionSkillDraft, setSubmissionSkillDraft] = useState('');
+  const [submissionSkills, setSubmissionSkills] = useState<{ skill: string; years: string }[]>([]);
+  const [submissionReference, setSubmissionReference] = useState({ name: '', company: '', contact: '', email: '', type: '', years: '', summary: '' });
+  const [submissionEmployer, setSubmissionEmployer] = useState({ mode: 'Active Employer', name: applicant?.currentCompany || '', firstName: '', lastName: '', office: '', mobile: '', email: '' });
+  const [jobActionSearch, setJobActionSearch] = useState('');
+  const [jobActionDropdownOpen, setJobActionDropdownOpen] = useState(false);
+  const [jobActionSelectedJobId, setJobActionSelectedJobId] = useState('');
   const [newTagInput, setNewTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(['Immediate Joiner', 'Verified']);
   const [editStatusValue, setEditStatusValue] = useState('');
@@ -293,7 +392,7 @@ export const ApplicantDetail: React.FC = () => {
 
   // Call logs and meetings
   const [callLogs, setCallLogs] = useState<{ type: string; comments: string; followUp: string; date: string; by: string }[]>([]);
-  const [meetings, setMeetings] = useState<{ title: string; description: string; attendees: string; time: string; by: string }[]>([]);
+  const [meetings, setMeetings] = useState<{ title: string; description: string; attendees: string; guests: string; time: string; by: string }[]>([]);
 
   useEffect(() => {
     setSelectedDocumentIds([]);
@@ -317,6 +416,10 @@ export const ApplicantDetail: React.FC = () => {
   }, [selectedId]);
 
   useEffect(() => {
+    ApiService.getJobs().then((jobs) => {
+      setSubmissionJobs(jobs);
+      if (!jobs.some((job) => job.businessUnit === 'Ampcus Tech Pvt Ltd.')) setSubmissionBusinessUnit('All Business Units');
+    });
     ApiService.getSubmissions().then(setSubmissionRecords);
     const syncSubmissions = (event: Event) => {
       const records = (event as CustomEvent<Submission[]>).detail;
@@ -484,12 +587,20 @@ export const ApplicantDetail: React.FC = () => {
       showToast('Please enter note contents.');
       return;
     }
-    const noteTextContent = newNoteText.trim() || noteSubject.trim();
+    const noteTextContent = newNoteText
+      .replace(/<br\s*\/?\s*>/gi, '\n')
+      .replace(/<\/(p|div|li)>/gi, '\n')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .trim() || noteSubject.trim();
     const noteObj = {
       id: `nt-${Date.now()}`,
       author: currentUser?.name || 'Ganesh Kshirsagar',
       text: noteTextContent,
-      subject: noteSubject || `New Note Created for ${displayName.toUpperCase()} - ${displayId}.`,
+      subject: noteSubject || `New Note Created for ${displayName} - ${displayId}.`,
       priority: newNotePriority || 'Medium',
       job: noteJob || undefined,
       client: noteClient || undefined,
@@ -506,6 +617,7 @@ export const ApplicantDetail: React.FC = () => {
       console.warn('Note persist warning:', e);
     }
     setNewNoteText('');
+    setNoteEditorResetKey((key) => key + 1);
     setDialog(null);
     showToast('Note added successfully.');
   };
@@ -528,6 +640,34 @@ export const ApplicantDetail: React.FC = () => {
   };
 
   const avatarInitial = applicant.name.charAt(0).toUpperCase() || 'A';
+  const openAvatarEditor = () => {
+    setAvatarMenuOpen(false);
+    setAvatarPreview(applicant.avatar || '');
+    if (avatarFileInputRef.current) avatarFileInputRef.current.value = '';
+    setAvatarEditOpen(true);
+  };
+  const handleAvatarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Choose an image file.', 'error'); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast('Choose an image smaller than 2 MB.', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(String(reader.result || ''));
+    reader.onerror = () => showToast('The selected image could not be read.', 'error');
+    reader.readAsDataURL(file);
+  };
+  const saveApplicantAvatar = async () => {
+    if (!avatarPreview) { showToast('Choose an image before saving.', 'error'); return; }
+    try {
+      const updated = await ApiService.updateApplicant(applicant.id, { avatar: avatarPreview });
+      setApplicant(updated);
+      setAllApplicants((items) => items.map((item) => item.id === updated.id ? updated : item));
+      setAvatarEditOpen(false);
+      showToast('Profile picture updated.');
+    } catch {
+      showToast('The profile picture could not be saved.', 'error');
+    }
+  };
   const startEditPersonal = () => {
     if (!applicant) return;
     const [fName = '', ...lNames] = (applicant.name || '').split(' ');
@@ -798,15 +938,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     const fullName = `${empFirstName} ${empLastName}`.trim();
     const officeDisplay = empOfficeNumber
       ? `${empOfficeNumber}${empExtension ? ` Ext: ${empExtension}` : ''}`
-      : '—';
+      : 'â€”';
 
     const newEmp = {
       id: `emp-${Date.now()}`,
       employeeName: fullName || empEmployerName || 'Employee',
-      employer: empEmployerName || '—',
+      employer: empEmployerName || 'â€”',
       officeNumber: officeDisplay,
-      mobile: empMobileNumber || '—',
-      email: empEmailId || '—',
+      mobile: empMobileNumber || 'â€”',
+      email: empEmailId || 'â€”',
       status: (empTypeSelect === 'Select' || empTypeSelect === 'Select Status') ? 'Active' : empTypeSelect
     };
 
@@ -851,8 +991,49 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     setDialog(null);
   };
 
-  const notesCount = applicant.notes?.length || 0;
   const applicantSubmissions = submissionRecords.filter((submission) => submission.applicantId === applicant.id || submission.applicantId === applicant.applicantId || submission.applicantName.toLowerCase() === applicant.name.toLowerCase());
+  const noteEntries = [
+    ...(applicant.notes || []).map((note) => ({ ...note, source: 'applicants' as const })),
+    ...applicantSubmissions.flatMap((submission) => (submission.notes || []).map((note) => ({
+      ...note,
+      source: 'submissions' as const,
+      job: submission.jobTitle,
+      client: submission.client,
+      priority: '',
+      action: 'Submission'
+    }))),
+    ...applicantSubmissions.flatMap((submission) => (submission.statusHistory || [])
+      .filter((entry) => Boolean(entry.comments?.trim()))
+      .map((entry, index) => ({
+        id: `${submission.id}-pipeline-${index}`,
+        author: entry.changedBy || submission.recruiter || 'System',
+        text: entry.comments || '',
+        subject: `Pipeline update: ${entry.status}`,
+        date: entry.changedAt,
+        priority: '',
+        job: submission.jobTitle,
+        client: submission.client,
+        action: entry.status,
+        source: 'pipeline' as const
+      })))
+  ];
+  const notesAuthorOptions = Array.from(new Set(noteEntries.map((note) => note.author).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  const filteredNotes = noteEntries.filter((note) => {
+    if (note.source !== activeNotesFilter) return false;
+    if (notesAuthorFilter && note.author !== notesAuthorFilter) return false;
+    if (notesPriorityFilter && (note.priority || 'Medium') !== notesPriorityFilter) return false;
+    const searchText = `${note.subject || ''} ${note.text} ${note.author} ${note.job || ''} ${note.client || ''} ${note.action || ''}`.toLowerCase();
+    if (notesSearch.trim() && !searchText.includes(notesSearch.trim().toLowerCase())) return false;
+    const noteTimestamp = Date.parse(note.date);
+    if (notesDateFrom && (!Number.isFinite(noteTimestamp) || noteTimestamp < new Date(`${notesDateFrom}T00:00:00`).getTime())) return false;
+    if (notesDateTo && (!Number.isFinite(noteTimestamp) || noteTimestamp > new Date(`${notesDateTo}T23:59:59.999`).getTime())) return false;
+    return true;
+  });
+  const notesSourceCounts = {
+    applicants: noteEntries.filter((note) => note.source === 'applicants').length,
+    submissions: noteEntries.filter((note) => note.source === 'submissions').length,
+    pipeline: noteEntries.filter((note) => note.source === 'pipeline').length
+  };
   const submissionCounts = {
     pipeline: applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) <= 1 && !/disqualified|rejected/i.test(submission.status)).length,
     all: applicantSubmissions.length,
@@ -930,7 +1111,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       category: 'all' as const,
       date: '20 Nov 2026',
       time: '16:49:41',
-      description: `Applicant has been submitted to AMP7894 · ${applicant.currentDesignation || 'US IT Recruiter'}`,
+      description: `Applicant has been submitted to AMP7894 Â· ${applicant.currentDesignation || 'US IT Recruiter'}`,
       detail: 'by Jatin Jaiswal',
       icon: Send,
       iconClass: 'bg-blue-50 text-[#2F80ED] dark:bg-[#173B67]'
@@ -940,7 +1121,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       category: 'documents' as const,
       date: '20 Nov 2026',
       time: '16:49:27',
-      description: 'Uploaded a new resume · Mansi Talware.docx',
+      description: 'Uploaded a new resume Â· Mansi Talware.docx',
       detail: 'by US IT Recruiter (Night Shift)',
       icon: FileText,
       iconClass: 'bg-violet-50 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300'
@@ -994,6 +1175,197 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     return matchesCategory && matchesPeriod;
   });
 
+  const openEmailComposer = () => {
+    const firstName = displayName.split(/\s+/)[0] || displayName;
+    setEmailTo(applicant.email || '');
+    setEmailFrom('System (noreply@ats.local)');
+    setEmailCc('');
+    setEmailSubject('');
+    setEmailBody(`Hi ${firstName},<br/><br/>`);
+    setEmailAttachments([]);
+    setEmailTheme('Blue');
+    setEmailSalutation(`Hi ${firstName}`);
+    setEmailTemplate('');
+    setEmailEditorResetKey((key) => key + 1);
+    setDialog('email');
+  };
+
+  const sendApplicantEmail = async () => {
+    const recipients = emailTo.split(/[;,]/).map((address) => address.trim()).filter(Boolean);
+    const ccRecipients = emailCc.split(/[;,]/).map((address) => address.trim()).filter(Boolean);
+    if (!recipients.length || recipients.some((address) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))) {
+      showToast('Enter a valid recipient email address.');
+      return;
+    }
+    if (ccRecipients.some((address) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))) {
+      showToast('Enter valid CC email addresses.');
+      return;
+    }
+    if (!emailSubject.trim() || !emailBody.replace(/<[^>]*>/g, '').trim()) {
+      showToast('Enter an email subject and message.');
+      return;
+    }
+    const outgoing = JSON.parse(localStorage.getItem('ats_applicant_sent_emails') || '[]') as Array<Record<string, unknown>>;
+    outgoing.unshift({ id: `email-${Date.now()}`, applicantId: applicant.id, type: 'Email', from: emailFrom, to: recipients, cc: ccRecipients, subject: emailSubject.trim(), body: emailBody, attachments: emailAttachments.map((file) => file.name), sentAt: new Date().toISOString() });
+    localStorage.setItem('ats_applicant_sent_emails', JSON.stringify(outgoing));
+    await ApiService.logActivity({ user: currentUser?.name || 'Recruiter', avatar: '', action: `sent an email: ${emailSubject.trim()}`, target: applicant.name, type: 'applicant' });
+    setDialog(null);
+    showToast('Email saved to sent items.');
+  };
+
+  const timelineDrawerEvents = activityEvents.filter((event) => {
+    if (timelineDrawerTab === 'all') return true;
+    if (timelineDrawerTab === 'email') return event.category === 'messages';
+    return false;
+  });
+
+  let storedApplicantEmails: { id?: string; applicantId?: string; type?: string; from?: string; to?: string[]; cc?: string[]; subject?: string; body?: string; attachments?: string[]; sentAt?: string }[] = [];
+  try {
+    storedApplicantEmails = JSON.parse(localStorage.getItem('ats_applicant_sent_emails') || '[]');
+  } catch {
+    storedApplicantEmails = [];
+  }
+  const applicantEmailHistory = storedApplicantEmails.filter((email) => email.applicantId === applicant.id || email.applicantId === applicant.applicantId);
+  const emailActivityTypes = Array.from(new Set(applicantEmailHistory.map((email) => email.type || 'Email')));
+  const emailActivityFiltered = applicantEmailHistory.filter((email) => {
+    const emailType = email.type || 'Email';
+    if (emailActivityTypeFilter !== 'All Types' && emailType !== emailActivityTypeFilter) return false;
+    const sentTime = email.sentAt ? new Date(email.sentAt).getTime() : NaN;
+    const periodCutoff = emailActivityPeriod === 'All Time' ? 0 : (() => {
+      const cutoff = new Date();
+      if (emailActivityPeriod === 'Last 30 Days') cutoff.setDate(cutoff.getDate() - 30);
+      else if (emailActivityPeriod === 'Last Year') cutoff.setFullYear(cutoff.getFullYear() - 1);
+      else cutoff.setMonth(cutoff.getMonth() - 6);
+      return cutoff.getTime();
+    })();
+    if (emailActivityPeriod !== 'All Time' && (!Number.isFinite(sentTime) || sentTime < periodCutoff)) return false;
+    const searchText = `${email.subject || ''} ${email.from || ''} ${(email.to || []).join(' ')} ${(email.cc || []).join(' ')} ${email.body || ''} ${(email.attachments || []).join(' ')}`.replace(/<[^>]*>/g, ' ').toLowerCase();
+    return !emailActivitySearch.trim() || searchText.includes(emailActivitySearch.trim().toLowerCase());
+  });
+  const emailActivityPageCount = Math.ceil(emailActivityFiltered.length / emailActivityPageSize);
+  const visibleEmailActivity = emailActivityFiltered.slice(emailActivityPage * emailActivityPageSize, (emailActivityPage + 1) * emailActivityPageSize);
+  const filteredSubmitJobs = submissionJobs.filter((job) => {
+    const query = submissionJobSearch.trim().toLowerCase();
+    const matchesSearch = !query || `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client} ${job.location}`.toLowerCase().includes(query);
+    const matchesBusinessUnit = submissionBusinessUnit === 'All Business Units' || job.businessUnit === submissionBusinessUnit;
+    const matchesAssigned = !submissionAssignedJobsOnly || job.assignedRecruiter === currentUser?.name || job.recruiterId === currentUser?.id;
+    return matchesSearch && matchesBusinessUnit && matchesAssigned && ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status);
+  });
+
+  const openSubmissionDetails = () => {
+    if (!selectedSubmissionJobIds.length) { showToast('Select at least one job to continue.', 'error'); return; }
+    const existingJobs = selectedSubmissionJobIds.filter((jobId) => applicantSubmissions.some((submission) => submission.jobId === jobId));
+    const jobsToSubmit = selectedSubmissionJobIds.filter((jobId) => !existingJobs.includes(jobId));
+    if (existingJobs.length) {
+      setSelectedSubmissionJobIds(jobsToSubmit);
+      if (!jobsToSubmit.length) { showToast('This applicant is already submitted to the selected job.', 'error'); return; }
+      showToast('Already-submitted jobs were removed from the selection.', 'info');
+    }
+    const defaultResume = applicant.documents?.find((document) => /resume/i.test(`${document.type} ${document.name}`));
+    setSubmissionResumeName(defaultResume?.name || '');
+    setSubmissionEmailPreviewOpen(false);
+    setSubmissionResumeFile(null);
+    setSubmissionNoticePeriod(applicant.noticePeriod || '');
+    setSubmissionRelocation(applicant.willingToRelocate === false ? 'No' : 'Yes');
+    setSubmissionVideoLink('');
+    setSubmissionCurrency('INR');
+    setSubmissionBillRate('');
+    setSubmissionRateType('Yearly');
+    setSubmissionEForm('');
+    setSubmissionRecipients('');
+    setSubmissionNotifiers('');
+    setSubmissionOtherEmails('');
+    setSubmissionComments('');
+    setSubmissionSkills((applicant.skills || []).map((skill) => ({ skill, years: '' })));
+    setSubmissionReference({ name: '', company: '', contact: '', email: '', type: '', years: '', summary: '' });
+    setSubmissionEmployer((previous) => ({ ...previous, name: applicant.currentCompany || '' }));
+    setDialog('applicant-submission');
+  };
+
+  const submitApplicantToJobs = async () => {
+    const jobIds = selectedSubmissionJobIds.filter((jobId) => !applicantSubmissions.some((submission) => submission.jobId === jobId));
+    if (!jobIds.length) { showToast('Select a job that does not already have this applicant submitted.', 'error'); return; }
+    if (!submissionNoticePeriod.trim()) { showToast('Enter the candidate notice period.', 'error'); return; }
+    if (!submissionResumeName && !submissionResumeFile) { showToast('Select or upload a resume to submit.', 'error'); return; }
+    try {
+      const chosenJobs = jobIds.map((jobId) => submissionJobs.find((job) => job.id === jobId)).filter((job): job is Job => Boolean(job));
+      for (const job of chosenJobs) {
+        await ApiService.createSubmission({
+          applicantId: applicant.id,
+          applicantName: applicant.name,
+          jobId: job.id,
+          jobTitle: job.title,
+          client: job.client,
+          recruiter: currentUser?.name || job.assignedRecruiter,
+          status: 'Waiting for Evaluation by Internal Reviewer',
+          billRate: Number(submissionBillRate) || job.billRate || 0,
+          payRate: job.payRate || 0,
+          submissionDetails: {
+            businessUnit: job.businessUnit,
+            noticePeriod: submissionNoticePeriod,
+            relocation: submissionRelocation,
+            videoLink: submissionVideoLink,
+            currency: submissionCurrency,
+            rateType: submissionRateType,
+            resume: submissionResumeFile?.name || submissionResumeName,
+            additionalAttachments: submissionAdditionalAttachments.map((file) => file.name),
+            eForm: submissionEForm,
+            recipients: submissionRecipients,
+            additionalNotifiers: submissionNotifiers,
+            otherEmailIds: submissionOtherEmails,
+            comments: submissionComments,
+            skills: submissionSkills,
+            ratings,
+            reference: submissionReference,
+            employer: submissionEmployer
+          }
+        });
+      }
+      setSubmissionRecords(await ApiService.getSubmissions());
+      setDialog(null);
+      setSelectedSubmissionJobIds([]);
+      showToast(`Applicant submitted to ${chosenJobs.length} job${chosenJobs.length === 1 ? '' : 's'}.`);
+    } catch {
+      showToast('The applicant submission could not be saved. Please try again.', 'error');
+    }
+  };
+
+  const openJobActionDialog = (action: 'tag-to-job' | 'quick-submit') => {
+    setJobActionSearch('');
+    setJobActionSelectedJobId('');
+    setJobActionDropdownOpen(false);
+    setDialog(action);
+  };
+
+  const completeJobAction = async () => {
+    const job = submissionJobs.find((item) => item.id === jobActionSelectedJobId);
+    if (!job) { showToast('Select a job first.', 'error'); return; }
+    if (applicantSubmissions.some((submission) => submission.jobId === job.id)) {
+      showToast('This applicant is already associated with the selected job.', 'error');
+      return;
+    }
+    const isTag = dialog === 'tag-to-job' || dialog === 'quick-tag-to-job';
+    try {
+      await ApiService.createSubmission({
+        applicantId: applicant.id,
+        applicantName: applicant.name,
+        jobId: job.id,
+        jobTitle: job.title,
+        client: job.client,
+        recruiter: currentUser?.name || job.assignedRecruiter,
+        billRate: job.billRate || 0,
+        payRate: job.payRate || 0,
+        status: isTag ? 'Pipeline' : 'Waiting for Evaluation by Internal Reviewer',
+        submissionDetails: isTag ? { action: 'Tag to Job' } : { action: 'Quick Submit' }
+      });
+      setSubmissionRecords(await ApiService.getSubmissions());
+      setDialog(null);
+      showToast(isTag ? `${applicant.name} added to ${job.code} pipeline.` : `${applicant.name} submitted to ${job.code}.`);
+    } catch {
+      showToast(isTag ? 'The applicant could not be tagged to this job.' : 'The quick submission could not be saved.', 'error');
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-[#F4F6F9] text-[#222] dark:bg-[#1A1A1A] dark:text-[#E0E0E0]">
       {/* Toast Notification - z-[9999] so it's always visible above all modals/dialogs */}
@@ -1023,6 +1395,165 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
         </div>
       )}
 
+      {isTimelineDrawerOpen && createPortal(
+        <div className="fixed inset-0 z-[110] flex justify-end" role="presentation">
+          <button type="button" aria-label="Close timeline activities" onClick={() => setIsTimelineDrawerOpen(false)} className="absolute inset-0 bg-black/45" />
+          <aside aria-label={`Timeline activities for ${applicant.name}`} className="relative z-10 flex h-full w-full max-w-[700px] flex-col border-l border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+            <header className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#334155]">
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-semibold text-slate-900 dark:text-white">{applicant.applicantId ? `${applicant.applicantId} - ` : ''}{applicant.name}</h2>
+                <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{applicant.phone ? `${applicant.phone}  |  ` : ''}{applicant.email}</p>
+              </div>
+              <button type="button" aria-label="Close timeline activities" onClick={() => setIsTimelineDrawerOpen(false)} className="ml-4 rounded p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-[#334155]"><X className="h-5 w-5" /></button>
+            </header>
+            <nav className="flex shrink-0 gap-6 border-b border-slate-200 px-5 dark:border-[#334155]" aria-label="Timeline filters">
+              {([
+                ['all', 'All Activity'], ['tasks', 'Tasks'], ['notes', 'Notes'], ['email', 'Email']
+              ] as const).map(([id, label]) => (
+                <button key={id} type="button" onClick={() => setTimelineDrawerTab(id)} className={`border-b-2 py-3 text-xs font-medium ${timelineDrawerTab === id ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'}`}>
+                  {label}{id !== 'all' && <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] dark:bg-[#334155]">{id === 'email' ? activityEvents.filter((event) => event.category === 'messages').length : 0}</span>}
+                </button>
+              ))}
+            </nav>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              {timelineDrawerEvents.length ? (
+                <>
+                  <div className="mb-4 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-semibold uppercase text-blue-600 dark:bg-[#334155] dark:text-blue-300">{timelineDrawerEvents[0].date}</div>
+                  <div className="relative ml-3 border-l border-slate-200 dark:border-[#475569]">
+                    {timelineDrawerEvents.map((event) => {
+                      const Icon = event.icon;
+                      return <article key={event.id} className="relative ml-5 border-b border-slate-200 py-4 last:border-0 dark:border-[#334155]">
+                        <div className="absolute -left-[41px] top-4 flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 text-white"><Icon className="h-3.5 w-3.5" /></div>
+                        <div className="flex items-start justify-between gap-4"><div><p className="text-xs leading-5 text-slate-600 dark:text-slate-300">{event.description}</p><p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{event.detail}</p></div><time className="shrink-0 text-[10px] text-slate-400">{event.date} {event.time}</time></div>
+                      </article>;
+                    })}
+                  </div>
+                </>
+              ) : <div className="flex h-full flex-col items-center justify-center text-center"><Clock className="h-8 w-8 text-slate-300" /><p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-300">No {timelineDrawerTab} activities</p></div>}
+            </div>
+          </aside>
+        </div>,
+        document.body
+      )}
+
+      {avatarEditOpen && <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/50 p-4" onClick={() => setAvatarEditOpen(false)}>
+        <section role="dialog" aria-modal="true" aria-label="Change user profile image" onClick={(event) => event.stopPropagation()} className="w-full max-w-[876px] border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+          <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-[#334155]"><h2 className="text-lg font-medium text-slate-700 dark:text-white">Change User Profile Image</h2><button type="button" aria-label="Close image editor" onClick={() => setAvatarEditOpen(false)} className="text-xl text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
+          <div className="p-5"><label className="mb-1 block text-xs text-slate-500 dark:text-slate-300" htmlFor="applicant-profile-image">Upload Image</label><input ref={avatarFileInputRef} id="applicant-profile-image" type="file" accept="image/*" onChange={handleAvatarFileChange} className="block max-w-full text-xs" /><div className="mt-4 flex h-[260px] items-center justify-center border border-slate-200 bg-white dark:border-[#334155] dark:bg-[#172033]">{avatarPreview && <img src={avatarPreview} alt="Profile image preview" className="max-h-full max-w-full object-contain" />}</div></div>
+          <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button type="button" onClick={() => void saveApplicantAvatar()} className="rounded bg-[#4387F5] px-5 py-2 text-xs font-semibold text-white hover:bg-blue-600">Save</button><button type="button" onClick={() => setAvatarEditOpen(false)} className="rounded border border-slate-300 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 dark:border-[#475569] dark:text-white dark:hover:bg-[#263449]">Cancel</button></footer>
+        </section>
+      </div>}
+
+      {avatarZoomOpen && <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/75 p-6" role="presentation" onClick={() => setAvatarZoomOpen(false)}><button type="button" aria-label="Close enlarged profile picture" onClick={() => setAvatarZoomOpen(false)} className="absolute right-5 top-5 rounded-full bg-black/40 p-2 text-white hover:bg-black/70"><X className="h-5 w-5" /></button>{applicant.avatar ? <img src={applicant.avatar} alt={`${applicant.name} enlarged profile`} onClick={(event) => event.stopPropagation()} className="max-h-[85vh] max-w-[85vw] rounded-lg object-contain shadow-2xl" /> : <div onClick={(event) => event.stopPropagation()} className="flex h-64 w-64 items-center justify-center rounded-full bg-[#E2C8E4] text-8xl font-bold text-[#6B21A8]">{avatarInitial}</div>}</div>}
+
+      {dialog === 'submit-to-job' && (
+        <div className="fixed inset-x-0 bottom-0 top-[50px] z-[100] overflow-y-auto bg-[#EDF1F4] text-slate-700">
+          <div className="mx-auto min-h-full max-w-[1900px] px-4 py-4 sm:px-6">
+            <div className="mb-3 flex items-center justify-between"><h1 className="text-lg font-semibold text-slate-800">{displayName}'s Profile</h1><button type="button" aria-label="Close job selection" onClick={() => setDialog(null)} className="rounded bg-[#4387F5] px-3 py-1.5 text-sm font-semibold text-white">←</button></div>
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2.3fr)_minmax(280px,0.95fr)]">
+              <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="mb-2 flex flex-wrap items-center gap-4"><label className="flex items-center gap-3 text-xs text-slate-500">Business Units<select value={submissionBusinessUnit} onChange={(event) => setSubmissionBusinessUnit(event.target.value)} className="min-w-64 border border-slate-300 bg-slate-50 px-2 py-2 text-slate-700"><option>All Business Units</option>{Array.from(new Set(submissionJobs.map((job) => job.businessUnit).filter(Boolean))).map((unit) => <option key={unit}>{unit}</option>)}</select></label>{selectedSubmissionJobIds.length > 0 && <button type="button" onClick={openSubmissionDetails} className="ml-auto rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">Submit to Jobs</button>}</div>
+                <div className="flex items-center justify-between gap-3"><div className="flex min-w-0 flex-1"><input value={submissionJobSearch} onChange={(event) => setSubmissionJobSearch(event.target.value)} placeholder="Job Code, Job Title, Client Job ID, Client" className="w-full max-w-[420px] border border-slate-300 px-2.5 py-1.5 text-xs outline-none focus:border-blue-500" /><button type="button" onClick={() => setSubmissionAssignedJobsOnly((value) => !value)} className={`rounded-r px-3 py-1.5 text-xs font-semibold text-white ${submissionAssignedJobsOnly ? 'bg-slate-600' : 'bg-[#4387F5]'}`}>Assigned Jobs ⌄</button></div><label className="flex items-center gap-1 text-[10px] text-slate-500">Show<select className="border border-slate-300 px-2 py-1"><option>10</option><option>25</option><option>50</option></select>entries</label></div>
+                <div className="mt-8 overflow-x-auto"><table className="w-full min-w-[750px] text-left text-xs"><thead><tr className="border-y border-slate-300 text-[10px] font-bold uppercase text-slate-600"><th className="w-10 px-1 py-2"><input aria-label="Select all available jobs" type="checkbox" checked={filteredSubmitJobs.length > 0 && filteredSubmitJobs.every((job) => selectedSubmissionJobIds.includes(job.id))} onChange={(event) => setSelectedSubmissionJobIds(event.target.checked ? [...new Set([...selectedSubmissionJobIds, ...filteredSubmitJobs.map((job) => job.id)])] : selectedSubmissionJobIds.filter((id) => !filteredSubmitJobs.some((job) => job.id === id)))} /></th><th className="px-2 py-2">Job Code ↕</th><th className="px-2 py-2">Job Title ↕</th><th className="px-2 py-2">Client Job ID ↕</th><th className="px-2 py-2">Client ↕</th><th className="px-2 py-2">City ↕</th><th className="px-2 py-2">Respond By ↕</th></tr></thead><tbody className="divide-y divide-slate-200">
+                  {filteredSubmitJobs.length ? filteredSubmitJobs.map((job) => {
+                    const alreadySubmitted = applicantSubmissions.some((submission) => submission.jobId === job.id);
+                    const checked = selectedSubmissionJobIds.includes(job.id);
+                    return <tr key={job.id} className={`${checked ? 'bg-slate-50' : ''} ${alreadySubmitted ? 'opacity-50' : 'hover:bg-slate-50'}`}><td className="px-1 py-2"><input type="checkbox" aria-label={`Select ${job.title}`} disabled={alreadySubmitted} checked={checked} onChange={() => setSelectedSubmissionJobIds((ids) => checked ? ids.filter((id) => id !== job.id) : [...ids, job.id])} /></td><td className="px-2 py-2 text-blue-600">{job.code}</td><td className="px-2 py-2">{job.title}</td><td className="px-2 py-2">{job.clientJobId || 'N/A'}</td><td className="px-2 py-2">{job.client || 'N/A'}</td><td className="px-2 py-2">{job.location || 'N/A'}</td><td className="px-2 py-2">{job.respondBy || 'Open Until Filled'}{alreadySubmitted && <span className="ml-2 text-[10px] text-slate-400">Already submitted</span>}</td></tr>;
+                  }) : <tr><td colSpan={7} className="px-3 py-8 text-center text-xs text-slate-500">No available jobs match these filters.</td></tr>}
+                </tbody></table></div>
+                <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500"><span>Showing {filteredSubmitJobs.length ? 1 : 0} to {filteredSubmitJobs.length} of {filteredSubmitJobs.length} entries</span><span>Selected: {selectedSubmissionJobIds.length}</span></div>
+              </section>
+              <aside className="rounded border border-slate-200 bg-white p-5 shadow-sm"><h2 className="mb-4 text-base font-semibold text-slate-800">Profile Details</h2>{[['Name', applicant.name], ['Email Address', applicant.email], ['Mobile Number', applicant.phone], ['City', applicant.location], ['Address', applicant.address || '']].map(([label, value]) => <div key={label} className="mb-4"><p className="text-[11px] text-slate-500">{label}</p><p className="mt-0.5 break-words text-xs text-slate-800">{value || 'N/A'}</p></div>)}</aside>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dialog === 'applicant-submission' && (
+        <div className="fixed inset-x-0 bottom-0 top-[50px] z-[100] overflow-y-auto bg-[#EDF1F4] text-slate-700">
+          <div className="mx-auto min-h-full max-w-[1900px] px-4 py-4 sm:px-6">
+            <div className="mb-3 flex items-center justify-between"><h1 className="text-lg font-semibold text-slate-800">Applicant Profile Submission</h1><div className="flex gap-2"><button type="button" onClick={() => setSubmissionEmailPreviewOpen(true)} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white">Email Preview</button><button type="button" onClick={() => void submitApplicantToJobs()} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white">Submit</button><button type="button" onClick={() => setDialog('submit-to-job')} className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600">Cancel</button></div></div>
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2.3fr)_minmax(280px,0.95fr)]">
+              <section className="space-y-2 rounded border border-slate-200 bg-white p-3 shadow-sm">
+                {selectedSubmissionJobIds.map((id) => { const job = submissionJobs.find((item) => item.id === id); return job ? <div key={id} className="flex items-center justify-between px-2 py-2 text-sm font-medium text-slate-800"><span>Job Title: <span className="ml-2 text-blue-700">{job.code} - {job.title} - {job.client || 'N/A'}</span></span><button type="button" onClick={() => setSelectedSubmissionJobIds((ids) => ids.filter((jobId) => jobId !== id))} className="text-blue-500">−</button></div> : null; })}
+                <div className="rounded bg-slate-100 px-2.5 py-2 text-xs font-medium text-blue-600">Skills <button type="button" onClick={() => setSubmissionSkillsExpanded((open) => !open)} className="float-right rounded bg-blue-500 px-2 py-0.5 font-semibold text-white">{submissionSkillsExpanded ? '−' : '+ Add'}</button></div>
+                {submissionSkillsExpanded && <div className="p-3"><div className="mb-2 grid grid-cols-[1fr_100px] gap-2 text-[11px] text-slate-500"><span>Skills</span><span># of years</span></div>{submissionSkills.map((item, index) => <div key={`${item.skill}-${index}`} className="mb-2 grid grid-cols-[1fr_100px] gap-2"><input value={item.skill} onChange={(event) => setSubmissionSkills((skills) => skills.map((skill, i) => i === index ? { ...skill, skill: event.target.value } : skill))} className="border border-slate-300 px-2 py-1.5 text-xs" /><input type="number" min="0" value={item.years} onChange={(event) => setSubmissionSkills((skills) => skills.map((skill, i) => i === index ? { ...skill, years: event.target.value } : skill))} placeholder="Years" className="border border-slate-300 px-2 py-1.5 text-xs" /></div>)}<div className="flex gap-2"><input value={submissionSkillDraft} onChange={(event) => setSubmissionSkillDraft(event.target.value)} placeholder="Add a skill" className="border border-slate-300 px-2 py-1.5 text-xs" /><button type="button" onClick={() => { if (submissionSkillDraft.trim()) setSubmissionSkills((skills) => [...skills, { skill: submissionSkillDraft.trim(), years: '' }]); setSubmissionSkillDraft(''); }} className="text-xs text-blue-600">Add</button></div></div>}
+                <div className="rounded bg-slate-100 px-2.5 py-2 text-xs font-medium text-blue-600">Applicant Rating</div><div className="space-y-1 px-4 py-2">{(['technical', 'communication', 'professionalism', 'overall'] as const).map((key) => <div key={key} className="flex items-center justify-between text-[11px] text-slate-500"><span className="capitalize">{key === 'technical' ? 'Technical Skills' : key === 'communication' ? 'Communication Skills' : key === 'overall' ? 'Overall Rating' : 'Professionalism'}</span><span className="flex text-lg leading-none">{[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${key} rating ${rating}`} onClick={() => setRatings((current) => ({ ...current, [key]: rating }))} className={rating <= ratings[key] ? 'text-amber-400' : 'text-slate-300'}>★</button>)}</span></div>)}</div>
+                <div className="rounded bg-slate-100 px-2.5 py-2 text-xs font-medium text-blue-600">Reference Details <button type="button" onClick={() => setSubmissionReferenceExpanded((open) => !open)} className="float-right rounded bg-blue-500 px-2 py-0.5 font-semibold text-white">{submissionReferenceExpanded ? '−' : '+ Add'}</button></div>
+                {submissionReferenceExpanded && <div className="grid gap-3 p-3 md:grid-cols-3">{([['name', 'Reference Name', true], ['company', 'Company Name', true], ['contact', 'Contact Number', false], ['email', 'Email Address', true], ['type', 'Reference Type', true], ['years', 'Years Acquainted', true], ['summary', 'Reference Summary', true]] as const).map(([key, label, required]) => <label key={key} className={`space-y-1 text-[11px] text-slate-500 ${key === 'summary' ? 'md:col-span-2' : ''}`}>{label}{required && <span className="text-red-500"> *</span>}{key === 'type' ? <select value={submissionReference.type} onChange={(event) => setSubmissionReference((value) => ({ ...value, type: event.target.value }))} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs"><option value="">Select</option><option>Professional</option><option>Personal</option><option>Manager</option></select> : key === 'summary' ? <textarea value={submissionReference.summary} onChange={(event) => setSubmissionReference((value) => ({ ...value, summary: event.target.value }))} className="block w-full border border-slate-300 bg-slate-50 p-2 text-xs" /> : <input type={key === 'email' ? 'email' : key === 'years' ? 'number' : 'text'} value={submissionReference[key]} onChange={(event) => setSubmissionReference((value) => ({ ...value, [key]: event.target.value }))} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs" />}</label>)}</div>}
+                <div className="rounded bg-slate-100 px-2.5 py-2 text-xs font-medium text-blue-600">Employer Details <button type="button" onClick={() => setSubmissionEmployerExpanded((open) => !open)} className="float-right rounded bg-blue-500 px-2 py-0.5 font-semibold text-white">{submissionEmployerExpanded ? '−' : '+ Add'}</button></div>
+                {submissionEmployerExpanded && <div className="space-y-3 p-3"><div className="flex flex-wrap gap-5 text-xs">{['Active Employer', 'Add New', 'Add from existing vendor contact records'].map((mode) => <label key={mode}><input type="radio" checked={submissionEmployer.mode === mode} onChange={() => setSubmissionEmployer((value) => ({ ...value, mode }))} className="mr-1.5" />{mode}</label>)}</div><div className="grid gap-3 md:grid-cols-3">{([['name', 'Employer Name'], ['firstName', 'First Name'], ['lastName', 'Last Name'], ['office', 'Office Number'], ['mobile', 'Mobile Number'], ['email', 'Email ID']] as const).map(([key, label]) => <label key={key} className="space-y-1 text-[11px] text-slate-500">{label}<input value={submissionEmployer[key]} onChange={(event) => setSubmissionEmployer((value) => ({ ...value, [key]: event.target.value }))} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs" /></label>)}</div></div>}
+                <div className="rounded bg-slate-100 px-2.5 py-2 text-xs font-medium text-blue-600">Available Documents <button type="button" onClick={() => setSubmissionDocumentsExpanded((open) => !open)} className="float-right rounded bg-blue-500 px-2 py-0.5 font-semibold text-white">{submissionDocumentsExpanded ? '−' : '+ Add'}</button></div>
+                {submissionDocumentsExpanded && <div className="space-y-2 p-3">{(applicant.documents || []).length ? (applicant.documents || []).map((document, index) => <label key={document.id || `${document.name}-${index}`} className="flex items-center gap-2 text-xs"><input type="checkbox" checked={submissionAdditionalAttachments.some((file) => file.name === document.name)} onChange={(event) => setSubmissionAdditionalAttachments((files) => event.target.checked ? [...files, new File([], document.name)] : files.filter((file) => file.name !== document.name))} />{document.name}</label>) : <p className="text-xs italic text-slate-500">No data available</p>}</div>}
+                <div className="rounded bg-slate-100 px-2.5 py-2 text-xs font-medium text-blue-600">Submission Details</div><div className="p-3"><h3 className="mb-3 text-sm font-semibold text-slate-800">Standard Fields</h3><div className="grid gap-x-8 gap-y-3 md:grid-cols-2"><label className="space-y-1 text-[11px] text-slate-500">Notice Period <span className="text-red-500">*</span><input required value={submissionNoticePeriod} onChange={(event) => setSubmissionNoticePeriod(event.target.value)} placeholder="e.g. 30 days / Immediate" className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs" /></label><label className="space-y-1 text-[11px] text-slate-500">Bill Rate<div className="flex gap-2"><select value={submissionCurrency} onChange={(event) => setSubmissionCurrency(event.target.value)} className="border border-slate-300 bg-slate-50 px-2 text-xs"><option>INR</option><option>USD</option><option>EUR</option></select><input type="number" min="0" value={submissionBillRate} onChange={(event) => setSubmissionBillRate(event.target.value)} className="min-w-0 flex-1 border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs" /><select value={submissionRateType} onChange={(event) => setSubmissionRateType(event.target.value)} className="border border-slate-300 bg-slate-50 px-2 text-xs"><option>Yearly</option><option>Hourly</option><option>Monthly</option><option>Daily</option></select></div></label><fieldset className="space-y-1 text-[11px] text-slate-500"><legend>Relocation</legend><label className="mr-4"><input type="radio" checked={submissionRelocation === 'Yes'} onChange={() => setSubmissionRelocation('Yes')} className="mr-1" />Yes</label><label><input type="radio" checked={submissionRelocation === 'No'} onChange={() => setSubmissionRelocation('No')} className="mr-1" />No</label></fieldset><label className="space-y-1 text-[11px] text-slate-500">Resume <span className="text-red-500">*</span><select value={submissionResumeName} onChange={(event) => setSubmissionResumeName(event.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs"><option value="">Select a resume</option>{(applicant.documents || []).filter((document) => /resume/i.test(`${document.type} ${document.name}`)).map((document, index) => <option key={document.id || `${document.name}-${index}`} value={document.name}>{document.name}</option>)}</select><input type="file" accept=".pdf,.doc,.docx,.txt,.rtf" onChange={(event) => setSubmissionResumeFile(event.target.files?.[0] || null)} className="mt-1 block max-w-full text-[10px]" /></label><label className="space-y-1 text-[11px] text-slate-500">Video Link<input value={submissionVideoLink} onChange={(event) => setSubmissionVideoLink(event.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs" /></label><label className="space-y-1 text-[11px] text-slate-500">eForms<select value={submissionEForm} onChange={(event) => setSubmissionEForm(event.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs"><option value="">Select</option><option>Candidate Consent</option><option>Right to Represent</option><option>Employment Application</option></select></label><label className="space-y-1 text-[11px] text-slate-500">Recipients<input value={submissionRecipients} onChange={(event) => setSubmissionRecipients(event.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs" /></label><label className="space-y-1 text-[11px] text-slate-500">Additional Notifiers<input value={submissionNotifiers} onChange={(event) => setSubmissionNotifiers(event.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs" /></label><label className="space-y-1 text-[11px] text-slate-500">Other Email IDs<input value={submissionOtherEmails} onChange={(event) => setSubmissionOtherEmails(event.target.value)} placeholder="Separate addresses with commas" className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-xs" /></label><label className="space-y-1 text-[11px] text-slate-500 md:col-span-2">Additional Attachment<input type="file" multiple onChange={(event) => setSubmissionAdditionalAttachments(Array.from(event.target.files || []))} className="mt-1 block text-[10px]" /></label><label className="space-y-1 text-[11px] text-slate-500 md:col-span-2">Comments<textarea value={submissionComments} onChange={(event) => setSubmissionComments(event.target.value)} rows={3} className="block w-full border border-slate-300 bg-slate-50 p-2 text-xs" /></label></div><button type="button" onClick={() => showToast('Submission details saved.')} className="mt-4 rounded bg-[#4387F5] px-4 py-2 text-xs font-semibold text-white">Save</button></div>
+              </section>
+              <aside className="rounded border border-slate-200 bg-white p-5 shadow-sm"><h2 className="mb-4 text-base font-semibold text-slate-800">Profile Details</h2>{[['Name', applicant.name], ['Email Address', applicant.email], ['Mobile Number', applicant.phone], ['City', applicant.location], ['Address', applicant.address || ''], ['Submission Guidelines', 'N/A'], ['Submissions Documents', submissionResumeName || submissionResumeFile?.name || '']].map(([label, value]) => <div key={label} className="mb-4"><p className="text-[11px] text-slate-500">{label}</p><p className="mt-0.5 break-words text-xs text-slate-800">{value || 'N/A'}</p></div>)}</aside>
+            </div>
+          </div>
+          {submissionEmailPreviewOpen && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4" onClick={() => setSubmissionEmailPreviewOpen(false)}><section role="dialog" aria-modal="true" aria-label="Submission email preview" onClick={(event) => event.stopPropagation()} className="w-full max-w-xl rounded border border-slate-200 bg-white p-5 shadow-2xl"><div className="flex items-center justify-between border-b pb-3"><h2 className="font-semibold text-slate-800">Submission Email Preview</h2><button type="button" aria-label="Close preview" onClick={() => setSubmissionEmailPreviewOpen(false)} className="text-slate-500">×</button></div><p className="mt-3 text-xs text-slate-600">To: {submissionRecipients || 'Job submission recipients'}</p><p className="mt-2 text-xs text-slate-600">Candidate: {applicant.name} ({applicant.email})</p><p className="mt-2 text-xs text-slate-600">Jobs: {selectedSubmissionJobIds.map((id) => submissionJobs.find((job) => job.id === id)?.title).filter(Boolean).join(', ')}</p><p className="mt-2 text-xs text-slate-600">Resume: {submissionResumeFile?.name || submissionResumeName || 'Not selected'}</p><p className="mt-3 rounded bg-slate-50 p-3 text-xs text-slate-500">The candidate profile and submission details will be included with the selected resume.</p><div className="mt-4 flex justify-end"><button type="button" onClick={() => setSubmissionEmailPreviewOpen(false)} className="rounded bg-[#4387F5] px-4 py-2 text-xs font-semibold text-white">Close</button></div></section></div>}
+        </div>
+      )}
+
+      {dialog === 'quick-tag-to-job' && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
+          <section role="dialog" aria-modal="true" aria-label="Tag to Job" className="w-full max-w-[560px] border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(event) => event.stopPropagation()}>
+            <header className="flex items-center justify-between border-b border-slate-200 bg-[#F8F8F8] px-5 py-3 dark:border-[#334155] dark:bg-[#252525]"><h2 className="text-lg font-medium text-slate-800 dark:text-white">Tag to Job</h2><button type="button" aria-label="Close Tag to Job" onClick={() => setDialog(null)} className="text-xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
+            <div className="px-7 py-7 text-xs leading-5 text-slate-600 dark:text-slate-300"><p>Please select the relevant Job to tag the applicant <strong className="text-slate-800 dark:text-white">{applicant.name}</strong>. This action will add the applicant to the job pipeline</p><label htmlFor="quick-tag-job-search" className="mt-7 mb-2 block text-slate-500">Select Job</label><div className="relative"><div className="flex items-center border border-slate-300 bg-[#F8F8F8] dark:border-[#475569] dark:bg-[#263449]"><input id="quick-tag-job-search" value={jobActionSelectedJobId ? (submissionJobs.find((job) => job.id === jobActionSelectedJobId)?.title || jobActionSearch) : jobActionSearch} onChange={(event) => { setJobActionSelectedJobId(''); setJobActionSearch(event.target.value); setJobActionDropdownOpen(true); }} onFocus={() => setJobActionDropdownOpen(true)} placeholder="Search for a Job" className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-xs italic outline-none dark:text-white" /><button type="button" aria-label="Show jobs" onClick={() => setJobActionDropdownOpen((open) => !open)} className="px-2 text-slate-500">▾</button></div>
+              {jobActionDropdownOpen && <div className="absolute left-0 right-0 top-full z-20 max-h-56 overflow-y-auto border border-slate-300 bg-white shadow-lg dark:border-[#475569] dark:bg-[#263449]">{jobActionSearch.trim().length < 3 ? <p className="px-2 py-2 text-[11px] text-slate-500">Please enter 3 more characters</p> : submissionJobs.filter((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())).map((job) => <button key={job.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setJobActionSelectedJobId(job.id); setJobActionSearch(''); setJobActionDropdownOpen(false); }} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-blue-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">{job.code} - {job.title} ({job.client})</button>)}{jobActionSearch.trim().length >= 3 && !submissionJobs.some((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())) && <p className="px-2 py-2 text-[11px] text-slate-500">No matching jobs found.</p>}</div>}
+            </div></div>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button type="button" onClick={() => void completeJobAction()} className="rounded bg-[#4387F5] px-5 py-2 text-xs font-semibold text-white hover:bg-blue-600">Save</button><button type="button" onClick={() => setDialog(null)} className="rounded border border-slate-300 bg-white px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 dark:border-[#475569] dark:bg-[#263449] dark:text-white">Cancel</button></footer>
+          </section>
+        </div>
+      )}
+
+      {(dialog === 'tag-to-job' || dialog === 'quick-submit') && (
+        <div className="fixed inset-0 z-[110] flex justify-end bg-black/35">
+          <button type="button" aria-label="Close job action" onClick={() => setDialog(null)} className="absolute inset-0" />
+          <aside role="dialog" aria-modal="true" aria-label={dialog === 'tag-to-job' ? 'Tag applicant to job' : 'Quick submit applicant'} className="relative z-10 h-full w-full max-w-[860px] overflow-y-auto border-l border-slate-200 bg-[#F8F8F8] shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+            <header className="flex h-10 items-center justify-between border-b border-slate-300 bg-white px-4 dark:border-[#334155] dark:bg-[#252525]"><h2 className="text-xs font-semibold text-[#1877F2]">◉ {dialog === 'tag-to-job' ? 'Tag to Job' : 'Quick Submission'} - {applicant.name}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)} className="text-2xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
+            <div className="grid max-w-[580px] grid-cols-[145px_minmax(0,1fr)] items-center gap-x-5 gap-y-3 px-6 py-6 text-xs">
+              <label htmlFor="job-action-search" className="text-slate-500">Select Job <span className="text-red-500">*</span></label>
+              <div className="relative"><div className="flex items-center border border-slate-300 bg-white dark:border-[#475569] dark:bg-[#263449]"><input id="job-action-search" value={jobActionSelectedJobId ? (submissionJobs.find((job) => job.id === jobActionSelectedJobId)?.title || jobActionSearch) : jobActionSearch} onChange={(event) => { setJobActionSelectedJobId(''); setJobActionSearch(event.target.value); setJobActionDropdownOpen(true); }} onFocus={() => setJobActionDropdownOpen(true)} placeholder="Search for a Job" className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-xs outline-none dark:text-white" /><button type="button" aria-label="Show jobs" onClick={() => setJobActionDropdownOpen((open) => !open)} className="px-2 text-slate-500">▾</button></div>
+                {jobActionDropdownOpen && <div className="absolute left-0 right-0 top-full z-20 max-h-64 overflow-y-auto border border-slate-300 bg-white shadow-lg dark:border-[#475569] dark:bg-[#263449]">{jobActionSearch.trim().length < 3 ? <p className="px-2 py-2 text-[11px] text-slate-500">Please enter 3 more characters</p> : submissionJobs.filter((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())).map((job) => <button key={job.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setJobActionSelectedJobId(job.id); setJobActionSearch(''); setJobActionDropdownOpen(false); }} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-blue-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">{job.code} - {job.title} ({job.client})</button>)}{jobActionSearch.trim().length >= 3 && !submissionJobs.some((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())) && <p className="px-2 py-2 text-[11px] text-slate-500">No matching jobs found.</p>}</div>}
+              </div>
+              <label className="text-slate-500">Candidate Id</label><input readOnly value={applicant.applicantId || applicant.id} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
+              <label className="text-slate-500">Candidate Name</label><input readOnly value={applicant.name} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
+              <label className="text-slate-500">Email Address</label><input readOnly value={applicant.email} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
+              <span /><div className="flex gap-2 pt-1"><button type="button" onClick={() => void completeJobAction()} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">{dialog === 'tag-to-job' ? 'Tag' : 'Submit'}</button><button type="button" onClick={() => setDialog(null)} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">Cancel</button></div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {dialog === 'email' && (
+        <div className="fixed inset-x-0 bottom-0 top-[50px] z-[100] overflow-y-auto bg-[#ECECEC] text-slate-700">
+          <div className="mx-auto min-h-full max-w-[1800px] px-4 py-4 sm:px-8">
+            <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,22%)]">
+              <section>
+                <h1 className="mb-4 text-xl font-medium text-slate-800">Send Email</h1>
+                <div className="border border-slate-300 bg-white shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200 bg-[#F8F8F8] px-3 py-3">
+                    <label className="flex items-center gap-4 text-xs text-slate-500">From<select value={emailFrom} onChange={(event) => setEmailFrom(event.target.value)} className="min-w-64 border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700"><option>System (noreply@ats.local)</option><option>{currentUser?.name || 'Recruiter'} ({currentUser?.email || 'recruiter@ats.local'})</option></select></label>
+                    <div className="flex gap-1.5"><button type="button" onClick={() => void sendApplicantEmail()} className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#286FE0]">Send</button><button type="button" onClick={() => setDialog(null)} className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#286FE0]">Cancel</button></div>
+                  </div>
+                  <div className="flex items-center gap-4 border-b border-slate-200 px-3 py-2 text-xs"><span className="w-10 text-slate-500">To</span><input aria-label="To" value={emailTo} onChange={(event) => setEmailTo(event.target.value)} className="min-w-0 flex-1 rounded-full border border-slate-200 px-3 py-1.5 text-slate-700 outline-none focus:border-blue-400" placeholder="Enter email addresses separated by commas" /></div>
+                  <div className="flex items-center gap-4 border-b border-slate-200 px-3 py-1"><label className="w-10 text-xs text-slate-500" htmlFor="applicant-email-cc">CC</label><input id="applicant-email-cc" value={emailCc} onChange={(event) => setEmailCc(event.target.value)} className="min-w-0 flex-1 border-0 bg-transparent px-1 py-2 text-xs outline-none" placeholder="Add CC recipients" /></div>
+                  <div className="flex items-center gap-4 border-b border-slate-200 px-3 py-2"><label className="w-10 text-xs text-slate-500" htmlFor="applicant-email-subject">Subject</label><input id="applicant-email-subject" value={emailSubject} onChange={(event) => setEmailSubject(event.target.value)} className="min-w-0 flex-1 border-0 bg-transparent px-1 py-1 text-xs outline-none" placeholder="Enter subject" /></div>
+                  <EmailRichTextEditor value={emailBody} resetKey={emailEditorResetKey} accentColor={emailTheme === 'Green' ? '#16A34A' : emailTheme === 'Purple' ? '#7C3AED' : '#4387F5'} onChange={setEmailBody} onError={showToast} />
+                  <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 px-3 py-3 text-xs"><span className="text-slate-500">Attachments</span><input aria-label="Email attachments" type="file" multiple onChange={(event) => setEmailAttachments(Array.from(event.target.files || []))} className="max-w-full text-[11px]" />{emailAttachments.length > 0 && <span className="text-[10px] text-slate-500">{emailAttachments.map((file) => file.name).join(', ')}</span>}</div>
+                  <div className="flex justify-end gap-1.5 border-t border-slate-200 bg-[#F8F8F8] px-3 py-2"><button type="button" onClick={() => void sendApplicantEmail()} className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#286FE0]">Send</button><button type="button" onClick={() => setDialog(null)} className="rounded-sm bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#286FE0]">Cancel</button></div>
+                </div>
+              </section>
+              <aside className="pt-0 xl:pt-0"><h2 className="mb-4 text-xl font-medium text-slate-800">Customize Mail Body</h2><div className="space-y-4 border border-slate-300 bg-white p-4 text-xs">
+                <label className="block space-y-1 text-slate-500">Select Mailing Theme<select value={emailTheme} onChange={(event) => setEmailTheme(event.target.value)} className="block w-full border border-slate-300 bg-[#F8F8F8] px-2 py-2 text-slate-700"><option value="">Select</option><option>Blue</option><option>Green</option><option>Purple</option></select></label>
+                <label className="block space-y-1 text-slate-500">Salutation<select value={emailSalutation} onChange={(event) => { setEmailSalutation(event.target.value); setEmailBody(`${event.target.value.replace('[FirstName]', displayName.split(/\s+/)[0] || displayName)},<br/><br/>`); }} className="block w-full border border-slate-300 bg-[#F8F8F8] px-2 py-2 text-slate-700"><option value={`Hi ${displayName.split(/\s+/)[0] || displayName}`}>Hi [FirstName]</option><option value="Hello">Hello</option><option value="Dear [FirstName]">Dear [FirstName]</option></select></label>
+                <label className="block space-y-1 text-slate-500">Select Template<select value={emailTemplate} onChange={(event) => { const value = event.target.value; setEmailTemplate(value); if (value === 'Interview Invitation') { setEmailSubject('Interview invitation'); setEmailBody(`Hi ${displayName.split(/\s+/)[0]},<br/><br/>We would like to invite you to an interview. Please let us know your availability.<br/><br/>`); } else if (value === 'Follow-up') { setEmailSubject('Following up'); setEmailBody(`Hi ${displayName.split(/\s+/)[0]},<br/><br/>I am following up regarding your application. Please let me know if you have any questions.<br/><br/>`); } else if (value === 'Blank') { setEmailSubject(''); setEmailBody(''); } }} className="block w-full border border-slate-300 bg-[#F8F8F8] px-2 py-2 text-slate-700"><option value="">-- Select Template --</option><option>Interview Invitation</option><option>Follow-up</option><option>Blank</option></select></label>
+              </div></aside>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Sub-Navigation Tabs Bar */}
       <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-1.5 shadow-xs dark:border-[#333] dark:bg-[#1E293B] overflow-visible">
         <div className="flex items-center gap-1 text-xs overflow-visible">
@@ -1034,14 +1565,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          {[
-            'Snapshot',
-            'Personal Details',
-            'Profession Details',
-            'Employer Details',
-            'Employment Test Results',
-            'Activities'
-          ].map((tab) => (
+          {baseSubTabs.map((tab) => (
             <button
               key={tab}
               type="button"
@@ -1059,41 +1583,61 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             </button>
           ))}
 
-          {/* Three-Dot Menu with Hidden Sub-Tabs (Reference Image 1 Replication) */}
-          <div className="relative" ref={moreSubTabsRef}>
+          {/* 6th Slot: Dynamic Sub-Tab */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSubTab(currentDynamicTab);
+              setDynamicTab(currentDynamicTab);
+              setMoreSubTabsOpen(false);
+            }}
+            className={`whitespace-nowrap px-3 py-1.5 font-medium transition-colors ${
+              activeSubTab === currentDynamicTab
+                ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
+                : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
+            }`}
+          >
+            {currentDynamicTab}
+          </button>
+
+          {/* Three-Dot Menu with Hidden Sub-Tabs (Reference Image 1, 2, 3 Replication) */}
+          <div className="relative inline-flex items-center" ref={moreSubTabsRef}>
             <button
               type="button"
               onClick={() => setMoreSubTabsOpen((prev) => !prev)}
-              className={`flex items-center gap-1 px-3 py-1.5 font-medium transition-colors ${
-                ['Email Merges', 'Email Activity', 'Hires', 'Surveys'].includes(activeSubTab)
-                  ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
-                  : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
-              }`}
+              aria-label="More applicant sections"
+              aria-haspopup="menu"
+              aria-expanded={moreSubTabsOpen}
+              title="More applicant sections"
+              className="flex items-center justify-center px-1.5 py-1 text-sm font-bold text-[#1877F2] hover:opacity-80 transition-opacity"
             >
-              <span>{['Email Merges', 'Email Activity', 'Hires', 'Surveys'].includes(activeSubTab) ? activeSubTab : '...'}</span>
+              ...
             </button>
             {moreSubTabsOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border border-[#CBD5E1] bg-white py-1.5 shadow-2xl dark:border-[#444] dark:bg-[#252525]">
+              <div
+                role="menu"
+                className="absolute right-0 top-full z-50 mt-1.5 w-44 rounded-sm border border-[#CBD5E1] bg-white py-1 shadow-md dark:border-[#444] dark:bg-[#252525]"
+              >
                 {/* Triangular Caret Arrow Pointing Up directly under ... */}
-                <div className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 border-l border-t border-[#CBD5E1] bg-white dark:border-[#444] dark:bg-[#252525]" />
+                <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 border-l border-t border-[#CBD5E1] bg-white dark:border-[#444] dark:bg-[#252525]" />
                 <div className="relative z-10">
-                  {['Email Merges', 'Email Activity', 'Hires', 'Surveys'].map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => {
-                        setActiveSubTab(item);
-                        setMoreSubTabsOpen(false);
-                      }}
-                      className={`block w-full px-4 py-2 text-left text-xs transition-colors ${
-                        activeSubTab === item
-                          ? 'bg-blue-50 font-semibold text-[#1877F2] dark:bg-[#333]'
-                          : 'text-[#444] hover:bg-gray-100 hover:text-[#1877F2] dark:text-[#CCC] dark:hover:bg-[#333]'
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  {dynamicSubTabsPool
+                    .filter((item) => item !== currentDynamicTab)
+                    .map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => {
+                          setActiveSubTab(item);
+                          setDynamicTab(item);
+                          setMoreSubTabsOpen(false);
+                        }}
+                        role="menuitem"
+                        className="block w-full px-4 py-2 text-left text-xs text-[#555] transition-colors hover:bg-[#F3F4F6] hover:text-[#1877F2] dark:text-[#CCC] dark:hover:bg-[#333]"
+                      >
+                        {item}
+                      </button>
+                    ))}
                 </div>
               </div>
             )}
@@ -1127,7 +1671,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             type="button"
             title="Email Applicant"
             className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#333]"
-            onClick={() => window.location.href = `mailto:${applicant.email}`}
+            onClick={() => openEmailComposer()}
           >
             <Mail className="h-4 w-4" />
           </button>
@@ -1148,7 +1692,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   type="button"
                   onClick={() => {
                     setSubmitMenuOpen(false);
-                    setDialog('matching-jobs');
+                    setSelectedSubmissionJobIds([]);
+                    setSubmissionJobSearch('');
+                    setSubmissionBusinessUnit('Ampcus Tech Pvt Ltd.');
+                    setSubmissionAssignedJobsOnly(false);
+                    setDialog('submit-to-job');
                   }}
                   className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
                 >
@@ -1158,11 +1706,34 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   type="button"
                   onClick={() => {
                     setSubmitMenuOpen(false);
-                    showToast('Submission to Client initiated.');
+                    openJobActionDialog('tag-to-job');
                   }}
                   className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
                 >
-                  Submit to Client
+                  Tag to Job
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitMenuOpen(false);
+                    setJobActionSearch('');
+                    setJobActionSelectedJobId('');
+                    setJobActionDropdownOpen(false);
+                    setDialog('quick-tag-to-job');
+                  }}
+                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                >
+                  Quick Tag
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitMenuOpen(false);
+                    openJobActionDialog('quick-submit');
+                  }}
+                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                >
+                  Quick Submit
                 </button>
               </div>
             )}
@@ -1214,8 +1785,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
               {/* Left Candidate Info */}
               <div className="flex items-start gap-3.5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#E2C8E4] text-lg font-bold text-[#6B21A8] dark:bg-[#4A2B4E] dark:text-[#E9D5FF]">
-                  {avatarInitial}
+                <div ref={avatarMenuRef} className="relative z-30 shrink-0">
+                  <button type="button" aria-label="Profile picture options" aria-haspopup="menu" aria-expanded={avatarMenuOpen} onClick={() => setAvatarMenuOpen((open) => !open)} className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#E2C8E4] text-lg font-bold text-[#6B21A8] ring-offset-2 hover:ring-2 hover:ring-[#2F80ED] dark:bg-[#4A2B4E] dark:text-[#E9D5FF]">
+                    {applicant.avatar ? <img src={applicant.avatar} alt={`${applicant.name} profile`} className="h-full w-full object-cover" /> : avatarInitial}
+                  </button>
+                  {avatarMenuOpen && <div role="menu" aria-label="Profile picture options" className="absolute left-0 top-[calc(100%+5px)] z-50 flex flex-col gap-1 rounded bg-[#666] p-1.5 shadow-lg">
+                    <button type="button" role="menuitem" title="Edit" aria-label="Edit profile picture" onClick={openAvatarEditor} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#2F80ED] hover:bg-blue-50"><Pencil className="h-4 w-4" /></button>
+                    <button type="button" role="menuitem" title="Zoom" aria-label="Zoom profile picture" onClick={() => { setAvatarMenuOpen(false); setAvatarZoomOpen(true); }} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#2F80ED] hover:bg-blue-50"><Search className="h-4 w-4" /></button>
+                  </div>}
                 </div>
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1265,7 +1842,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                               <p className="px-1 py-1.5 text-[11px] text-[#64748B] dark:text-[#AAB2BF]">Please enter {3 - candidateSearchQuery.trim().length} more character{3 - candidateSearchQuery.trim().length === 1 ? '' : 's'}</p>
                             ) : matchingApplicants.length ? matchingApplicants.map((candidate) => (
                               <button key={candidate.id} type="button" onClick={() => selectSearchedApplicant(candidate)} className="block w-full rounded px-2 py-2 text-left hover:bg-[#EFF6FF] dark:hover:bg-[#333]">
-                                <span className="block truncate text-xs font-medium text-[#334155] dark:text-white">{candidate.applicantId} Â· {candidate.name}</span>
+                                <span className="block truncate text-xs font-medium text-[#334155] dark:text-white">{candidate.applicantId} Ã‚Â· {candidate.name}</span>
                                 <span className="block truncate text-[10px] text-[#64748B] dark:text-[#AAB2BF]">{candidate.email}</span>
                               </button>
                             )) : <p className="px-2 py-2 text-xs text-[#64748B] dark:text-[#AAB2BF]">No applicants found.</p>}
@@ -1288,13 +1865,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       <Phone className="h-3 w-3 text-[#2F80ED]" />
                       {applicant.phone || '+91 7667560620'}
                     </span>
-                    <a
-                      href={`mailto:${applicant.email}`}
-                      className="flex items-center gap-1 text-[#2F80ED] hover:underline"
-                    >
+                    <button type="button" onClick={openEmailComposer} className="flex items-center gap-1 text-[#2F80ED] hover:underline">
                       <Mail className="h-3 w-3" />
                       {applicant.email || 'sivakrishnanckmilsamy@gmail.com'}
-                    </a>
+                    </button>
                   </div>
 
                   <p className="text-[10px] text-[#888] dark:text-[#888]">
@@ -1366,8 +1940,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             'Create Task',
                             'Add Note',
                             'Matching Jobs',
-                            'Send Email',
-                            'Print Dossier'
+                            'Send Email'
                           ].map((item) => (
                             <button
                               key={item}
@@ -1375,12 +1948,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                               role="menuitem"
                               onClick={() => {
                                 setActionMenuOpen(false);
-                                if (item === 'Timeline Activities') setActiveSubTab('Activities');
+                                if (item === 'Timeline Activities') setIsTimelineDrawerOpen(true);
                                 else if (item === 'Create Task') setDialog('task');
                                 else if (item === 'Add Note') setDialog('note');
                                 else if (item === 'Matching Jobs') navigate('matching-jobs', applicant.id);
-                                else if (item === 'Send Email') window.location.href = `mailto:${applicant.email}`;
-                                else if (item === 'Print Dossier') window.print();
+                                else if (item === 'Send Email') openEmailComposer();
                                 else showToast(`${item} recorded.`);
                               }}
                               className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 hover:text-[#1877F2] dark:text-white dark:hover:bg-[#333]"
@@ -1516,7 +2088,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     activeNotesFilter === 'applicants' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
                   }`}
                 >
-                  Applicants ({notesCount})
+                  Applicants ({notesSourceCounts.applicants})
                 </button>
                 <button
                   type="button"
@@ -1525,7 +2097,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     activeNotesFilter === 'submissions' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
                   }`}
                 >
-                  Submissions ({submissionCounts.all})
+                  Submissions ({notesSourceCounts.submissions})
                 </button>
                 <button
                   type="button"
@@ -1534,7 +2106,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     activeNotesFilter === 'pipeline' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
                   }`}
                 >
-                  Pipeline ({submissionCounts.pipeline})
+                  Pipeline ({notesSourceCounts.pipeline})
                 </button>
               </div>
 
@@ -1542,6 +2114,9 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <button
                   type="button"
                   title="Filter Notes"
+                  aria-label="Filter notes"
+                  aria-expanded={notesFilterOpen}
+                  onClick={() => setNotesFilterOpen((open) => !open)}
                   className="rounded p-1 text-[#666] hover:bg-gray-100 dark:hover:bg-[#333]"
                 >
                   <Filter className="h-3.5 w-3.5" />
@@ -1549,7 +2124,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <button
                   type="button"
                   onClick={() => {
-                    setNoteSubject(`New Note Created for ${displayName.toUpperCase()} - ${displayId}.`);
+                    setNoteSubject(`New Note Created for ${displayName} - ${displayId}.`);
                     setDialog('note');
                   }}
                   className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
@@ -1558,6 +2133,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 </button>
               </div>
             </div>
+
+            {notesFilterOpen && <div className="grid grid-cols-1 gap-3 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 dark:border-[#333] dark:bg-[#202020] sm:grid-cols-2 xl:grid-cols-5">
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Search notes<input type="search" value={notesSearch} onChange={(event) => setNotesSearch(event.target.value)} placeholder="Subject, text, job, clientâ€¦" className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Added by<select value={notesAuthorFilter} onChange={(event) => setNotesAuthorFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Any author</option>{notesAuthorOptions.map((author) => <option key={author} value={author}>{author}</option>)}</select></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Priority<select value={notesPriorityFilter} onChange={(event) => setNotesPriorityFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Any priority</option><option>Urgent</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">From date<input type="date" value={notesDateFrom} onChange={(event) => setNotesDateFrom(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">To date<input type="date" value={notesDateTo} onChange={(event) => setNotesDateTo(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+              <div className="flex items-end justify-between gap-2 sm:col-span-2 xl:col-span-5"><span className="text-[11px] text-[#64748B]">Showing {filteredNotes.length} of {notesSourceCounts[activeNotesFilter]} notes</span><button type="button" onClick={() => { setNotesSearch(''); setNotesAuthorFilter(''); setNotesPriorityFilter(''); setNotesDateFrom(''); setNotesDateTo(''); }} className="text-[11px] font-semibold text-[#2F80ED] hover:underline">Clear filters</button></div>
+            </div>}
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -1569,8 +2153,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
-                  {applicant.notes && applicant.notes.length > 0 ? (
-                    applicant.notes.map((n) => (
+                  {filteredNotes.length > 0 ? (
+                    filteredNotes.map((n) => (
                       <tr key={n.id} className="hover:bg-gray-50 dark:hover:bg-[#202020]">
                         <td className="whitespace-nowrap px-4 py-2.5 text-[#555] dark:text-[#AAA]">
                           <span className="font-medium text-[#222] dark:text-white">{n.author}</span>
@@ -1603,7 +2187,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   ) : (
                     <tr>
                       <td colSpan={3} className="px-4 py-6 text-center text-xs text-[#888]">
-                        No data available
+                        {noteEntries.some((note) => note.source === activeNotesFilter) ? 'No notes match the selected filters.' : 'No data available'}
                       </td>
                     </tr>
                   )}
@@ -1642,7 +2226,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <button type="button" onClick={() => viewApplicantDocument(doc)} className="min-w-0 text-left">
                     <span className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#1F2937] hover:text-[#2F80ED] dark:text-white"><span className="break-all">{doc.title || doc.name}</span><Check className="h-3.5 w-3.5 rounded-full bg-[#68C17B] p-0.5 text-white" /></span>
                     <span className="mt-1 block text-[11px] text-[#526174] dark:text-[#AAB2BF]">Created By {doc.createdBy || applicant.createdBy || currentUser?.name || 'User'} on {doc.date || applicant.createdDate || 'N/A'} <span className="text-[#2F80ED]">|</span> Modified By {doc.modifiedBy || doc.createdBy || applicant.createdBy || currentUser?.name || 'User'}</span>
-                    <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` Â· ${doc.size}` : ''}</span>
+                    <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` Ã‚Â· ${doc.size}` : ''}</span>
                   </button>
                 </div>
                 <div className="relative shrink-0">
@@ -1690,21 +2274,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
-                  <th className="px-4 py-2">Job Details</th><th className="px-4 py-2">Submission Details</th><th className="px-4 py-2">Submitted By</th><th className="px-4 py-2">Client Bill Rate</th><th className="px-4 py-2">Pay Rate</th><th className="px-4 py-2 text-right">Approval</th>
+                  <th className="px-4 py-2">Job Details</th><th className="px-4 py-2">Submission Details</th><th className="px-4 py-2">Submitted By</th><th className="px-4 py-2">Client Bill Rate</th><th className="px-4 py-2">Pay Rate</th>
                 </tr></thead>
                 <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
-                  {filteredApplicantSubmissions.length === 0 ? <tr><td colSpan={6} className="px-4 py-6 text-center text-xs text-[#888]">No data available</td></tr> : filteredApplicantSubmissions.map((submission) => {
+                  {filteredApplicantSubmissions.length === 0 ? <tr><td colSpan={5} className="px-4 py-6 text-center text-xs text-[#888]">No data available</td></tr> : filteredApplicantSubmissions.map((submission) => {
                     const currentStage = getSubmissionStageIndex(submission.status);
                     const steps = ['Pipeline', 'Submission', 'Client Submission', 'Interview', 'Confirmation', 'Placement', 'Not Joined'];
                     const history = submission.statusHistory || [{ status: submission.status, changedAt: submission.submittedDate }];
                     return <React.Fragment key={submission.id}>
                       <tr className="hover:bg-gray-50 dark:hover:bg-[#202020]">
-                        <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#333]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || '—'}</span></td>
+                        <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#333]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || 'â€”'}</span></td>
                         <td className="px-4 py-3"><span className="block font-medium text-[#18558A] dark:text-[#90CDF4]">Submission #{submission.submissionId}</span><span className="mt-1 block max-w-[300px] text-xs font-semibold text-emerald-700 dark:text-emerald-400">{submission.status}</span></td>
-                        <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-white">{submission.recruiter || '—'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
-                        <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.billRate ? submission.billRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.payRate ? submission.payRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 text-right text-xs text-[#718096]">{submission.approvalStatus}</td>
+                        <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-white">{submission.recruiter || 'â€”'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
+                        <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.billRate ? submission.billRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.payRate ? submission.payRate.toLocaleString() : 'N/A'}</td>
                       </tr>
-                      <tr><td colSpan={6} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#333]"><div className="flex items-start">{steps.map((step, index) => {
+                      <tr><td colSpan={5} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#333]"><div className="flex items-start">{steps.map((step, index) => {
                         const state = index === 0 || index < currentStage ? 'completed' : index === currentStage ? 'active' : 'upcoming';
                         const entry = history.filter((item) => getSubmissionStageIndex(item.status) === index).slice(-1)[0];
                         const timestamp = index === 1 ? submission.submittedDate : entry?.changedAt;
@@ -1737,7 +2321,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div className="min-h-0 flex-1 overflow-y-auto p-4 text-xs">
                   {quickViewTab === 'details' && <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">{[['Client Bill Rate / Salary', quickViewJob.billRate ? `${quickViewJob.currency || 'INR'} ${quickViewJob.billRate.toLocaleString()}` : 'N/A'], ['Required Documents for Submission', detailValue('requiredDocuments')], ['End Client', detailValue('endClient')], ['Duration', quickViewJob.duration || 'N/A'], ['Tax Terms', detailValue('taxTerms')], ['Work Authorization', detailValue('workAuthorization')], ['Interview Mode', detailValue('interviewMode')], ['Experience', quickViewJob.experienceRequired || 'N/A'], ['Assigned To', quickViewJob.assignedTo || quickViewJob.assignedRecruiter || 'N/A'], ['Job Type', quickViewJob.type]].map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3"><span className="text-[#7B8490]">{label}</span><span className="font-medium text-[#252525] dark:text-white">{value}</span></div>)}</div>}
                   {quickViewTab === 'skills' && <div className="space-y-4"><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Skills</h3><div className="flex flex-wrap gap-1.5">{(quickViewJob.primarySkills?.length ? quickViewJob.primarySkills : quickViewJob.skills).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white">{skill}</span>)}</div></div><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Job Description</h3><p className="whitespace-pre-wrap leading-relaxed text-[#475569] dark:text-[#CCC]">{quickViewJob.description || 'No job description available.'}</p></div></div>}
-                  {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#444]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
+                  {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#444]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">Â· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
                   {quickViewTab === 'email' && <p className="py-8 text-center text-[#64748B]">No email merges available.</p>}
                 </div>
               </aside>
@@ -1809,11 +2393,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={8} className="px-4 py-5 text-center text-xs text-[#888]">
-                      No data available
-                    </td>
-                  </tr>
+                  {applicantTasks.length ? applicantTasks.map((task, index) => <tr key={`${task.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#333]"><td className="px-4 py-2">{currentUser?.name || 'Me'}</td><td className="px-4 py-2">{task.due || 'â€”'}</td><td className="px-4 py-2">Local</td><td className="px-4 py-2">{task.description || task.title}</td><td className="px-4 py-2">{task.assignee}</td><td className="px-4 py-2">â€”</td><td className="px-4 py-2">â€”</td><td className="px-4 py-2">{task.status}</td></tr>) : <tr><td colSpan={8} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1844,11 +2424,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={6} className="px-4 py-5 text-center text-xs text-[#888]">
-                      No data available
-                    </td>
-                  </tr>
+                  {callLogs.length ? callLogs.map((call, index) => <tr key={`${call.date}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#333]"><td className="px-4 py-2">{call.type}</td><td className="px-4 py-2">{call.comments}</td><td className="px-4 py-2">{call.date || 'â€”'}</td><td className="px-4 py-2">{call.followUp || 'â€”'}</td><td className="px-4 py-2">{call.date || 'â€”'}</td><td className="px-4 py-2">{call.by}</td></tr>) : <tr><td colSpan={6} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1883,11 +2459,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={7} className="px-4 py-5 text-center text-xs text-[#888]">
-                      No data available
-                    </td>
-                  </tr>
+                  {meetings.length ? meetings.map((meeting, index) => <tr key={`${meeting.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#333]"><td className="px-4 py-2">{meeting.title}</td><td className="px-4 py-2">{meeting.description || 'â€”'}</td><td className="px-4 py-2">{meeting.attendees || 'â€”'}</td><td className="px-4 py-2">{meeting.guests || 'â€”'}</td><td className="px-4 py-2">{meeting.time}</td><td className="px-4 py-2">{meeting.by}</td><td className="px-4 py-2">â€”</td></tr>) : <tr><td colSpan={7} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -2033,9 +2605,9 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
-                      <a href={`mailto:${applicant.email}`} className="hover:underline">
+                      <button type="button" onClick={openEmailComposer} className="hover:underline">
                         {applicant.email || 'sivakrishnanduraisamy@gmail.com'}
-                      </a>
+                      </button>
                     </p>
                   )}
                 </div>
@@ -2608,7 +3180,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             onClick={() => setSkillsExpandedPersonal(false)}
                             className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
                           >
-                            Less â–´
+                            Less Ã¢â€“Â´
                           </button>
                         </div>
                       ) : (
@@ -2620,7 +3192,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             onClick={() => setSkillsExpandedPersonal(true)}
                             className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
                           >
-                            More â–¾
+                            More Ã¢â€“Â¾
                           </button>
                         </div>
                       )}
@@ -3220,7 +3792,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       </div>
                       <div>
                         <h3 id="activities-title" className="text-sm font-bold text-[#1F2937] dark:text-white">Activities</h3>
-                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-[#AAA]">A complete record of this applicant’s interactions and updates.</p>
+                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-[#AAA]">A complete record of this applicantâ€™s interactions and updates.</p>
                       </div>
                     </div>
                   </div>
@@ -3364,37 +3936,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           {/* EMAIL ACTIVITY TAB (Three-Dot Option 2) */}
           {activeSubTab === 'Email Activity' && (
             <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
-                <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Email Activity Log</h3>
-                <button
-                  type="button"
-                  onClick={() => showToast('Opening Email Composer')}
-                  className="flex items-center gap-1 rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
-                >
-                  <Send className="h-3 w-3" />
-                  <span>Compose Email</span>
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
+                <h3 className="text-sm font-semibold text-[#1F2937] dark:text-white">Email Activity</h3>
+                <div className="flex flex-wrap items-center gap-2 text-xs"><label className="text-[#64748B]">Email Type</label><select value={emailActivityTypeFilter} onChange={(event) => { setEmailActivityTypeFilter(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option>All Types</option>{Array.from(new Set(['Email', 'Job Share', ...emailActivityTypes])).map((type) => <option key={type}>{type}</option>)}</select><select aria-label="Email activity period" value={emailActivityPeriod} onChange={(event) => { setEmailActivityPeriod(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option>Last 6 Months</option><option>Last 30 Days</option><option>Last Year</option><option>All Time</option></select><button type="button" onClick={openEmailComposer} className="rounded bg-[#2F80ED] px-2.5 py-1.5 font-semibold text-white hover:bg-[#1D6FD8]"><Send className="mr-1 inline h-3 w-3" />Compose Email</button></div>
               </div>
-              <div className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
-                <div className="flex items-start justify-between py-3">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2 text-[#1877F2] dark:bg-[#1E293B]">
-                      <Mail className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-[#1F2937] dark:text-white">Interview Schedule - E-commerce Production Support</h4>
-                      <p className="text-xs text-[#555] dark:text-[#CCC]">From: ganesh.godse@ampcustech.com â†’ To: {applicant.email}</p>
-                      <p className="text-[11px] text-[#888]">Sent on 20/11/2026 at 14:25 PM</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-semibold text-[#1877F2] dark:bg-blue-950/40 dark:text-blue-300">
-                    Sent
-                  </span>
-                </div>
-              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3 text-[11px] dark:border-[#333]"><label className="flex items-center gap-1.5 text-[#64748B]">Search:<input type="search" value={emailActivitySearch} onChange={(event) => { setEmailActivitySearch(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-xs text-[#334155] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label><label className="flex items-center gap-1.5 text-[#64748B]">Show<select value={emailActivityPageSize} onChange={(event) => { setEmailActivityPageSize(Number(event.target.value)); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1 text-xs dark:border-[#444] dark:bg-[#333] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select>entries</label></div>
+              <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead><tr className="border-b border-[#D8D8D8] text-[10px] font-bold uppercase text-[#444]"><th className="px-2 py-2">Date &amp; Time</th><th className="px-2 py-2">Email Type</th><th className="px-2 py-2">Sent By</th><th className="px-2 py-2">Sent To</th><th className="px-2 py-2">Email Details</th></tr></thead><tbody className="divide-y divide-[#E5E7EB] dark:divide-[#333]">
+                {visibleEmailActivity.length ? visibleEmailActivity.map((email, index) => {
+                  const emailId = email.id || `${email.sentAt}-${index}`;
+                  const isExpanded = emailActivityExpandedId === emailId;
+                  return <React.Fragment key={emailId}><tr className="hover:bg-slate-50 dark:hover:bg-[#202020]"><td className="whitespace-nowrap px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.sentAt ? new Date(email.sentAt).toLocaleString() : '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.type || 'Email'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.from || '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{(email.to || []).join(', ') || '—'}{email.cc?.length ? <span className="block text-[10px] text-slate-400">CC: {email.cc.join(', ')}</span> : null}</td><td className="px-2 py-2.5"><button type="button" onClick={() => setEmailActivityExpandedId(isExpanded ? null : emailId)} className="font-medium text-[#1877F2] hover:underline">{email.subject || 'View email'} {isExpanded ? '-' : '+'}</button></td></tr>{isExpanded && <tr><td colSpan={5} className="bg-slate-50 px-4 py-3 dark:bg-[#202020]"><p className="font-semibold text-slate-700 dark:text-slate-200">{email.subject || '(No subject)'}</p><p className="mt-2 whitespace-pre-wrap text-slate-600 dark:text-slate-300">{(email.body || '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' ').trim() || '(No message body)'}</p>{email.attachments?.length ? <p className="mt-2 text-[10px] text-slate-500">Attachments: {email.attachments.join(', ')}</p> : null}<p className="mt-2 text-[10px] text-slate-400">Activity: Email composed and saved from this applicant profile.</p></td></tr>}</React.Fragment>;
+                }) : <tr><td colSpan={5} className="px-2 py-3 text-center text-xs text-[#666]">No data available in table</td></tr>}
+              </tbody></table></div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-[10px] text-[#64748B]"><span>Showing {emailActivityFiltered.length ? emailActivityPage * emailActivityPageSize + 1 : 0} to {Math.min((emailActivityPage + 1) * emailActivityPageSize, emailActivityFiltered.length)} of {emailActivityFiltered.length} entries</span><div className="flex gap-1"><button type="button" aria-label="Previous email activity page" disabled={emailActivityPage === 0} onClick={() => setEmailActivityPage((page) => Math.max(0, page - 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#444]">‹</button><button type="button" aria-label="Next email activity page" disabled={emailActivityPage + 1 >= emailActivityPageCount} onClick={() => setEmailActivityPage((page) => Math.min(emailActivityPageCount - 1, page + 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#444]">›</button></div></div>
             </div>
           )}
-
           {/* HIRES TAB (Three-Dot Option 3) */}
           {activeSubTab === 'Hires' && (
             <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
@@ -3466,7 +4022,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           Completed
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#F2B705] font-bold">5 / 5 â˜…</td>
+                      <td className="px-4 py-3 text-[#F2B705] font-bold">5 / 5 Ã¢Ëœâ€¦</td>
                       <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">"Recruitment team was very responsive and professional."</td>
                     </tr>
                   </tbody>
@@ -3546,13 +4102,13 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   {displayName}
                 </h1>
                 <p className="text-xs text-[#4B5563] dark:text-[#9CA3AF]">
-                  {applicant.city || applicant.location || 'Nashik, Maharashtra, India'} Â· {applicant.email || 'applicant@email.com'} Â· {applicant.phone || '+91-9876543210'}
+                  {applicant.city || applicant.location || 'Nashik, Maharashtra, India'} Ã‚Â· {applicant.email || 'applicant@email.com'} Ã‚Â· {applicant.phone || '+91-9876543210'}
                 </p>
                 <div className="flex justify-center items-center gap-3 text-xs text-[#1877F2] pt-1">
                   <a href={applicant.portfolioUrl || '#'} className="hover:underline">Portfolio</a>
-                  <span>Â·</span>
+                  <span>Ã‚Â·</span>
                   <a href={applicant.githubUrl || '#'} className="hover:underline">GitHub</a>
-                  <span>Â·</span>
+                  <span>Ã‚Â·</span>
                   <a href={applicant.linkedinUrl || '#'} className="hover:underline">LinkedIn</a>
                 </div>
               </div>
@@ -3953,8 +4509,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
               <div>
-                <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Resume Document — {applicant.name}</h2>
-                <p className="text-[11px] text-[#888]">{applicant.currentDesignation} · {applicant.location}</p>
+                <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Resume Document â€” {applicant.name}</h2>
+                <p className="text-[11px] text-[#888]">{applicant.currentDesignation} Â· {applicant.location}</p>
               </div>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
@@ -3972,7 +4528,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Core Technical Skills</h4>
-                <p className="text-[#555] dark:text-[#BBB]">{applicant.skills.join(' Â· ')}</p>
+                <p className="text-[#555] dark:text-[#BBB]">{applicant.skills.join(' Ã‚Â· ')}</p>
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Experience</h4>
@@ -3995,21 +4551,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Add Note Modal (Exact Replication of Reference Image 1) */}
       {dialog === 'note' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-[700px] border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#333]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Note</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-3 py-4 text-xs">
+            <div className="space-y-3 px-5 py-5 text-xs">
               {/* Row 1: Applicant Name & Search for a Job */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <input
                     type="text"
                     readOnly
-                    value={displayName.toUpperCase()}
+                    value={displayName}
                     className="w-full rounded border border-[#CBD5E1] bg-gray-50 p-2 text-xs font-semibold text-[#1F2937] outline-none dark:border-[#444] dark:bg-[#333] dark:text-white"
                   />
                 </div>
@@ -4101,68 +4657,20 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <div>
                 <input
                   type="text"
-                  value={noteSubject || `New Note Created for ${displayName.toUpperCase()} - ${displayId}.`}
+                  value={noteSubject || `New Note Created for ${displayName} - ${displayId}.`}
                   onChange={(e) => setNoteSubject(e.target.value)}
-                  placeholder={`New Note Created for ${displayName.toUpperCase()} - ${displayId}.`}
+                  placeholder={`New Note Created for ${displayName} - ${displayId}.`}
                   className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs font-medium outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
                 />
               </div>
 
-              {/* Row 6: Rich Text Editor with Exact Toolbar (Reference Image 1) */}
-              <div className="rounded border border-[#CBD5E1] dark:border-[#444]">
-                {/* Top Toolbar Row */}
-                <div className="flex flex-wrap items-center gap-1 border-b border-[#CBD5E1] bg-[#F8FAFC] p-1.5 text-xs text-[#555] dark:border-[#444] dark:bg-[#202020] dark:text-[#AAA]">
-                  <button type="button" title="Cut" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">âœ‚</button>
-                  <button type="button" title="Copy" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">ðŸ“‹</button>
-                  <button type="button" title="Paste" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">ðŸ“„</button>
-                  <button type="button" title="Undo" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">â†©</button>
-                  <button type="button" title="Redo" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">â†ª</button>
-                  <span className="text-gray-300">|</span>
-                  <button type="button" title="Bold" className="rounded px-1.5 py-0.5 font-bold hover:bg-gray-200 dark:hover:bg-[#333]">B</button>
-                  <button type="button" title="Italic" className="rounded px-1.5 py-0.5 italic hover:bg-gray-200 dark:hover:bg-[#333]">I</button>
-                  <button type="button" title="Underline" className="rounded px-1.5 py-0.5 underline hover:bg-gray-200 dark:hover:bg-[#333]">U</button>
-                  <button type="button" title="Strikethrough" className="rounded px-1.5 py-0.5 line-through hover:bg-gray-200 dark:hover:bg-[#333]">S</button>
-                  <button type="button" title="Subscript" className="rounded px-1 text-[10px] hover:bg-gray-200 dark:hover:bg-[#333]">xâ‚‚</button>
-                  <button type="button" title="Superscript" className="rounded px-1 text-[10px] hover:bg-gray-200 dark:hover:bg-[#333]">xÂ²</button>
-                  <span className="text-gray-300">|</span>
-                  <button type="button" title="Bulleted list" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">â‰¡</button>
-                  <button type="button" title="Numbered list" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">1.</button>
-                  <span className="text-gray-300">|</span>
-                  <button type="button" title="Special character" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">Î©</button>
-                  <button type="button" title="Link" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">ðŸ”—</button>
-                  <button type="button" title="Source code" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">&lt;/&gt;</button>
-                </div>
-                {/* Second Toolbar Row */}
-                <div className="flex flex-wrap items-center gap-1.5 border-b border-[#CBD5E1] bg-[#F8FAFC] px-1.5 py-1 text-[11px] text-[#555] dark:border-[#444] dark:bg-[#202020] dark:text-[#AAA]">
-                  <button type="button" title="Table" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â–¦</button>
-                  <button type="button" title="Align Left" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â‡ </button>
-                  <button type="button" title="Align Center" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â†”</button>
-                  <button type="button" title="Align Right" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â‡¢</button>
-                  <span className="text-gray-300">|</span>
-                  <span className="font-bold underline text-blue-600">A</span>
-                  <span className="bg-yellow-200 px-1 font-semibold text-black">A</span>
-                  <span className="text-gray-300">|</span>
-                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
-                    <option>Styles</option>
-                  </select>
-                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
-                    <option>Format</option>
-                  </select>
-                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
-                    <option>Font</option>
-                  </select>
-                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
-                    <option>Size</option>
-                  </select>
-                </div>
-                <textarea
-                  rows={6}
-                  value={newNoteText}
-                  onChange={(e) => setNewNoteText(e.target.value)}
-                  placeholder="Enter note contents..."
-                  className="w-full p-3 text-xs outline-none dark:bg-[#252525] dark:text-white"
-                />
-              </div>
+              <EmailRichTextEditor
+                value={newNoteText}
+                resetKey={noteEditorResetKey}
+                accentColor="#2F80ED"
+                onChange={setNewNoteText}
+                onError={showToast}
+              />
 
               {/* Row 7: Add To Task Checkbox */}
               <label className="flex items-center gap-2 cursor-pointer pt-0.5">
@@ -4176,7 +4684,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </label>
             </div>
 
-            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#333]">
               <button
                 type="button"
                 onClick={handleAddNote}
@@ -4198,67 +4706,69 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
       {/* Add Task Modal */}
       {dialog === 'task' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
-              <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Create Recruiter Task</h2>
-              <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
-                <X className="h-5 w-5" />
-              </button>
+        <div className="fixed inset-0 z-[100] flex justify-end bg-black/50" onClick={() => setDialog(null)}>
+          <section aria-label="Create new task" className="flex h-full w-full max-w-[900px] flex-col overflow-y-auto bg-white shadow-2xl dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3 dark:border-[#334155] dark:bg-[#172033]"><h2 className="text-base font-semibold text-slate-800 dark:text-white"><span className="mr-2 text-blue-500">â†</span>Create New Task</h2><button aria-label="Close task form" onClick={() => setDialog(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white"><X className="h-5 w-5" /></button></header>
+            <div className="grid flex-1 grid-cols-1 gap-6 p-5 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="space-y-3 text-xs">
+                <div className="flex gap-2"><input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Enter Title" className="min-w-0 flex-1 border border-slate-300 bg-slate-50 px-2 py-1.5 outline-none focus:border-blue-500 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /><select aria-label="Priority" className="border border-slate-300 bg-slate-50 px-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>ðŸŒŸ</option><option>High</option><option>Normal</option></select></div>
+                <textarea value={newTaskDescription} onChange={(e) => setNewTaskDescription(e.target.value)} placeholder="Enter a brief description of the task" rows={3} className="w-full border border-slate-300 bg-slate-50 p-2 outline-none focus:border-blue-500 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="space-y-1 text-slate-500">Task Type<select value={newTaskType} onChange={(e) => setNewTaskType(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Call</option><option>Follow-up</option><option>Meeting</option><option>Screening</option><option>Other</option></select></label>
+                  <label className="space-y-1 text-slate-500">Task Category<select value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option value="">Select</option><option>Recruiting</option><option>Follow-up</option><option>Interview</option><option>Administrative</option></select></label>
+                  <label className="space-y-1 text-slate-500">Related To<input readOnly value="Applicant" className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Applicant<input readOnly value={`${applicant.applicantId ? `${applicant.applicantId} - ` : ''}${applicant.name}`} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Due Date<input type="datetime-local" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Status<select value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Deferred</option></select></label>
+                  <label className="space-y-1 text-slate-500">Assign To<input value={newTaskAssignee} onChange={(e) => setNewTaskAssignee(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Escalate To<input className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 dark:border-[#475569] dark:bg-[#263449]" /></label>
+                  <label className="space-y-1 text-slate-500">Reminder<select value={newTaskReminder} onChange={(e) => setNewTaskReminder(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>None</option><option>At due time</option><option>15 minutes before</option><option>1 hour before</option><option>1 day before</option></select></label>
+                  <label className="space-y-1 text-slate-500">Ownership<input className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 dark:border-[#475569] dark:bg-[#263449]" /></label>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300"><label><input type="checkbox" className="mr-2" />Notify Via Email</label><label><input type="checkbox" className="mr-2" />Show task on event calendar</label><label><input type="checkbox" className="mr-2" />Recurrence Task</label></div>
+                <div className="flex gap-2 pt-3"><button type="button" onClick={() => { if (!newTaskTitle.trim()) { showToast('Enter a task title.'); return; } setApplicantTasks((items) => [...items, { title: newTaskTitle.trim(), description: newTaskDescription, due: newTaskDue, status: newTaskStatus, assignee: newTaskAssignee }]); setNewTaskTitle(''); setNewTaskDescription(''); setNewTaskDue(''); setDialog(null); showToast('Task added to applicant workspace.'); }} className="rounded bg-[#2F80ED] px-4 py-2 font-semibold text-white hover:bg-[#1D6FD8]">Create Task</button><button type="button" onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button></div>
+              </div>
+              <aside className="min-h-72 bg-slate-50 p-4 dark:bg-[#172033]"><h3 className="font-semibold text-slate-800 dark:text-white">Assigned Tasks</h3>{applicantTasks.length ? <ul className="mt-3 space-y-2">{applicantTasks.map((task, i) => <li key={`${task.title}-${i}`} className="border-b border-slate-200 py-2 dark:border-[#334155]"><p className="font-medium text-slate-700 dark:text-slate-200">{task.title}</p><p className="text-[11px] text-slate-500">{task.status}{task.due ? ` Â· ${task.due}` : ''}</p></li>)}</ul> : <p className="mt-3 text-center italic text-slate-400">No data available</p>}</aside>
             </div>
-            <div className="space-y-3 py-4 text-xs">
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Task Title</span>
-                <input
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="e.g. Schedule technical interview"
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Task Type</span>
-                <select
-                  value={newTaskType}
-                  onChange={(e) => setNewTaskType(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none dark:border-[#444] dark:bg-[#333] dark:text-white"
-                >
-                  <option>Follow-up</option>
-                  <option>Screening Call</option>
-                  <option>Document Collection</option>
-                  <option>Client Submission</option>
-                </select>
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Due Date</span>
-                <input
-                  type="date"
-                  value={newTaskDue}
-                  onChange={(e) => setNewTaskDue(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
-                />
-              </label>
+          </section>
+        </div>
+      )}
+
+      {dialog === 'call-log' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
+          <section aria-label="Call Logs" className="w-full max-w-xl border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-[#334155]"><h2 className="text-base font-medium text-slate-800 dark:text-white">Call Logs</h2><button aria-label="Close call log form" onClick={() => setDialog(null)}><X className="h-4 w-4 text-slate-500" /></button></header>
+            <div className="space-y-4 p-5 text-xs">
+              <div className="grid grid-cols-2 gap-4"><label className="space-y-1 text-slate-500">Call Type<select value={newCallType} onChange={(e) => setNewCallType(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Call</option><option>Incoming Call</option><option>Outgoing Call</option><option>Video Call</option></select></label><label className="space-y-1 text-slate-500">Call Taken On<input type="datetime-local" value={newCallDate} onChange={(e) => setNewCallDate(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label></div>
+              <label className="block space-y-1 text-slate-500">Comments<textarea value={newCallComments} onChange={(e) => setNewCallComments(e.target.value)} rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <h3 className="pt-1 text-sm font-semibold text-slate-800 dark:text-white">Follow Up Notes</h3>
+              <label className="block max-w-xs space-y-1 text-slate-500">Date &amp; Time<input type="datetime-local" value={newCallFollowUp} onChange={(e) => setNewCallFollowUp(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <p className="text-[11px] text-slate-500">Time Zone: (UTC+05:30) IST</p>
+              <label className="block max-w-xs space-y-1 text-slate-500">Reminder<select className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Select Reminder</option><option>At follow-up time</option><option>15 minutes before</option><option>1 hour before</option></select></label>
+              <label className="block space-y-1 text-slate-500">Notes<textarea rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
-              <button
-                type="button"
-                onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#444] dark:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDialog(null);
-                  showToast('Task added to applicant workspace.');
-                }}
-                className="rounded bg-[#2F80ED] px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
-              >
-                Create Task
-              </button>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button><button onClick={() => { setCallLogs((items) => [...items, { type: newCallType, comments: newCallComments, followUp: newCallFollowUp, date: newCallDate || new Date().toLocaleString(), by: currentUser?.name || 'Current User' }]); setNewCallComments(''); setNewCallFollowUp(''); setNewCallDate(''); setDialog(null); showToast('Call log saved.'); }} className="rounded bg-[#2F80ED] px-5 py-2 font-semibold text-white">Save</button></footer>
+          </section>
+        </div>
+      )}
+
+      {dialog === 'meeting' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
+          <section aria-label="Schedule Meeting" className="w-full max-w-xl border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-[#334155]"><h2 className="text-base font-medium text-slate-800 dark:text-white">Schedule Meeting</h2><button aria-label="Close meeting form" onClick={() => setDialog(null)}><X className="h-4 w-4 text-slate-500" /></button></header>
+            <div className="grid grid-cols-2 gap-4 p-5 text-xs">
+              <label className="col-span-2 space-y-1 text-slate-500">Meeting Title<input value={newMeetingTitle} onChange={(e) => setNewMeetingTitle(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="col-span-2 space-y-1 text-slate-500">Meeting Description<textarea value={newMeetingDescription} onChange={(e) => setNewMeetingDescription(e.target.value)} rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Meeting Mode<select value={newMeetingMode} onChange={(e) => setNewMeetingMode(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option value="">Select</option><option>Online</option><option>In Person</option><option>Phone</option></select></label>
+              <label className="space-y-1 text-slate-500">Meeting Date<input type="date" value={newMeetingDate} onChange={(e) => setNewMeetingDate(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Meeting Time<input type="time" value={newMeetingTime} onChange={(e) => setNewMeetingTime(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Duration<select value={newMeetingDuration} onChange={(e) => setNewMeetingDuration(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>30 mins</option><option>15 mins</option><option>45 mins</option><option>1 hour</option><option>90 mins</option></select></label>
+              <label className="space-y-1 text-slate-500">Add an Attendee<input readOnly value={currentUser?.name || 'Me'} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Guest Attendees<textarea value={newMeetingGuests} onChange={(e) => setNewMeetingGuests(e.target.value)} placeholder="Enter Email-IDs with comma separator" rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="col-span-2 text-slate-600 dark:text-slate-300"><input type="checkbox" className="mr-2" />Notify Via Email</label>
             </div>
-          </div>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button><button onClick={() => { if (!newMeetingTitle.trim()) { showToast('Enter a meeting title.'); return; } const meetingTime = [newMeetingDate, newMeetingTime].filter(Boolean).join(' '); setMeetings((items) => [...items, { title: newMeetingTitle.trim(), description: `${newMeetingMode ? `${newMeetingMode} Â· ` : ''}${newMeetingDescription}`, attendees: currentUser?.name || 'Me', guests: newMeetingGuests, time: `${meetingTime}${meetingTime ? ` Â· ${newMeetingDuration}` : newMeetingDuration}`, by: currentUser?.name || 'Current User' }]); setNewMeetingTitle(''); setNewMeetingDescription(''); setNewMeetingDate(''); setNewMeetingTime(''); setNewMeetingGuests(''); setDialog(null); showToast('Meeting scheduled.'); }} className="rounded bg-[#2F80ED] px-5 py-2 font-semibold text-white">Schedule</button></footer>
+          </section>
         </div>
       )}
 
@@ -4513,7 +5023,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2F80ED]">Professional details</p>
                   <h3 id="experience-dialog-title" className="text-base font-bold text-[#172033] dark:text-white">Add work experience</h3>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Capture a role that shows the applicant’s professional journey.</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Capture a role that shows the applicantâ€™s professional journey.</p>
                 </div>
               </div>
               <button type="button" aria-label="Close work experience form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#333] dark:hover:text-white">
@@ -4563,12 +5073,12 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       <label className="block space-y-2 md:col-span-2">
                         <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Employment period</span>
                         <input
-                          placeholder="e.g. October 2021 – Present"
+                          placeholder="e.g. October 2021 â€“ Present"
                           value={newExpPeriod}
                           onChange={(e) => setNewExpPeriod(e.target.value)}
                           className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
-                        <span className="block text-[11px] text-slate-400 dark:text-[#999]">Use “Present” for a current role.</span>
+                        <span className="block text-[11px] text-slate-400 dark:text-[#999]">Use â€œPresentâ€ for a current role.</span>
                       </label>
                     </div>
                   </section>

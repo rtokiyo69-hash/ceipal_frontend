@@ -278,6 +278,7 @@ export interface Submission {
     | (string & {});
   approvalStatus: 'Approved' | 'Pending Approval' | 'Revision Requested' | 'Pending Review' | (string & {});
   statusHistory?: { status: string; changedAt: string; changedBy?: string; comments?: string }[];
+  submissionDetails?: Record<string, unknown>;
   score?: number;
   groups?: string[];
   notes?: { id: string; author: string; text: string; date: string }[];

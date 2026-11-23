@@ -526,6 +526,7 @@ export const ApiService = {
       payRate: submissionData.payRate || 0,
       status,
       approvalStatus: submissionData.approvalStatus || 'Pending Review',
+      submissionDetails: submissionData.submissionDetails,
       statusHistory: [{ status, changedAt: submittedDate }]
     };
     const updated = [newSubmission, ...submissions];
