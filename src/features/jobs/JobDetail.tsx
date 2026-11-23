@@ -46,19 +46,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Job, Applicant, JobDocument, JobStatus, Submission, JobNote } from '../../types';
-
-const CEIPAL_STATUS_OPTIONS = [
-  'Select Status',
-  'Waiting for Evaluation by Internal Reviewer',
-  'Internal Disqualified',
-  'Client Submission',
-  'Interview Scheduled',
-  'Offered',
-  'Placed',
-  'Not Joined',
-  'In Review'
-];
+import { Job, Applicant, JobDocument, JobStatus, Submission, JobNote, SUBMISSION_STATUS_OPTIONS, getSubmissionStageIndex } from '../../types';
 
 const renderSafeDescription = (description: string): React.ReactNode => {
   if (!description) return null;
@@ -190,6 +178,23 @@ export const JobDetail: React.FC = () => {
     });
   }, [selectedId]);
 
+  useEffect(() => {
+    const syncSubmissions = (event: Event) => {
+      const records = (event as CustomEvent<Submission[]>).detail;
+      if (Array.isArray(records)) setSubmissions(records);
+      else ApiService.getSubmissions().then(setSubmissions);
+    };
+    const syncFromOtherTab = (event: StorageEvent) => {
+      if (event.key === 'talentember_submissions') ApiService.getSubmissions().then(setSubmissions);
+    };
+    window.addEventListener('ats:submissions-changed', syncSubmissions);
+    window.addEventListener('storage', syncFromOtherTab);
+    return () => {
+      window.removeEventListener('ats:submissions-changed', syncSubmissions);
+      window.removeEventListener('storage', syncFromOtherTab);
+    };
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -220,7 +225,7 @@ export const JobDetail: React.FC = () => {
   // Submissions for this job
   const jobSubmissions = useMemo(() => {
     if (!job) return [];
-    return submissions.filter((s) => s.jobId === job.id || s.jobTitle === job.title);
+    return submissions.filter((s) => s.jobId === job.id || (!s.jobId && s.jobTitle === job.title));
   }, [submissions, job]);
 
   // Filtered submissions by tab and search
@@ -228,18 +233,18 @@ export const JobDetail: React.FC = () => {
     return jobSubmissions.filter((sub) => {
       // Tab filter
       if (submissionFilterTab === 'pipeline') {
-        const isPipeline = ['Waiting for Evaluation by Internal Reviewer', 'Pending Review', 'Submitted'].includes(sub.status);
+        const isPipeline = getSubmissionStageIndex(sub.status) <= 1 && !/disqualified|rejected/i.test(sub.status);
         if (!isPipeline) return false;
       } else if (submissionFilterTab === 'client_submissions') {
-        if (!sub.status.toLowerCase().includes('client')) return false;
+        if (getSubmissionStageIndex(sub.status) !== 2) return false;
       } else if (submissionFilterTab === 'interviews') {
-        if (!sub.status.toLowerCase().includes('interview')) return false;
+        if (getSubmissionStageIndex(sub.status) !== 3) return false;
       } else if (submissionFilterTab === 'confirmations') {
-        if (!['offered', 'selected', 'confirmed'].some((s) => sub.status.toLowerCase().includes(s))) return false;
+        if (getSubmissionStageIndex(sub.status) !== 4) return false;
       } else if (submissionFilterTab === 'placements') {
-        if (!sub.status.toLowerCase().includes('place')) return false;
+        if (getSubmissionStageIndex(sub.status) !== 5) return false;
       } else if (submissionFilterTab === 'not_joined') {
-        if (!sub.status.toLowerCase().includes('not joined')) return false;
+        if (getSubmissionStageIndex(sub.status) !== 6) return false;
       }
 
       // Search filter
@@ -258,15 +263,13 @@ export const JobDetail: React.FC = () => {
   // Tab counts
   const tabCounts = useMemo(() => {
     return {
-      pipeline: jobSubmissions.filter((s) =>
-        ['Waiting for Evaluation by Internal Reviewer', 'Pending Review', 'Submitted'].includes(s.status)
-      ).length,
+      pipeline: jobSubmissions.filter((s) => getSubmissionStageIndex(s.status) <= 1 && !/disqualified|rejected/i.test(s.status)).length,
       all: jobSubmissions.length,
-      client_submissions: jobSubmissions.filter((s) => s.status.toLowerCase().includes('client')).length,
-      interviews: jobSubmissions.filter((s) => s.status.toLowerCase().includes('interview')).length,
-      confirmations: jobSubmissions.filter((s) => ['offered', 'selected', 'confirmed'].some((k) => s.status.toLowerCase().includes(k))).length,
-      placements: jobSubmissions.filter((s) => s.status.toLowerCase().includes('place')).length,
-      not_joined: jobSubmissions.filter((s) => s.status.toLowerCase().includes('not joined')).length
+      client_submissions: jobSubmissions.filter((s) => getSubmissionStageIndex(s.status) === 2).length,
+      interviews: jobSubmissions.filter((s) => getSubmissionStageIndex(s.status) === 3).length,
+      confirmations: jobSubmissions.filter((s) => getSubmissionStageIndex(s.status) === 4).length,
+      placements: jobSubmissions.filter((s) => getSubmissionStageIndex(s.status) === 5).length,
+      not_joined: jobSubmissions.filter((s) => getSubmissionStageIndex(s.status) === 6).length
     };
   }, [jobSubmissions]);
 
@@ -2024,7 +2027,7 @@ export const JobDetail: React.FC = () => {
                   onChange={(e) => setSelectedStatusValue(e.target.value)}
                   className="w-full px-3 py-2 bg-white dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg text-xs font-semibold text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
                 >
-                  {CEIPAL_STATUS_OPTIONS.map((st) => (
+                  {SUBMISSION_STATUS_OPTIONS.map((st) => (
                     <option key={st} value={st}>
                       {st}
                     </option>

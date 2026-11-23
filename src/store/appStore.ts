@@ -11,6 +11,7 @@ export type AppRoute =
   | 'job-new'
   | 'job-detail'
   | 'job-templates'
+  | 'matching-jobs'
   | 'applicants'
   | 'applicant-new'
   | 'applicant-detail'

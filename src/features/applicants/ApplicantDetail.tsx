@@ -2,6 +2,9 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
+  User,
+  Maximize2,
+  ExternalLink,
   GraduationCap,
   Bookmark,
   Award,
@@ -10,6 +13,7 @@ import {
   MapPin,
   Mail,
   Phone,
+  Eye,
   Briefcase,
   Star,
   Download,
@@ -26,7 +30,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
-  ThumbsUp,
+  Copy,
   Search,
   Check,
   CircleHelp,
@@ -39,7 +43,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Applicant, PipelineStage } from '../../types';
+import { Applicant, Job, PipelineStage, Submission, getSubmissionStageIndex } from '../../types';
 
 export const ApplicantDetail: React.FC = () => {
   const { selectedId, navigate, currentUser } = useAppStore();
@@ -49,6 +53,43 @@ export const ApplicantDetail: React.FC = () => {
   const [activityFilter, setActivityFilter] = useState<'all' | 'messages' | 'documents' | 'downloads'>('all');
   const [activityPeriod, setActivityPeriod] = useState<'last-6-months' | 'older'>('last-6-months');
   const [skillsExpandedPersonal, setSkillsExpandedPersonal] = useState(false);
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
+  const [personalForm, setPersonalForm] = useState<Record<string, any>>({});
+  const [isResumePanelOpen, setIsResumePanelOpen] = useState(false);
+  const [resumeFullscreen, setResumeFullscreen] = useState(false);
+  const [moreSubTabsOpen, setMoreSubTabsOpen] = useState(false);
+  const moreSubTabsRef = useRef<HTMLDivElement>(null);
+  const candidateSearchRef = useRef<HTMLDivElement>(null);
+  const candidateSearchInputRef = useRef<HTMLInputElement>(null);
+  const [candidateSearchOpen, setCandidateSearchOpen] = useState(false);
+  const [candidateSearchQuery, setCandidateSearchQuery] = useState('');
+  const submitMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (moreSubTabsRef.current && !moreSubTabsRef.current.contains(event.target as Node)) {
+        setMoreSubTabsOpen(false);
+      }
+      if (submitMenuRef.current && !submitMenuRef.current.contains(event.target as Node)) {
+        setSubmitMenuOpen(false);
+      }
+      if (candidateSearchRef.current && !candidateSearchRef.current.contains(event.target as Node)) {
+        setCandidateSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  const [resumeTemplate, setResumeTemplate] = useState('Standard Corporate Template');
+  const [noteJob, setNoteJob] = useState('');
+  const [noteClient, setNoteClient] = useState('');
+  const [noteContact, setNoteContact] = useState('');
+  const [noteAction, setNoteAction] = useState('');
+  const [noteRemindMe, setNoteRemindMe] = useState(false);
+  const [noteSubject, setNoteSubject] = useState('');
+  const [noteAddToTask, setNoteAddToTask] = useState(false);
 
   // Education state
   const [educationList, setEducationList] = useState([
@@ -182,7 +223,10 @@ export const ApplicantDetail: React.FC = () => {
     }
   ]);
   const [activeNotesFilter, setActiveNotesFilter] = useState<'applicants' | 'submissions' | 'pipeline'>('applicants');
-  const [activeSubmissionsFilter, setActiveSubmissionsFilter] = useState<'all' | 'client' | 'interview' | 'confirmation' | 'placement' | 'not-joined'>('all');
+  const [activeSubmissionsFilter, setActiveSubmissionsFilter] = useState<'pipeline' | 'all' | 'client' | 'interview' | 'confirmation' | 'placement' | 'not-joined'>('all');
+  const [submissionRecords, setSubmissionRecords] = useState<Submission[]>([]);
+  const [quickViewJob, setQuickViewJob] = useState<Job | null>(null);
+  const [quickViewTab, setQuickViewTab] = useState<'details' | 'skills' | 'notes' | 'email'>('details');
   const [headerViewMode, setHeaderViewMode] = useState<'applicant' | 'submission'>('applicant');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -208,6 +252,7 @@ export const ApplicantDetail: React.FC = () => {
     | 'add-work-exp'
     | 'add-employer'
     | 'confirm-vendor-create'
+    | 'create-resume'
     | null
   >(null);
 
@@ -236,12 +281,24 @@ export const ApplicantDetail: React.FC = () => {
     professionalism: 5,
     overall: 4
   });
+  const [documentFormOpen, setDocumentFormOpen] = useState(false);
+  const [documentType, setDocumentType] = useState('');
+  const [documentTitle, setDocumentTitle] = useState('');
+  const [documentDescription, setDocumentDescription] = useState('');
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
+  const [documentMenuId, setDocumentMenuId] = useState<string | null>(null);
+  const [documentShareOpen, setDocumentShareOpen] = useState(false);
+  const [documentShareRecipient, setDocumentShareRecipient] = useState('');
 
   // Call logs and meetings
   const [callLogs, setCallLogs] = useState<{ type: string; comments: string; followUp: string; date: string; by: string }[]>([]);
   const [meetings, setMeetings] = useState<{ title: string; description: string; attendees: string; time: string; by: string }[]>([]);
 
   useEffect(() => {
+    setSelectedDocumentIds([]);
+    setDocumentMenuId(null);
+    setDocumentShareOpen(false);
     ApiService.getApplicants().then((list) => {
       setAllApplicants(list);
       if (selectedId) {
@@ -258,6 +315,24 @@ export const ApplicantDetail: React.FC = () => {
       }
     });
   }, [selectedId]);
+
+  useEffect(() => {
+    ApiService.getSubmissions().then(setSubmissionRecords);
+    const syncSubmissions = (event: Event) => {
+      const records = (event as CustomEvent<Submission[]>).detail;
+      if (Array.isArray(records)) setSubmissionRecords(records);
+      else ApiService.getSubmissions().then(setSubmissionRecords);
+    };
+    const syncFromOtherTab = (event: StorageEvent) => {
+      if (event.key === 'talentember_submissions') ApiService.getSubmissions().then(setSubmissionRecords);
+    };
+    window.addEventListener('ats:submissions-changed', syncSubmissions);
+    window.addEventListener('storage', syncFromOtherTab);
+    return () => {
+      window.removeEventListener('ats:submissions-changed', syncSubmissions);
+      window.removeEventListener('storage', syncFromOtherTab);
+    };
+  }, []);
 
   const initApplicantFields = (app: Applicant) => {
     setEditName(app.name);
@@ -336,6 +411,13 @@ export const ApplicantDetail: React.FC = () => {
     };
   }, [actionMenuOpen]);
 
+  const openSubmissionJobQuickView = async (submission: Submission) => {
+    const job = await ApiService.getJobById(submission.jobId);
+    if (!job) { showToast('The associated job posting could not be found.'); return; }
+    setQuickViewJob(job);
+    setQuickViewTab('details');
+  };
+
   if (!applicant) {
     return (
       <div className="flex h-96 items-center justify-center p-8 text-xs text-[#64748B]">
@@ -362,6 +444,17 @@ export const ApplicantDetail: React.FC = () => {
     }
   };
 
+  const matchingApplicants = candidateSearchQuery.trim().length >= 3
+    ? allApplicants.filter((candidate) => `${candidate.name} ${candidate.applicantId} ${candidate.email}`.toLowerCase().includes(candidateSearchQuery.trim().toLowerCase())).slice(0, 8)
+    : [];
+  const selectSearchedApplicant = (candidate: Applicant) => {
+    setApplicant(candidate);
+    initApplicantFields(candidate);
+    setCandidateSearchQuery('');
+    setCandidateSearchOpen(false);
+    navigate('applicant-detail', candidate.id);
+  };
+
   const handleToggleFavorite = async () => {
     const isFav = await ApiService.toggleFavorite(applicant.id);
     setApplicant((prev) => (prev ? { ...prev, isFavorite: isFav } : prev));
@@ -386,18 +479,32 @@ export const ApplicantDetail: React.FC = () => {
     showToast('Applicant profile updated successfully.');
   };
 
-  const handleAddNote = () => {
-    if (!newNoteText.trim()) return;
+  const handleAddNote = async () => {
+    if (!newNoteText.trim() && !noteSubject.trim()) {
+      showToast('Please enter note contents.');
+      return;
+    }
+    const noteTextContent = newNoteText.trim() || noteSubject.trim();
     const noteObj = {
       id: `nt-${Date.now()}`,
       author: currentUser?.name || 'Ganesh Kshirsagar',
-      text: newNoteText.trim(),
+      text: noteTextContent,
+      subject: noteSubject || `New Note Created for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: newNotePriority || 'Medium',
+      job: noteJob || undefined,
+      client: noteClient || undefined,
+      action: noteAction || undefined,
       date: new Date().toLocaleString()
     };
     const updatedNotes = [noteObj, ...(applicant.notes || [])];
     const updated = { ...applicant, notes: updatedNotes };
     setApplicant(updated);
-    ApiService.updateApplicant(applicant.id, { notes: updatedNotes });
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { notes: updatedNotes });
+    } catch (e) {
+      console.warn('Note persist warning:', e);
+    }
     setNewNoteText('');
     setDialog(null);
     showToast('Note added successfully.');
@@ -421,6 +528,136 @@ export const ApplicantDetail: React.FC = () => {
   };
 
   const avatarInitial = applicant.name.charAt(0).toUpperCase() || 'A';
+  const startEditPersonal = () => {
+    if (!applicant) return;
+    const [fName = '', ...lNames] = (applicant.name || '').split(' ');
+    setPersonalForm({
+      firstName: applicant.firstName || fName || 'SIVAKRISHNAN',
+      middleName: applicant.middleName || '',
+      lastName: applicant.lastName || lNames.join(' ') || 'D',
+      legalName: applicant.legalName || '',
+      maidenName: applicant.maidenName || '',
+      email: applicant.email || '',
+      homePhone: applicant.homePhone || '',
+      phone: applicant.phone || '',
+      alternateEmail: applicant.alternateEmail || '',
+      otherPhone: applicant.otherPhone || '',
+      dateOfBirth: applicant.dateOfBirth || applicant.dob || '17/02/1993',
+      workPhone: applicant.workPhone || '',
+      facebookUrl: applicant.facebookUrl || '',
+      twitterUrl: applicant.twitterUrl || '',
+      linkedinUrl: applicant.linkedinUrl || '',
+      workAuthorization: applicant.workAuthorization || '',
+      address: applicant.address || '',
+      videoReference: applicant.videoReference || '',
+      state: applicant.state || 'Tamil Nadu',
+      city: applicant.city || applicant.location?.split(',')[0]?.trim() || 'Coimbatore',
+      country: applicant.country || 'India',
+      source: applicant.source || 'Naukri',
+      experienceYears: applicant.experienceYears || 9,
+      zipCode: applicant.zipCode || '',
+      referredBy: applicant.referredBy || '',
+      status: applicant.status || 'New',
+      relevantExperience: applicant.relevantExperience || '',
+      assignedRecruiter: applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar',
+      currentDesignation: applicant.currentDesignation || 'Technical Support Engineer (L2)',
+      applicantGroup: applicant.applicantGroup || '',
+      currentCTC: applicant.currentCTC || 'N/A',
+      expectedCTC: applicant.expectedCTC || applicant.expectedSalary || 'N/A',
+      currentCompany: applicant.currentCompany || 'Infosys PVT LTD',
+      panCard: applicant.panCard || '',
+      aadharNumber: applicant.aadharNumber || '',
+      noticePeriod: applicant.noticePeriod || '',
+      maritalStatus: applicant.maritalStatus || 'Single',
+      preferredShift: applicant.preferredShift || 'Day',
+      passportNumber: applicant.passportNumber || '',
+      skills: (applicant.skills || []).join(', '),
+      primarySkills: (applicant.primarySkills || []).join(', '),
+      willingToRelocate: applicant.willingToRelocate !== false,
+      technology: applicant.technology || '',
+      industry: applicant.industry || '',
+      nationality: applicant.nationality || 'Indian',
+      referenceId: applicant.referenceId || '',
+      applicantRemarks: applicant.applicantRemarks || '',
+      noticeEligibility: applicant.noticeEligibility || '',
+      gender: applicant.gender || '',
+      raceEthnicity: applicant.raceEthnicity || '',
+      veteranStatus: applicant.veteranStatus || '',
+      disability: applicant.disability || '',
+    });
+    setActiveSubTab('Personal Details');
+    setIsEditingPersonal(true);
+  };
+
+  const handleSavePersonal = async () => {
+    if (!applicant) return;
+    const fullName = `${personalForm.firstName || ''} ${personalForm.middleName || ''} ${personalForm.lastName || ''}`.replace(/\s+/g, ' ').trim() || applicant.name;
+    const parsedSkills = typeof personalForm.skills === 'string'
+      ? personalForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : applicant.skills;
+    const parsedPrimary = typeof personalForm.primarySkills === 'string'
+      ? personalForm.primarySkills.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : applicant.primarySkills;
+
+    const updatedApplicant: Applicant = {
+      ...applicant,
+      ...personalForm,
+      name: fullName,
+      skills: parsedSkills.length > 0 ? parsedSkills : applicant.skills,
+      primarySkills: parsedPrimary,
+      experienceYears: Number(personalForm.experienceYears) || applicant.experienceYears,
+    };
+
+    setApplicant(updatedApplicant);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id ? updatedApplicant : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, updatedApplicant);
+    } catch (err) {
+      console.warn('API update failed, preserved locally', err);
+    }
+    setIsEditingPersonal(false);
+    showToast('Applicant details updated successfully');
+  };
+
+  const handleDownloadResume = () => {
+    if (!applicant) return;
+    const name = applicant.name || 'Candidate';
+    const resumeText = `================================================
+${name.toUpperCase()}
+================================================
+Location: ${applicant.location || 'Nashik, Maharashtra, India'}
+Email:    ${applicant.email || 'applicant@email.com'}
+Phone:    ${applicant.phone || '+91-XXXXXXXXXX'}
+
+SUMMARY
+${applicant.summary || 'Software Engineer with hands-on experience in full-stack web development and scalable system design. Skilled in modern engineering workflows, high-performance architectures, and user-centric applications.'}
+
+EDUCATION
+${educationList.map((e) => `- ${e.degree} | ${e.institution} (${e.period})`).join('\n')}
+- HSC | LVH College, Nashik (2022) - 55%
+- SSC | Ravindranath Vidyalaya, Nashik (2020) - 74%
+
+TECHNICAL SKILLS
+Languages:       JavaScript, Python, Java, C++, TypeScript
+Frontend:        React.js, HTML, CSS, Tailwind CSS, Redux
+Backend:         Node.js, Express.js, FastAPI, REST APIs
+Core Skills:     ${(applicant.skills || []).join(', ')}
+
+EXPERIENCE & PROJECTS
+${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).join('\n')}
+- Fake News Detection System: NLP classification model with 92% accuracy using Python and Scikit-learn.
+- Real-Time Collaboration Chat: WebSocket-based room chat with authentication.
+`;
+    const blob = new Blob([resumeText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Resume_${name.replace(/\s+/g, '_')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Resume downloaded successfully');
+  };
+
   const handleSaveCertification = (e: React.FormEvent) => {
     e.preventDefault();
     if (!certForm.certification.trim() || !certForm.yearCompleted.trim()) {
@@ -615,9 +852,77 @@ export const ApplicantDetail: React.FC = () => {
   };
 
   const notesCount = applicant.notes?.length || 0;
+  const applicantSubmissions = submissionRecords.filter((submission) => submission.applicantId === applicant.id || submission.applicantId === applicant.applicantId || submission.applicantName.toLowerCase() === applicant.name.toLowerCase());
+  const submissionCounts = {
+    pipeline: applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) <= 1 && !/disqualified|rejected/i.test(submission.status)).length,
+    all: applicantSubmissions.length,
+    client: applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) === 2).length,
+    interview: applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) === 3).length,
+    confirmation: applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) === 4).length,
+    placement: applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) === 5).length,
+    'not-joined': applicantSubmissions.filter((submission) => getSubmissionStageIndex(submission.status) === 6).length
+  };
+  const filteredApplicantSubmissions = applicantSubmissions.filter((submission) => {
+    if (activeSubmissionsFilter === 'all') return true;
+    if (activeSubmissionsFilter === 'pipeline') return getSubmissionStageIndex(submission.status) <= 1 && !/disqualified|rejected/i.test(submission.status);
+    const category = activeSubmissionsFilter === 'client' ? 2 : activeSubmissionsFilter === 'interview' ? 3 : activeSubmissionsFilter === 'confirmation' ? 4 : activeSubmissionsFilter === 'placement' ? 5 : 6;
+    return getSubmissionStageIndex(submission.status) === category;
+  });
+  const displayId = applicant.applicantId || applicant.id?.slice(0, 6) || '165033';
+  const displayName = applicant.name || 'Sahil Shirsath';
   const skillsList = applicant.skills && applicant.skills.length > 0
     ? applicant.skills
     : ['.NET FRAMEWORK', 'E-Commerce', 'Datadog', 'Root Cause Analysis', 'Salesforce Commerce Cloud'];
+  const applicantDocuments = (applicant.documents || []).map((doc, index) => ({ ...doc, id: doc.id || `${applicant.id}-document-${index}` }));
+  const persistApplicantDocuments = async (documents: NonNullable<Applicant['documents']>) => {
+    const updated = { ...applicant, documents };
+    setApplicant(updated);
+    setAllApplicants((rows) => rows.map((row) => row.id === applicant.id ? updated : row));
+    try { await ApiService.updateApplicant(applicant.id, { documents }); }
+    catch { showToast('Document changes could not be saved.'); }
+  };
+  const downloadApplicantDocument = (doc: NonNullable<Applicant['documents']>[number]) => {
+    const link = document.createElement('a');
+    if (doc.dataUrl) link.href = doc.dataUrl;
+    else link.href = URL.createObjectURL(new Blob([`Document: ${doc.name}\nApplicant: ${applicant.name}\n${doc.description || doc.comments || ''}`], { type: 'text/plain' }));
+    link.download = doc.name;
+    link.click();
+    if (!doc.dataUrl) window.setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+  };
+  const viewApplicantDocument = (doc: NonNullable<Applicant['documents']>[number]) => {
+    if (doc.dataUrl) { window.open(doc.dataUrl, '_blank', 'noopener,noreferrer'); return; }
+    const url = URL.createObjectURL(new Blob([`Document: ${doc.name}\nApplicant: ${applicant.name}\n${doc.description || doc.comments || 'No preview is available for this existing document.'}`], { type: 'text/plain' }));
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+  const handleDocumentUpload = async () => {
+    if (!documentType) { showToast('Select a document type.'); return; }
+    if (!documentFile) { showToast('Choose a document to upload.'); return; }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || '')); reader.onerror = () => reject(reader.error); reader.readAsDataURL(documentFile);
+    }).catch(() => '');
+    if (!dataUrl) { showToast('The selected document could not be read.'); return; }
+    const now = new Date().toLocaleString();
+    const next = [...applicantDocuments, { id: `doc-${Date.now()}`, name: documentTitle.trim() || documentFile.name, title: documentTitle.trim() || documentFile.name, size: `${Math.max(1, Math.round(documentFile.size / 1024))} KB`, date: now, type: documentType, mimeType: documentFile.type, dataUrl, description: documentDescription.trim(), comments: documentDescription.trim() || 'N/A', createdBy: currentUser?.name || 'Current User', modifiedBy: currentUser?.name || 'Current User' }];
+    await persistApplicantDocuments(next);
+    setDocumentFormOpen(false); setDocumentTitle(''); setDocumentDescription(''); setDocumentFile(null); setDocumentType('');
+    showToast('Document uploaded successfully.');
+  };
+  const runDocumentToolbarAction = async (action: 'download' | 'copy' | 'share') => {
+    const selectedDocs = applicantDocuments.filter((doc) => selectedDocumentIds.includes(doc.id));
+    if (!selectedDocs.length) { showToast('Select one or more documents first.'); return; }
+    if (action === 'download') selectedDocs.forEach(downloadApplicantDocument);
+    else if (action === 'copy') {
+      const copies = selectedDocs.map((doc) => ({ ...doc, id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: `Copy of ${doc.name}`, title: `Copy of ${doc.title || doc.name}`, date: new Date().toLocaleString(), createdBy: currentUser?.name || 'Current User', modifiedBy: currentUser?.name || 'Current User' }));
+      await persistApplicantDocuments([...applicantDocuments, ...copies]); showToast('Selected documents copied.');
+    } else setDocumentShareOpen(true);
+  };
+  const shareApplicantDocuments = () => {
+    if (!documentShareRecipient) { showToast('Choose a user to share with.'); return; }
+    const records = JSON.parse(localStorage.getItem('ats_document_shares') || '[]') as { applicantId: string; documentIds: string[]; recipient: string; sharedAt: string }[];
+    records.unshift({ applicantId: applicant.id, documentIds: selectedDocumentIds, recipient: documentShareRecipient, sharedAt: new Date().toISOString() });
+    localStorage.setItem('ats_document_shares', JSON.stringify(records)); setDocumentShareOpen(false); setDocumentShareRecipient(''); showToast(`Documents shared with ${documentShareRecipient}.`);
+  };
 
   const activityEvents = [
     {
@@ -719,8 +1024,8 @@ export const ApplicantDetail: React.FC = () => {
       )}
 
       {/* Top Sub-Navigation Tabs Bar */}
-      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-        <div className="flex flex-wrap items-center gap-1 overflow-x-auto text-xs">
+      <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-1.5 shadow-xs dark:border-[#333] dark:bg-[#1E293B] overflow-visible">
+        <div className="flex items-center gap-1 text-xs overflow-visible">
           <button
             type="button"
             onClick={() => navigate('applicants')}
@@ -735,14 +1040,16 @@ export const ApplicantDetail: React.FC = () => {
             'Profession Details',
             'Employer Details',
             'Employment Test Results',
-            'Activities',
-            '...'
+            'Activities'
           ].map((tab) => (
             <button
               key={tab}
               type="button"
-              onClick={() => setActiveSubTab(tab)}
-              className={`px-3 py-1.5 font-medium transition-colors ${
+              onClick={() => {
+                setActiveSubTab(tab);
+                setMoreSubTabsOpen(false);
+              }}
+              className={`whitespace-nowrap px-3 py-1.5 font-medium transition-colors ${
                 activeSubTab === tab
                   ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
                   : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
@@ -751,6 +1058,46 @@ export const ApplicantDetail: React.FC = () => {
               {tab}
             </button>
           ))}
+
+          {/* Three-Dot Menu with Hidden Sub-Tabs (Reference Image 1 Replication) */}
+          <div className="relative" ref={moreSubTabsRef}>
+            <button
+              type="button"
+              onClick={() => setMoreSubTabsOpen((prev) => !prev)}
+              className={`flex items-center gap-1 px-3 py-1.5 font-medium transition-colors ${
+                ['Email Merges', 'Email Activity', 'Hires', 'Surveys'].includes(activeSubTab)
+                  ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
+                  : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
+              }`}
+            >
+              <span>{['Email Merges', 'Email Activity', 'Hires', 'Surveys'].includes(activeSubTab) ? activeSubTab : '...'}</span>
+            </button>
+            {moreSubTabsOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border border-[#CBD5E1] bg-white py-1.5 shadow-2xl dark:border-[#444] dark:bg-[#252525]">
+                {/* Triangular Caret Arrow Pointing Up directly under ... */}
+                <div className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 border-l border-t border-[#CBD5E1] bg-white dark:border-[#444] dark:bg-[#252525]" />
+                <div className="relative z-10">
+                  {['Email Merges', 'Email Activity', 'Hires', 'Surveys'].map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => {
+                        setActiveSubTab(item);
+                        setMoreSubTabsOpen(false);
+                      }}
+                      className={`block w-full px-4 py-2 text-left text-xs transition-colors ${
+                        activeSubTab === item
+                          ? 'bg-blue-50 font-semibold text-[#1877F2] dark:bg-[#333]'
+                          : 'text-[#444] hover:bg-gray-100 hover:text-[#1877F2] dark:text-[#CCC] dark:hover:bg-[#333]'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action icons right */}
@@ -786,7 +1133,7 @@ export const ApplicantDetail: React.FC = () => {
           </button>
 
           {/* Submit dropdown */}
-          <div className="relative">
+          <div className="relative" ref={submitMenuRef}>
             <button
               type="button"
               onClick={() => setSubmitMenuOpen((prev) => !prev)}
@@ -796,7 +1143,7 @@ export const ApplicantDetail: React.FC = () => {
               <ChevronDown className="h-3 w-3" />
             </button>
             {submitMenuOpen && (
-              <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]">
+              <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]">
                 <button
                   type="button"
                   onClick={() => {
@@ -852,10 +1199,18 @@ export const ApplicantDetail: React.FC = () => {
       </div>
 
       {/* Main 2-Column Body Content */}
-      <div className={`p-3 transition-all ${sidebarCollapsed ? 'pr-4' : 'lg:pr-[318px]'}`}>
+      <div className={`p-3 transition-all ${
+        isResumePanelOpen
+          ? resumeFullscreen
+            ? 'hidden'
+            : 'lg:pr-[49%] xl:pr-[46%]'
+          : sidebarCollapsed
+          ? 'pr-4'
+          : 'lg:pr-[318px]'
+      }`}>
         <div className="space-y-3.5">
           {/* 1. Candidate Header Card */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
+          <div className="relative z-20 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
               {/* Left Candidate Info */}
               <div className="flex items-start gap-3.5">
@@ -875,14 +1230,49 @@ export const ApplicantDetail: React.FC = () => {
                     >
                       <Star className={`h-3.5 w-3.5 ${applicant.isFavorite ? 'fill-[#F2B705] text-[#F2B705]' : ''}`} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setDialog('resume')}
-                      className="text-[#666] hover:text-[#1877F2]"
-                      title="Preview Dossier"
-                    >
-                      <Search className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="relative" ref={candidateSearchRef}>
+                      <button
+                        type="button"
+                        aria-label="Search and switch applicant"
+                        aria-expanded={candidateSearchOpen}
+                        onClick={() => {
+                          setCandidateSearchOpen((open) => !open);
+                          setCandidateSearchQuery('');
+                          window.setTimeout(() => candidateSearchInputRef.current?.focus(), 0);
+                        }}
+                        className="rounded p-0.5 text-[#666] hover:bg-blue-50 hover:text-[#1877F2] dark:hover:bg-[#333]"
+                        title="Search applicants"
+                      >
+                        <Search className="h-3.5 w-3.5" />
+                      </button>
+                      {candidateSearchOpen && (
+                        <div className="absolute left-0 top-full z-50 mt-1 w-[min(320px,calc(100vw-40px))] rounded-md border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#444] dark:bg-[#252525]" onClick={(event) => event.stopPropagation()}>
+                          <label className="flex items-center gap-2 rounded border border-[#2F80ED] px-2 py-1.5 text-[#6B7280] dark:text-[#AAA]">
+                            <input
+                              ref={candidateSearchInputRef}
+                              autoFocus
+                              value={candidateSearchQuery}
+                              onChange={(event) => setCandidateSearchQuery(event.target.value)}
+                              onKeyDown={(event) => { if (event.key === 'Escape') setCandidateSearchOpen(false); if (event.key === 'Enter' && matchingApplicants[0]) selectSearchedApplicant(matchingApplicants[0]); }}
+                              placeholder="Enter the ID or name to search an applicant"
+                              aria-label="Search applicant by ID or name"
+                              className="min-w-0 flex-1 bg-transparent text-xs text-[#333] outline-none dark:text-white"
+                            />
+                            <Search className="h-3.5 w-3.5 shrink-0" />
+                          </label>
+                          <div className="max-h-64 overflow-y-auto pt-1">
+                            {candidateSearchQuery.trim().length < 3 ? (
+                              <p className="px-1 py-1.5 text-[11px] text-[#64748B] dark:text-[#AAB2BF]">Please enter {3 - candidateSearchQuery.trim().length} more character{3 - candidateSearchQuery.trim().length === 1 ? '' : 's'}</p>
+                            ) : matchingApplicants.length ? matchingApplicants.map((candidate) => (
+                              <button key={candidate.id} type="button" onClick={() => selectSearchedApplicant(candidate)} className="block w-full rounded px-2 py-2 text-left hover:bg-[#EFF6FF] dark:hover:bg-[#333]">
+                                <span className="block truncate text-xs font-medium text-[#334155] dark:text-white">{candidate.applicantId} Â· {candidate.name}</span>
+                                <span className="block truncate text-[10px] text-[#64748B] dark:text-[#AAB2BF]">{candidate.email}</span>
+                              </button>
+                            )) : <p className="px-2 py-2 text-xs text-[#64748B] dark:text-[#AAB2BF]">No applicants found.</p>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <p className="text-xs font-semibold text-[#4B5563] dark:text-[#D1D5DB]">
@@ -918,35 +1308,35 @@ export const ApplicantDetail: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-2 pt-2">
                     <button
                       type="button"
-                      onClick={() => setDialog('edit')}
+                      onClick={startEditPersonal}
                       className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#333]"
                     >
                       Edit Applicant
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDialog('resume')}
+                      onClick={() => setIsResumePanelOpen(true)}
                       className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#333]"
                     >
                       View Resume
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDialog('matching-jobs')}
+                      onClick={() => navigate('matching-jobs', applicant.id)}
                       className="rounded border border-[#7C3AED] bg-[#F5F3FF] px-2.5 py-1 text-xs font-semibold text-[#7C3AED] hover:bg-[#EDE9FE] dark:bg-[#311B47] dark:text-[#C4B5FD]"
                     >
                       Matching Jobs
                     </button>
                     <button
                       type="button"
-                      onClick={() => showToast('Resume Builder initiated for candidate.')}
+                      onClick={() => setDialog('create-resume')}
                       className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#333]"
                     >
                       Create Resume Builder
                     </button>
 
                     {/* More dropdown */}
-                    <div className="relative">
+                    <div className="relative" ref={actionMenuRef}>
                       <button
                         ref={actionMenuButtonRef}
                         type="button"
@@ -963,7 +1353,7 @@ export const ApplicantDetail: React.FC = () => {
                           ref={actionMenuRef}
                           role="menu"
                           aria-label="Applicant actions"
-                          className="fixed z-[100] w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#252525]"
+                          className="fixed z-[100] w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]"
                           style={{
                             top: actionMenuPosition.top,
                             left: actionMenuPosition.left,
@@ -972,7 +1362,12 @@ export const ApplicantDetail: React.FC = () => {
                         >
                           {[
                             'Bench Marketing Jobs',
-                            'Timeline Activities'
+                            'Timeline Activities',
+                            'Create Task',
+                            'Add Note',
+                            'Matching Jobs',
+                            'Send Email',
+                            'Print Dossier'
                           ].map((item) => (
                             <button
                               key={item}
@@ -981,9 +1376,14 @@ export const ApplicantDetail: React.FC = () => {
                               onClick={() => {
                                 setActionMenuOpen(false);
                                 if (item === 'Timeline Activities') setActiveSubTab('Activities');
+                                else if (item === 'Create Task') setDialog('task');
+                                else if (item === 'Add Note') setDialog('note');
+                                else if (item === 'Matching Jobs') navigate('matching-jobs', applicant.id);
+                                else if (item === 'Send Email') window.location.href = `mailto:${applicant.email}`;
+                                else if (item === 'Print Dossier') window.print();
                                 else showToast(`${item} recorded.`);
                               }}
-                              className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                              className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 hover:text-[#1877F2] dark:text-white dark:hover:bg-[#333]"
                             >
                               {item}
                             </button>
@@ -995,7 +1395,7 @@ export const ApplicantDetail: React.FC = () => {
                   </div>
 
                   {/* Add Tag */}
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <div className="flex min-h-6 flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs">
                     {tags.map((t) => (
                       <span
                         key={t}
@@ -1007,7 +1407,7 @@ export const ApplicantDetail: React.FC = () => {
                           onClick={() => setTags(tags.filter((x) => x !== t))}
                           className="hover:text-red-500"
                         >
-                          ×
+                          <X className="h-2.5 w-2.5" aria-hidden="true" />
                         </button>
                       </span>
                     ))}
@@ -1125,7 +1525,7 @@ export const ApplicantDetail: React.FC = () => {
                     activeNotesFilter === 'submissions' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
                   }`}
                 >
-                  Submissions (0)
+                  Submissions ({submissionCounts.all})
                 </button>
                 <button
                   type="button"
@@ -1134,7 +1534,7 @@ export const ApplicantDetail: React.FC = () => {
                     activeNotesFilter === 'pipeline' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
                   }`}
                 >
-                  Pipeline (0)
+                  Pipeline ({submissionCounts.pipeline})
                 </button>
               </div>
 
@@ -1148,8 +1548,11 @@ export const ApplicantDetail: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDialog('note')}
-                  className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+                  onClick={() => {
+                    setNoteSubject(`New Note Created for ${displayName.toUpperCase()} - ${displayId}.`);
+                    setDialog('note');
+                  }}
+                  className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
                 >
                   + Add
                 </button>
@@ -1173,8 +1576,28 @@ export const ApplicantDetail: React.FC = () => {
                           <span className="font-medium text-[#222] dark:text-white">{n.author}</span>
                           <span className="block text-[10px] text-[#888]">{n.date}</span>
                         </td>
-                        <td className="px-4 py-2.5 text-[#333] dark:text-[#DDD]">{n.text}</td>
-                        <td className="whitespace-nowrap px-4 py-2.5 text-right font-medium text-[#2F80ED]">Normal</td>
+                        <td className="px-4 py-2.5 text-[#333] dark:text-[#DDD]">
+                          {n.subject && (
+                            <div className="font-semibold text-xs text-[#1F2937] dark:text-white mb-0.5">
+                              {n.subject}
+                            </div>
+                          )}
+                          <div className="whitespace-pre-wrap">{n.text}</div>
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-[#666] dark:text-[#AAA]">
+                            {n.job && <span className="text-[#2F80ED]">Job: {n.job}</span>}
+                            {n.client && <span>Client: {n.client}</span>}
+                            {n.action && <span className="rounded bg-gray-100 px-1.5 py-0.2 dark:bg-[#333]">Action: {n.action}</span>}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2.5 text-right font-medium">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            n.priority === 'Urgent' || n.priority === 'High'
+                              ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400'
+                              : 'bg-blue-50 text-[#2F80ED] dark:bg-blue-950/40 dark:text-blue-300'
+                          }`}>
+                            {n.priority || 'Medium'}
+                          </span>
+                        </td>
                       </tr>
                     ))
                   ) : (
@@ -1190,54 +1613,59 @@ export const ApplicantDetail: React.FC = () => {
           </div>
 
           {/* 3. Documents Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
+          <div className="relative z-40 rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
-              <span className="text-xs font-bold text-[#1F2937] dark:text-white">Documents</span>
-              <div className="flex items-center gap-2.5 text-[#666] dark:text-[#AAA]">
-                <button type="button" title="Like" className="hover:text-[#2F80ED]">
-                  <ThumbsUp className="h-3.5 w-3.5" />
-                </button>
-                <button type="button" title="Share" className="hover:text-[#2F80ED]">
-                  <Share2 className="h-3.5 w-3.5" />
-                </button>
-                <button type="button" title="Download" className="hover:text-[#2F80ED]">
-                  <Download className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  title="Upload Document"
-                  onClick={() => showToast('Upload document modal')}
-                  className="hover:text-[#2F80ED]"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+              <span className="text-sm font-semibold text-[#1F2937] dark:text-white">Documents</span>
+              <div className="flex items-center divide-x divide-[#CBD5E1] rounded border border-[#CBD5E1] text-[#687789] dark:divide-[#444] dark:border-[#444] dark:text-[#AAA]">
+                <button type="button" title="Share selected documents" onClick={() => void runDocumentToolbarAction('share')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Share2 className="h-3.5 w-3.5" /></button>
+                <button type="button" title="Copy selected documents" onClick={() => void runDocumentToolbarAction('copy')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Copy className="h-3.5 w-3.5" /></button>
+                <button type="button" title="Download selected documents" onClick={() => void runDocumentToolbarAction('download')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Download className="h-3.5 w-3.5" /></button>
+                <button type="button" title="Add Document" onClick={() => setDocumentFormOpen((open) => !open)} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Plus className="h-4 w-4" /></button>
               </div>
             </div>
 
-            <div className="p-4">
-              <div className="flex items-start justify-between rounded-lg border border-[#E2E8F0] p-3 hover:bg-gray-50 dark:border-[#333] dark:hover:bg-[#202020]">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-[#2B579A] text-sm font-bold text-white shadow-xs">
-                    W
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5 font-medium text-[#1F2937] dark:text-white">
-                      <span>Resume - {applicant.name.replace(/\s+/g, '_')}_Resume-v5.docx</span>
-                      <Check className="h-3.5 w-3.5 rounded-full bg-emerald-500 p-0.5 text-white" />
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
-                      Created By {applicant.createdBy || 'Ganesh Kshirsagar'} on {applicant.createdDate || '19/11/2026 18:39:40'} | Modified By {applicant.createdBy || 'Ganesh Kshirsagar'}
-                    </p>
-                    <p className="text-[10px] text-[#9CA3AF]">Comments N/A</p>
-                  </div>
-                </div>
-
-                <button type="button" title="Options" className="text-[#888] hover:text-[#222]">
-                  <MoreVertical className="h-4 w-4" />
-                </button>
+            {documentFormOpen && <div className="border-b border-[#E2E8F0] px-4 py-4 dark:border-[#333]">
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Select</option>{['Driving License', 'EMI File', 'Employment Application Form', 'Interview Feedback', 'Passport', 'Resume', 'SSN', 'Transcripts'].map((type) => <option key={type}>{type}</option>)}</select></label>
+                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Title<input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Enter document title" className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+                <label className="block space-y-1 text-[11px] text-[#64748B]">Upload Document<input type="file" onChange={(event) => setDocumentFile(event.target.files?.[0] || null)} className="block w-full text-[11px] text-[#334155] file:mr-2 file:border file:border-[#CBD5E1] file:bg-white file:px-2 file:py-1.5 dark:text-white" /></label>
               </div>
+              <label className="mt-3 block space-y-1 text-[11px] text-[#64748B]">Description<textarea rows={2} value={documentDescription} onChange={(event) => setDocumentDescription(event.target.value)} className="w-full resize-y border border-[#CBD5E1] bg-[#F8F8F8] p-2 text-xs text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+              <div className="mt-3 flex gap-2"><button type="button" onClick={() => void handleDocumentUpload()} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white hover:bg-[#1D6FD8]">Save</button><button type="button" onClick={() => { setDocumentFormOpen(false); setDocumentFile(null); setDocumentTitle(''); setDocumentDescription(''); }} className="rounded border border-[#CBD5E1] bg-white px-4 py-2 text-xs text-[#64748B] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white">Cancel</button></div>
+            </div>}
+
+            <div className="space-y-2 p-3">
+              {applicantDocuments.map((doc) => <div key={doc.id} className={`group flex items-start justify-between gap-3 rounded-sm px-2 py-3 transition-colors ${selectedDocumentIds.includes(doc.id) ? 'bg-[#DDF1FB]' : 'hover:bg-[#DDF1FB] dark:hover:bg-[#303840]'}`}>
+                <div className="flex min-w-0 items-start gap-3">
+                  <input type="checkbox" aria-label={`Select ${doc.name}`} checked={selectedDocumentIds.includes(doc.id)} onChange={(event) => setSelectedDocumentIds((ids) => event.target.checked ? [...new Set([...ids, doc.id])] : ids.filter((id) => id !== doc.id))} className={`mt-1 h-4 w-4 shrink-0 accent-[#2F80ED] ${selectedDocumentIds.includes(doc.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'}`} />
+                  <button type="button" title={`View ${doc.name}`} onClick={() => viewApplicantDocument(doc)} className="mt-0.5 shrink-0 text-[#F04452] hover:text-[#C92A3A]"><FileText className="h-5 w-5" /></button>
+                  <button type="button" onClick={() => viewApplicantDocument(doc)} className="min-w-0 text-left">
+                    <span className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#1F2937] hover:text-[#2F80ED] dark:text-white"><span className="break-all">{doc.title || doc.name}</span><Check className="h-3.5 w-3.5 rounded-full bg-[#68C17B] p-0.5 text-white" /></span>
+                    <span className="mt-1 block text-[11px] text-[#526174] dark:text-[#AAB2BF]">Created By {doc.createdBy || applicant.createdBy || currentUser?.name || 'User'} on {doc.date || applicant.createdDate || 'N/A'} <span className="text-[#2F80ED]">|</span> Modified By {doc.modifiedBy || doc.createdBy || applicant.createdBy || currentUser?.name || 'User'}</span>
+                    <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` Â· ${doc.size}` : ''}</span>
+                  </button>
+                </div>
+                <div className="relative shrink-0">
+                  <button type="button" aria-label={`Options for ${doc.name}`} aria-expanded={documentMenuId === doc.id} onClick={() => setDocumentMenuId((id) => id === doc.id ? null : doc.id)} className="rounded p-1 text-[#718096] hover:bg-white hover:text-[#222]"><MoreVertical className="h-4 w-4" /></button>
+                  {documentMenuId === doc.id && <div className="absolute right-0 top-full z-[60] mt-1 w-36 rounded border border-[#CBD5E1] bg-white py-1 shadow-lg dark:border-[#444] dark:bg-[#252525]">
+                    <button type="button" onClick={() => { viewApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#333]">View</button>
+                    <button type="button" onClick={() => { downloadApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#333]">Download</button>
+                    <button type="button" onClick={async () => { const name = window.prompt('Document title', doc.title || doc.name); if (name?.trim()) { await persistApplicantDocuments(applicantDocuments.map((item) => item.id === doc.id ? { ...item, name: name.trim(), title: name.trim(), modifiedBy: currentUser?.name || 'Current User', date: new Date().toLocaleString() } : item)); showToast('Document title updated.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#333]">Rename</button>
+                    <button type="button" onClick={async () => { if (window.confirm(`Delete ${doc.name}?`)) { await persistApplicantDocuments(applicantDocuments.filter((item) => item.id !== doc.id)); setSelectedDocumentIds((ids) => ids.filter((id) => id !== doc.id)); showToast('Document deleted.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-[#333]">Delete</button>
+                  </div>}
+                </div>
+              </div>)}
+              {applicantDocuments.length === 0 && !documentFormOpen && <p className="px-2 py-6 text-center text-xs text-[#64748B]">No documents uploaded yet.</p>}
             </div>
           </div>
+
+          {documentShareOpen && <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/50 p-4 pt-[15vh]" onClick={() => setDocumentShareOpen(false)}>
+            <div role="dialog" aria-modal="true" aria-labelledby="document-share-title" onClick={(event) => event.stopPropagation()} className="w-full max-w-md border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#444] dark:bg-[#252525]">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#333]"><h2 id="document-share-title" className="text-lg font-medium text-[#334155] dark:text-white">Documents Sharing</h2><button type="button" aria-label="Close sharing dialog" onClick={() => setDocumentShareOpen(false)}><X className="h-5 w-5 text-[#777]" /></button></div>
+              <div className="px-5 py-8"><label className="mb-3 block text-xs text-[#64748B]">Choose the users below to share the selected documents</label><select value={documentShareRecipient} onChange={(event) => setDocumentShareRecipient(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2.5 py-2 text-xs dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Select a user</option>{Array.from(new Set([currentUser?.name || '', ...allApplicants.map((item) => item.assignedRecruiter).filter(Boolean), 'Recruiting Team'].filter(Boolean))).map((name) => <option key={name} value={name}>{name}</option>)}</select></div>
+              <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#333]"><button type="button" onClick={shareApplicantDocuments} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white">Share</button><button type="button" onClick={() => setDocumentShareOpen(false)} className="rounded border border-[#CBD5E1] px-4 py-2 text-xs text-[#555] dark:border-[#444] dark:text-white">Cancel</button></div>
+            </div>
+          </div>}
 
           {/* 4. Submissions Section */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
@@ -1245,121 +1673,76 @@ export const ApplicantDetail: React.FC = () => {
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions</span>
               <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                 {[
-                  { label: 'Pipeline (0)', key: 'pipeline' },
-                  { label: 'All (1)', key: 'all' },
-                  { label: 'Client Submissions (1)', key: 'client' },
-                  { label: 'Interviews (0)', key: 'interview' },
-                  { label: 'Confirmations (0)', key: 'confirmation' },
-                  { label: 'Placements (0)', key: 'placement' },
-                  { label: 'Not Joined (0)', key: 'not-joined' }
+                  { label: 'Pipeline', key: 'pipeline', count: submissionCounts.pipeline },
+                  { label: 'All', key: 'all', count: submissionCounts.all },
+                  { label: 'Client Submissions', key: 'client', count: submissionCounts.client },
+                  { label: 'Interviews', key: 'interview', count: submissionCounts.interview },
+                  { label: 'Confirmations', key: 'confirmation', count: submissionCounts.confirmation },
+                  { label: 'Placements', key: 'placement', count: submissionCounts.placement },
+                  { label: 'Not Joined', key: 'not-joined', count: submissionCounts['not-joined'] }
                 ].map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => setActiveSubmissionsFilter(item.key as any)}
-                    className={`rounded-full px-2.5 py-0.5 font-semibold transition-colors ${
-                      activeSubmissionsFilter === item.key
-                        ? 'bg-[#2F80ED] text-white'
-                        : 'border border-[#CBD5E1] text-[#666] hover:bg-gray-50 dark:hover:bg-[#333]'
-                    }`}
-                  >
-                    {item.label}
+                  <button key={item.key} type="button" onClick={() => setActiveSubmissionsFilter(item.key as typeof activeSubmissionsFilter)} className={`rounded-full px-2.5 py-0.5 font-semibold transition-colors ${activeSubmissionsFilter === item.key ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666] hover:bg-gray-50 dark:hover:bg-[#333]'}`}>
+                    {item.label} ({item.count})
                   </button>
                 ))}
               </div>
             </div>
-
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
-                    <th className="px-4 py-2">Job Details</th>
-                    <th className="px-4 py-2">Submission Details</th>
-                    <th className="px-4 py-2">Submitted By</th>
-                    <th className="px-4 py-2">Client Bill Rate</th>
-                    <th className="px-4 py-2">Pay Rate</th>
-                    <th className="px-4 py-2 text-right"></th>
-                  </tr>
-                </thead>
+                <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                  <th className="px-4 py-2">Job Details</th><th className="px-4 py-2">Submission Details</th><th className="px-4 py-2">Submitted By</th><th className="px-4 py-2">Client Bill Rate</th><th className="px-4 py-2">Pay Rate</th><th className="px-4 py-2 text-right">Approval</th>
+                </tr></thead>
                 <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
-                  <tr className="hover:bg-gray-50 dark:hover:bg-[#202020]">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">
-                          {applicant.assignedJobTitle || 'AMP12294,E-commerce production..'}
-                        </span>
-                        <Briefcase className="h-3 w-3 text-[#2F80ED]" />
-                      </div>
-                      <span className="text-[11px] text-[#666] dark:text-[#AAA]">Dentsu</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="block text-[#18558A] hover:underline">Submission record</span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">Submitted To Client</span>
-                    </td>
-                    <td className="px-4 py-3 text-[#555] dark:text-[#AAA]">
-                      <span className="block font-medium text-[#222] dark:text-white">{applicant.createdBy || 'Ganesh Kshirsagar'}</span>
-                      <span className="text-[10px] text-[#888]">19/11/2026</span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">N/A</td>
-                    <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">N/A</td>
-                    <td className="px-4 py-3 text-right">
-                      <button type="button" className="text-[#888] hover:text-[#222]">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
+                  {filteredApplicantSubmissions.length === 0 ? <tr><td colSpan={6} className="px-4 py-6 text-center text-xs text-[#888]">No data available</td></tr> : filteredApplicantSubmissions.map((submission) => {
+                    const currentStage = getSubmissionStageIndex(submission.status);
+                    const steps = ['Pipeline', 'Submission', 'Client Submission', 'Interview', 'Confirmation', 'Placement', 'Not Joined'];
+                    const history = submission.statusHistory || [{ status: submission.status, changedAt: submission.submittedDate }];
+                    return <React.Fragment key={submission.id}>
+                      <tr className="hover:bg-gray-50 dark:hover:bg-[#202020]">
+                        <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#333]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || '—'}</span></td>
+                        <td className="px-4 py-3"><span className="block font-medium text-[#18558A] dark:text-[#90CDF4]">Submission #{submission.submissionId}</span><span className="mt-1 block max-w-[300px] text-xs font-semibold text-emerald-700 dark:text-emerald-400">{submission.status}</span></td>
+                        <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-white">{submission.recruiter || '—'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
+                        <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.billRate ? submission.billRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.payRate ? submission.payRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 text-right text-xs text-[#718096]">{submission.approvalStatus}</td>
+                      </tr>
+                      <tr><td colSpan={6} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#333]"><div className="flex items-start">{steps.map((step, index) => {
+                        const state = index === 0 || index < currentStage ? 'completed' : index === currentStage ? 'active' : 'upcoming';
+                        const entry = history.filter((item) => getSubmissionStageIndex(item.status) === index).slice(-1)[0];
+                        const timestamp = index === 1 ? submission.submittedDate : entry?.changedAt;
+                        return <div key={step} className="flex min-w-0 flex-1 flex-col items-center text-center"><div className="relative flex w-full items-center">{index > 0 && <div className={`h-0.5 flex-1 ${index <= currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} />}<div className={`mx-auto flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white ${state === 'completed' || state === 'active' ? 'bg-emerald-500' : 'border border-gray-400 bg-white dark:bg-[#333]'}`}>{state === 'active' ? <Check className="h-2.5 w-2.5" /> : ''}</div>{index < steps.length - 1 && <div className={`h-0.5 flex-1 ${index < currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} />}</div><span className="mt-1 text-[10px] font-medium text-[#333] dark:text-[#DDD]">{step}</span>{timestamp && <span className="mt-0.5 text-[9px] text-[#888]">{timestamp}</span>}</div>;
+                      })}</div></td></tr>
+                    </React.Fragment>;
+                  })}
                 </tbody>
               </table>
             </div>
-
-            {/* Stepper Pipeline Bar */}
-            <div className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#333]">
-              <div className="flex items-center justify-between text-[11px]">
-                {[
-                  { name: 'Pipeline', status: 'completed' },
-                  { name: 'Submission', time: '19/11/2026 18:39:40', status: 'completed' },
-                  { name: 'Client Submission', time: '19/11/2026 18:41:14', status: 'active' },
-                  { name: 'Interview', status: 'upcoming' },
-                  { name: 'Confirmation', status: 'upcoming' },
-                  { name: 'Placement', status: 'upcoming' },
-                  { name: 'Not Joined', status: 'upcoming' }
-                ].map((step, idx) => (
-                  <div key={step.name} className="flex flex-1 flex-col items-center text-center">
-                    <div className="relative flex w-full items-center">
-                      {idx > 0 && (
-                        <div
-                          className={`h-0.5 flex-1 ${
-                            step.status === 'upcoming' ? 'bg-gray-300 dark:bg-gray-700' : 'bg-emerald-500'
-                          }`}
-                        />
-                      )}
-                      <div
-                        className={`mx-auto flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold text-white ${
-                          step.status === 'active'
-                            ? 'bg-emerald-500 ring-2 ring-emerald-200'
-                            : step.status === 'completed'
-                            ? 'bg-emerald-500'
-                            : 'border border-gray-400 bg-white dark:bg-[#333]'
-                        }`}
-                      >
-                        {step.status === 'active' ? '✓' : ''}
-                      </div>
-                      {idx < 6 && (
-                        <div
-                          className={`h-0.5 flex-1 ${
-                            idx >= 2 ? 'bg-gray-300 dark:bg-gray-700' : 'bg-emerald-500'
-                          }`}
-                        />
-                      )}
-                    </div>
-                    <span className="mt-1 font-medium text-[#333] dark:text-[#DDD]">{step.name}</span>
-                    {step.time && <span className="text-[9px] text-[#888]">{step.time}</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
-
+          {quickViewJob && (() => {
+            const jobSubmissions = submissionRecords.filter((record) => record.jobId === quickViewJob.id);
+            const pipelineCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) <= 1 && !/disqualified|rejected/i.test(record.status)).length;
+            const clientCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) === 2).length;
+            const interviewCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) === 3).length;
+            const hireCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) >= 4).length;
+            const detailValue = (key: string): string => String(quickViewJob.customFields?.[key] || 'N/A');
+            return <div className="fixed inset-0 z-[80] flex justify-end bg-black/50" onClick={() => setQuickViewJob(null)}>
+              <aside role="dialog" aria-modal="true" aria-label={`Job details quick view: ${quickViewJob.title}`} onClick={(event) => event.stopPropagation()} className="flex h-full w-full flex-col border-l border-[#D5D9DE] bg-white shadow-2xl sm:w-[min(56vw,900px)] dark:border-[#444] dark:bg-[#252525]">
+                <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D7DCE2] px-4 py-3 dark:border-[#444]">
+                  <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-[#1877F2]"><Briefcase className="h-4 w-4 shrink-0" /><span className="truncate">{quickViewJob.code} {quickViewJob.title}</span></div>
+                  <div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => navigate('job-detail', quickViewJob.id)} className="rounded border border-[#CBD5E1] px-2.5 py-1.5 text-[11px] text-[#475569] hover:bg-[#F1F5F9] dark:border-[#444] dark:text-white dark:hover:bg-[#333]">Open Job Details</button><button type="button" aria-label="Close job details quick view" onClick={() => setQuickViewJob(null)} className="rounded p-1 text-[#6B7280] hover:bg-[#F1F3F5] dark:hover:bg-[#333]"><X className="h-5 w-5" /></button></div>
+                </header>
+                <div className="shrink-0 bg-[#EEF0F2] px-4 py-4 dark:bg-[#303030]">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] sm:grid-cols-2"><div><span className="block uppercase tracking-wide text-[#64748B]">Pay Rate / Salary</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.currency || 'INR'} {quickViewJob.payRate ? quickViewJob.payRate.toLocaleString() : 'N/A'} / {quickViewJob.rateType || 'Yearly'}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Client</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.client}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Country</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{detailValue('country')}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Job Status</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.status}</span></div><div className="col-span-2"><span className="block uppercase tracking-wide text-[#64748B]">Location</span><span className="mt-1 inline-block rounded bg-white px-2 py-1 text-[10px] font-medium text-[#334155] dark:bg-[#252525] dark:text-white">{quickViewJob.location || 'N/A'}</span></div></div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">{[{ label: '# OF SUBMISSIONS', value: jobSubmissions.length, color: 'text-[#1F2937]' }, { label: '# OF PIPELINE', value: pipelineCount, color: 'text-[#1F2937]' }, { label: '# OF CLIENT SUBMISSIONS', value: clientCount, color: 'text-red-500' }, { label: '# OF INTERVIEWS', value: interviewCount, color: 'text-amber-500' }, { label: '# OF HIRES', value: hireCount, color: 'text-blue-500' }].map((item) => <div key={item.label} className="rounded-sm bg-white px-2 py-2 text-center shadow-sm dark:bg-[#252525]"><span className={`block text-lg font-semibold ${item.color}`}>{item.value}</span><span className="block text-[8px] font-semibold text-[#334155] dark:text-[#AAA]">{item.label}</span></div>)}</div>
+                </div>
+                <nav className="flex shrink-0 items-center gap-1 border-b border-[#E2E8F0] px-4 pt-3 dark:border-[#444]">{[{ id: 'details', label: 'Job Details' }, { id: 'skills', label: 'Skills & Job Description' }, { id: 'notes', label: `Notes (${quickViewJob.notes?.length || 0})` }, { id: 'email', label: 'Email Merges' }].map((tab) => <button key={tab.id} type="button" onClick={() => setQuickViewTab(tab.id as typeof quickViewTab)} className={`border-b-2 px-2.5 py-2 text-[11px] ${quickViewTab === tab.id ? 'border-[#2F80ED] bg-[#2F80ED] font-semibold text-white' : 'border-transparent text-[#555] hover:bg-[#F1F5F9] dark:text-[#CCC] dark:hover:bg-[#333]'}`}>{tab.label}</button>)}</nav>
+                <div className="min-h-0 flex-1 overflow-y-auto p-4 text-xs">
+                  {quickViewTab === 'details' && <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">{[['Client Bill Rate / Salary', quickViewJob.billRate ? `${quickViewJob.currency || 'INR'} ${quickViewJob.billRate.toLocaleString()}` : 'N/A'], ['Required Documents for Submission', detailValue('requiredDocuments')], ['End Client', detailValue('endClient')], ['Duration', quickViewJob.duration || 'N/A'], ['Tax Terms', detailValue('taxTerms')], ['Work Authorization', detailValue('workAuthorization')], ['Interview Mode', detailValue('interviewMode')], ['Experience', quickViewJob.experienceRequired || 'N/A'], ['Assigned To', quickViewJob.assignedTo || quickViewJob.assignedRecruiter || 'N/A'], ['Job Type', quickViewJob.type]].map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3"><span className="text-[#7B8490]">{label}</span><span className="font-medium text-[#252525] dark:text-white">{value}</span></div>)}</div>}
+                  {quickViewTab === 'skills' && <div className="space-y-4"><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Skills</h3><div className="flex flex-wrap gap-1.5">{(quickViewJob.primarySkills?.length ? quickViewJob.primarySkills : quickViewJob.skills).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white">{skill}</span>)}</div></div><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Job Description</h3><p className="whitespace-pre-wrap leading-relaxed text-[#475569] dark:text-[#CCC]">{quickViewJob.description || 'No job description available.'}</p></div></div>}
+                  {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#444]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
+                  {quickViewTab === 'email' && <p className="py-8 text-center text-[#64748B]">No email merges available.</p>}
+                </div>
+              </aside>
+            </div>;
+          })()}
           {/* 5. eInterviews Section */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
             <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
@@ -1515,271 +1898,630 @@ export const ApplicantDetail: React.FC = () => {
             </>
           )}
 
-          {/* PERSONAL DETAILS TAB (Image 1 Replication) */}
+          {/* PERSONAL DETAILS TAB (Image 1 Replication & Editable Mode) */}
           {activeSubTab === 'Personal Details' && (
             <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
-                <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
-                <button
-                  type="button"
-                  onClick={() => setDialog('edit')}
-                  className="text-[#1877F2] hover:opacity-80"
-                  title="Edit Personal Details"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
+              {/* Card Header */}
+              <div className="flex flex-wrap items-center justify-between border-b border-[#F1F5F9] pb-3 gap-2 dark:border-[#333]">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                    Personal Details {isEditingPersonal && <span className="text-[#2F80ED] font-normal text-xs">(Editing Mode)</span>}
+                  </h2>
+                </div>
+                {isEditingPersonal ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSavePersonal}
+                      className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      <span>Save Changes</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingPersonal(false)}
+                      className="rounded border border-[#CED4DA] bg-white px-3.5 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={startEditPersonal}
+                    className="flex items-center gap-1 text-[#1877F2] hover:opacity-80 text-xs font-medium"
+                    title="Edit Personal Details"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </button>
+                )}
               </div>
 
-              {/* 3-Column Key-Value Grid matching Image 1 */}
+              {/* 3-Column Key-Value Grid */}
               <div className="grid grid-cols-1 gap-x-8 gap-y-4 pt-4 md:grid-cols-3">
                 {/* Row 1 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">First Name as per Aadhaar</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.firstName || applicant.name?.split(' ')[0] || 'SIVAKRISHNAN'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.firstName ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, firstName: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.firstName || applicant.name?.split(' ')[0] || 'SIVAKRISHNAN'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Middle Name as per Aadhaar</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.middleName || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.middleName ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, middleName: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.middleName || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Last Name as per Aadhaar</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.lastName || applicant.name?.split(' ').slice(1).join(' ') || 'D'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.lastName ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, lastName: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.lastName || applicant.name?.split(' ').slice(1).join(' ') || 'D'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 2 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Legal name</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.legalName || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.legalName ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, legalName: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.legalName || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Maiden name</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.maidenName || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.maidenName ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, maidenName: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.maidenName || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Email Address</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
-                    <a href={`mailto:${applicant.email}`} className="hover:underline">
-                      {applicant.email || 'sivakrishnanduraisamy@gmail.com'}
-                    </a>
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="email"
+                      value={personalForm.email ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, email: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
+                      <a href={`mailto:${applicant.email}`} className="hover:underline">
+                        {applicant.email || 'sivakrishnanduraisamy@gmail.com'}
+                      </a>
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 3 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Home Phone Number</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.homePhone || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.homePhone ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, homePhone: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.homePhone || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Mobile Number</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
-                    <a href={`tel:${applicant.phone}`} className="hover:underline">
-                      {applicant.phone || '+91 7667560620'}
-                    </a>
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.phone ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
+                      <a href={`tel:${applicant.phone}`} className="hover:underline">
+                        {applicant.phone || '+91 7667560620'}
+                      </a>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Alternate Email Address</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.alternateEmail || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="email"
+                      value={personalForm.alternateEmail ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, alternateEmail: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.alternateEmail || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 4 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Other Phone</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.otherPhone || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.otherPhone ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, otherPhone: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.otherPhone || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Date Of Birth</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.dateOfBirth || applicant.dob || '17/02/1993'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      placeholder="DD/MM/YYYY"
+                      value={personalForm.dateOfBirth ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, dateOfBirth: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.dateOfBirth || applicant.dob || '17/02/1993'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Work Phone Number</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.workPhone || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.workPhone ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, workPhone: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.workPhone || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 5 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Facebook Profile URL</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.facebookUrl || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.facebookUrl ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, facebookUrl: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.facebookUrl || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Twitter Profile URL</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.twitterUrl || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.twitterUrl ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, twitterUrl: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.twitterUrl || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">LinkedIn Profile URL</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.linkedinUrl || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.linkedinUrl ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, linkedinUrl: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.linkedinUrl || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 6 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Work Authorization</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.workAuthorization || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.workAuthorization ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, workAuthorization: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.workAuthorization || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Address</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.address || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.address ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, address: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.address || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Video Reference</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.videoReference || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.videoReference ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, videoReference: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.videoReference || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 7 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">State</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.state || 'Tamil Nadu'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.state ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.state || 'Tamil Nadu'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">City</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.city || applicant.location?.split(',')[0]?.trim() || 'Coimbatore'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.city ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, city: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.city || applicant.location?.split(',')[0]?.trim() || 'Coimbatore'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Country</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.country || 'India'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.country ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.country || 'India'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 8 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Source</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.source || 'Naukri'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.source ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, source: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.source || 'Naukri'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Experience</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      placeholder="e.g. 9 Years 2 Months"
+                      value={personalForm.experienceYears ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, experienceYears: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Zip Code</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.zipCode || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.zipCode ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, zipCode: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.zipCode || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 9 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Referred By</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.referredBy || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.referredBy ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, referredBy: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.referredBy || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Status</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.status || 'New lead (Allowed to submit)'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <select
+                      value={personalForm.status ?? 'New'}
+                      onChange={(e) => setPersonalForm({ ...personalForm, status: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    >
+                      <option value="New">New lead (Allowed to submit)</option>
+                      <option value="Screening">Screening</option>
+                      <option value="Submitted">Submitted</option>
+                      <option value="Interview">Interview</option>
+                      <option value="Offered">Offered</option>
+                      <option value="Hired">Hired</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.status || 'New lead (Allowed to submit)'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Relevant experience</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.relevantExperience ? `${applicant.relevantExperience} Years` : 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.relevantExperience ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, relevantExperience: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.relevantExperience ? `${applicant.relevantExperience} Years` : 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 10 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Ownership</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.assignedRecruiter ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, assignedRecruiter: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current Title/Designation</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.currentDesignation || 'technical support engineer (L2)'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.currentDesignation ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, currentDesignation: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.currentDesignation || 'technical support engineer (L2)'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Group</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.applicantGroup || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.applicantGroup ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, applicantGroup: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.applicantGroup || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 11 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current CTC</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.currentCTC || '-'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.currentCTC ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, currentCTC: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.currentCTC || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Expected CTC</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.expectedCTC || applicant.expectedSalary || '-'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.expectedCTC ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, expectedCTC: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.expectedCTC || applicant.expectedSalary || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current Company</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.currentCompany || 'Infosys PVT LTD'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.currentCompany ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, currentCompany: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.currentCompany || 'Infosys PVT LTD'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 12 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Pan Card Number</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.panCard || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.panCard ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, panCard: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.panCard || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Aadhar number</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.aadharNumber || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.aadharNumber ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, aadharNumber: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.aadharNumber || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Notice Period</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.noticePeriod || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.noticePeriod ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, noticePeriod: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.noticePeriod || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 13 */}
@@ -1788,113 +2530,231 @@ export const ApplicantDetail: React.FC = () => {
                     <span>Marital status</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.maritalStatus || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <select
+                      value={personalForm.maritalStatus ?? 'Single'}
+                      onChange={(e) => setPersonalForm({ ...personalForm, maritalStatus: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    >
+                      <option value="Single">Single</option>
+                      <option value="Married">Married</option>
+                      <option value="N/A">N/A</option>
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.maritalStatus || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Preferred Shift</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.preferredShift || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <select
+                      value={personalForm.preferredShift ?? 'Day'}
+                      onChange={(e) => setPersonalForm({ ...personalForm, preferredShift: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    >
+                      <option value="Day">Day Shift</option>
+                      <option value="Night">Night Shift</option>
+                      <option value="Flexible">Flexible / Rotational</option>
+                      <option value="N/A">N/A</option>
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.preferredShift || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Passport number</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.passportNumber || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.passportNumber ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, passportNumber: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.passportNumber || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 14 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Skills</p>
-                  <div className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {skillsExpandedPersonal ? (
-                      <div>
-                        <span>{skillsList.join(', ')}</span>
-                        <button
-                          type="button"
-                          onClick={() => setSkillsExpandedPersonal(false)}
-                          className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
-                        >
-                          Less ▴
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <span>{skillsList.slice(0, 5).join(', ')}</span>
-                        {skillsList.length > 5 && <span>...</span>}
-                        <button
-                          type="button"
-                          onClick={() => setSkillsExpandedPersonal(true)}
-                          className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
-                        >
-                          More ▾
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      placeholder="e.g. React, Node.js, Python"
+                      value={personalForm.skills ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, skills: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <div className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {skillsExpandedPersonal ? (
+                        <div>
+                          <span>{skillsList.join(', ')}</span>
+                          <button
+                            type="button"
+                            onClick={() => setSkillsExpandedPersonal(false)}
+                            className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
+                          >
+                            Less â–´
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <span>{skillsList.slice(0, 5).join(', ')}</span>
+                          {skillsList.length > 5 && <span>...</span>}
+                          <button
+                            type="button"
+                            onClick={() => setSkillsExpandedPersonal(true)}
+                            className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
+                          >
+                            More â–¾
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Primary Skills</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.primarySkills?.join(', ') || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.primarySkills ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, primarySkills: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.primarySkills?.join(', ') || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Relocation</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.willingToRelocate !== false ? 'Yes' : 'No'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <select
+                      value={personalForm.willingToRelocate ? 'Yes' : 'No'}
+                      onChange={(e) => setPersonalForm({ ...personalForm, willingToRelocate: e.target.value === 'Yes' })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.willingToRelocate !== false ? 'Yes' : 'No'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 15 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Technology</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.technology || '-'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.technology ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, technology: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.technology || '-'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Industry</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.industry || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.industry ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, industry: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.industry || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Nationality</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.nationality || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.nationality ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, nationality: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.nationality || 'N/A'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 16 */}
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Reference ID</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.referenceId || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.referenceId ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, referenceId: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.referenceId || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Remarks</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.applicantRemarks || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.applicantRemarks ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, applicantRemarks: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.applicantRemarks || 'N/A'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Notice/Eligibility</p>
-                  <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                    {applicant.noticeEligibility || 'N/A'}
-                  </p>
+                  {isEditingPersonal ? (
+                    <input
+                      type="text"
+                      value={personalForm.noticeEligibility ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, noticeEligibility: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    />
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.noticeEligibility || 'N/A'}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1904,19 +2764,55 @@ export const ApplicantDetail: React.FC = () => {
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 pt-3 md:grid-cols-3">
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Gender</p>
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.gender || 'N/A'}</p>
+                    {isEditingPersonal ? (
+                      <input
+                        type="text"
+                        value={personalForm.gender ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      />
+                    ) : (
+                      <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.gender || 'N/A'}</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Race/Ethnicity</p>
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.raceEthnicity || 'N/A'}</p>
+                    {isEditingPersonal ? (
+                      <input
+                        type="text"
+                        value={personalForm.raceEthnicity ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, raceEthnicity: e.target.value })}
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      />
+                    ) : (
+                      <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.raceEthnicity || 'N/A'}</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Veteran Status</p>
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.veteranStatus || 'N/A'}</p>
+                    {isEditingPersonal ? (
+                      <input
+                        type="text"
+                        value={personalForm.veteranStatus ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, veteranStatus: e.target.value })}
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      />
+                    ) : (
+                      <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.veteranStatus || 'N/A'}</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Disability</p>
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.disability || 'N/A'}</p>
+                    {isEditingPersonal ? (
+                      <input
+                        type="text"
+                        value={personalForm.disability ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, disability: e.target.value })}
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      />
+                    ) : (
+                      <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.disability || 'N/A'}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1925,6 +2821,27 @@ export const ApplicantDetail: React.FC = () => {
               <div className="mt-8 border-t border-[#F1F5F9] pt-4 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">User Defined Fields</h3>
               </div>
+
+              {/* Bottom Save / Cancel bar when editing */}
+              {isEditingPersonal && (
+                <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#333]">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingPersonal(false)}
+                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSavePersonal}
+                    className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+                  >
+                    <Check className="h-4 w-4" />
+                    <span>Save Changes</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -2401,19 +3318,358 @@ export const ApplicantDetail: React.FC = () => {
             </section>
           )}
 
+          {/* EMAIL MERGES TAB (Three-Dot Option 1) */}
+          {activeSubTab === 'Email Merges' && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+                <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Email Merges</h3>
+                <button
+                  type="button"
+                  onClick={() => showToast('Email Merge campaign initiated')}
+                  className="flex items-center gap-1 rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>New Merge</span>
+                </button>
+              </div>
+              <div className="overflow-x-auto pt-2">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                    <tr>
+                      <th className="px-4 py-2.5">CAMPAIGN / TEMPLATE</th>
+                      <th className="px-4 py-2.5">RECIPIENT EMAIL</th>
+                      <th className="px-4 py-2.5">SENT BY</th>
+                      <th className="px-4 py-2.5">SENT DATE</th>
+                      <th className="px-4 py-2.5">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                    <tr className="hover:bg-gray-50 dark:hover:bg-[#2A2A2A]">
+                      <td className="px-4 py-3 font-semibold text-[#1877F2]">Candidate Introduction Campaign</td>
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">{applicant.email || 'applicant@email.com'}</td>
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">{applicant.assignedRecruiter || 'Ganesh Kshirsagar'}</td>
+                      <td className="px-4 py-3 text-[#666]">20/11/2026 14:10</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                          Delivered & Opened
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* EMAIL ACTIVITY TAB (Three-Dot Option 2) */}
+          {activeSubTab === 'Email Activity' && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+                <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Email Activity Log</h3>
+                <button
+                  type="button"
+                  onClick={() => showToast('Opening Email Composer')}
+                  className="flex items-center gap-1 rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
+                >
+                  <Send className="h-3 w-3" />
+                  <span>Compose Email</span>
+                </button>
+              </div>
+              <div className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                <div className="flex items-start justify-between py-3">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-blue-50 p-2 text-[#1877F2] dark:bg-[#1E293B]">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#1F2937] dark:text-white">Interview Schedule - E-commerce Production Support</h4>
+                      <p className="text-xs text-[#555] dark:text-[#CCC]">From: ganesh.godse@ampcustech.com â†’ To: {applicant.email}</p>
+                      <p className="text-[11px] text-[#888]">Sent on 20/11/2026 at 14:25 PM</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-semibold text-[#1877F2] dark:bg-blue-950/40 dark:text-blue-300">
+                    Sent
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* HIRES TAB (Three-Dot Option 3) */}
+          {activeSubTab === 'Hires' && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+                <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Hires & Onboarding Records</h3>
+              </div>
+              <div className="overflow-x-auto pt-2">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                    <tr>
+                      <th className="px-4 py-2.5">JOB CODE & TITLE</th>
+                      <th className="px-4 py-2.5">CLIENT</th>
+                      <th className="px-4 py-2.5">HIRE / JOINING DATE</th>
+                      <th className="px-4 py-2.5">OFFERED RATE / CTC</th>
+                      <th className="px-4 py-2.5">RECRUITER</th>
+                      <th className="px-4 py-2.5">ONBOARDING STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                    <tr className="hover:bg-gray-50 dark:hover:bg-[#2A2A2A]">
+                      <td className="px-4 py-3 font-semibold text-[#18558A] dark:text-[#90CDF4]">AMP12294 - E-commerce Production Support</td>
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">Dentsu</td>
+                      <td className="px-4 py-3 text-[#666]">01/12/2026</td>
+                      <td className="px-4 py-3 font-medium text-emerald-600">$85/hr</td>
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">Ganesh Godse</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                          Onboarding In Progress
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* SURVEYS TAB (Three-Dot Option 4) */}
+          {activeSubTab === 'Surveys' && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+                <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Candidate Experience Surveys</h3>
+                <button
+                  type="button"
+                  onClick={() => showToast('Survey dispatched to candidate email')}
+                  className="flex items-center gap-1 rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#1D6FD8]"
+                >
+                  <Send className="h-3 w-3" />
+                  <span>Send Survey</span>
+                </button>
+              </div>
+              <div className="overflow-x-auto pt-2">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                    <tr>
+                      <th className="px-4 py-2.5">SURVEY NAME</th>
+                      <th className="px-4 py-2.5">DISPATCHED DATE</th>
+                      <th className="px-4 py-2.5">STATUS</th>
+                      <th className="px-4 py-2.5">RATING</th>
+                      <th className="px-4 py-2.5">FEEDBACK</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                    <tr className="hover:bg-gray-50 dark:hover:bg-[#2A2A2A]">
+                      <td className="px-4 py-3 font-semibold text-[#1F2937] dark:text-white">Initial Screening Experience</td>
+                      <td className="px-4 py-3 text-[#666]">18/11/2026</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                          Completed
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#F2B705] font-bold">5 / 5 â˜…</td>
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">"Recruitment team was very responsive and professional."</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
+
+            {/* RIGHT-SIDE SLIDE-OUT RESUME PANEL (Matching Reference UI) */}
+      {isResumePanelOpen && (
+        <div
+          className={`fixed bottom-0 right-0 top-[56px] z-40 flex flex-col border-l border-[#E2E8F0] bg-white shadow-2xl transition-all duration-300 dark:border-[#333] dark:bg-[#1E1E1E] ${
+            resumeFullscreen
+              ? 'left-0 w-full'
+              : 'w-full sm:w-[500px] md:w-[550px] lg:w-[48%] xl:w-[45%]'
+          }`}
+        >
+          {/* Top Header */}
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2.5 dark:border-[#333] dark:bg-[#252525]">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-[#1877F2]" />
+              <span className="text-xs font-bold text-[#1F2937] dark:text-white">
+                {displayId} - {displayName}
+              </span>
+              <Search className="h-3.5 w-3.5 cursor-pointer text-[#888] hover:text-[#1877F2]" />
+            </div>
+            <div className="flex items-center gap-2.5 text-[#666] dark:text-[#AAA]">
+              <button
+                type="button"
+                onClick={handleDownloadResume}
+                title="Download Resume"
+                className="rounded p-1.5 hover:bg-gray-100 hover:text-[#1877F2] dark:hover:bg-[#333]"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setResumeFullscreen(!resumeFullscreen)}
+                title={resumeFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                className="rounded p-1.5 hover:bg-gray-100 hover:text-[#1877F2] dark:hover:bg-[#333]"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsResumePanelOpen(false)}
+                title="Close Resume"
+                className="rounded p-1.5 text-[#666] hover:bg-gray-100 hover:text-red-500 dark:hover:bg-[#333]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Sub Bar with Resume Tab */}
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-1.5 dark:border-[#333] dark:bg-[#202020]">
+            <div className="flex items-center gap-2">
+              <div className="rounded-t-md bg-[#2F80ED] px-3.5 py-1 text-[11px] font-semibold text-white shadow-xs">
+                Resume
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-[#666] dark:text-[#AAA]">
+              <span>Verified Document</span>
+              <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+            </div>
+          </div>
+
+          {/* Resume Document Canvas / Paper */}
+          <div className="flex-1 overflow-y-auto bg-[#F1F5F9] p-4 md:p-6 dark:bg-[#121212]">
+            <div className="mx-auto max-w-[620px] rounded border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm space-y-5 text-xs text-[#1F2937] dark:border-[#333] dark:bg-[#1E1E1E] dark:text-[#E0E0E0]">
+              {/* Header */}
+              <div className="text-center space-y-1">
+                <h1 className="text-xl font-bold tracking-tight text-[#111827] dark:text-white">
+                  {displayName}
+                </h1>
+                <p className="text-xs text-[#4B5563] dark:text-[#9CA3AF]">
+                  {applicant.city || applicant.location || 'Nashik, Maharashtra, India'} Â· {applicant.email || 'applicant@email.com'} Â· {applicant.phone || '+91-9876543210'}
+                </p>
+                <div className="flex justify-center items-center gap-3 text-xs text-[#1877F2] pt-1">
+                  <a href={applicant.portfolioUrl || '#'} className="hover:underline">Portfolio</a>
+                  <span>Â·</span>
+                  <a href={applicant.githubUrl || '#'} className="hover:underline">GitHub</a>
+                  <span>Â·</span>
+                  <a href={applicant.linkedinUrl || '#'} className="hover:underline">LinkedIn</a>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="space-y-1.5">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                  Summary
+                </h2>
+                <p className="text-xs text-[#4B5563] dark:text-[#CCC] leading-relaxed">
+                  {applicant.summary ||
+                    `B.Tech Computer Science student with hands-on experience in full-stack web development. Built projects including a Fake News Detection system using NLP and a real-time chat platform with live room features. Skilled in React, Node.js, and modern web technologies, with a focus on developing scalable and user-centric applications.`}
+                </p>
+              </div>
+
+              {/* Education */}
+              <div className="space-y-2">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                  Education
+                </h2>
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="text-[11px] font-semibold text-[#6B7280] dark:text-[#9CA3AF]">
+                      <th className="py-1">Degree</th>
+                      <th className="py-1">Institution</th>
+                      <th className="py-1">Years</th>
+                      <th className="py-1 text-right">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                    {educationList.map((edu, idx) => (
+                      <tr key={idx} className="text-xs">
+                        <td className="py-1.5 font-medium">{edu.degree}</td>
+                        <td className="py-1.5 text-[#555] dark:text-[#BBB]">{edu.institution}</td>
+                        <td className="py-1.5 text-[#666]">{edu.period}</td>
+                        <td className="py-1.5 text-right font-medium">8.33 CGPA</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td className="py-1.5 font-medium">HSC</td>
+                      <td className="py-1.5 text-[#555] dark:text-[#BBB]">LVH College, Nashik</td>
+                      <td className="py-1.5 text-[#666]">2022</td>
+                      <td className="py-1.5 text-right font-medium">55%</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 font-medium">SSC</td>
+                      <td className="py-1.5 text-[#555] dark:text-[#BBB]">Ravindranath Vidyalaya, Nashik</td>
+                      <td className="py-1.5 text-[#666]">2020</td>
+                      <td className="py-1.5 text-right font-medium">74%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Technical Skills */}
+              <div className="space-y-2">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                  Technical Skills
+                </h2>
+                <div className="space-y-1 text-xs">
+                  <p><span className="font-semibold text-[#111827] dark:text-white">Languages:</span> JavaScript, Python, Java, C++, TypeScript</p>
+                  <p><span className="font-semibold text-[#111827] dark:text-white">Frontend:</span> React.js, HTML, CSS, Tailwind, Redux</p>
+                  <p><span className="font-semibold text-[#111827] dark:text-white">Backend:</span> Node.js, Express.js, FastAPI, REST APIs</p>
+                  <p><span className="font-semibold text-[#111827] dark:text-white">Core Skills:</span> {skillsList.join(', ')}</p>
+                </div>
+              </div>
+
+              {/* Work Experience */}
+              <div className="space-y-2">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                  Work Experience & Projects
+                </h2>
+                <div className="space-y-3">
+                  {workExperiences.map((exp, idx) => (
+                    <div key={idx} className="space-y-0.5">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-xs text-[#1F2937] dark:text-white">{exp.company}</h3>
+                        <span className="text-[11px] text-[#888]">{exp.period}</span>
+                      </div>
+                      <p className="text-xs font-medium text-[#2F80ED]">{exp.designation}</p>
+                      <p className="text-xs text-[#4B5563] dark:text-[#CCC]">
+                        Worked on building reliable, high-performance features, improving code quality, and collaborating with cross-functional teams.
+                      </p>
+                    </div>
+                  ))}
+                  <div className="space-y-0.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-xs text-[#1F2937] dark:text-white">Fake News Detection System</h3>
+                      <span className="text-[11px] text-[#888]">2023 - 2024</span>
+                    </div>
+                    <p className="text-xs font-medium text-[#2F80ED]">NLP Classification & Web Application</p>
+                    <p className="text-xs text-[#4B5563] dark:text-[#CCC]">
+                      Built an end-to-end natural language processing model using TF-IDF and classification algorithms achieving 92% accuracy on benchmark news datasets.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* RIGHT SIDEBAR (Fixed / Sticky Right Panel matching Ceipal reference) */}
       <aside
         className={`fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#333] dark:bg-[#1E293B] ${
-          sidebarCollapsed ? 'w-0 overflow-hidden border-none' : 'w-[305px] overflow-y-auto'
+          isResumePanelOpen || sidebarCollapsed
+            ? 'w-0 overflow-hidden border-none pointer-events-none'
+            : 'w-[305px] overflow-hidden'
         }`}
       >
-        <div className="space-y-5 p-4 text-xs">
+        <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 pb-3 pt-4 dark:border-[#333] dark:bg-[#252525]">
+          <h2 className="m-0 block text-sm font-semibold leading-5 text-[#1F2937] dark:text-white">Applicant Details</h2>
+        </div>
+        <div className="space-y-5 overflow-y-auto p-4 text-xs">
           {/* Section 1: Applicant Details */}
           <div>
-            <h2 className="mb-3 text-xs font-bold text-[#1F2937] dark:text-white">Applicant Details</h2>
             <div className="space-y-2.5">
               <div>
                 <span className="block text-[10px] font-medium text-[#888]">Ownership</span>
@@ -2478,7 +3734,7 @@ export const ApplicantDetail: React.FC = () => {
                   {applicant.skills?.length ? applicant.skills.join(', ') : '.NET FRAMEWORK, E-Commerce, Datadog, Root Cause Analysis, Salesforce Comme'}
                 </p>
                 <button type="button" onClick={() => setDialog('edit')} className="mt-0.5 text-[10px] font-semibold text-[#2F80ED] hover:underline">
-                  More ▾
+                  <span>More</span><ChevronDown className="ml-0.5 inline h-3 w-3" />
                 </button>
               </div>
 
@@ -2491,12 +3747,12 @@ export const ApplicantDetail: React.FC = () => {
 
               <div>
                 <span className="block text-[10px] font-medium text-[#888]">Expected CTC</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.expectedCTC || applicant.expectedSalary || '—'}</span>
+                <span className="font-medium text-[#222] dark:text-white">{applicant.expectedCTC || applicant.expectedSalary || 'N/A'}</span>
               </div>
 
               <div>
                 <span className="block text-[10px] font-medium text-[#888]">Current CTC</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.currentCTC || '—'}</span>
+                <span className="font-medium text-[#222] dark:text-white">{applicant.currentCTC || 'N/A'}</span>
               </div>
 
               <div>
@@ -2592,7 +3848,7 @@ export const ApplicantDetail: React.FC = () => {
         }`}
         title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
       >
-        <span className="text-[10px] font-bold">{sidebarCollapsed ? '‹' : '›'}</span>
+        {sidebarCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
 
       {/* DIALOGS & MODALS */}
@@ -2716,7 +3972,7 @@ export const ApplicantDetail: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Core Technical Skills</h4>
-                <p className="text-[#555] dark:text-[#BBB]">{applicant.skills.join(' · ')}</p>
+                <p className="text-[#555] dark:text-[#BBB]">{applicant.skills.join(' Â· ')}</p>
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Experience</h4>
@@ -2736,55 +3992,204 @@ export const ApplicantDetail: React.FC = () => {
         </div>
       )}
 
-      {/* Add Note Modal */}
+      {/* Add Note Modal (Exact Replication of Reference Image 1) */}
       {dialog === 'note' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
-              <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Recruiter Note</h2>
-              <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
+              <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Note</h3>
+              <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="space-y-3 py-4 text-xs">
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Priority</span>
-                <select
-                  value={newNotePriority}
-                  onChange={(e) => setNewNotePriority(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none dark:border-[#444] dark:bg-[#333] dark:text-white"
-                >
-                  <option>Normal</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                  <option>Urgent</option>
-                </select>
+              {/* Row 1: Applicant Name & Search for a Job */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <input
+                    type="text"
+                    readOnly
+                    value={displayName.toUpperCase()}
+                    className="w-full rounded border border-[#CBD5E1] bg-gray-50 p-2 text-xs font-semibold text-[#1F2937] outline-none dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  />
+                </div>
+                <div>
+                  <select
+                    value={noteJob}
+                    onChange={(e) => setNoteJob(e.target.value)}
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  >
+                    <option value="">Search for a Job</option>
+                    <option value="AMP12294">AMP12294 - E-commerce Production Support</option>
+                    <option value="AMP12295">AMP12295 - Principal Cloud AI Architect</option>
+                    <option value="AMP12296">AMP12296 - Senior Platform Support Engineer</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Priority & Search for Client */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <select
+                    value={newNotePriority}
+                    onChange={(e) => setNewNotePriority(e.target.value)}
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={noteClient}
+                    onChange={(e) => setNoteClient(e.target.value)}
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  >
+                    <option value="">Search for a Client</option>
+                    <option value="Dentsu">Dentsu</option>
+                    <option value="CloudScale Enterprises">CloudScale Enterprises</option>
+                    <option value="FinEdge Capital">FinEdge Capital</option>
+                    <option value="Ampcus Tech Pvt Ltd.">Ampcus Tech Pvt Ltd.</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Select Contact / Requisition & Select Actions */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <select
+                    value={noteContact}
+                    onChange={(e) => setNoteContact(e.target.value)}
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  >
+                    <option value="">Select</option>
+                    <option value="Primary Contact">Primary Contact</option>
+                    <option value="Hiring Manager">Hiring Manager</option>
+                    <option value="HR Lead">HR Lead</option>
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={noteAction}
+                    onChange={(e) => setNoteAction(e.target.value)}
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  >
+                    <option value="">Select Actions</option>
+                    <option value="Call">Call Candidate</option>
+                    <option value="Email">Email Candidate</option>
+                    <option value="Interview">Schedule Interview</option>
+                    <option value="Internal Review">Internal Team Review</option>
+                    <option value="Submission Follow-up">Submission Follow-up</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 4: Remind Me Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={noteRemindMe}
+                  onChange={(e) => setNoteRemindMe(e.target.checked)}
+                  className="rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                />
+                <span className="text-xs text-[#444] dark:text-[#CCC]">Remind Me</span>
               </label>
-              <label className="block space-y-1">
-                <span className="text-[#666] dark:text-[#AAA]">Note / Feedback</span>
+
+              {/* Row 5: Subject line */}
+              <div>
+                <input
+                  type="text"
+                  value={noteSubject || `New Note Created for ${displayName.toUpperCase()} - ${displayId}.`}
+                  onChange={(e) => setNoteSubject(e.target.value)}
+                  placeholder={`New Note Created for ${displayName.toUpperCase()} - ${displayId}.`}
+                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs font-medium outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                />
+              </div>
+
+              {/* Row 6: Rich Text Editor with Exact Toolbar (Reference Image 1) */}
+              <div className="rounded border border-[#CBD5E1] dark:border-[#444]">
+                {/* Top Toolbar Row */}
+                <div className="flex flex-wrap items-center gap-1 border-b border-[#CBD5E1] bg-[#F8FAFC] p-1.5 text-xs text-[#555] dark:border-[#444] dark:bg-[#202020] dark:text-[#AAA]">
+                  <button type="button" title="Cut" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">âœ‚</button>
+                  <button type="button" title="Copy" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">ðŸ“‹</button>
+                  <button type="button" title="Paste" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">ðŸ“„</button>
+                  <button type="button" title="Undo" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">â†©</button>
+                  <button type="button" title="Redo" className="rounded p-1 hover:bg-gray-200 dark:hover:bg-[#333]">â†ª</button>
+                  <span className="text-gray-300">|</span>
+                  <button type="button" title="Bold" className="rounded px-1.5 py-0.5 font-bold hover:bg-gray-200 dark:hover:bg-[#333]">B</button>
+                  <button type="button" title="Italic" className="rounded px-1.5 py-0.5 italic hover:bg-gray-200 dark:hover:bg-[#333]">I</button>
+                  <button type="button" title="Underline" className="rounded px-1.5 py-0.5 underline hover:bg-gray-200 dark:hover:bg-[#333]">U</button>
+                  <button type="button" title="Strikethrough" className="rounded px-1.5 py-0.5 line-through hover:bg-gray-200 dark:hover:bg-[#333]">S</button>
+                  <button type="button" title="Subscript" className="rounded px-1 text-[10px] hover:bg-gray-200 dark:hover:bg-[#333]">xâ‚‚</button>
+                  <button type="button" title="Superscript" className="rounded px-1 text-[10px] hover:bg-gray-200 dark:hover:bg-[#333]">xÂ²</button>
+                  <span className="text-gray-300">|</span>
+                  <button type="button" title="Bulleted list" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">â‰¡</button>
+                  <button type="button" title="Numbered list" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">1.</button>
+                  <span className="text-gray-300">|</span>
+                  <button type="button" title="Special character" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">Î©</button>
+                  <button type="button" title="Link" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">ðŸ”—</button>
+                  <button type="button" title="Source code" className="rounded px-1 text-[11px] hover:bg-gray-200 dark:hover:bg-[#333]">&lt;/&gt;</button>
+                </div>
+                {/* Second Toolbar Row */}
+                <div className="flex flex-wrap items-center gap-1.5 border-b border-[#CBD5E1] bg-[#F8FAFC] px-1.5 py-1 text-[11px] text-[#555] dark:border-[#444] dark:bg-[#202020] dark:text-[#AAA]">
+                  <button type="button" title="Table" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â–¦</button>
+                  <button type="button" title="Align Left" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â‡ </button>
+                  <button type="button" title="Align Center" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â†”</button>
+                  <button type="button" title="Align Right" className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-[#333]">â‡¢</button>
+                  <span className="text-gray-300">|</span>
+                  <span className="font-bold underline text-blue-600">A</span>
+                  <span className="bg-yellow-200 px-1 font-semibold text-black">A</span>
+                  <span className="text-gray-300">|</span>
+                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                    <option>Styles</option>
+                  </select>
+                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                    <option>Format</option>
+                  </select>
+                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                    <option>Font</option>
+                  </select>
+                  <select className="bg-transparent text-[10px] outline-none text-[#555] dark:text-[#AAA]">
+                    <option>Size</option>
+                  </select>
+                </div>
                 <textarea
-                  rows={4}
+                  rows={6}
                   value={newNoteText}
                   onChange={(e) => setNewNoteText(e.target.value)}
-                  placeholder="Enter evaluation, screen feedback, or candidate update..."
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  placeholder="Enter note contents..."
+                  className="w-full p-3 text-xs outline-none dark:bg-[#252525] dark:text-white"
                 />
+              </div>
+
+              {/* Row 7: Add To Task Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={noteAddToTask}
+                  onChange={(e) => setNoteAddToTask(e.target.checked)}
+                  className="rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                />
+                <span className="text-xs text-[#444] dark:text-[#CCC]">Add To Task</span>
               </label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
-              <button
-                type="button"
-                onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#444] dark:text-white"
-              >
-                Cancel
-              </button>
+
+            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
               <button
                 type="button"
                 onClick={handleAddNote}
-                className="rounded bg-[#2F80ED] px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+                className="rounded bg-[#2F80ED] px-6 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
               >
-                Save Note
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white transition-colors"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -3473,6 +4878,63 @@ export const ApplicantDetail: React.FC = () => {
                 type="button"
                 onClick={() => finalizeEmployerSave(false)}
                 className="min-w-[100px] rounded border border-[#CED4DA] bg-white px-6 py-2 text-sm font-medium text-[#4A5568] shadow-2xs hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Create Resume Builder (Replicating Reference Image 2) */}
+      {dialog === 'create-resume' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+              <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Create Resume Builder</h3>
+              <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222] dark:hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4 py-5 text-xs">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-[#475569] dark:text-[#AAA]">
+                  Choose Resume Template
+                </label>
+                <select
+                  value={resumeTemplate}
+                  onChange={(e) => setResumeTemplate(e.target.value)}
+                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                >
+                  <option value="">Select</option>
+                  <option value="Standard Corporate Template">Standard Corporate Template</option>
+                  <option value="Modern Executive Template">Modern Executive Template</option>
+                  <option value="Technical ATS Template">Technical ATS Template</option>
+                  <option value="Minimalist One-Page Template">Minimalist One-Page Template</option>
+                  <option value="Creative Portfolio Template">Creative Portfolio Template</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!resumeTemplate) {
+                    showToast('Please choose a resume template');
+                    return;
+                  }
+                  setDialog(null);
+                  setIsResumePanelOpen(true);
+                  showToast(`Resume Builder: "${resumeTemplate}" created successfully for ${displayName}`);
+                }}
+                className="rounded bg-[#2F80ED] px-5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+              >
+                Create
+              </button>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
               >
                 Cancel
               </button>

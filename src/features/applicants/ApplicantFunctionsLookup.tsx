@@ -17,6 +17,7 @@ import { useAppStore } from '../../store/appStore';
 interface ApplicantFunction {
   id: string;
   name: string;
+  specialization?: string;
   createdBy: string;
   modifiedBy: string;
   lastModified: string;
@@ -36,6 +37,9 @@ type SortDirection = 'asc' | 'desc' | null;
 interface ApplicantLookupTableProps {
   singularLabel: string;
   pluralLabel: string;
+  nameColumnLabel?: string;
+  specializationColumn?: boolean;
+  lastModifiedColumnLabel?: string;
   recordsStorageKey: string;
   activitiesStorageKey: string;
   initialRecords: ApplicantFunction[];
@@ -60,17 +64,34 @@ const initialFunctions: ApplicantFunction[] = [
   { id: 'function-16', name: 'Supply Chain', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' }
 ];
 const initialTechnologies: ApplicantFunction[] = [];
+const initialClearanceTypes: ApplicantFunction[] = [];
+const initialLanguageProficiencies: ApplicantFunction[] = [
+  { id: 'language-proficiency-1', name: 'Speak', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' },
+  { id: 'language-proficiency-2', name: 'Write', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' },
+  { id: 'language-proficiency-3', name: 'Read', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' }
+];
+const initialDegrees: ApplicantFunction[] = [
+  { id: 'degree-1', name: 'Master of Science in Education (M.Ed.)', specialization: 'N/A', createdBy: 'Gourav Ashok Mishra', modifiedBy: 'Gourav Ashok Mishra', lastModified: '22/04/2025 17:25:51' },
+  { id: 'degree-2', name: 'PHD', specialization: 'N/A', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' },
+  { id: 'degree-3', name: 'Masters Degree', specialization: 'N/A', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' },
+  { id: 'degree-4', name: 'Bachelors Degree', specialization: 'N/A', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' },
+  { id: 'degree-5', name: 'Undergraduate', specialization: 'N/A', createdBy: 'Sachin Wadeyar', modifiedBy: 'Sachin Wadeyar', lastModified: '03/06/2024 22:51:26' }
+];
 
 const formatTimestamp = () => new Date().toLocaleString();
 
 const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
   singularLabel,
   pluralLabel,
+  nameColumnLabel = 'Name',
+  specializationColumn = false,
+  lastModifiedColumnLabel = 'Last modified',
   recordsStorageKey,
   activitiesStorageKey,
   initialRecords
 }) => {
   const { currentUser } = useAppStore();
+  const activitiesTitleId = `${recordsStorageKey}-activities-title`;
   const [records, setRecords] = useState<ApplicantFunction[]>(() => {
     const storedRecords = localStorage.getItem(recordsStorageKey);
     return storedRecords ? JSON.parse(storedRecords) as ApplicantFunction[] : initialRecords;
@@ -83,6 +104,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
   const [recordToDelete, setRecordToDelete] = useState<ApplicantFunction | null>(null);
   const [editingRecord, setEditingRecord] = useState<ApplicantFunction | null>(null);
   const [name, setName] = useState('');
+  const [specialization, setSpecialization] = useState('');
   const [validationError, setValidationError] = useState('');
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [activities, setActivities] = useState<LookupActivity[]>(() => {
@@ -101,7 +123,10 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
   const filteredRecords = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return records
-      .filter((record) => record.name.toLocaleLowerCase().includes(query))
+        .filter((record) =>
+          record.name.toLocaleLowerCase().includes(query) ||
+          (record.specialization || '').toLocaleLowerCase().includes(query)
+        )
       .sort((a, b) => {
         if (!sortDirection) return 0;
         const comparison = a.name.localeCompare(b.name);
@@ -131,6 +156,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
   const openAddModal = () => {
     setEditingRecord(null);
     setName('');
+    setSpecialization('');
     setValidationError('');
     setModal('add');
   };
@@ -138,6 +164,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
   const openEditModal = (record: ApplicantFunction) => {
     setEditingRecord(record);
     setName(record.name);
+    setSpecialization(record.specialization || 'N/A');
     setValidationError('');
     setModal('edit');
   };
@@ -146,7 +173,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
     event.preventDefault();
     const nextName = name.trim();
     if (!nextName) {
-      setValidationError(`Enter an applicant ${singularLabel} name.`);
+      setValidationError(`Enter a ${singularLabel} name.`);
       return;
     }
 
@@ -154,17 +181,20 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
       (record) => record.id !== editingRecord?.id && record.name.toLocaleLowerCase() === nextName.toLocaleLowerCase()
     );
     if (duplicate) {
-      setValidationError(`This applicant ${singularLabel} already exists.`);
+      setValidationError(`This ${singularLabel} already exists.`);
       return;
     }
 
     const user = currentUser?.name || 'Admin';
     const timestamp = formatTimestamp();
+    const degreeFields = specializationColumn
+      ? { specialization: specialization.trim() || 'N/A' }
+      : {};
     if (editingRecord) {
       setRecords((previous) =>
         previous.map((record) =>
           record.id === editingRecord.id
-            ? { ...record, name: nextName, modifiedBy: user, lastModified: timestamp }
+            ? { ...record, name: nextName, ...degreeFields, modifiedBy: user, lastModified: timestamp }
             : record
         )
       );
@@ -174,6 +204,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
         {
           id: `${singularLabel}-${Date.now()}`,
           name: nextName,
+          ...degreeFields,
           createdBy: user,
           modifiedBy: user,
           lastModified: timestamp
@@ -196,7 +227,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
   return (
     <section className="overflow-hidden rounded-2xl border border-[#D8E3F1] bg-white shadow-sm dark:border-[#334155] dark:bg-[#1E293B]">
       <div className="flex flex-col gap-3 border-b border-[#D8E3F1] bg-white p-4 dark:border-[#334155] dark:bg-[#1E293B] sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex h-10 w-full max-w-sm items-center gap-2 rounded-xl border border-[#D8E3F1] bg-[#FFFFFF]/60 px-3 text-[#64748B] transition-colors focus-within:border-[#2563EB] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#BFDBFE]">
+        <label className="flex h-10 w-full max-w-[200px] items-center gap-2 rounded-xl border border-[#D8E3F1] bg-[#FFFFFF]/60 px-3 text-[#64748B] transition-colors focus-within:border-[#2563EB] dark:border-[#334155] dark:bg-[#0F172A] dark:text-[#BFDBFE]">
           <Search className="h-4 w-4 shrink-0" />
           <input
             value={search}
@@ -230,7 +261,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
             className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1D4ED8]"
           >
             <Plus className="h-4 w-4" />
-            Add {singularLabel}
+            Add
           </button>
         </div>
       </div>
@@ -245,13 +276,14 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
                   onClick={() => setSortDirection((direction) => direction === null || direction === 'desc' ? 'asc' : 'desc')}
                   className="inline-flex items-center gap-1.5 font-semibold hover:text-[#125B97] dark:hover:text-white"
                 >
-                  Name
+                  {nameColumnLabel}
                   <span aria-hidden="true">{sortDirection === 'asc' ? '↑' : sortDirection === 'desc' ? '↓' : '↕'}</span>
                 </button>
               </th>
+              {specializationColumn && <th scope="col" className="px-5 py-3.5 font-semibold">Specialization</th>}
               <th scope="col" className="px-5 py-3.5 font-semibold">Created by</th>
               <th scope="col" className="px-5 py-3.5 font-semibold">Modified by</th>
-              <th scope="col" className="px-5 py-3.5 font-semibold">Last modified</th>
+              <th scope="col" className="px-5 py-3.5 font-semibold">{lastModifiedColumnLabel}</th>
               <th scope="col" className="w-28 px-5 py-3.5 text-right font-semibold">Actions</th>
             </tr>
           </thead>
@@ -259,6 +291,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
             {visibleRecords.map((record) => (
               <tr key={record.id} className="transition-colors hover:bg-[#F8FAFC] dark:hover:bg-[#334155]">
                 <td className="px-5 py-3.5 font-semibold text-[#1E293B] dark:text-white">{record.name}</td>
+                {specializationColumn && <td className="px-5 py-3.5 text-[#475569] dark:text-[#BFDBFE]">{record.specialization || 'N/A'}</td>}
                 <td className="px-5 py-3.5 text-[#475569] dark:text-[#BFDBFE]">{record.createdBy}</td>
                 <td className="px-5 py-3.5 text-[#475569] dark:text-[#BFDBFE]">{record.modifiedBy}</td>
                 <td className="px-5 py-3.5 tabular-nums text-[#64748B] dark:text-[#64748B]">{record.lastModified}</td>
@@ -288,12 +321,8 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
             ))}
             {visibleRecords.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-16 text-center">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFFFFF] text-[#64748B] dark:bg-[#475569] dark:text-[#BFDBFE]">
-                    <Search className="h-5 w-5" />
-                  </div>
-                  <p className="mt-3 text-sm font-semibold text-[#1E293B] dark:text-white">No records found</p>
-                  <p className="mt-1 text-xs text-[#64748B] dark:text-[#64748B]">Try another search or add an applicant {singularLabel}.</p>
+                <td colSpan={specializationColumn ? 6 : 5} className="px-5 py-3 text-left text-xs text-[#64748B] dark:text-[#BFDBFE]">
+                  No Records Found.
                 </td>
               </tr>
             )}
@@ -366,10 +395,21 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
                     setName(event.target.value);
                     setValidationError('');
                   }}
-                  placeholder={`Enter an applicant ${singularLabel} name`}
+                  placeholder={`Enter a ${singularLabel} name`}
                   className="w-full rounded-xl border border-[#D8E3F1] bg-white px-3 py-2.5 text-sm font-normal text-[#1E293B] outline-none transition-colors placeholder:text-[#64748B] focus:border-[#2563EB] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 />
               </label>
+              {specializationColumn && (
+                <label className="block space-y-1.5 text-xs font-semibold text-[#334155] dark:text-[#BFDBFE]">
+                  Specialization
+                  <input
+                    value={specialization}
+                    onChange={(event) => setSpecialization(event.target.value)}
+                    placeholder="Enter a specialization or N/A"
+                    className="w-full rounded-xl border border-[#D8E3F1] bg-white px-3 py-2.5 text-sm font-normal text-[#1E293B] outline-none transition-colors placeholder:text-[#64748B] focus:border-[#2563EB] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                  />
+                </label>
+              )}
               {validationError && <p role="alert" className="text-xs text-rose-600 dark:text-rose-300">{validationError}</p>}
               <div className="flex justify-end gap-2 border-t border-[#D8E3F1] pt-4 dark:border-[#334155]">
                 <button type="button" onClick={() => setModal(null)} className="rounded-xl border border-[#D8E3F1] px-4 py-2.5 text-xs font-semibold text-[#475569] transition-colors hover:bg-[#FFFFFF] dark:border-[#334155] dark:text-[#BFDBFE] dark:hover:bg-[#475569]">Cancel</button>
@@ -381,7 +421,7 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
           {recordToDelete && (
             <div className="w-full max-w-sm space-y-4 rounded-2xl border border-[#D8E3F1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
               <div>
-                <h2 className="text-base font-bold text-[#1E293B] dark:text-white">Delete applicant {singularLabel}?</h2>
+                <h2 className="text-base font-bold text-[#1E293B] dark:text-white">Delete {singularLabel}?</h2>
                 <p className="mt-1 text-xs leading-5 text-[#64748B] dark:text-[#BFDBFE]">
                   <strong className="text-[#1E293B] dark:text-white">{recordToDelete.name}</strong> will be removed from this lookup list.
                 </p>
@@ -394,11 +434,11 @@ const ApplicantLookupTable: React.FC<ApplicantLookupTableProps> = ({
           )}
 
           {activitiesOpen && (
-            <section aria-labelledby="applicant-function-activities-title" className="flex max-h-[min(80vh,680px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#D8E3F1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+            <section aria-labelledby={activitiesTitleId} className="flex max-h-[min(80vh,680px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#D8E3F1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
               <div className="flex items-center justify-between border-b border-[#D8E3F1] p-5 dark:border-[#334155]">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1E40AF] dark:text-[#60A5FA]">Audit trail</p>
-                  <h2 id="applicant-function-activities-title" className="mt-1 text-lg font-bold text-[#1E293B] dark:text-white">Recent activities</h2>
+                  <h2 id={activitiesTitleId} className="mt-1 text-lg font-bold text-[#1E293B] dark:text-white">Recent activities</h2>
                 </div>
                 <button type="button" aria-label="Close activities" onClick={() => setActivitiesOpen(false)} className="rounded-lg p-2 text-[#64748B] hover:bg-[#FFFFFF] dark:text-[#BFDBFE] dark:hover:bg-[#475569]">
                   <X className="h-4 w-4" />
@@ -453,5 +493,39 @@ export const ApplicantTechnologiesLookup: React.FC = () => (
     recordsStorageKey="ats_applicant_technologies"
     activitiesStorageKey="ats_applicant_technology_activities"
     initialRecords={initialTechnologies}
+  />
+);
+
+export const ApplicantDegreesLookup: React.FC = () => (
+  <ApplicantLookupTable
+    singularLabel="degree"
+    pluralLabel="Degrees"
+    specializationColumn
+    lastModifiedColumnLabel="Modified on"
+    recordsStorageKey="ats_applicant_degrees"
+    activitiesStorageKey="ats_applicant_degree_activities"
+    initialRecords={initialDegrees}
+  />
+);
+
+export const ApplicantClearanceTypesLookup: React.FC = () => (
+  <ApplicantLookupTable
+    singularLabel="clearance type"
+    pluralLabel="Clearance Types"
+    nameColumnLabel="Clearance Type"
+    recordsStorageKey="ats_applicant_clearance_types"
+    activitiesStorageKey="ats_applicant_clearance_type_activities"
+    initialRecords={initialClearanceTypes}
+  />
+);
+
+export const ApplicantLanguageProficienciesLookup: React.FC = () => (
+  <ApplicantLookupTable
+    singularLabel="language proficiency"
+    pluralLabel="Language Proficiencies"
+    nameColumnLabel="Language Proficiency"
+    recordsStorageKey="ats_applicant_language_proficiencies"
+    activitiesStorageKey="ats_applicant_language_proficiency_activities"
+    initialRecords={initialLanguageProficiencies}
   />
 );
