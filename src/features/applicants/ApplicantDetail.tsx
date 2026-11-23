@@ -39,7 +39,18 @@ import {
   Calendar,
   Send,
   FileText,
-  UserPlus
+  UserPlus,
+  MailX,
+  Printer,
+  History,
+  FileUp,
+  UserCheck,
+  Sparkles,
+  ShieldAlert,
+  Square,
+  CheckSquare,
+  FileCheck2,
+  AlertTriangle
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
@@ -79,6 +90,143 @@ export const ApplicantDetail: React.FC = () => {
   const submitMenuRef = useRef<HTMLDivElement>(null);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [isEmailMergeDeactivated, setIsEmailMergeDeactivated] = useState(false);
+  const [emailMergeOptOutUntil, setEmailMergeOptOutUntil] = useState('');
+  const [emailMergeReason, setEmailMergeReason] = useState('Candidate requested opt-out');
+  const [emailMergeSelectedPreset, setEmailMergeSelectedPreset] = useState('1 Month');
+  const [emailMergeSuppressAll, setEmailMergeSuppressAll] = useState(true);
+  const [emailMergeAddTimelineNote, setEmailMergeAddTimelineNote] = useState(true);
+  const [showExistingNotesInModal, setShowExistingNotesInModal] = useState(false);
+  const [referenceForm, setReferenceForm] = useState({
+    name: '',
+    company: '',
+    contactNumber: '',
+    email: '',
+    referenceType: 'Select Reference Type',
+    designation: '',
+    yearsAcquainted: '',
+    summary: ''
+  });
+
+  // Request Employee Information state (matching reference images)
+  const initialReqPersonalFields: Record<string, boolean> = {
+    'First Name as per Aadhaar': true,
+    'Middle Name as per Aadhaar': false,
+    'Last Name as per Aadhaar': false,
+    'Legal Name': false,
+    'Alternate Email Address': false,
+    'Home Phone Number': false,
+    'Mobile Number': false,
+    'Work Phone Number': false,
+    'Other Phone': false,
+    'Date Of Birth': false,
+    'SSN': false,
+    'Skype ID': false,
+    'LinkedIn Profile URL': false,
+    'Facebook Profile URL': false,
+    'Twitter Profile URL': false,
+    'Video Reference': false,
+    'Work Authorization': false,
+    'Address': false,
+    'City': false,
+    'Country': false,
+    'State': false,
+    'Pin Code': false,
+    'Experience': false,
+    'Current Title/Designation': false,
+    'Expected CTC': false,
+    'Skills': false,
+    'Primary Skills': false,
+    'Technology': false,
+    'Gender': false,
+    'Race/Ethnicity': false,
+    'Veteran Status': false,
+    'Disability': false,
+    'Work Authorization Expiry': false,
+    'Notice Period': false,
+    'Function': false,
+    'Current CTC': false,
+    'Industry': false,
+    'Candidate Photo': false,
+    'Pan Card Number': false,
+    'Aadhar Number': false,
+    'Current Company': false,
+    'Relevant experiece': false,
+    'Passport number': false,
+    'Marital status': false,
+    'Preferred Shift': false,
+    'Nationality': false,
+    'Maiden Name': false,
+    'UAN Number': false,
+    'Relocation': false,
+    'Email Address': true
+  };
+
+  const initialReqDocuments: Record<string, boolean> = {
+    'Pan Card': false,
+    'Aadhar Card': false,
+    'Employment Application Form': false,
+    'Resume': false,
+    'Transcripts': false,
+    'Driving License': false,
+    'Passport': false,
+    'SSN': false,
+    'EML File': false
+  };
+
+  const [reqAllChecked, setReqAllChecked] = useState(false);
+  const [reqPersonalFields, setReqPersonalFields] = useState<Record<string, boolean>>(initialReqPersonalFields);
+  const [reqDocuments, setReqDocuments] = useState<Record<string, boolean>>(initialReqDocuments);
+  const [reqCertifications, setReqCertifications] = useState(false);
+  const [reqLanguages, setReqLanguages] = useState(false);
+  const [reqReferences, setReqReferences] = useState(false);
+  const [reqComments, setReqComments] = useState('');
+  const [reqEmailSubject, setReqEmailSubject] = useState('Request for details');
+  const [reqEmailBody, setReqEmailBody] = useState('');
+  const [reqEmailSourceMode, setReqEmailSourceMode] = useState(false);
+  const reqEmailBodyRef = useRef<HTMLDivElement>(null);
+  const reqEmailSelectionRef = useRef<Range | null>(null);
+
+  // Employment Application Form eForm state (matching reference image)
+  const [eformDate, setEformDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [eformInterviewTime, setEformInterviewTime] = useState('10:00 AM');
+  const [eformPosition, setEformPosition] = useState('');
+  const [eformSource, setEformSource] = useState('Direct Career Portal');
+  const [eformReferredBy, setEformReferredBy] = useState('');
+  const [eformRecruiter, setEformRecruiter] = useState('');
+  const [eformAadhaarName, setEformAadhaarName] = useState('');
+  const [eformDob, setEformDob] = useState('15/08/1997');
+  const [eformGender, setEformGender] = useState<'M' | 'F'>('M');
+  const [eformMaritalStatus, setEformMaritalStatus] = useState<'Married' | 'Unmarried'>('Unmarried');
+  const [eformAddress, setEformAddress] = useState('');
+  const [eformNativePlace, setEformNativePlace] = useState('');
+  const [eformMobile, setEformMobile] = useState('');
+  const [eformAltMobile, setEformAltMobile] = useState('');
+  const [eformEmail, setEformEmail] = useState('');
+  const [eformServiceClause, setEformServiceClause] = useState('Yes');
+  const [eformNightShiftsWorked, setEformNightShiftsWorked] = useState('No');
+  const [eformNightShiftsAvailable, setEformNightShiftsAvailable] = useState('Yes');
+  const [eformIsFresher, setEformIsFresher] = useState(false);
+  const [eformCurrentCTC, setEformCurrentCTC] = useState('₹6,50,000 PA');
+  const [eformExpectedCTC, setEformExpectedCTC] = useState('₹9,00,000 PA');
+  const [eformNoticePeriod, setEformNoticePeriod] = useState('15 Days');
+  const [eformImmediateJoiner, setEformImmediateJoiner] = useState('Yes');
+  const [eformDoj, setEformDoj] = useState('01/12/2026');
+  const [eformMedical, setEformMedical] = useState('None / Fit for duty');
+  const [eformSignature, setEformSignature] = useState('');
+
+  // Employer eForm state
+  const [employerEformEmail, setEmployerEformEmail] = useState('');
+  const [employerEformCompany, setEmployerEformCompany] = useState('');
+  const [employerEformNotes, setEmployerEformNotes] = useState('');
+  const [employerEformScope, setEmployerEformScope] = useState({
+    dates: true,
+    conduct: true,
+    relieving: true,
+    rehire: true
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -93,6 +241,9 @@ export const ApplicantDetail: React.FC = () => {
       }
       if (avatarMenuRef.current && !avatarMenuRef.current.contains(event.target as Node)) {
         setAvatarMenuOpen(false);
+      }
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
+        setSettingsMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -287,6 +438,16 @@ export const ApplicantDetail: React.FC = () => {
     | 'add-employer'
     | 'confirm-vendor-create'
     | 'create-resume'
+    | 'deactivate-email-merge'
+    | 'download-history'
+    | 'add-reference'
+    | 'activate-account'
+    | 'request-employee-info'
+    | 'request-employee-preview'
+    | 'request-eform-applicant'
+    | 'request-eform-employer'
+    | 'block-contact'
+    | 'ampcus-print'
     | null
   >(null);
 
@@ -447,6 +608,23 @@ export const ApplicantDetail: React.FC = () => {
     setEditSkills(app.skills.join(', '));
     setEditStatusValue(app.status || 'New');
     setEditGroupValue(app.applicantGroup || 'N/A');
+    setIsEmailMergeDeactivated(Boolean(app.isEmailMergeDeactivated));
+    setEmailMergeOptOutUntil(app.emailMergeOptOutUntil || '');
+    setEmailMergeReason(app.emailMergeReason || 'Candidate requested opt-out');
+    setEformPosition(app.currentDesignation || '');
+    setEformSource(app.source || 'Direct Career Portal');
+    setEformRecruiter(app.assignedRecruiter || 'Ganesh Kshirsagar');
+    setEformAadhaarName(app.name || '');
+    setEformDob(app.dateOfBirth || '15/08/1997');
+    setEformAddress(app.location || '');
+    setEformNativePlace(app.location?.split(',')[0]?.trim() || '');
+    setEformMobile(app.phone || '');
+    setEformEmail(app.email || '');
+    setEformCurrentCTC(app.currentCTC || '₹6,50,000 PA');
+    setEformExpectedCTC(app.expectedCTC || app.expectedSalary || '₹9,00,000 PA');
+    setEformNoticePeriod(app.noticePeriod || '15 Days');
+    setEmployerEformCompany(app.currentCompany || 'Wipro Technologies Ltd');
+    setEmployerEformEmail(`hr@${(app.currentCompany || 'wipro').toLowerCase().replace(/[^a-z0-9]/g, '') || 'company'}.com`);
   };
 
   const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -1105,6 +1283,390 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     localStorage.setItem('ats_document_shares', JSON.stringify(records)); setDocumentShareOpen(false); setDocumentShareRecipient(''); showToast(`Documents shared with ${documentShareRecipient}.`);
   };
 
+  const getPresetDate = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
+  };
+
+  const handleSaveDeactivateEmailMerge = async () => {
+    if (!applicant) return;
+    const targetDate = emailMergeOptOutUntil || getPresetDate(30);
+    const updates: Partial<Applicant> = {
+      isEmailMergeDeactivated: true,
+      emailMergeOptOutUntil: targetDate
+    };
+
+    const updated = { ...applicant, ...updates };
+    setApplicant(updated);
+    setIsEmailMergeDeactivated(true);
+    setEmailMergeOptOutUntil(targetDate);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+
+    try {
+      await ApiService.updateApplicant(applicant.id, updates);
+    } catch (err) {
+      console.warn('Failed to update email merge status:', err);
+    }
+
+    setDialog(null);
+    showToast(`Email Merge deactivated for ${displayName} until ${targetDate === '9999-12-31' ? 'Indefinitely' : new Date(targetDate).toLocaleDateString()}.`);
+  };
+
+  const handleReactivateEmailMerge = async () => {
+    if (!applicant) return;
+    const updates: Partial<Applicant> = {
+      isEmailMergeDeactivated: false,
+      emailMergeOptOutUntil: '',
+      emailMergeReason: ''
+    };
+
+    let updatedNotes = applicant.notes || [];
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Email Merge reactivated. Candidate is now eligible to receive bulk emails and campaign merges.`,
+      subject: `Email Merge Reactivated for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: 'Low',
+      action: 'Email Merge Reactivated',
+      date: new Date().toLocaleString()
+    };
+    updatedNotes = [noteObj, ...updatedNotes];
+    updates.notes = updatedNotes;
+
+    const updated = { ...applicant, ...updates };
+    setApplicant(updated);
+    setIsEmailMergeDeactivated(false);
+    setEmailMergeOptOutUntil('');
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+
+    try {
+      await ApiService.updateApplicant(applicant.id, updates);
+    } catch (err) {
+      console.warn('Failed to reactivate email merge:', err);
+    }
+
+    setDialog(null);
+    showToast(`Email Merge reactivated for ${displayName}.`);
+  };
+
+  const handleAddReference = async () => {
+    if (!applicant) return;
+    if (!referenceForm.name.trim()) {
+      showToast('Please enter reference name.', 'error');
+      return;
+    }
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Reference Recorded: ${referenceForm.name} (${referenceForm.referenceType !== 'Select Reference Type' ? referenceForm.referenceType : 'Professional'}) - ${referenceForm.designation || 'N/A'} at ${referenceForm.company || 'N/A'}. Phone: ${referenceForm.contactNumber || 'N/A'}, Email: ${referenceForm.email || 'N/A'}. Years Acquainted: ${referenceForm.yearsAcquainted || 'N/A'}. Summary: ${referenceForm.summary || 'N/A'}.`,
+      subject: `New Reference Added for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: 'Medium',
+      action: 'Reference Check',
+      date: new Date().toLocaleString()
+    };
+    const newRef = {
+      name: referenceForm.name,
+      company: referenceForm.company,
+      contactNumber: referenceForm.contactNumber,
+      email: referenceForm.email,
+      referenceType: referenceForm.referenceType !== 'Select Reference Type' ? referenceForm.referenceType : 'Professional',
+      designation: referenceForm.designation,
+      yearsAcquainted: referenceForm.yearsAcquainted,
+      summary: referenceForm.summary
+    };
+    const updatedNotes = [noteObj, ...(applicant.notes || [])];
+    const updatedReferences = [...(applicant.references || []), newRef];
+    const updated = { ...applicant, notes: updatedNotes, references: updatedReferences };
+    setApplicant(updated);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { notes: updatedNotes, references: updatedReferences });
+    } catch (e) {
+      console.warn('Reference persist warning:', e);
+    }
+    setDialog(null);
+    setReferenceForm({
+      name: '',
+      company: '',
+      contactNumber: '',
+      email: '',
+      referenceType: 'Select Reference Type',
+      designation: '',
+      yearsAcquainted: '',
+      summary: ''
+    });
+    showToast(`Reference for ${referenceForm.name} recorded successfully.`);
+  };
+
+  const handleConfirmActivateAccount = async () => {
+    if (!applicant) return;
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Career Portal account activated for ${displayName}. Welcome email with login credentials dispatched to ${applicant.email || 'applicant email'}.`,
+      subject: `Career Portal Account Activated for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: 'High',
+      action: 'Portal Account Activation',
+      date: new Date().toLocaleString()
+    };
+    const updatedNotes = [noteObj, ...(applicant.notes || [])];
+    const updated = { ...applicant, portalAccountActive: true, notes: updatedNotes };
+    setApplicant(updated);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { portalAccountActive: true, notes: updatedNotes });
+    } catch (e) {
+      console.warn('Portal account activation warning:', e);
+    }
+    setDialog(null);
+    showToast(`Account activated. Login credentials sent to ${applicant.email || displayName}.`);
+  };
+
+  const handleToggleReqAll = () => {
+    const nextChecked = !reqAllChecked;
+    setReqAllChecked(nextChecked);
+    const updatedPersonal: Record<string, boolean> = {};
+    Object.keys(reqPersonalFields).forEach((k) => {
+      updatedPersonal[k] = nextChecked;
+    });
+    setReqPersonalFields(updatedPersonal);
+    const updatedDocs: Record<string, boolean> = {};
+    Object.keys(reqDocuments).forEach((k) => {
+      updatedDocs[k] = nextChecked;
+    });
+    setReqDocuments(updatedDocs);
+    setReqCertifications(nextChecked);
+    setReqLanguages(nextChecked);
+    setReqReferences(nextChecked);
+  };
+
+  const handleSaveRequestEmployeeInfo = async () => {
+    if (!applicant) return;
+    const requestedPersonal = Object.entries(reqPersonalFields).filter(([_, v]) => v).map(([k]) => k);
+    const requestedDocs = Object.entries(reqDocuments).filter(([_, v]) => v).map(([k]) => k);
+    const totalCount = requestedPersonal.length + requestedDocs.length + (reqCertifications ? 1 : 0) + (reqLanguages ? 1 : 0) + (reqReferences ? 1 : 0);
+
+    if (totalCount === 0) {
+      showToast('Please select at least one field or document to request.', 'error');
+      return;
+    }
+
+    const requestedItems = [
+      ...requestedPersonal,
+      ...requestedDocs.map((item) => `${item} document`),
+      ...(reqCertifications ? ['Certifications'] : []),
+      ...(reqLanguages ? ['Languages'] : []),
+      ...(reqReferences ? ['References'] : [])
+    ];
+    setReqEmailSubject('Request for details');
+    const escapeEmailHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    setReqEmailBody(`<p>Hello ${escapeEmailHtml(displayName)},</p><p>Thank you for your interest in Ampcus Tech Pvt Ltd. In order to move forward, please provide the following information and requested documents:</p><ul>${requestedItems.map((item) => `<li>${escapeEmailHtml(item)}</li>`).join('')}</ul>${reqComments ? `<p>Additional instructions:<br>${escapeEmailHtml(reqComments)}</p>` : ''}<p>Please reply to this email with the requested details at your earliest convenience.</p><p>THANKS,<br>Ampcus Tech</p>`);
+    setReqEmailSourceMode(false);
+    setDialog('request-employee-preview');
+  };
+
+  const applyRequestEmailFormat = (command: string, value?: string) => {
+    if (reqEmailSourceMode) return;
+    reqEmailBodyRef.current?.focus();
+    if (reqEmailSelectionRef.current) {
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(reqEmailSelectionRef.current);
+    }
+    if (command === 'createLink') {
+      const url = window.prompt('Enter the link URL');
+      if (!url) return;
+      document.execCommand(command, false, url);
+    } else if (command === 'insertSpecialCharacter') {
+      const character = window.prompt('Enter a character to insert', '©');
+      if (character) document.execCommand('insertText', false, character);
+    } else if (command === 'pasteText') {
+      navigator.clipboard.readText().then((text) => {
+        reqEmailBodyRef.current?.focus();
+        document.execCommand('insertText', false, text);
+        if (reqEmailBodyRef.current) setReqEmailBody(reqEmailBodyRef.current.innerHTML);
+      }).catch(() => showToast('Clipboard access is unavailable. Paste with Ctrl+V instead.', 'info'));
+      return;
+    } else if (command === 'insertTable') {
+      const rowCount = window.prompt('Number of rows', '2');
+      const columnCount = window.prompt('Number of columns', '2');
+      if (rowCount === null || columnCount === null) return;
+      const rows = Math.max(1, Math.min(10, Number(rowCount) || 1));
+      const columns = Math.max(1, Math.min(8, Number(columnCount) || 1));
+      const tableHtml = `<table style="border-collapse:collapse;width:100%"><tbody>${Array.from({ length: rows }, () => `<tr>${Array.from({ length: columns }, () => '<td style="border:1px solid #999;padding:4px"><br></td>').join('')}</tr>`).join('')}</tbody></table><p><br></p>`;
+      document.execCommand('insertHTML', false, tableHtml);
+    } else if (command === 'findText') {
+      const term = window.prompt('Find text');
+      if (term && reqEmailBodyRef.current) {
+        const walker = document.createTreeWalker(reqEmailBodyRef.current, NodeFilter.SHOW_TEXT);
+        let textNode: Node | null;
+        while ((textNode = walker.nextNode())) {
+          const index = (textNode.textContent || '').toLowerCase().indexOf(term.toLowerCase());
+          if (index >= 0) {
+            const range = document.createRange();
+            range.setStart(textNode, index);
+            range.setEnd(textNode, index + term.length);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            break;
+          }
+        }
+      }
+    } else if (command === 'replaceText') {
+      const term = window.prompt('Find text to replace');
+      if (term && reqEmailBodyRef.current) {
+        const walker = document.createTreeWalker(reqEmailBodyRef.current, NodeFilter.SHOW_TEXT);
+        let textNode: Node | null;
+        while ((textNode = walker.nextNode())) {
+          const index = (textNode.textContent || '').toLowerCase().indexOf(term.toLowerCase());
+          if (index >= 0) {
+            const replacement = window.prompt('Replace with', term);
+            if (replacement !== null) {
+              const range = document.createRange();
+              range.setStart(textNode, index);
+              range.setEnd(textNode, index + term.length);
+              const selection = window.getSelection();
+              selection?.removeAllRanges();
+              selection?.addRange(range);
+              document.execCommand('insertText', false, replacement);
+            }
+            break;
+          }
+        }
+      }
+    } else {
+      document.execCommand(command, false, value);
+    }
+    if (reqEmailBodyRef.current) setReqEmailBody(reqEmailBodyRef.current.innerHTML);
+  };
+
+  const rememberRequestEmailSelection = () => {
+    const selection = window.getSelection();
+    if (selection?.rangeCount && reqEmailBodyRef.current?.contains(selection.anchorNode)) {
+      reqEmailSelectionRef.current = selection.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const toggleRequestEmailSource = () => {
+    if (!reqEmailSourceMode && reqEmailBodyRef.current) setReqEmailBody(reqEmailBodyRef.current.innerHTML);
+    setReqEmailSourceMode((sourceMode) => !sourceMode);
+  };
+
+  const handleSendRequestEmployeeInfo = async () => {
+    if (!applicant) return;
+    const requestedPersonal = Object.entries(reqPersonalFields).filter(([_, value]) => value).map(([key]) => key);
+    const requestedDocs = Object.entries(reqDocuments).filter(([_, value]) => value).map(([key]) => key);
+    const totalCount = requestedPersonal.length + requestedDocs.length + Number(reqCertifications) + Number(reqLanguages) + Number(reqReferences);
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Requested ${totalCount} information fields and documents from ${displayName}: ${[...requestedPersonal, ...requestedDocs].slice(0, 6).join(', ')}${totalCount > 6 ? ` and ${totalCount - 6} more items` : ''}.${reqComments ? ` Recruiter Note: "${reqComments}"` : ''}`,
+      subject: reqEmailSubject,
+      priority: 'Medium',
+      action: 'Information Request',
+      date: new Date().toLocaleString()
+    };
+    const updatedNotes = [noteObj, ...(applicant.notes || [])];
+    const updated = { ...applicant, notes: updatedNotes };
+    setApplicant(updated);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { notes: updatedNotes });
+    } catch (e) {
+      console.warn('Request info warning:', e);
+    }
+    const emailText = reqEmailBody
+      .replace(/<\/(p|div|li|ul|ol|h[1-6])\s*>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<li\b[^>]*>/gi, '• ')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, '\n\n');
+    const mailto = `mailto:${encodeURIComponent(applicant.email || '')}?subject=${encodeURIComponent(reqEmailSubject)}&body=${encodeURIComponent(emailText)}`;
+    window.location.href = mailto;
+    setDialog(null);
+    showToast(`Email draft opened for ${applicant.email || displayName}. Send it from your email app to complete the request.`);
+  };
+
+  const handleSendEformApplicant = async () => {
+    if (!applicant) return;
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Employment Application Form (eForm) dispatched to ${displayName} (${applicant.email || 'applicant email'}). E-Sign and verification link active.`,
+      subject: `eForm Dispatched: Employment Application Form for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: 'High',
+      action: 'eForm Dispatched',
+      date: new Date().toLocaleString()
+    };
+    const updatedNotes = [noteObj, ...(applicant.notes || [])];
+    const updated = { ...applicant, notes: updatedNotes, eformStatus: 'Sent' };
+    setApplicant(updated);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { notes: updatedNotes, eformStatus: 'Sent' });
+    } catch (e) {
+      console.warn('eForm save warning:', e);
+    }
+    setDialog(null);
+    showToast(`Employment Application Form sent to ${applicant.email || displayName}.`);
+  };
+
+  const handleSendEmployerEform = async () => {
+    if (!applicant) return;
+    if (!employerEformEmail.trim()) {
+      showToast('Please enter employer contact email.', 'error');
+      return;
+    }
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Employment Verification eForm sent to ${employerEformCompany || 'Employer'} (${employerEformEmail}) for candidate ${displayName}.${employerEformNotes ? ` Instructions: "${employerEformNotes}"` : ''}`,
+      subject: `Employer eForm Dispatched for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: 'Medium',
+      action: 'Employer Verification',
+      date: new Date().toLocaleString()
+    };
+    const updatedNotes = [noteObj, ...(applicant.notes || [])];
+    const updated = { ...applicant, notes: updatedNotes };
+    setApplicant(updated);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { notes: updatedNotes });
+    } catch (e) {
+      console.warn('Employer eForm warning:', e);
+    }
+    setDialog(null);
+    showToast(`Employer verification eForm sent to ${employerEformEmail}.`);
+  };
+
+  const handleConfirmBlockContact = async () => {
+    if (!applicant) return;
+    const noteObj = {
+      id: `nt-${Date.now()}`,
+      author: currentUser?.name || 'Ganesh Kshirsagar',
+      text: `Candidate ${displayName} has been blocked on TextToHire. Automated SMS sequences and direct messaging suppressed.`,
+      subject: `TextToHire Contact Blocked for ${displayName.toUpperCase()} - ${displayId}.`,
+      priority: 'High',
+      action: 'TextToHire Block',
+      date: new Date().toLocaleString()
+    };
+    const updatedNotes = [noteObj, ...(applicant.notes || [])];
+    const updated = { ...applicant, isBlockedOnTextToHire: true, notes: updatedNotes };
+    setApplicant(updated);
+    setAllApplicants((prev) => prev.map((a) => (a.id === applicant.id || a.applicantId === applicant.applicantId ? updated : a)));
+    try {
+      await ApiService.updateApplicant(applicant.id, { isBlockedOnTextToHire: true, notes: updatedNotes });
+    } catch (e) {
+      console.warn('Block contact warning:', e);
+    }
+    setDialog(null);
+    showToast(`${displayName} contact has been blocked on TextToHire.`);
+  };
+
   const activityEvents = [
     {
       id: 'activity-submitted',
@@ -1646,14 +2208,187 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
         {/* Action icons right */}
         <div className="flex items-center gap-2 text-[#666] dark:text-[#AAA]">
-          <button
-            type="button"
-            title="Settings"
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#333]"
-            onClick={() => showToast('Settings opened')}
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+          {/* Settings dropdown menu */}
+          <div className="relative" ref={settingsMenuRef}>
+            <button
+              type="button"
+              title="Settings"
+              aria-label="Applicant Settings"
+              aria-expanded={settingsMenuOpen}
+              className={`rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-[#333] ${
+                settingsMenuOpen ? 'bg-blue-50 text-[#1877F2] dark:bg-[#333] dark:text-blue-400' : ''
+              }`}
+              onClick={() => setSettingsMenuOpen((prev) => !prev)}
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+            {settingsMenuOpen && (
+              <div
+                role="menu"
+                aria-label="Applicant Settings Menu"
+                className="absolute right-0 top-full z-50 mt-1.5 w-64 rounded-md border border-[#CED4DA] bg-white py-1.5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B] animate-in fade-in-50 zoom-in-95 duration-100 divide-y divide-gray-50 dark:divide-slate-800/60"
+              >
+                <div className="py-0.5">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('deactivate-email-merge');
+                    }}
+                    className="flex w-full items-center justify-between px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    <span>Deactivate Email Merge</span>
+                    {isEmailMergeDeactivated && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-400">
+                        Opted Out
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setActiveSubTab('Snapshot');
+                      setNoteSubject(`New Note Created for ${displayName.toUpperCase()} - ${displayId}.`);
+                      setDialog('note');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Add Notes
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setActiveSubTab('Snapshot');
+                      setDocumentFormOpen(true);
+                      showToast('Document upload form opened.');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Upload Document
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('task');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Create Task
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('add-reference');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Add References
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('activate-account');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Activate Account
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('ampcus-print');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Print
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('request-employee-info');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Request More Details from Applicant
+                  </button>
+                  {/*
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('request-eform-employer');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Request eForm to Employer
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('request-eform-applicant');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Request eForm to Applicant
+                  </button>
+                  */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('download-history');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Resume Download History
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('rating');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                  >
+                    Initiate Feedback Review
+                  </button>
+                  {/*
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      setDialog('block-contact');
+                    }}
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-red-50 hover:text-red-600 dark:text-[#E2E8F0] dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                  >
+                    Block This Contact On TextToHire
+                  </button>
+                  */}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             title="Share Profile"
@@ -1953,6 +2688,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                                 else if (item === 'Add Note') setDialog('note');
                                 else if (item === 'Matching Jobs') navigate('matching-jobs', applicant.id);
                                 else if (item === 'Send Email') openEmailComposer();
+                                else if (item === 'Print Dossier') setDialog('ampcus-print');
                                 else showToast(`${item} recorded.`);
                               }}
                               className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 hover:text-[#1877F2] dark:text-white dark:hover:bg-[#333]"
@@ -3893,6 +4629,38 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           {/* EMAIL MERGES TAB (Three-Dot Option 1) */}
           {activeSubTab === 'Email Merges' && (
             <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+              {isEmailMergeDeactivated && (
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs dark:border-amber-900/50 dark:bg-amber-950/30">
+                  <div className="flex items-center gap-2">
+                    <MailX className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span className="font-medium text-amber-900 dark:text-amber-200">
+                      Mail Merge is currently <strong>deactivated</strong> for this candidate until{' '}
+                      <strong>
+                        {emailMergeOptOutUntil === '9999-12-31'
+                          ? 'Indefinite'
+                          : new Date(emailMergeOptOutUntil).toLocaleDateString()}
+                      </strong>{' '}
+                      ({emailMergeReason}). Candidate is suppressed from all automated email merges.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDialog('deactivate-email-merge')}
+                      className="font-semibold text-[#2F80ED] underline hover:text-[#1D6FD8] dark:text-blue-400"
+                    >
+                      Change Settings
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReactivateEmailMerge}
+                      className="rounded bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700"
+                    >
+                      Reactivate
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Email Merges</h3>
                 <button
@@ -4551,14 +5319,54 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Add Note Modal (Exact Replication of Reference Image 1) */}
       {dialog === 'note' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-[700px] border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#333]">
-              <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Note</h3>
+          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Note</h3>
+                {applicant.notes && applicant.notes.length > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-[#1877F2] dark:bg-blue-950/60 dark:text-blue-300">
+                    {applicant.notes.length} Existing Note{applicant.notes.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-3 px-5 py-5 text-xs">
+            {applicant.notes && applicant.notes.length > 0 && (
+              <div className="border-b border-[#E2E8F0] py-2 dark:border-[#333]">
+                <button
+                  type="button"
+                  onClick={() => setShowExistingNotesInModal((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#2F80ED] hover:underline"
+                >
+                  <span>{showExistingNotesInModal ? 'Hide' : 'View'} Notes Present for {displayName} ({applicant.notes.length})</span>
+                  {showExistingNotesInModal ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+                {showExistingNotesInModal && (
+                  <div className="mt-2 max-h-40 overflow-y-auto space-y-2 rounded-lg border border-[#E2E8F0] bg-gray-50 p-2.5 dark:border-[#333] dark:bg-[#202020]">
+                    {applicant.notes.map((n) => (
+                      <div key={n.id} className="rounded border border-gray-100 bg-white p-2 text-xs shadow-xs dark:border-[#333] dark:bg-[#2A2A2A]">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-[#333] dark:text-white">
+                          <span>{n.author}</span>
+                          <span className="font-normal text-[#888]">{n.date}</span>
+                        </div>
+                        {n.subject && <div className="font-medium text-[#2F80ED] text-[11px] mt-0.5">{n.subject}</div>}
+                        <div className="mt-1 text-[#555] dark:text-[#CCC] whitespace-pre-wrap text-[11px]">{n.text}</div>
+                        {n.priority && (
+                          <div className="mt-1">
+                            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-[#2F80ED] dark:bg-blue-950 dark:text-blue-300">
+                              Priority: {n.priority}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="space-y-3 py-4 text-xs">
               {/* Row 1: Applicant Name & Search for a Job */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
@@ -5452,6 +6260,1904 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
         </div>
       )}
+
+      {/* Modal: Deactivate Email Merge (Replicating and Enhancing Reference Images 1 & 2) */}
+      {dialog === 'deactivate-email-merge' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-lg rounded-2xl border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200/70 dark:bg-amber-950/40 dark:border-amber-800/40 dark:text-amber-400">
+                  <MailX className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                    Deactivate Email Merge
+                  </h2>
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                    Opt-out preferences for automated mail merge campaigns
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded-lg p-1 text-[#64748B] hover:bg-gray-100 hover:text-[#1F2937] dark:text-[#94A3B8] dark:hover:bg-[#333] dark:hover:text-white transition-colors"
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="space-y-4 p-6 text-xs">
+              {/* Candidate Info Card */}
+              <div className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3.5 dark:border-[#333] dark:bg-[#252525]">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E2C8E4] font-bold text-[#6B21A8] dark:bg-[#4A2B4E] dark:text-[#E9D5FF]">
+                    {avatarInitial}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate font-bold text-[#1F2937] dark:text-white">
+                      {displayName.toUpperCase()} <span className="font-normal text-[#64748B] dark:text-[#94A3B8]">({displayId})</span>
+                    </div>
+                    <div className="truncate text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                      {applicant.email || 'No email specified'}
+                    </div>
+                  </div>
+                </div>
+                <div className="shrink-0 pl-2">
+                  {isEmailMergeDeactivated ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Opted Out
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Active in Merge
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Time Period Opt-Out Section (Exact Requirement from Reference Images 1 & 2) */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-[#1F2937] dark:text-white">
+                  Select the time period to opt-out {displayName} from Mail Merge:
+                </label>
+
+                {/* Quick Presets Pills */}
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {[
+                    { label: '1 Week', days: 7 },
+                    { label: '1 Month', days: 30 },
+                    { label: '3 Months', days: 90 },
+                    { label: '6 Months', days: 180 },
+                    { label: '1 Year', days: 365 },
+                    { label: 'Indefinite', days: -1 }
+                  ].map((preset) => {
+                    const isSelected = emailMergeSelectedPreset === preset.label;
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setEmailMergeSelectedPreset(preset.label);
+                          if (preset.days === -1) {
+                            setEmailMergeOptOutUntil('9999-12-31');
+                          } else {
+                            const d = new Date();
+                            d.setDate(d.getDate() + preset.days);
+                            setEmailMergeOptOutUntil(d.toISOString().split('T')[0]);
+                          }
+                        }}
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                          isSelected
+                            ? 'bg-[#2F80ED] text-white font-semibold shadow-xs ring-2 ring-[#2F80ED]/30'
+                            : 'border border-[#CBD5E1] bg-white text-[#475569] hover:bg-slate-50 dark:border-[#444] dark:bg-[#252525] dark:text-[#CBD5E1]'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Interactive Date Picker Input */}
+                <div className="relative mt-2">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#2F80ED]">
+                    <Calendar className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    value={emailMergeOptOutUntil === '9999-12-31' ? '' : emailMergeOptOutUntil}
+                    placeholder="Select opt-out expiration date"
+                    onChange={(e) => {
+                      setEmailMergeOptOutUntil(e.target.value);
+                      setEmailMergeSelectedPreset('Custom');
+                    }}
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-white py-2.5 pl-10 pr-4 text-xs font-medium text-[#1F2937] shadow-xs outline-none transition-all focus:border-[#2F80ED] focus:ring-2 focus:ring-[#2F80ED]/20 dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+
+                {emailMergeOptOutUntil && (
+                  <p className="flex items-center gap-1.5 pt-0.5 text-[11px] text-[#2F80ED] dark:text-[#60A5FA]">
+                    <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      {emailMergeOptOutUntil === '9999-12-31'
+                        ? 'Candidate is opted out indefinitely until manually reactivated.'
+                        : `Opt-out will remain in effect until: ${new Date(emailMergeOptOutUntil).toLocaleDateString(undefined, {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}`}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+
+
+              {/* Informational Hint */}
+              <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-[11px] text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#2F80ED]" />
+                <span>
+                  Deactivating email merge suppresses this candidate from automated email campaigns. Direct 1-on-1 emails sent from the candidate profile will remain available.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-[#E2E8F0] px-6 py-4 bg-[#F8FAFC] dark:border-[#333] dark:bg-[#1A222F]">
+              <div>
+                {isEmailMergeDeactivated && (
+                  <button
+                    type="button"
+                    onClick={handleReactivateEmailMerge}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-colors"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Reactivate Merge Now
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDialog(null)}
+                  className="rounded-lg border border-[#CED4DA] bg-white px-5 py-2 text-xs font-semibold text-[#475569] shadow-xs hover:bg-gray-50 dark:border-[#444] dark:bg-[#252525] dark:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveDeactivateEmailMerge}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#2F80ED] px-6 py-2 text-xs font-semibold text-white shadow-md hover:bg-[#1D6FD8] active:scale-95 transition-all"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Resume Download History */}
+      {dialog === 'download-history' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-xl rounded-2xl border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2F80ED] border border-blue-200/70 dark:bg-blue-950/40 dark:border-blue-800/40 dark:text-blue-400">
+                  <History className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                    Resume Download History
+                  </h2>
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                    Audit trail of all resume and dossier access for {displayName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded-lg p-1 text-[#64748B] hover:bg-gray-100 dark:text-[#94A3B8] dark:hover:bg-[#333]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] dark:border-[#333]">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#202020] dark:text-[#94A3B8]">
+                    <tr>
+                      <th className="px-4 py-2.5">Date & Time</th>
+                      <th className="px-4 py-2.5">Downloaded By</th>
+                      <th className="px-4 py-2.5">Document</th>
+                      <th className="px-4 py-2.5">IP / Location</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                    <tr className="hover:bg-gray-50 dark:hover:bg-[#252525]">
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">20 Nov 2026, 16:49</td>
+                      <td className="px-4 py-3 font-semibold text-[#1877F2]">{currentUser?.name || 'Ganesh Kshirsagar'}</td>
+                      <td className="px-4 py-3 text-[#333] dark:text-white">{displayName}_Resume.pdf</td>
+                      <td className="px-4 py-3 text-[#666]">103.21.244.12 · Bangalore</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50 dark:hover:bg-[#252525]">
+                      <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">19 Nov 2026, 11:20</td>
+                      <td className="px-4 py-3 font-semibold text-[#1877F2]">Jatin Jaiswal</td>
+                      <td className="px-4 py-3 text-[#333] dark:text-white">{displayName}_Original.docx</td>
+                      <td className="px-4 py-3 text-[#666]">103.21.244.18 · Pune</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="flex justify-end border-t border-[#E2E8F0] px-6 py-3.5 bg-[#F8FAFC] dark:border-[#333] dark:bg-[#1A222F]">
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded-lg bg-[#2F80ED] px-5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add References (Exact Match to Reference Image 4) */}
+      {dialog === 'add-reference' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <h2 className="text-base font-bold text-[#1F2937] dark:text-white">
+                Add Reference
+              </h2>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded-lg p-1 text-[#64748B] hover:bg-gray-100 dark:text-[#94A3B8] dark:hover:bg-[#333]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Row 1 */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Reference Name"
+                    value={referenceForm.name}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, name: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Company Name"
+                    value={referenceForm.company}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, company: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+
+                {/* Row 2 */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Contact Number"
+                    value={referenceForm.contactNumber}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, contactNumber: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={referenceForm.email}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, email: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+
+                {/* Row 3 */}
+                <div>
+                  <select
+                    value={referenceForm.referenceType}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, referenceType: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  >
+                    <option value="Select Reference Type">Select Reference Type</option>
+                    <option value="Professional">Professional</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Manager / Supervisor">Manager / Supervisor</option>
+                    <option value="Colleague / Peer">Colleague / Peer</option>
+                    <option value="Client Sponsor">Client Sponsor</option>
+                    <option value="HR Business Partner">HR Business Partner</option>
+                  </select>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Designation"
+                    value={referenceForm.designation}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, designation: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+
+                {/* Row 4 */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Years Acquainted"
+                    value={referenceForm.yearsAcquainted}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, yearsAcquainted: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+                <div>
+                  <textarea
+                    rows={3}
+                    placeholder="Reference Summary"
+                    value={referenceForm.summary}
+                    onChange={(e) => setReferenceForm({ ...referenceForm, summary: e.target.value })}
+                    className="w-full rounded border border-[#CBD5E1] bg-white px-3 py-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 border-t border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <button
+                type="button"
+                onClick={handleAddReference}
+                className="rounded bg-[#2F80ED] px-6 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-5 py-2 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#252525] dark:text-white transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Activate Account Confirmation (Exact Match to Reference Image 5) */}
+      {dialog === 'activate-account' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-8 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] animate-in fade-in zoom-in-95 duration-150 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-normal text-[#333] dark:text-[#E2E8F0] leading-relaxed">
+              This action will send an email to {displayName} with login credentials to the Career Portal. Please click on Yes to proceed or Cancel to stop.
+            </p>
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={handleConfirmActivateAccount}
+                className="rounded bg-[#E53E3E] px-8 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#C53030] transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-7 py-2 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#252525] dark:text-white transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Request Employee Information (Exact Match to Reference Images 2 & 3) */}
+      {dialog === 'request-employee-info' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-xl border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                Request Employee Information
+              </h2>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded-lg p-1 text-[#64748B] hover:bg-gray-100 dark:text-[#94A3B8] dark:hover:bg-[#333]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs text-[#333] dark:text-[#E2E8F0]">
+              {/* Check/Uncheck All */}
+              <div className="border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+                <label className="inline-flex items-center gap-2 cursor-pointer font-bold text-[#1F2937] dark:text-white">
+                  <input
+                    type="checkbox"
+                    checked={reqAllChecked}
+                    onChange={handleToggleReqAll}
+                    className="h-4 w-4 rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-[#2F80ED]/20"
+                  />
+                  <span>Check/Uncheck All</span>
+                </label>
+              </div>
+
+              {/* Personal Details */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-[#1877F2] dark:text-blue-400">Personal Details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-2.5 gap-x-3 text-[11px]">
+                  {Object.keys(reqPersonalFields).map((field) => (
+                    <label key={field} className="flex items-start gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={reqPersonalFields[field]}
+                        onChange={(e) => setReqPersonalFields({ ...reqPersonalFields, [field]: e.target.checked })}
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                      />
+                      <span className="leading-tight">{field}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Documents */}
+              <div className="space-y-3 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+                <h3 className="font-semibold text-[#1877F2] dark:text-blue-400">Documents</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-2.5 gap-x-3 text-[11px]">
+                  {Object.keys(reqDocuments).map((doc) => (
+                    <label key={doc} className="flex items-start gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={reqDocuments[doc]}
+                        onChange={(e) => setReqDocuments({ ...reqDocuments, [doc]: e.target.checked })}
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                      />
+                      <span className="leading-tight">{doc}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Certifications, Languages, References */}
+              <div className="space-y-2 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={reqCertifications}
+                    onChange={(e) => setReqCertifications(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                  />
+                  <span className="font-medium text-[#1877F2] dark:text-blue-400">Certifications</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={reqLanguages}
+                    onChange={(e) => setReqLanguages(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                  />
+                  <span className="font-medium text-[#1877F2] dark:text-blue-400">Languages</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={reqReferences}
+                    onChange={(e) => setReqReferences(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-[#CBD5E1] text-[#2F80ED] focus:ring-0"
+                  />
+                  <span className="font-medium text-[#1877F2] dark:text-blue-400">References</span>
+                </label>
+              </div>
+
+              {/* Comments */}
+              <div className="space-y-1.5 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+                <label className="block text-xs font-semibold text-[#444] dark:text-[#AAA]">
+                  Comments
+                </label>
+                <textarea
+                  rows={4}
+                  value={reqComments}
+                  onChange={(e) => setReqComments(e.target.value)}
+                  placeholder="Enter comments or specific instructions for the applicant..."
+                  className="w-full rounded border border-[#CBD5E1] bg-white p-3 text-xs text-[#333] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2.5 border-t border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <button
+                type="button"
+                onClick={handleSaveRequestEmployeeInfo}
+                className="rounded bg-[#2F80ED] px-6 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+              >
+                Preview Email
+              </button>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-5 py-2 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#252525] dark:text-white transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dialog === 'request-employee-preview' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-3 sm:p-5" onClick={() => setDialog(null)}>
+          <div className="flex max-h-[94vh] w-full max-w-5xl flex-col border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#334155]">
+              <h2 className="text-xl font-normal text-[#333] dark:text-white">Preview</h2>
+              <button type="button" onClick={() => setDialog('request-employee-info')} aria-label="Close email preview" className="rounded p-1 text-[#666] hover:bg-gray-100 dark:text-[#CBD5E1] dark:hover:bg-[#334155]"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="px-5 pt-4">
+              <div className="inline-block border-b-2 border-[#4386F4] pb-2 text-[11px] font-medium text-[#4386F4]">EMAIL PREVIEW</div>
+            </div>
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5 text-xs">
+              <label className="grid grid-cols-[120px_1fr] items-center gap-5 text-[#64748B]">
+                <span>To:</span>
+                <input type="email" readOnly value={applicant.email || ''} className="h-[30px] min-w-0 border border-[#D7DCE5] bg-[#F8FAFC] px-2 text-[#263238] outline-none dark:border-[#475569] dark:bg-[#172033] dark:text-white" />
+              </label>
+              <label className="grid grid-cols-[120px_1fr] items-center gap-5 text-[#64748B]">
+                <span>Subject:</span>
+                <input type="text" value={reqEmailSubject} onChange={(event) => setReqEmailSubject(event.target.value)} className="h-[30px] min-w-0 border border-[#D7DCE5] px-2 text-[#263238] outline-none focus:border-[#4386F4] dark:border-[#475569] dark:bg-[#172033] dark:text-white" />
+              </label>
+              <div className="grid grid-cols-[120px_1fr] gap-5 text-[#64748B]">
+                <span className="pt-2">Body:</span>
+                <div className="flex min-h-[300px] flex-col border border-[#D7DCE5] dark:border-[#475569]">
+                  <div className="shrink-0 border-b border-[#E2E8F0] bg-[#FAFAFA] px-2 py-1 text-[#52606D] dark:border-[#475569] dark:bg-[#263244]">
+                    <div className="flex min-h-8 items-center gap-0.5 overflow-x-auto border-b border-[#E2E8F0] dark:border-[#475569]">
+                      {[
+                        ['✥', 'Clear formatting', 'removeFormat'], ['✂', 'Cut', 'cut'], ['▢', 'Copy', 'copy'], ['▣', 'Paste', 'pasteText'],
+                        ['↶', 'Undo', 'undo'], ['↷', 'Redo', 'redo'], ['⌕', 'Find', 'findText'], ['☷', 'Select all', 'selectAll'],
+                        ['A̸', 'Remove formatting', 'removeFormat'], ['B', 'Bold', 'bold'], ['I', 'Italic', 'italic'], ['U', 'Underline', 'underline'],
+                        ['S̶', 'Strikethrough', 'strikeThrough'], ['x₂', 'Subscript', 'subscript'], ['x²', 'Superscript', 'superscript'],
+                        ['1.', 'Numbered list', 'insertOrderedList'], ['☷', 'Bulleted list', 'insertUnorderedList'], ['⇤', 'Decrease indent', 'outdent'], ['⇥', 'Increase indent', 'indent'],
+                        ['≡', 'Align left', 'justifyLeft'], ['☰', 'Center', 'justifyCenter'], ['≣', 'Align right', 'justifyRight'], ['▤', 'Justify', 'justifyFull'],
+                        ['A', 'Text color', 'foreColor'], ['▨', 'Highlight color', 'hiliteColor'], ['Ω', 'Special character', 'insertSpecialCharacter'], ['↗ Link', 'Insert link', 'createLink'], ['⊘', 'Remove link', 'unlink'], ['▦', 'Insert table', 'insertTable']
+                      ].map(([label, title, command]) => <button key={`${title}-${command}`} type="button" title={title} aria-label={title} disabled={reqEmailSourceMode} onMouseDown={(event) => { rememberRequestEmailSelection(); event.preventDefault(); }} onClick={() => (command === 'foreColor' || command === 'hiliteColor' ? applyRequestEmailFormat(command, window.prompt(command === 'foreColor' ? 'Text color (CSS color)' : 'Highlight color (CSS color)', '#2563eb') || undefined) : applyRequestEmailFormat(command))} className={`shrink-0 rounded px-1.5 py-1 text-[11px] hover:bg-[#E8EDF3] disabled:opacity-40 dark:hover:bg-[#334155] ${command === 'bold' ? 'font-bold' : command === 'italic' ? 'italic' : command === 'underline' ? 'underline' : ''}`}>{label}</button>)}
+                      <button type="button" onClick={toggleRequestEmailSource} aria-pressed={reqEmailSourceMode} className={`shrink-0 rounded px-1.5 py-1 text-[11px] ${reqEmailSourceMode ? 'bg-[#E8EDF3] font-semibold dark:bg-[#334155]' : 'hover:bg-[#E8EDF3] dark:hover:bg-[#334155]'}`}>Source</button>
+                    </div>
+                    <div className="flex min-h-8 items-center gap-2 overflow-x-auto pt-1">
+                      <select aria-label="Styles" disabled={reqEmailSourceMode} onMouseDown={rememberRequestEmailSelection} defaultValue="" onChange={(event) => { if (event.target.value) applyRequestEmailFormat('formatBlock', event.target.value); event.target.value = ''; }} className="h-7 min-w-24 rounded border border-[#D7DCE5] bg-white px-2 text-[11px] text-[#52606D] disabled:opacity-40 dark:border-[#475569] dark:bg-[#1E293B] dark:text-white"><option value="">Styles</option><option value="p">Normal</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select>
+                      <select aria-label="Format" disabled={reqEmailSourceMode} onMouseDown={rememberRequestEmailSelection} defaultValue="" onChange={(event) => { if (event.target.value) applyRequestEmailFormat('formatBlock', event.target.value); event.target.value = ''; }} className="h-7 min-w-24 rounded border border-[#D7DCE5] bg-white px-2 text-[11px] text-[#52606D] disabled:opacity-40 dark:border-[#475569] dark:bg-[#1E293B] dark:text-white"><option value="">Format</option><option value="p">Paragraph</option><option value="pre">Preformatted</option><option value="address">Address</option></select>
+                      <select aria-label="Font" disabled={reqEmailSourceMode} onMouseDown={rememberRequestEmailSelection} defaultValue="" onChange={(event) => { if (event.target.value) applyRequestEmailFormat('fontName', event.target.value); event.target.value = ''; }} className="h-7 min-w-24 rounded border border-[#D7DCE5] bg-white px-2 text-[11px] text-[#52606D] disabled:opacity-40 dark:border-[#475569] dark:bg-[#1E293B] dark:text-white"><option value="">Font</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Tahoma">Tahoma</option><option value="Times New Roman">Times New Roman</option><option value="Verdana">Verdana</option></select>
+                      <select aria-label="Font size" disabled={reqEmailSourceMode} onMouseDown={rememberRequestEmailSelection} defaultValue="" onChange={(event) => { if (event.target.value) applyRequestEmailFormat('fontSize', event.target.value); event.target.value = ''; }} className="h-7 min-w-16 rounded border border-[#D7DCE5] bg-white px-2 text-[11px] text-[#52606D] disabled:opacity-40 dark:border-[#475569] dark:bg-[#1E293B] dark:text-white"><option value="">Size</option><option value="1">8</option><option value="2">10</option><option value="3">12</option><option value="4">14</option><option value="5">18</option><option value="6">24</option><option value="7">36</option></select>
+                    </div>
+                  </div>
+                  {reqEmailSourceMode ? (
+                    <textarea value={reqEmailBody} onChange={(event) => setReqEmailBody(event.target.value)} className="min-h-[260px] flex-1 resize-y border-0 p-4 font-mono text-xs leading-5 text-[#263238] outline-none dark:bg-[#1E293B] dark:text-white" aria-label="Email HTML source" />
+                  ) : (
+                    <div ref={reqEmailBodyRef} contentEditable suppressContentEditableWarning dangerouslySetInnerHTML={{ __html: reqEmailBody }} onMouseUp={rememberRequestEmailSelection} onKeyUp={rememberRequestEmailSelection} onInput={(event) => setReqEmailBody(event.currentTarget.innerHTML)} className="min-h-[260px] flex-1 overflow-y-auto p-4 text-sm leading-5 text-[#263238] outline-none dark:bg-[#1E293B] dark:text-white [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5" aria-label="Email body editor" />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#334155]">
+              <button type="button" onClick={handleSendRequestEmployeeInfo} className="rounded bg-[#4386F4] px-6 py-2 text-sm font-semibold text-white hover:bg-[#3478E5]">Send</button>
+              <button type="button" onClick={() => setDialog(null)} className="rounded border border-[#C7CDD4] bg-white px-5 py-2 text-sm text-[#444] hover:bg-gray-50 dark:border-[#475569] dark:bg-[#263244] dark:text-white dark:hover:bg-[#334155]">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Employment Application Form (eForm) (Exact Match to Reference Image 1) */}
+      {dialog === 'request-eform-applicant' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-6 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-4xl max-h-[94vh] flex flex-col rounded-xl border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-3.5 bg-slate-50 dark:border-[#333] dark:bg-[#182230]">
+              <div className="flex items-center gap-2">
+                <FileCheck2 className="h-5 w-5 text-[#2F80ED]" />
+                <div>
+                  <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                    Employment Application Form (eForm)
+                  </h2>
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                    Send formal onboarding eForm to {displayName} or review details
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 rounded border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-100 dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  title="Print Application Form"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>Print Form</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDialog(null)}
+                  className="rounded-lg p-1 text-[#64748B] hover:bg-gray-200 dark:text-[#94A3B8] dark:hover:bg-[#333]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Recipient Ribbon */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] px-6 py-2.5 bg-blue-50/60 dark:border-[#333] dark:bg-blue-950/20 text-xs">
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300">
+                <Mail className="h-4 w-4 shrink-0 text-[#2F80ED]" />
+                <span>Recipient: <strong>{applicant.email || displayName}</strong></span>
+                <span className="text-gray-400">|</span>
+                <span>Recruiter: <strong>{applicant.assignedRecruiter || 'Ganesh Kshirsagar'}</strong></span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSendEformApplicant}
+                className="inline-flex items-center gap-1.5 rounded bg-[#2F80ED] px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Send eForm to Applicant</span>
+              </button>
+            </div>
+
+            {/* Scrollable Form Body (Matching Image 1 Two-Page Form Structure) */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#EAEFF4] dark:bg-[#111827]">
+              <div className="max-w-3xl mx-auto bg-white p-6 sm:p-10 shadow-md border border-gray-300 dark:border-[#333] dark:bg-[#1F2937] text-xs text-[#222] dark:text-white font-sans space-y-6">
+
+                {/* PAGE 1 HEADER */}
+                <div className="text-center pb-2">
+                  <h1 className="text-sm sm:text-base font-bold uppercase tracking-wider underline">
+                    EMPLOYMENT APPLICATION FORM
+                  </h1>
+                </div>
+
+                {/* Page 1 Details Grid */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-28 shrink-0 font-medium">Date:</span>
+                      <input
+                        type="date"
+                        value={eformDate}
+                        onChange={(e) => setEformDate(e.target.value)}
+                        className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-36 shrink-0 font-medium">Interview Time Reported:</span>
+                      <input
+                        type="text"
+                        value={eformInterviewTime}
+                        onChange={(e) => setEformInterviewTime(e.target.value)}
+                        className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-44 shrink-0 font-medium">Applied for the position of:</span>
+                    <input
+                      type="text"
+                      value={eformPosition || applicant.currentDesignation || 'Technical Support Engineer (L2)'}
+                      onChange={(e) => setEformPosition(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-44 shrink-0 font-medium">Source:</span>
+                    <input
+                      type="text"
+                      value={eformSource || applicant.source || 'Direct Career Portal'}
+                      onChange={(e) => setEformSource(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-56 shrink-0 font-medium">Name of employee, if referred:</span>
+                    <input
+                      type="text"
+                      value={eformReferredBy}
+                      onChange={(e) => setEformReferredBy(e.target.value)}
+                      placeholder="Employee Name"
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-56 shrink-0 font-medium">Name of HR / Recruiter sourced:</span>
+                    <input
+                      type="text"
+                      value={eformRecruiter || applicant.assignedRecruiter || 'Ganesh Kshirsagar'}
+                      onChange={(e) => setEformRecruiter(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-56 shrink-0 font-medium">Name (As per Aadhaar card):</span>
+                    <input
+                      type="text"
+                      value={eformAadhaarName || displayName.toUpperCase()}
+                      onChange={(e) => setEformAadhaarName(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs font-semibold dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-28 shrink-0 font-medium">Date of Birth:</span>
+                      <input
+                        type="text"
+                        value={eformDob}
+                        onChange={(e) => setEformDob(e.target.value)}
+                        className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="font-medium">Gender:</span>
+                      <label className="inline-flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="eformGender"
+                          checked={eformGender === 'M'}
+                          onChange={() => setEformGender('M')}
+                          className="accent-[#2F80ED]"
+                        />
+                        <span>M</span>
+                      </label>
+                      <label className="inline-flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="eformGender"
+                          checked={eformGender === 'F'}
+                          onChange={() => setEformGender('F')}
+                          className="accent-[#2F80ED]"
+                        />
+                        <span>F</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <span className="font-medium">Marital Status:</span>
+                    <label className="inline-flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="eformMaritalStatus"
+                        checked={eformMaritalStatus === 'Married'}
+                        onChange={() => setEformMaritalStatus('Married')}
+                        className="accent-[#2F80ED]"
+                      />
+                      <span>Married</span>
+                    </label>
+                    <label className="inline-flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="eformMaritalStatus"
+                        checked={eformMaritalStatus === 'Unmarried'}
+                        onChange={() => setEformMaritalStatus('Unmarried')}
+                        className="accent-[#2F80ED]"
+                      />
+                      <span>Unmarried</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 shrink-0 font-medium">Address:</span>
+                    <input
+                      type="text"
+                      value={eformAddress || applicant.location || 'Coimbatore, Tamil Nadu, India'}
+                      onChange={(e) => setEformAddress(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 shrink-0 font-medium">Native Place:</span>
+                    <input
+                      type="text"
+                      value={eformNativePlace || applicant.location?.split(',')[0] || 'Coimbatore'}
+                      onChange={(e) => setEformNativePlace(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-28 shrink-0 font-medium">Mobile No:</span>
+                      <input
+                        type="text"
+                        value={eformMobile || applicant.phone || '+91 7667560620'}
+                        onChange={(e) => setEformMobile(e.target.value)}
+                        className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-36 shrink-0 font-medium">Alternate Mobile No:</span>
+                      <input
+                        type="text"
+                        value={eformAltMobile}
+                        onChange={(e) => setEformAltMobile(e.target.value)}
+                        placeholder="+91 9876543210"
+                        className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-28 shrink-0 font-medium">E-mail ID:</span>
+                    <input
+                      type="email"
+                      value={eformEmail || applicant.email || 'applicant@email.com'}
+                      onChange={(e) => setEformEmail(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+                </div>
+
+                {/* Educational Qualifications Table */}
+                <div className="space-y-2 pt-2">
+                  <h3 className="font-semibold text-xs">
+                    Educational Qualifications (Highest qualification first):
+                  </h3>
+                  <div className="overflow-x-auto border border-[#CBD5E1] dark:border-[#444]">
+                    <table className="w-full text-left text-[11px]">
+                      <thead className="bg-[#F1F5F9] border-b border-[#CBD5E1] font-bold text-[#334155] dark:bg-[#333] dark:text-white">
+                        <tr>
+                          <th className="px-3 py-1.5 border-r border-[#CBD5E1] dark:border-[#444]">Examination Passed</th>
+                          <th className="px-3 py-1.5 border-r border-[#CBD5E1] dark:border-[#444]">University / Board</th>
+                          <th className="px-3 py-1.5 border-r border-[#CBD5E1] dark:border-[#444]">Year of passing</th>
+                          <th className="px-3 py-1.5">Percentage / Grade</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#CBD5E1] dark:divide-[#444]">
+                        <tr>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">B.Tech (Computer Science)</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Anna University</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">2019</td>
+                          <td className="p-1.5 bg-[#FFF8EB] dark:bg-[#252525]">82.4% / First Class</td>
+                        </tr>
+                        <tr>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">HSC / 12th Grade</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">State Board</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">2015</td>
+                          <td className="p-1.5 bg-[#FFF8EB] dark:bg-[#252525]">86.2%</td>
+                        </tr>
+                        <tr>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">SSLC / 10th Grade</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">State Board</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">2013</td>
+                          <td className="p-1.5 bg-[#FFF8EB] dark:bg-[#252525]">89.0%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Service Clause & Night Shift Questions */}
+                <div className="space-y-2 pt-1 text-[11px]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>A mandatory service clause for three years is mentioned in the letter of appointment. Are you willing to accept this clause?</span>
+                    <select
+                      value={eformServiceClause}
+                      onChange={(e) => setEformServiceClause(e.target.value)}
+                      className="rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-0.5 text-xs dark:bg-[#252525]"
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                      <option value="Negotiable">Negotiable</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-6 pt-1">
+                    <div className="flex items-center gap-2">
+                      <span>Worked in Night shifts:</span>
+                      <select
+                        value={eformNightShiftsWorked}
+                        onChange={(e) => setEformNightShiftsWorked(e.target.value)}
+                        className="rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-0.5 text-xs dark:bg-[#252525]"
+                      >
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Available for Night Shifts:</span>
+                      <select
+                        value={eformNightShiftsAvailable}
+                        onChange={(e) => setEformNightShiftsAvailable(e.target.value)}
+                        className="rounded border border-[#CBD5E1] bg-[#FFF8EB] px-2 py-0.5 text-xs dark:bg-[#252525]"
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <label className="inline-flex items-center gap-2 cursor-pointer font-medium">
+                      <input
+                        type="checkbox"
+                        checked={eformIsFresher}
+                        onChange={(e) => setEformIsFresher(e.target.checked)}
+                        className="h-3.5 w-3.5 accent-[#2F80ED]"
+                      />
+                      <span>If you are a fresher, tick this check box</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* PAGE 2 SEPARATOR */}
+                <div className="border-t-2 border-dashed border-slate-300 dark:border-slate-600 pt-6 my-6 text-center">
+                  <span className="bg-slate-100 dark:bg-[#151D28] px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Page 2 — Experience, Family Details & Declaration
+                  </span>
+                </div>
+
+                {/* Experience Section */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-xs">
+                    Experience (Mention most Recent Employment):
+                  </h3>
+
+                  {/* Employer 1 */}
+                  <div className="border border-[#CBD5E1] dark:border-[#444] p-3 bg-white dark:bg-[#252525] space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Employer name and address:</span>
+                        <input
+                          type="text"
+                          defaultValue="Wipro Technologies Ltd, Electronics City, Bangalore"
+                          className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1.5 text-xs dark:bg-[#252525]"
+                        />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Position title/desgn, skills:</span>
+                        <input
+                          type="text"
+                          defaultValue="Technical Support Engineer (L2) - .NET, Troubleshooting"
+                          className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1.5 text-xs dark:bg-[#252525]"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Date of Joining:</span>
+                        <input type="text" defaultValue="12/06/2021" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Last Working Date:</span>
+                        <input type="text" defaultValue="Present" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Duration in Years:</span>
+                        <input type="text" defaultValue="3.5 Years" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Net Salary:</span>
+                        <input type="text" defaultValue="₹45,000 / month" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-medium text-gray-500">Reason for leaving:</span>
+                      <input type="text" defaultValue="Seeking Career Growth and Senior Responsibilities" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                    </div>
+                  </div>
+
+                  {/* Employer 2 */}
+                  <div className="border border-[#CBD5E1] dark:border-[#444] p-3 bg-white dark:bg-[#252525] space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Employer name and address:</span>
+                        <input
+                          type="text"
+                          defaultValue="Cognizant Tech Solutions, Coimbatore"
+                          className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1.5 text-xs dark:bg-[#252525]"
+                        />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Position title/desgn, skills:</span>
+                        <input
+                          type="text"
+                          defaultValue="Associate Support Engineer - ITIL, Ticketing, SQL"
+                          className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1.5 text-xs dark:bg-[#252525]"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Date of Joining:</span>
+                        <input type="text" defaultValue="15/07/2019" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Last Working Date:</span>
+                        <input type="text" defaultValue="30/05/2021" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Duration in Years:</span>
+                        <input type="text" defaultValue="1.9 Years" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-medium text-gray-500">Net Salary:</span>
+                        <input type="text" defaultValue="₹32,000 / month" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-medium text-gray-500">Reason for leaving:</span>
+                      <input type="text" defaultValue="Better Opportunity & Role" className="w-full border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compensation & Availability */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 font-medium">Current CTC:</span>
+                    <input
+                      type="text"
+                      value={eformCurrentCTC}
+                      onChange={(e) => setEformCurrentCTC(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 font-medium">Expected CTC:</span>
+                    <input
+                      type="text"
+                      value={eformExpectedCTC}
+                      onChange={(e) => setEformExpectedCTC(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 font-medium">Notice Period:</span>
+                    <input
+                      type="text"
+                      value={eformNoticePeriod}
+                      onChange={(e) => setEformNoticePeriod(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-32 shrink-0 font-medium">Immediate Joiner:</span>
+                    <select
+                      value={eformImmediateJoiner}
+                      onChange={(e) => setEformImmediateJoiner(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]"
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-44 shrink-0 font-medium">Approximate date of joining:</span>
+                    <input
+                      type="text"
+                      value={eformDoj}
+                      onChange={(e) => setEformDoj(e.target.value)}
+                      className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-1 text-xs dark:bg-[#252525]"
+                    />
+                  </div>
+                </div>
+
+                {/* Personal / Family Details Table */}
+                <div className="space-y-2 pt-2">
+                  <h3 className="font-semibold text-xs">
+                    Personal / Family Details:
+                  </h3>
+                  <div className="overflow-x-auto border border-[#CBD5E1] dark:border-[#444]">
+                    <table className="w-full text-left text-[11px]">
+                      <thead className="bg-[#F1F5F9] border-b border-[#CBD5E1] font-bold text-[#334155] dark:bg-[#333] dark:text-white">
+                        <tr>
+                          <th className="px-3 py-1.5 border-r border-[#CBD5E1] dark:border-[#444]">Name</th>
+                          <th className="px-3 py-1.5 border-r border-[#CBD5E1] dark:border-[#444]">Relationship</th>
+                          <th className="px-3 py-1.5 border-r border-[#CBD5E1] dark:border-[#444]">Age</th>
+                          <th className="px-3 py-1.5">Occupation</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#CBD5E1] dark:divide-[#444]">
+                        <tr>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Milsamy C K</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Father</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">58</td>
+                          <td className="p-1.5 bg-[#FFF8EB] dark:bg-[#252525]">Business</td>
+                        </tr>
+                        <tr>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Radhamani M</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Mother</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">52</td>
+                          <td className="p-1.5 bg-[#FFF8EB] dark:bg-[#252525]">Homemaker</td>
+                        </tr>
+                        <tr>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Karthik M</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">Brother</td>
+                          <td className="p-1.5 border-r border-[#CBD5E1] dark:border-[#444] bg-[#FFF8EB] dark:bg-[#252525]">24</td>
+                          <td className="p-1.5 bg-[#FFF8EB] dark:bg-[#252525]">Software Engineer</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Medical Conditions */}
+                <div className="space-y-1 pt-1">
+                  <h3 className="font-semibold text-xs">Medical Conditions (If any):</h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                    (Please mention any existing or past medical conditions, allergies, or disabilities that the company should be aware of for safety measures. This information will be kept confidential.)
+                  </p>
+                  <input
+                    type="text"
+                    value={eformMedical}
+                    onChange={(e) => setEformMedical(e.target.value)}
+                    className="w-full rounded border border-[#CBD5E1] bg-[#FFF8EB] p-2 text-xs dark:bg-[#252525]"
+                  />
+                </div>
+
+                {/* Declaration & Signature */}
+                <div className="space-y-4 pt-3 border-t border-[#CBD5E1] dark:border-[#444]">
+                  <p className="text-[11px] text-justify text-[#444] dark:text-[#CCC] leading-relaxed">
+                    I hereby declare that the information provided above is true and correct to the best of my knowledge. I understand that any false information may lead to disqualification or termination of employment.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2">
+                    <div className="text-[11px] text-gray-500">
+                      Date of Verification: {new Date().toLocaleDateString()}
+                    </div>
+                    <div className="w-64 border border-[#CBD5E1] bg-[#F8FAFC] p-3 text-center dark:border-[#444] dark:bg-[#252525]">
+                      <div className="font-serif italic text-sm text-[#1877F2] font-bold">
+                        {displayName}
+                      </div>
+                      <div className="text-[9px] text-gray-400 border-t border-dashed mt-1 pt-1">
+                        Applicant Digital Signature
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between border-t border-[#E2E8F0] px-6 py-3.5 bg-slate-50 dark:border-[#333] dark:bg-[#182230]">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 rounded border border-[#CBD5E1] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-100 dark:border-[#444] dark:bg-[#252525] dark:text-white"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                <span>Print Form</span>
+              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDialog(null)}
+                  className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-semibold text-[#444] hover:bg-gray-100 dark:border-[#444] dark:bg-[#252525] dark:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendEformApplicant}
+                  className="inline-flex items-center gap-1.5 rounded bg-[#2F80ED] px-6 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Send eForm</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Request eForm to Employer */}
+      {dialog === 'request-eform-employer' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <div className="flex items-center gap-2.5">
+                <Building2 className="h-5 w-5 text-[#2F80ED]" />
+                <div>
+                  <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                    Request eForm to Employer
+                  </h2>
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                    Employment background & verification eForm for {displayName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded-lg p-1 text-[#64748B] hover:bg-gray-100 dark:text-[#94A3B8] dark:hover:bg-[#333]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Employer / Company Name *</label>
+                  <input
+                    type="text"
+                    value={employerEformCompany}
+                    onChange={(e) => setEmployerEformCompany(e.target.value)}
+                    placeholder="e.g. Wipro Technologies Ltd"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Employer HR Email *</label>
+                  <input
+                    type="email"
+                    value={employerEformEmail}
+                    onChange={(e) => setEmployerEformEmail(e.target.value)}
+                    placeholder="hr.verification@wipro.com"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <span className="block font-medium text-gray-700 dark:text-gray-300 mb-1.5">Verification Scope:</span>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={employerEformScope.dates}
+                      onChange={(e) => setEmployerEformScope({ ...employerEformScope, dates: e.target.checked })}
+                      className="accent-[#2F80ED]"
+                    />
+                    <span>Employment Dates & Designation</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={employerEformScope.conduct}
+                      onChange={(e) => setEmployerEformScope({ ...employerEformScope, conduct: e.target.checked })}
+                      className="accent-[#2F80ED]"
+                    />
+                    <span>Conduct & Performance</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={employerEformScope.relieving}
+                      onChange={(e) => setEmployerEformScope({ ...employerEformScope, relieving: e.target.checked })}
+                      className="accent-[#2F80ED]"
+                    />
+                    <span>Relieving & Dues Clearances</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={employerEformScope.rehire}
+                      onChange={(e) => setEmployerEformScope({ ...employerEformScope, rehire: e.target.checked })}
+                      className="accent-[#2F80ED]"
+                    />
+                    <span>Eligible for Re-Hire</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Notes / Comments</label>
+                <textarea
+                  rows={3}
+                  value={employerEformNotes}
+                  onChange={(e) => setEmployerEformNotes(e.target.value)}
+                  placeholder="Additional verification details or requisition references..."
+                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#252525] dark:text-white"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 border-t border-[#E2E8F0] px-6 py-4 dark:border-[#333]">
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#252525] dark:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmployerEform}
+                className="rounded bg-[#2F80ED] px-6 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+              >
+                Send Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Block Contact On TextToHire */}
+      {dialog === 'block-contact' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" onClick={() => setDialog(null)}>
+          <div
+            className="w-full max-w-md rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 text-red-600 mb-3">
+              <ShieldAlert className="h-6 w-6 shrink-0" />
+              <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">
+                Block Contact On TextToHire
+              </h3>
+            </div>
+            <p className="text-xs text-[#555] dark:text-[#CCC] leading-relaxed">
+              Are you sure you want to block <strong>{displayName}</strong> ({applicant.phone || 'Phone number'}) on TextToHire?
+              This contact will no longer receive automated SMS broadcasts or direct text messages.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-2.5 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#252525] dark:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmBlockContact}
+                className="rounded bg-[#E53E3E] px-6 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#C53030]"
+              >
+                Block Contact
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          Ampcus Tech Candidate Information Print Theme (Ceipal Matching Layout)
+          ========================================================================= */}
+      {(() => {
+        const nameParts = (applicant.name || 'Demo User').trim().split(/\s+/);
+        const ampcusFirstName = nameParts[0] || 'Demo';
+        const ampcusLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : 'User';
+        const ampcusMiddleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : 'N/A';
+        const ampcusInitial = (ampcusFirstName[0] || 'D').toUpperCase();
+        const ampcusSkills = (applicant.skills && applicant.skills.length > 0
+          ? applicant.skills
+          : [
+              'Data Analysis',
+              'Predictive Data Analysis',
+              'Retail Commerce',
+              'CODE REVIEW',
+              'PostgreSQL',
+              'Dashboards',
+              'Deployment Automation',
+              'Vehicle Fleet Management',
+              'Application Programming Interfaces (APIs)',
+              'Package Tracking',
+              'Logistics Operations',
+              'Microservices',
+              'DATABASES',
+              'Computer Engineering',
+              'Data Cleansing',
+              'Python (Programming Language)',
+              'Software Systems'
+            ]
+        ).join(', ');
+        const ampcusPrintDate = '11/23/26, 5:01 PM';
+        const ampcusPrintUrl = `https://talentreach2.ceipal.com/applicant_profiles/print_external_emp_info/${applicant.applicantId || applicant.id || 'app-demo'}`;
+
+        const renderAmpcusPages = (showButton: boolean) => (
+          <div id="ampcus-print-dossier" className="w-full text-black font-sans leading-normal">
+            {/* -------------------- PAGE 1 -------------------- */}
+            <div className="bg-white text-black p-6 sm:p-10 max-w-[800px] w-full mx-auto shadow-xl print:shadow-none print:p-0 print:max-w-none border border-gray-200 print:border-none">
+              {/* Ampcus Tech Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-gray-400">
+                <div className="flex items-center gap-2">
+                  <svg width="26" height="22" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 0L27 23H19.5L14 13L8.5 23H1L14 0Z" fill="#1A92D1" />
+                    <path d="M14 6L21.5 20H17L14 14.5L11 20H6.5L14 6Z" fill="#239CD3" />
+                    <path d="M14 10L17.5 17H10.5L14 10Z" fill="#60A5FA" />
+                  </svg>
+                  <span className="text-[17px] font-extrabold tracking-wider text-[#1A92D1]" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                    AMPCUS TECH
+                  </span>
+                </div>
+              </div>
+
+              {/* Large Circle Avatar with Initial */}
+              <div className="mt-4 mb-3">
+                <div className="w-12 h-12 rounded-full border-2 border-[#239cd3] flex items-center justify-center text-[#239cd3] text-2xl font-normal">
+                  {ampcusInitial}
+                </div>
+              </div>
+
+              {/* Personal Details Title */}
+              <div className="text-[11px] font-bold text-black mb-1">Personal Details</div>
+
+              {/* Personal Details Table - Part 1 (17 Rows) */}
+              <table className="w-full border-collapse border border-[#239cd3] text-[9.5px] leading-tight text-black">
+                <tbody>
+                  <tr>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">First Name as per Aadhaar</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{ampcusFirstName}</td>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Middle Name as per Aadhaar</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{ampcusMiddleName}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Last Name as per Aadhaar</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{ampcusLastName}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Legal Name</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.name || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Maiden Name</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.maidenName || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Email Address</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.email || 'ganeshgodsetemp@gmail.com'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Alternate Email Address</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.altEmail || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Home Phone Number</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.homePhone || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Mobile Number</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.phone || '+91 9423022506'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Work Phone Number</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.workPhone || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Other Phone</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.otherPhone || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Date Of Birth</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.dateOfBirth || eformDob || '03/09/2002'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">LinkedIn Profile URL</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.linkedinUrl || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Facebook Profile URL</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.facebookUrl || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Twitter Profile URL</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.twitterUrl || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Video Reference</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.videoUrl || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Work Authorization</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.workAuthorization || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Address</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.location || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Country</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">India</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">State</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.location?.split(',')[1]?.trim() || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">City</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.location?.split(',')[0]?.trim() || 'Nashik'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Pin Code</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.pinCode || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Source</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.source || 'Naukri'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Experience</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.experienceYears ? `${applicant.experienceYears} Years 10 Months` : '5 Years 10 Months'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Relevant experiece</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.relevantExperience || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Referred By</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.referredBy || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Applicant Status</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.status || 'New lead'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Applicant Group</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.applicantGroup || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Ownership</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.assignedRecruiter || 'Ganesh Godse'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Current Title/Designation</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.currentDesignation || 'Software Engineer'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Current Company</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.currentCompany || workExperiences[0]?.company || 'Nimbus Retail Technologies'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Current CTC</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.currentCTC || 'INR - N/A / N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Expected CTC</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.expectedCTC || applicant.expectedSalary || 'INR - / Yearly'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Notice Period</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.noticePeriod || 'N/A'}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Page 1 Footer */}
+              <div className="mt-8 pt-2 flex items-center justify-between text-[7.5px] text-gray-500 border-t border-gray-100">
+                <span className="truncate max-w-[620px]">{ampcusPrintUrl}</span>
+                <span className="font-semibold shrink-0">1/3</span>
+              </div>
+            </div>
+
+            {/* -------------------- PAGE 2 -------------------- */}
+            <div className="bg-white text-black p-6 sm:p-10 max-w-[800px] w-full mx-auto shadow-xl print:shadow-none print:p-0 print:max-w-none border border-gray-200 print:border-none ampcus-page-break mt-6 print:mt-0">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-1 text-[8px] text-gray-500 mb-2 border-b border-gray-200">
+                <span>{ampcusPrintDate}</span>
+                <span className="font-bold text-black text-[9.5px]">Candidate Information</span>
+                <span className="w-16"></span>
+              </div>
+
+              {/* Personal Details Table - Part 2 */}
+              <table className="w-full border-collapse border border-[#239cd3] text-[9.5px] leading-tight text-black">
+                <tbody>
+                  <tr>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Pan Card Number</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{applicant.panNumber || 'N/A'}</td>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Aadhar Number</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{applicant.aadharNumber || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Passport number</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.passportNumber || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Marital status</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{eformMaritalStatus || applicant.maritalStatus || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Preferred Shift</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.preferredShift || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Relocation</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.relocation || 'Yes'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black align-top">Nationality</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black align-top">{applicant.nationality || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black align-top">Skills</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black align-top" rowSpan={4}>
+                      <div className="text-[9px] leading-snug">
+                        {ampcusSkills}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Primary Skills</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.primarySkills || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Applicant Remarks</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Technology</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.technology || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Industry</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Nationality</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.nationality || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1"></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Section: EEO Details */}
+              <div className="text-[11px] font-bold text-black mt-3 mb-1">EEO Details</div>
+              <table className="w-full border-collapse border border-[#239cd3] text-[9.5px] leading-tight text-black">
+                <tbody>
+                  <tr>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Gender</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{eformGender || applicant.gender || 'N/A'}</td>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Race/Ethnicity</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{applicant.race || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Veteran Status</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.veteranStatus || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Disability</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.disability || 'N/A'}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Section: User Defined Fields */}
+              <div className="text-[11px] font-bold text-black mt-3 mb-1">User Defined Fields</div>
+
+              {/* Section: Education */}
+              <div className="text-[11px] font-bold text-black mt-3 mb-1">Education</div>
+              <table className="w-full border-collapse border border-[#239cd3] text-[9px] leading-tight text-black">
+                <thead>
+                  <tr>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">School/University Name</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">Degree</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">Year Completed</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">Major Study</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">Minor Study</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">City</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">State</th>
+                    <th className="border border-[#239cd3] bg-white px-1.5 py-1 text-left font-bold text-black">Country</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {educationList.length > 0 ? (
+                    educationList.map((edu, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-[#239cd3] px-1.5 py-1">{edu.institution || 'Savitribai Phule Pune University'}</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">{edu.degree || 'N/A'}</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">{edu.period || '01/01/2017'}</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">Computer Engineering</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">N/A</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">Pune</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">Maharashtra</td>
+                        <td className="border border-[#239cd3] px-1.5 py-1">India</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className="border border-[#239cd3] px-1.5 py-1">Savitribai Phule Pune University</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">N/A</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">01/01/2017</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">Computer Engineering</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">N/A</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">Pune</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">Maharashtra</td>
+                      <td className="border border-[#239cd3] px-1.5 py-1">India</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Section: Work Experience */}
+              <div className="text-[11px] font-bold text-black mt-3 mb-1">Work Experience</div>
+              <table className="w-full border-collapse border border-[#239cd3] text-[9px] leading-tight text-black">
+                <thead>
+                  <tr>
+                    <th className="w-[36%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Employer</th>
+                    <th className="w-[36%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Job Title</th>
+                    <th className="w-[14%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Work From Date</th>
+                    <th className="w-[14%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Work To Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workExperiences.length > 0 ? (
+                    workExperiences.map((exp, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-[#239cd3] px-2 py-1">{exp.company}</td>
+                        <td className="border border-[#239cd3] px-2 py-1">{exp.designation}</td>
+                        <td className="border border-[#239cd3] px-2 py-1">01/01/2021</td>
+                        <td className="border border-[#239cd3] px-2 py-1">30/06/2021</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <>
+                      <tr>
+                        <td className="border border-[#239cd3] px-2 py-1">BrightPath Software Solutions</td>
+                        <td className="border border-[#239cd3] px-2 py-1">Software Intern</td>
+                        <td className="border border-[#239cd3] px-2 py-1">01/01/2021</td>
+                        <td className="border border-[#239cd3] px-2 py-1">30/06/2021</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-[#239cd3] px-2 py-1">Acme Logistics Pvt Ltd</td>
+                        <td className="border border-[#239cd3] px-2 py-1">Junior Software Developer</td>
+                        <td className="border border-[#239cd3] px-2 py-1">01/07/2021</td>
+                        <td className="border border-[#239cd3] px-2 py-1">28/02/2023</td>
+                      </tr>
+                      <tr>
+                        <td className="border border-[#239cd3] px-2 py-1">Nimbus Retail Technologies</td>
+                        <td className="border border-[#239cd3] px-2 py-1">Software Engineer</td>
+                        <td className="border border-[#239cd3] px-2 py-1">01/03/2023</td>
+                        <td className="border border-[#239cd3] px-2 py-1">N/A</td>
+                      </tr>
+                    </>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Section: Certification */}
+              <div className="text-[11px] font-bold text-black mt-3 mb-1">Certification</div>
+              <table className="w-full border-collapse border border-[#239cd3] text-[9px] leading-tight text-black">
+                <thead>
+                  <tr>
+                    <th className="w-[50%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Certification</th>
+                    <th className="w-[25%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Year Completed</th>
+                    <th className="w-[25%] border border-[#239cd3] bg-white px-2 py-1 text-left font-bold text-black">Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {certificationsList.length > 0 ? (
+                    certificationsList.map((cert, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-[#239cd3] px-2 py-1">{cert.name}</td>
+                        <td className="border border-[#239cd3] px-2 py-1">{cert.yearCompleted || ''}</td>
+                        <td className="border border-[#239cd3] px-2 py-1">{cert.comments || ''}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <>
+                      <tr>
+                        <td className="border border-[#239cd3] px-2 py-1">Certified Zorblang Associate - Zorblang Foundation</td>
+                        <td className="border border-[#239cd3] px-2 py-1"></td>
+                        <td className="border border-[#239cd3] px-2 py-1"></td>
+                      </tr>
+                      <tr>
+                        <td className="border border-[#239cd3] px-2 py-1">Introduction to Flumpy++ - Gibberish Academy</td>
+                        <td className="border border-[#239cd3] px-2 py-1"></td>
+                        <td className="border border-[#239cd3] px-2 py-1"></td>
+                      </tr>
+                      <tr>
+                        <td className="border border-[#239cd3] px-2 py-1">Certified Zorblang Associate</td>
+                        <td className="border border-[#239cd3] px-2 py-1"></td>
+                        <td className="border border-[#239cd3] px-2 py-1"></td>
+                      </tr>
+                    </>
+                  )}
+                </tbody>
+              </table>
+
+              {/* Page 2 Footer */}
+              <div className="mt-8 pt-2 flex items-center justify-between text-[7.5px] text-gray-500 border-t border-gray-100">
+                <span className="truncate max-w-[620px]">{ampcusPrintUrl}</span>
+                <span className="font-semibold shrink-0">2/3</span>
+              </div>
+            </div>
+
+            {/* -------------------- PAGE 3 -------------------- */}
+            <div className="bg-white text-black p-6 sm:p-10 max-w-[800px] w-full mx-auto shadow-xl print:shadow-none print:p-0 print:max-w-none border border-gray-200 print:border-none ampcus-page-break mt-6 print:mt-0">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-1 text-[8px] text-gray-500 mb-2 border-b border-gray-200">
+                <span>{ampcusPrintDate}</span>
+                <span className="font-bold text-black text-[9.5px]">Candidate Information</span>
+                <span className="w-16"></span>
+              </div>
+
+              {/* Standard Fields */}
+              <div className="text-[11px] font-bold text-black mb-1">Standard Fields</div>
+              <table className="w-full border-collapse border border-[#239cd3] text-[9.5px] leading-tight text-black">
+                <tbody>
+                  <tr>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Notice Period</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{applicant.noticePeriod || 'N/A'}</td>
+                    <td className="w-[28%] border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Pay Rate</td>
+                    <td className="w-[22%] border border-[#239cd3] px-2 py-1 text-black">{applicant.payRate || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Bill Rate</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.billRate || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Relocation</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.relocation || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Video Link</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.videoUrl || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Comments</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.comments || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Cost for the given candidate</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.cost || 'N/A'}</td>
+                    <td className="border border-[#239cd3] bg-white px-2 py-1"></td>
+                    <td className="border border-[#239cd3] px-2 py-1"></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Centered Ceipal-style Print Button (Hidden on actual print) */}
+              {showButton && (
+                <div className="mt-8 text-center no-print">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="rounded border border-gray-400 bg-gray-100 px-6 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-200 transition-colors shadow-xs cursor-pointer"
+                  >
+                    Print
+                  </button>
+                </div>
+              )}
+
+              {/* Page 3 Footer */}
+              <div className="mt-12 pt-2 flex items-center justify-end text-[7.5px] text-gray-500 border-t border-gray-100">
+                <span className="font-semibold">3/3</span>
+              </div>
+            </div>
+          </div>
+        );
+
+        return (
+          <>
+            {/* Modal: Full-screen Print Preview */}
+            {dialog === 'ampcus-print' && (
+              <div className="fixed inset-0 z-50 flex flex-col bg-[#525659] overflow-hidden animate-in fade-in duration-150">
+                {/* Modal Header Bar (Chrome) */}
+                <div className="shrink-0 flex items-center justify-between border-b border-gray-700 bg-[#2D3134] px-6 py-3 text-white no-print shadow-md">
+                  <div className="flex items-center gap-3">
+                    <Printer className="h-5 w-5 text-[#239cd3]" />
+                    <div>
+                      <h2 className="text-sm font-bold text-white">
+                        Ampcus Tech — Candidate Information Print Dossier
+                      </h2>
+                      <p className="text-[11px] text-gray-300">
+                        Ceipal ATS Official Print Theme · 3 Pages
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="flex items-center gap-1.5 rounded bg-[#239cd3] px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1a85b6] transition-colors cursor-pointer"
+                    >
+                      <Printer className="h-4 w-4" />
+                      <span>Print Now</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDialog(null)}
+                      className="rounded-lg p-1.5 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors cursor-pointer"
+                      title="Close"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable Preview Body */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#525659]">
+                  {renderAmpcusPages(true)}
+                </div>
+              </div>
+            )}
+
+            {/* Background Dossier container for direct Ctrl+P */}
+            {dialog !== 'ampcus-print' && (
+              <div className="hidden print:block">
+                {renderAmpcusPages(false)}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
     </div>
   );

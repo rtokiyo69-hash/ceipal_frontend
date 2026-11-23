@@ -163,6 +163,21 @@ export interface Applicant {
   workHistory?: { role: string; company: string; duration: string; summary: string }[];
   documents?: { id?: string; name: string; size: string; date: string; type: string; mimeType?: string; dataUrl?: string; title?: string; description?: string; comments?: string; createdBy?: string; modifiedBy?: string; liked?: boolean }[];
   notes?: { id: string; author: string; text: string; date: string; subject?: string; priority?: string; job?: string; client?: string; action?: string; pinned?: boolean }[];
+  isEmailMergeDeactivated?: boolean;
+  emailMergeOptOutUntil?: string;
+  emailMergeReason?: string;
+  portalAccountActive?: boolean;
+  isBlockedOnTextToHire?: boolean;
+  references?: {
+    name: string;
+    company: string;
+    contactNumber?: string;
+    email?: string;
+    referenceType?: string;
+    designation?: string;
+    yearsAcquainted?: string;
+    summary?: string;
+  }[];
   // Optional recruiter profile fields collected by the frontend applicant form.
   middleName?: string;
   legalName?: string;
