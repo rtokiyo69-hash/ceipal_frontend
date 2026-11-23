@@ -389,6 +389,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .dark .blue-clay-theme {
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #cbd5e1;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f8fafc;
+  --color-slate-900: #f8fafc;
   --bg-primary: #111827;
   --bg-surface: #1e293b;
   --bg-surface-hover: #27364b;
@@ -399,6 +405,34 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .dark #root > .blue-clay-theme {
   background-color: #111827;
   color: #e2e8f0;
+}
+
+.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class~="bg-white"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl),
+.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class~="bg-[#FFFFFF]"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl),
+.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class*="dark:bg-"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow:
+    8px 8px 20px rgba(0, 0, 0, 0.26),
+    -5px -5px 15px rgba(51, 65, 85, 0.2),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.04);
+}
+
+.dark .blue-clay-theme :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]) {
+  background-color: #0f172a;
+  border-color: #475569;
+  color: #f8fafc;
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.3),
+    inset -2px -2px 5px rgba(51, 65, 85, 0.2);
+}
+
+.dark .blue-clay-theme table tbody tr {
+  background-color: #1e293b;
+}
+
+.dark .blue-clay-theme table tbody tr:hover {
+  background-color: #27364b;
 }
 
 .dark .blue-clay-theme [class~="dark:bg-[#1E293B]"],
@@ -422,11 +456,29 @@ h1, h2, h3, h4, h5, h6, .font-display {
   color: #cbd5e1;
 }
 
-.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class~="dark:bg-[#1E293B]"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
-  background-color: #1e293b;
-  border-color: #334155;
-  box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.26),
-    -5px -5px 15px rgba(51, 65, 85, 0.18),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.04);
+.dark .blue-clay-theme [class~="text-[#1E293B]"],
+.dark .blue-clay-theme [class~="text-[#1F2937]"],
+.dark .blue-clay-theme [class~="text-[#172033]"],
+.dark .blue-clay-theme [class~="text-[#0F172A]"],
+.dark .blue-clay-theme [class~="text-[#252525]"],
+.dark .blue-clay-theme [class~="text-[#333]"],
+.dark .blue-clay-theme [class~="text-[#444]"] {
+  color: #f8fafc;
+}
+
+.dark .blue-clay-theme [class~="text-[#334155]"],
+.dark .blue-clay-theme [class~="text-[#475569]"],
+.dark .blue-clay-theme [class~="text-[#64748B]"],
+.dark .blue-clay-theme [class~="text-[#555]"],
+.dark .blue-clay-theme [class~="text-[#666]"],
+.dark .blue-clay-theme [class~="text-[#777]"],
+.dark .blue-clay-theme [class~="text-[#888]"] {
+  color: #cbd5e1;
+}
+
+.dark .blue-clay-theme [class~="text-[#1E40AF]"],
+.dark .blue-clay-theme [class~="text-[#125B97]"],
+.dark .blue-clay-theme [class~="text-[#2563EB]"],
+.dark .blue-clay-theme [class~="text-[#2F80ED]"] {
+  color: #60a5fa;
 }

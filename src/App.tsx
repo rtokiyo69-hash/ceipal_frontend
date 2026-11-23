@@ -33,6 +33,7 @@ import { PlatformSettings } from './features/settings/PlatformSettings';
 export default function App() {
   const { currentRoute, isAuthenticated, isDark, currentUser } = useAppStore();
   const isRecruiter = currentUser?.role === 'recruiter';
+  const isRecruiterFullBleed = isRecruiter && (currentRoute === 'applicant-detail' || currentRoute === 'job-detail');
   const isAdminApplicants = currentUser?.role === 'admin' && currentRoute === 'applicants';
   const useBlueClayTheme = isAuthenticated;
 
@@ -110,7 +111,7 @@ export default function App() {
         <TopBar />
 
         {/* Viewport Content */}
-        <main className={`flex-1 overflow-y-auto ${isRecruiter || currentRoute === 'applicant-detail' ? 'p-0' : isAdminApplicants ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : 'p-6 md:p-8'}`}>
+        <main className={`flex-1 overflow-y-auto ${isRecruiterFullBleed || currentRoute === 'applicant-detail' ? 'p-0' : isAdminApplicants ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : isRecruiter ? 'p-4 sm:p-5 md:p-6' : 'p-6 md:p-8'}`}>
           <div className={isRecruiter || currentRoute === 'applicant-detail' || isAdminApplicants ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
         </main>
       </div>

@@ -3,7 +3,13 @@ import { Search, Filter, Plus, Star, Download, Eye, CheckCircle, X, SlidersHoriz
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, PipelineStage } from '../../types';
-import { ApplicantFunctionsLookup, ApplicantTechnologiesLookup } from './ApplicantFunctionsLookup';
+import {
+  ApplicantClearanceTypesLookup,
+  ApplicantDegreesLookup,
+  ApplicantFunctionsLookup,
+  ApplicantLanguageProficienciesLookup,
+  ApplicantTechnologiesLookup
+} from './ApplicantFunctionsLookup';
 
 type DialogKind = 'advanced' | 'import' | 'view' | 'folder' | 'ticket' | 'columns' | null;
 type FilterRule = { id: string; field: string; operator: string; value: string };
@@ -582,6 +588,12 @@ export const ApplicantList: React.FC = () => {
       <ApplicantFunctionsLookup />
     ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Applicant Technologies' ? (
       <ApplicantTechnologiesLookup />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Clearance Types' ? (
+      <ApplicantClearanceTypesLookup />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Degrees' ? (
+      <ApplicantDegreesLookup />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Language Proficiencies' ? (
+      <ApplicantLanguageProficienciesLookup />
     ) : (
       <>
     <div className="flex flex-nowrap items-center gap-3 border-b border-[#D8E3F1] pb-2 dark:border-[#334155]">
