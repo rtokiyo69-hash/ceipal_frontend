@@ -332,13 +332,31 @@ h1, h2, h3, h4, h5, h6, .font-display {
   color: #1e293b;
 }
 
-#root > .blue-clay-theme aside {
+#root > .blue-clay-theme > aside {
   background-color: #17345c;
   border-color: #24456c;
 }
 
-#root > .blue-clay-theme aside [class~="text-[#FFFFFF]"] {
+#root > .blue-clay-theme > aside [class~="text-[#FFFFFF]"] {
   color: #ffffff;
+}
+
+.blue-clay-theme main aside,
+.blue-clay-theme [role="dialog"] aside,
+.blue-clay-theme [role="region"] aside,
+.blue-clay-theme .drawer-panel,
+.blue-clay-theme aside:not(:first-child) {
+  background-color: #ffffff;
+  border-color: #d8e3f1;
+}
+
+.dark .blue-clay-theme main aside,
+.dark .blue-clay-theme [role="dialog"] aside,
+.dark .blue-clay-theme [role="region"] aside,
+.dark .blue-clay-theme .drawer-panel,
+.dark .blue-clay-theme aside:not(:first-child) {
+  background-color: #1e293b;
+  border-color: #334155;
 }
 
 .blue-clay-theme :is(div, section, article, form, nav, header)[class~="bg-white"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl),
@@ -389,6 +407,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .dark .blue-clay-theme {
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #cbd5e1;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f8fafc;
+  --color-slate-900: #f8fafc;
   --bg-primary: #111827;
   --bg-surface: #1e293b;
   --bg-surface-hover: #27364b;
@@ -399,6 +423,34 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .dark #root > .blue-clay-theme {
   background-color: #111827;
   color: #e2e8f0;
+}
+
+.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class~="bg-white"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl),
+.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class~="bg-[#FFFFFF]"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl),
+.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class*="dark:bg-"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow:
+    8px 8px 20px rgba(0, 0, 0, 0.26),
+    -5px -5px 15px rgba(51, 65, 85, 0.2),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.04);
+}
+
+.dark .blue-clay-theme :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]) {
+  background-color: #0f172a;
+  border-color: #475569;
+  color: #f8fafc;
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.3),
+    inset -2px -2px 5px rgba(51, 65, 85, 0.2);
+}
+
+.dark .blue-clay-theme table tbody tr {
+  background-color: #1e293b;
+}
+
+.dark .blue-clay-theme table tbody tr:hover {
+  background-color: #27364b;
 }
 
 .dark .blue-clay-theme [class~="dark:bg-[#1E293B]"],
@@ -422,11 +474,82 @@ h1, h2, h3, h4, h5, h6, .font-display {
   color: #cbd5e1;
 }
 
-.dark .blue-clay-theme :is(div, section, article, form, nav, header)[class~="dark:bg-[#1E293B]"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
-  background-color: #1e293b;
-  border-color: #334155;
-  box-shadow:
-    8px 8px 20px rgba(0, 0, 0, 0.26),
-    -5px -5px 15px rgba(51, 65, 85, 0.18),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.04);
+.dark .blue-clay-theme [class~="text-[#1E293B]"],
+.dark .blue-clay-theme [class~="text-[#1F2937]"],
+.dark .blue-clay-theme [class~="text-[#172033]"],
+.dark .blue-clay-theme [class~="text-[#0F172A]"],
+.dark .blue-clay-theme [class~="text-[#252525]"],
+.dark .blue-clay-theme [class~="text-[#333]"],
+.dark .blue-clay-theme [class~="text-[#444]"] {
+  color: #f8fafc;
 }
+
+.dark .blue-clay-theme [class~="text-[#334155]"],
+.dark .blue-clay-theme [class~="text-[#475569]"],
+.dark .blue-clay-theme [class~="text-[#64748B]"],
+.dark .blue-clay-theme [class~="text-[#555]"],
+.dark .blue-clay-theme [class~="text-[#666]"],
+.dark .blue-clay-theme [class~="text-[#777]"],
+.dark .blue-clay-theme [class~="text-[#888]"] {
+  color: #cbd5e1;
+}
+
+.dark .blue-clay-theme [class~="text-[#1E40AF]"],
+.dark .blue-clay-theme [class~="text-[#125B97]"],
+.dark .blue-clay-theme [class~="text-[#2563EB]"],
+.dark .blue-clay-theme [class~="text-[#2F80ED]"] {
+  color: #60a5fa;
+}
+
+/* ==========================================================================
+   Ampcus Tech ATS Print Theme (Ceipal Matching Layout)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide all application chrome during print */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Make only the Ampcus Print Dossier visible */
+  #ampcus-print-dossier,
+  #ampcus-print-dossier * {
+    visibility: visible !important;
+  }
+
+  #ampcus-print-dossier {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .ampcus-print-modal-chrome {
+    display: none !important;
+  }
+
+  .ampcus-page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+}
+

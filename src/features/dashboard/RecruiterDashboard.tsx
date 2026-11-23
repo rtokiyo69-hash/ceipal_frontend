@@ -39,7 +39,7 @@ const stages: DashboardPipelineStage[] = [
   { name: 'Sourced', stage: 'New', statuses: ['New'], fill: '#2563EB' },
   { name: 'Applied', stage: 'Submitted', statuses: ['Submitted'], fill: '#2563EB' },
   { name: 'Screen', stage: 'Screening', statuses: ['Screening'], fill: '#64748B' },
-  { name: 'Technical', stage: 'Interview', statuses: ['Interview', 'Selected'], fill: '#786C60' },
+  { name: 'Technical', stage: 'Interview', statuses: ['Interview', 'Selected'], fill: '#64748B' },
   { name: 'Offer', stage: 'Offered', statuses: ['Offered'], fill: '#64748B' },
   { name: 'Hired', stage: 'Hired', statuses: ['Hired'], fill: '#64748B' },
   { name: 'Archived', stage: 'Rejected', statuses: ['Rejected'], fill: '#8A96A3' }

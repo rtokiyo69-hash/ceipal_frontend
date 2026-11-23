@@ -52,6 +52,9 @@ function getStorage<T>(key: string, defaultValue: T): T {
 function setStorage<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    if (key === STORAGE_KEYS.SUBMISSIONS && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ats:submissions-changed', { detail: value }));
+    }
   } catch (e) {
     console.error('Storage error:', e);
   }
@@ -194,7 +197,22 @@ export const ApiService = {
   // Applicants
   async getApplicants(): Promise<Applicant[]> {
     await delay(150);
-    return getStorage<Applicant[]>(STORAGE_KEYS.APPLICANTS, INITIAL_APPLICANTS);
+    const stored = getStorage<Applicant[]>(STORAGE_KEYS.APPLICANTS, INITIAL_APPLICANTS);
+    // Ensure initial applicants like Test Dummy, DURAI KANDASAMY are present if storage predated them
+    const existingIds = new Set(stored.map((a) => a.applicantId || a.id));
+    let modified = false;
+    for (const initApp of INITIAL_APPLICANTS) {
+      if (!existingIds.has(initApp.applicantId) && !existingIds.has(initApp.id)) {
+        stored.push(initApp);
+        existingIds.add(initApp.applicantId);
+        existingIds.add(initApp.id);
+        modified = true;
+      }
+    }
+    if (modified) {
+      setStorage(STORAGE_KEYS.APPLICANTS, stored);
+    }
+    return stored;
   },
 
   async getApplicantById(id: string): Promise<Applicant | undefined> {
@@ -254,8 +272,29 @@ export const ApiService = {
   async updateApplicant(id: string, updates: Partial<Applicant>): Promise<Applicant> {
     await delay(150);
     const applicants = await this.getApplicants();
-    const index = applicants.findIndex((a) => a.id === id);
-    if (index === -1) throw new Error('Applicant not found');
+    const index = applicants.findIndex((a) => a.id === id || a.applicantId === id);
+    if (index === -1) {
+      const fallback: Applicant = {
+        id,
+        applicantId: id,
+        name: updates.name || 'Candidate',
+        email: updates.email || '',
+        phone: updates.phone || '',
+        currentDesignation: updates.currentDesignation || '',
+        location: updates.location || '',
+        experienceYears: updates.experienceYears || 0,
+        skills: updates.skills || [],
+        source: 'Direct Career Portal',
+        status: 'New',
+        assignedRecruiter: updates.assignedRecruiter || 'Recruiter',
+        matchScore: 80,
+        avatar: '',
+        ...updates
+      };
+      applicants.unshift(fallback);
+      setStorage(STORAGE_KEYS.APPLICANTS, applicants);
+      return fallback;
+    }
     const updated = { ...applicants[index], ...updates };
     applicants[index] = updated;
     setStorage(STORAGE_KEYS.APPLICANTS, applicants);
@@ -373,7 +412,19 @@ export const ApiService = {
   // Submissions
   async getSubmissions(): Promise<Submission[]> {
     await delay(130);
-    return getStorage<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    const records = getStorage<Submission[]>(STORAGE_KEYS.SUBMISSIONS, INITIAL_SUBMISSIONS);
+    let migrated = false;
+    const normalized = records.map((submission) => {
+      const status = submission.status === 'Client Submission' ? 'Submitted to Client' : submission.status === 'In Review' ? 'Client Review' : submission.status === 'Submitted' ? 'Waiting for Evaluation by Internal Reviewer' : submission.status;
+      if (status !== submission.status || !submission.statusHistory) migrated = true;
+      return {
+        ...submission,
+        status,
+        statusHistory: submission.statusHistory || [{ status, changedAt: submission.submittedDate }]
+      };
+    });
+    if (migrated) setStorage(STORAGE_KEYS.SUBMISSIONS, normalized);
+    return normalized;
   },
 
   async updateSubmissionApproval(id: string, approvalStatus: Submission['approvalStatus']): Promise<void> {
@@ -429,7 +480,17 @@ export const ApiService = {
     const submissions = await this.getSubmissions();
     const index = submissions.findIndex((s) => s.id === id);
     if (index === -1) return null;
-    const item = { ...submissions[index], status };
+    const normalizedStatus = status === 'Client Submission' ? 'Submitted to Client' : status === 'In Review' ? 'Client Review' : status === 'Submitted' ? 'Waiting for Evaluation by Internal Reviewer' : status;
+    const changedAt = new Date().toLocaleString();
+    const previous = submissions[index];
+    const history = previous.statusHistory || [{ status: previous.status, changedAt: previous.submittedDate }];
+    const item = {
+      ...previous,
+      status: normalizedStatus,
+      statusHistory: previous.status === normalizedStatus
+        ? history
+        : [...history, { status: normalizedStatus, changedAt, comments }]
+    };
     submissions[index] = item;
     setStorage(STORAGE_KEYS.SUBMISSIONS, submissions);
 
@@ -437,7 +498,7 @@ export const ApiService = {
       await this.logActivity({
         user: item.recruiter || 'Ganesh Godse',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
-        action: `updated submission status to "${status}" for`,
+        action: `updated submission status to "${normalizedStatus}" for`,
         target: `${item.applicantName} (${comments})`,
         type: 'submission'
       });
@@ -449,8 +510,10 @@ export const ApiService = {
   async createSubmission(submissionData: Partial<Submission>): Promise<Submission> {
     await delay(150);
     const submissions = await this.getSubmissions();
+    const submittedDate = new Date().toLocaleString();
+    const status = submissionData.status === 'Client Submission' ? 'Submitted to Client' : submissionData.status === 'In Review' ? 'Client Review' : submissionData.status === 'Submitted' ? 'Waiting for Evaluation by Internal Reviewer' : submissionData.status || 'Waiting for Evaluation by Internal Reviewer';
     const newSubmission: Submission = {
-      id: `sub-${Date.now()}`,
+      id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       submissionId: `${Math.floor(40000 + Math.random() * 20000)}`,
       applicantId: submissionData.applicantId || '',
       applicantName: submissionData.applicantName || 'Candidate',
@@ -458,11 +521,13 @@ export const ApiService = {
       jobTitle: submissionData.jobTitle || 'Requisition',
       client: submissionData.client || '',
       recruiter: submissionData.recruiter || 'Ganesh Godse',
-      submittedDate: new Date().toLocaleString(),
+      submittedDate,
       billRate: submissionData.billRate || 0,
       payRate: submissionData.payRate || 0,
-      status: submissionData.status || 'Waiting for Evaluation by Internal Reviewer',
-      approvalStatus: submissionData.approvalStatus || 'Pending Review'
+      status,
+      approvalStatus: submissionData.approvalStatus || 'Pending Review',
+      submissionDetails: submissionData.submissionDetails,
+      statusHistory: [{ status, changedAt: submittedDate }]
     };
     const updated = [newSubmission, ...submissions];
     setStorage(STORAGE_KEYS.SUBMISSIONS, updated);

@@ -42,11 +42,12 @@ import {
   Settings,
   Upload,
   ArrowLeft,
-  Download
+  Download,
+  CloudDownload
 } from 'lucide-react';
 import { useAppStore, getJobDetailUrl } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Job, JobStatus, Priority, Applicant, Submission, JobNote, Interview } from '../../types';
+import { Job, JobStatus, Priority, Applicant, Submission, JobNote, Interview, SUBMISSION_STATUS_OPTIONS, getSubmissionStageIndex } from '../../types';
 import { EmailRichTextEditor } from '../../components/common/EmailRichTextEditor';
 
 type BulkJobAction =
@@ -107,18 +108,7 @@ const JOB_STATUSES: JobStatus[] = ['Draft', 'Open', 'Active', 'Sourcing', 'In Re
 const JOB_PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
 const JOB_TYPES: Job['type'][] = ['Full-Time', 'Contract', 'C2H', 'C2C', 'Remote', 'Hybrid', 'On-Site', 'Part-Time'];
 const RATE_TYPES: NonNullable<Job['rateType']>[] = ['Hourly', 'Yearly', 'Monthly', 'Daily'];
-const SUBMISSION_STATUSES = [
-  'Submitted to Client',
-  'Client Review',
-  'Interview Requested',
-  'Client Rejected',
-  'Waiting for Evaluation by Internal Reviewer',
-  'Internal Disqualified',
-  'Placed',
-  'Offered',
-  'Not Joined',
-  'Interview Scheduled'
-];
+const SUBMISSION_STATUSES = SUBMISSION_STATUS_OPTIONS;
 const BULK_JOB_ACTIONS: { id: BulkJobAction; label: string }[] = [
   { id: 'notes', label: 'Add Notes' },
   { id: 'folder', label: 'Add to Folder' },
@@ -733,6 +723,22 @@ export const JobList: React.FC = () => {
     ApiService.getAllUsers().then(setUsers);
   }, [currentRoute]);
 
+  useEffect(() => {
+    const syncSubmissions = (event: Event) => {
+      const submissions = (event as CustomEvent<Submission[]>).detail;
+      if (Array.isArray(submissions)) setSubmissions(submissions);
+    };
+    const syncFromOtherTab = (event: StorageEvent) => {
+      if (event.key === 'talentember_submissions') ApiService.getSubmissions().then(setSubmissions);
+    };
+    window.addEventListener('ats:submissions-changed', syncSubmissions);
+    window.addEventListener('storage', syncFromOtherTab);
+    return () => {
+      window.removeEventListener('ats:submissions-changed', syncSubmissions);
+      window.removeEventListener('storage', syncFromOtherTab);
+    };
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
@@ -1177,9 +1183,10 @@ export const JobList: React.FC = () => {
       const matchesUnit = businessUnitFilter === 'All' || (j.businessUnit || '').includes(businessUnitFilter);
       const jobSubmissions = submissions.filter((submission) => submission.jobId === j.id);
       const hasSubmissions = jobSubmissions.length > 0;
-      const hasClientSubmissions = jobSubmissions.some((submission) =>
-        ['Submitted to Client', 'Client Review', 'Interview Requested', 'Interview Scheduled', 'Offered', 'Placed'].includes(submission.status)
-      );
+      const hasClientSubmissions = jobSubmissions.some((submission) => {
+        const stage = getSubmissionStageIndex(submission.status);
+        return stage >= 2 && stage <= 5;
+      });
       const matchesPredefinedFilter = !activePredefinedFilter || (() => {
         switch (activePredefinedFilter) {
           case 'Active Jobs': return j.status === 'Active';
@@ -1481,7 +1488,9 @@ export const JobList: React.FC = () => {
               status: 'Scheduled',
               meetingLink: submissionActionForm.meetingLink.trim()
             });
+            await ApiService.updateSubmissionStatus(submission.id, 'Interview Scheduled', `Interview scheduled for ${submissionActionForm.date} at ${submissionActionForm.time}.`);
           }
+          setSubmissions(await ApiService.getSubmissions());
           showToast(`Interview scheduled for ${targets.length} candidate${targets.length === 1 ? '' : 's'}.`);
           break;
         case 'other-job': {
@@ -2635,6 +2644,11 @@ export const JobList: React.FC = () => {
                   const isExpanded = expandedJobIds.has(j.id);
                   const jobSubmissions = submissions.filter((s) => s.jobId === j.id);
                   const countSubmissions = jobSubmissions.length;
+                  // Pipeline color is based on the candidate's current stage, not on whether this row is open.
+                  const pipelineCandidateCount = jobSubmissions.filter((submission) =>
+                    ['Waiting for Evaluation by Internal Reviewer', 'Pending Review', 'Submitted'].includes(submission.status)
+                  ).length;
+                  const hasPipelineCandidates = pipelineCandidateCount > 0;
                   const selectedJobSubmissions = jobSubmissions.filter((submission) =>
                     selectedSubmissionIds.includes(submission.id)
                   );
@@ -2677,17 +2691,26 @@ export const JobList: React.FC = () => {
                               type="button"
                               onClick={() => toggleRowExpansion(j.id)}
                               aria-expanded={isExpanded}
-                              aria-label={`${isExpanded ? 'Collapse' : 'Expand'} submissions for ${j.code} (${countSubmissions})`}
-                              className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-0.5 ${
-                                isExpanded
-                                  ? 'bg-[#2563EB] text-white shadow-xs'
-                                  : 'bg-[#FFFFFF] dark:bg-[#475569] text-[#1E293B] dark:text-[#FFFFFF] border border-[#2563EB]/30 hover:bg-[#2563EB] hover:text-white'
+                              aria-label={`${isExpanded ? 'Collapse' : 'Expand'} submissions for ${j.code} (${countSubmissions}). ${pipelineCandidateCount} in pipeline.`}
+                              className={`flex items-center justify-center gap-0.5 rounded border px-2 py-0.5 font-mono text-[11px] font-bold transition-all ${
+                                hasPipelineCandidates
+                                  ? 'border-[#F5BDB8] bg-[#FDE8E7] text-[#B42318] shadow-xs hover:bg-[#FAD8D5] dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-[#555] dark:bg-[#303030] dark:text-slate-300'
                               }`}
-                              title={isExpanded ? 'Collapse submissions' : 'Expand applicant submissions'}
+                              title={hasPipelineCandidates ? `${pipelineCandidateCount} candidate${pipelineCandidateCount === 1 ? '' : 's'} in pipeline` : 'Normal candidate stage'}
                             >
                               <span>{isExpanded ? '−' : '+'}</span>
                               <span>{countSubmissions}</span>
                             </button>
+                            {j.vmsName && (
+                              <span
+                                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-violet-200 bg-violet-50 text-violet-600 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
+                                title={`Imported from VMS: ${j.vmsName}`}
+                                aria-label={`Imported from VMS: ${j.vmsName}`}
+                              >
+                                <CloudDownload className="h-3 w-3" aria-hidden="true" />
+                              </span>
+                            )}
                           </div>
                         </td>
 

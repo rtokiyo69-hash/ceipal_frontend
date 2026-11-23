@@ -148,7 +148,7 @@ export interface Applicant {
   location: string;
   experienceYears: number;
   skills: string[];
-  source: 'LinkedIn' | 'Direct Career Portal' | 'Referral' | 'Vendor Partner' | 'GitHub';
+  source: 'LinkedIn' | 'Direct Career Portal' | 'Referral' | 'Vendor Partner' | 'GitHub' | 'Naukri';
   status: PipelineStage;
   assignedRecruiter: string;
   assignedJobId?: string;
@@ -161,8 +161,23 @@ export interface Applicant {
   summary?: string;
   education?: { degree: string; school: string; year: string }[];
   workHistory?: { role: string; company: string; duration: string; summary: string }[];
-  documents?: { name: string; size: string; date: string; type: string }[];
-  notes?: { id: string; author: string; text: string; date: string }[];
+  documents?: { id?: string; name: string; size: string; date: string; type: string; mimeType?: string; dataUrl?: string; title?: string; description?: string; comments?: string; createdBy?: string; modifiedBy?: string; liked?: boolean }[];
+  notes?: { id: string; author: string; text: string; date: string; subject?: string; priority?: string; job?: string; client?: string; action?: string; pinned?: boolean }[];
+  isEmailMergeDeactivated?: boolean;
+  emailMergeOptOutUntil?: string;
+  emailMergeReason?: string;
+  portalAccountActive?: boolean;
+  isBlockedOnTextToHire?: boolean;
+  references?: {
+    name: string;
+    company: string;
+    contactNumber?: string;
+    email?: string;
+    referenceType?: string;
+    designation?: string;
+    yearsAcquainted?: string;
+    summary?: string;
+  }[];
   // Optional recruiter profile fields collected by the frontend applicant form.
   middleName?: string;
   legalName?: string;
@@ -277,9 +292,37 @@ export interface Submission {
     | 'Interview Scheduled'
     | (string & {});
   approvalStatus: 'Approved' | 'Pending Approval' | 'Revision Requested' | 'Pending Review' | (string & {});
+  statusHistory?: { status: string; changedAt: string; changedBy?: string; comments?: string }[];
+  submissionDetails?: Record<string, unknown>;
   score?: number;
   groups?: string[];
   notes?: { id: string; author: string; text: string; date: string }[];
+}
+
+export const SUBMISSION_STATUS_OPTIONS = [
+  'Waiting for Evaluation by Internal Reviewer',
+  'Internal Disqualified',
+  'Submitted to Client',
+  'Client Review',
+  'Interview Requested',
+  'Interview Scheduled',
+  'Client Rejected',
+  'Offered',
+  'Placed',
+  'Not Joined',
+  'Request More Details'
+] as const;
+
+export function getSubmissionStageIndex(status: string): number {
+  const value = status.trim().toLowerCase();
+  if (value === 'pipeline') return 0;
+  if (value.includes('not joined')) return 6;
+  if (value.includes('placed')) return 5;
+  if (value.includes('offer') || value.includes('confirm') || value.includes('selected')) return 4;
+  if (value.includes('interview')) return 3;
+  if (value.includes('client') || value.includes('submitted to client')) return 2;
+  if (value.includes('submission') || value.includes('review') || value.includes('disqualified') || value.includes('request more')) return 1;
+  return 0;
 }
 
 export interface Placement {
