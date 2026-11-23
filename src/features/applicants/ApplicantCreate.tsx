@@ -169,7 +169,7 @@ export const ApplicantCreate: React.FC = () => {
       { label: 'OneDrive', method: 'onedrive' as const, color: 'bg-[#1251B5]', icon: <FolderOpen className="h-6 w-6" /> },
       { label: 'Bulk Parsing', method: 'bulk' as const, color: 'bg-[#E77BB1]', icon: <UploadCloud className="h-6 w-6" /> }
     ];
-    return <div className="relative flex min-h-[calc(100vh-128px)] flex-col items-center bg-[#EDF2F6] px-4 py-12 dark:bg-[#1E40AF]">
+    return <div className="relative flex min-h-[calc(100vh-128px)] flex-col items-center bg-[#EDF2F6] px-4 py-12 dark:bg-[#0F172A]">
       <button onClick={() => navigate('applicants')} className="absolute right-4 top-4 rounded-lg border border-[#D8E3F1] bg-white px-3 py-1.5 text-xs font-medium text-[#64748B] hover:bg-[#FFFFFF] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#BFDBFE]">Cancel</button>
       <h1 className="mt-2 text-xl font-medium text-[#384553] dark:text-white">Add Applicant</h1>
       <div className="mt-9 grid w-full max-w-[505px] grid-cols-2 justify-items-center gap-x-2 gap-y-2 sm:grid-cols-4">
@@ -294,7 +294,7 @@ export const ApplicantCreate: React.FC = () => {
       <form onSubmit={handleSubmit} className="p-6 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-xs space-y-6">
         {/* Personal & Contact */}
         <div className="space-y-4">
-          <div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">
+          <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">
             01. Personal &amp; Contact Details
           </div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
@@ -306,7 +306,7 @@ export const ApplicantCreate: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Gaurav Nambiar"
-                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white font-semibold focus:outline-none focus:border-[#2563EB]"
+                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white font-semibold focus:outline-none focus:border-[#2563EB]"
               />
             </div>
 
@@ -318,7 +318,7 @@ export const ApplicantCreate: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@domain.com"
-                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
+                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
               />
             </div>
 
@@ -329,7 +329,7 @@ export const ApplicantCreate: React.FC = () => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+1 (555) 000-0000"
-                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
+                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
@@ -337,7 +337,7 @@ export const ApplicantCreate: React.FC = () => {
 
         {/* Professional Details */}
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">
+          <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">
             02. Professional Experience &amp; Location
           </div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
@@ -349,7 +349,7 @@ export const ApplicantCreate: React.FC = () => {
                 value={currentDesignation}
                 onChange={(e) => setCurrentDesignation(e.target.value)}
                 placeholder="e.g. Lead Systems Architect"
-                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white font-semibold focus:outline-none focus:border-[#2563EB]"
+                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white font-semibold focus:outline-none focus:border-[#2563EB]"
               />
             </div>
 
@@ -360,7 +360,7 @@ export const ApplicantCreate: React.FC = () => {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="City, Country"
-                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
+                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
               />
             </div>
 
@@ -370,7 +370,7 @@ export const ApplicantCreate: React.FC = () => {
                 type="number"
                 value={experienceYears}
                 onChange={(e) => setExperienceYears(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
+                className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-mono text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
@@ -378,7 +378,7 @@ export const ApplicantCreate: React.FC = () => {
 
         {/* Skills */}
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">
+          <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">
             03. Core Competencies &amp; Skills
           </div>
           <div className="space-y-3 text-xs">
@@ -389,7 +389,7 @@ export const ApplicantCreate: React.FC = () => {
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={handleAddSkill}
                 placeholder="Add skill and press Enter"
-                className="flex-1 px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
+                className="flex-1 px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
               />
               <button
                 type="button"
@@ -404,7 +404,7 @@ export const ApplicantCreate: React.FC = () => {
               {skills.map((sk) => (
                 <span
                   key={sk}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#475569] rounded-lg font-mono text-xs text-[#1E293B] dark:text-[#FFFFFF]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-lg font-mono text-xs text-[#1E293B] dark:text-[#FFFFFF]"
                 >
                   <span>{sk}</span>
                   <X
@@ -419,7 +419,7 @@ export const ApplicantCreate: React.FC = () => {
 
         {/* Executive Summary */}
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">
+          <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">
             04. Executive Summary
           </div>
           <textarea
@@ -427,13 +427,13 @@ export const ApplicantCreate: React.FC = () => {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             placeholder="Candidate profile summary, notable project highlights..."
-            className="w-full p-3 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
+            className="w-full p-3 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-xs text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]"
           />
         </div>
 
         {/* Additional fields from the reference applicant profile workflow */}
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">05. Personal Details &amp; Work Authorization</div>
+          <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">05. Personal Details &amp; Work Authorization</div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
             {[
               ['Middle Name', 'middleName'], ['Legal Name', 'legalName'], ['Alternate Email', 'alternateEmail'],
@@ -448,34 +448,34 @@ export const ApplicantCreate: React.FC = () => {
               ['Technology', 'technology'], ['Industry', 'industry'], ['Reference ID', 'referenceId']
             ].map(([label, key, type]) => <div key={key}>
               <label className="block text-[#64748B] dark:text-[#BFDBFE] mb-1 font-medium">{label}</label>
-              <input type={type || 'text'} value={profileFields[key] || ''} onChange={(e) => updateProfileField(key, e.target.value)} className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]" />
+              <input type={type || 'text'} value={profileFields[key] || ''} onChange={(e) => updateProfileField(key, e.target.value)} className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white focus:outline-none focus:border-[#2563EB]" />
             </div>)}
-            <div><label className="block text-[#64748B] dark:text-[#BFDBFE] mb-1 font-medium">Willing to Relocate</label><select value={profileFields.willingToRelocate || 'Yes'} onChange={(e) => updateProfileField('willingToRelocate', e.target.value)} className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl"><option>Yes</option><option>No</option></select></div>
-            <div><label className="block text-[#64748B] dark:text-[#BFDBFE] mb-1 font-medium">Currency</label><select value={profileFields.currency || 'INR'} onChange={(e) => updateProfileField('currency', e.target.value)} className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl"><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div>
+            <div><label className="block text-[#64748B] dark:text-[#BFDBFE] mb-1 font-medium">Willing to Relocate</label><select value={profileFields.willingToRelocate || 'Yes'} onChange={(e) => updateProfileField('willingToRelocate', e.target.value)} className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white"><option>Yes</option><option>No</option></select></div>
+            <div><label className="block text-[#64748B] dark:text-[#BFDBFE] mb-1 font-medium">Currency</label><select value={profileFields.currency || 'INR'} onChange={(e) => updateProfileField('currency', e.target.value)} className="w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white"><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></div>
           </div>
-          <label className="block text-xs text-[#64748B] dark:text-[#BFDBFE]">Primary Skills (comma separated)<input value={profileFields.primarySkills || ''} onChange={(e) => updateProfileField('primarySkills', e.target.value)} placeholder="Java, React, AWS" className="mt-1 w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white" /></label>
-          <label className="block text-xs text-[#64748B] dark:text-[#BFDBFE]">Applicant Remarks<textarea rows={2} value={profileFields.applicantRemarks || ''} onChange={(e) => updateProfileField('applicantRemarks', e.target.value)} className="mt-1 w-full p-3 bg-[#FFFFFF] dark:bg-[#475569] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white" /></label>
+          <label className="block text-xs text-[#64748B] dark:text-[#BFDBFE]">Primary Skills (comma separated)<input value={profileFields.primarySkills || ''} onChange={(e) => updateProfileField('primarySkills', e.target.value)} placeholder="Java, React, AWS" className="mt-1 w-full px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white" /></label>
+          <label className="block text-xs text-[#64748B] dark:text-[#BFDBFE]">Applicant Remarks<textarea rows={2} value={profileFields.applicantRemarks || ''} onChange={(e) => updateProfileField('applicantRemarks', e.target.value)} className="mt-1 w-full p-3 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] rounded-xl text-[#1E293B] dark:text-white" /></label>
           <label className="flex items-start gap-2 text-xs text-[#64748B] dark:text-[#BFDBFE]"><input type="checkbox" checked={profileFields.gdprApproved === 'Yes'} onChange={(e) => updateProfileField('gdprApproved', e.target.checked ? 'Yes' : 'No')} /> GDPR approved consent recorded</label>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">06. Documents</div>
-          <div className="rounded-xl border border-dashed border-[#AFCBE4] bg-[#F7FBFF] p-4 text-xs dark:bg-[#475569]"><label className="font-semibold text-[#334155] dark:text-white">Upload resume and supporting documents</label><input type="file" multiple accept=".pdf,.doc,.docx,.txt,.rtf" onChange={(e) => setUploadedDocuments(Array.from(e.target.files || []).map((f) => f.name))} className="mt-2 block w-full text-xs" />{uploadedDocuments.length > 0 && <div className="mt-2 text-[#1E293B]">{uploadedDocuments.join(' · ')}</div>}<p className="mt-1 text-[10px] text-[#64748B]">Files are listed in this browser demo; no server upload is configured.</p></div>
+          <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">06. Documents</div>
+          <div className="rounded-xl border border-dashed border-[#AFCBE4] bg-[#F7FBFF] p-4 text-xs dark:bg-[#0F172A] dark:border-[#334155]"><label className="font-semibold text-[#334155] dark:text-white">Upload resume and supporting documents</label><input type="file" multiple accept=".pdf,.doc,.docx,.txt,.rtf" onChange={(e) => setUploadedDocuments(Array.from(e.target.files || []).map((f) => f.name))} className="mt-2 block w-full text-xs dark:text-slate-300" />{uploadedDocuments.length > 0 && <div className="mt-2 text-[#1E293B] dark:text-blue-300">{uploadedDocuments.join(' · ')}</div>}<p className="mt-1 text-[10px] text-[#64748B] dark:text-slate-400">Files are listed in this browser demo; no server upload is configured.</p></div>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="flex items-center justify-between"><div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">07. Education Details</div><button type="button" onClick={() => setEducationRows([...educationRows, { degree: '', school: '', year: '' }])} className="text-xs font-semibold text-[#1E293B]">+ Add Education</button></div>
-          {educationRows.map((row, i) => <div key={i} className="grid sm:grid-cols-3 gap-3"><input aria-label="Degree" placeholder="Degree / qualification" value={row.degree} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, degree: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><input aria-label="School" placeholder="School / institution" value={row.school} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, school: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><input aria-label="Graduation year" placeholder="Graduation year" value={row.year} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, year: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /></div>)}
+          <div className="flex items-center justify-between"><div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">07. Education Details</div><button type="button" onClick={() => setEducationRows([...educationRows, { degree: '', school: '', year: '' }])} className="text-xs font-semibold text-[#1E293B] dark:text-blue-400 hover:underline">+ Add Education</button></div>
+          {educationRows.map((row, i) => <div key={i} className="grid sm:grid-cols-3 gap-3"><input aria-label="Degree" placeholder="Degree / qualification" value={row.degree} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, degree: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><input aria-label="School" placeholder="School / institution" value={row.school} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, school: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><input aria-label="Graduation year" placeholder="Graduation year" value={row.year} onChange={(e) => setEducationRows(educationRows.map((r, j) => j === i ? { ...r, year: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /></div>)}
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="space-y-3"><div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">08. Certifications</div><div className="flex gap-2"><input value={certInput} onChange={(e) => setCertInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (certInput.trim()) setCertifications([...certifications, certInput.trim()]); setCertInput(''); } }} placeholder="Add certification" className="min-w-0 flex-1 px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><button type="button" onClick={() => { if (certInput.trim()) setCertifications([...certifications, certInput.trim()]); setCertInput(''); }} className="rounded-xl bg-[#2563EB] px-3 text-xs text-white">Add</button></div><div className="flex flex-wrap gap-1">{certifications.map((item) => <button key={item} type="button" onClick={() => setCertifications(certifications.filter((x) => x !== item))} className="rounded bg-[#FFFFFF] px-2 py-1 text-[10px] text-[#1E293B]">{item} ×</button>)}</div></div>
-          <div className="space-y-3"><div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">09. Languages</div><div className="flex gap-2"><input value={languageInput} onChange={(e) => setLanguageInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (languageInput.trim()) setLanguages([...languages, languageInput.trim()]); setLanguageInput(''); } }} placeholder="Add language" className="min-w-0 flex-1 px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><button type="button" onClick={() => { if (languageInput.trim()) setLanguages([...languages, languageInput.trim()]); setLanguageInput(''); }} className="rounded-xl bg-[#2563EB] px-3 text-xs text-white">Add</button></div><div className="flex flex-wrap gap-1">{languages.map((item) => <button key={item} type="button" onClick={() => setLanguages(languages.filter((x) => x !== item))} className="rounded bg-[#FFFFFF] px-2 py-1 text-[10px] text-[#1E293B]">{item} ×</button>)}</div></div>
+          <div className="space-y-3"><div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">08. Certifications</div><div className="flex gap-2"><input value={certInput} onChange={(e) => setCertInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (certInput.trim()) setCertifications([...certifications, certInput.trim()]); setCertInput(''); } }} placeholder="Add certification" className="min-w-0 flex-1 px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><button type="button" onClick={() => { if (certInput.trim()) setCertifications([...certifications, certInput.trim()]); setCertInput(''); }} className="rounded-xl bg-[#2563EB] px-3 text-xs text-white">Add</button></div><div className="flex flex-wrap gap-1">{certifications.map((item) => <button key={item} type="button" onClick={() => setCertifications(certifications.filter((x) => x !== item))} className="rounded bg-[#FFFFFF] px-2 py-1 text-[10px] text-[#1E293B] dark:bg-[#0F172A] dark:text-white dark:border dark:border-[#334155]">{item} ×</button>)}</div></div>
+          <div className="space-y-3"><div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">09. Languages</div><div className="flex gap-2"><input value={languageInput} onChange={(e) => setLanguageInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (languageInput.trim()) setLanguages([...languages, languageInput.trim()]); setLanguageInput(''); } }} placeholder="Add language" className="min-w-0 flex-1 px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><button type="button" onClick={() => { if (languageInput.trim()) setLanguages([...languages, languageInput.trim()]); setLanguageInput(''); }} className="rounded-xl bg-[#2563EB] px-3 text-xs text-white">Add</button></div><div className="flex flex-wrap gap-1">{languages.map((item) => <button key={item} type="button" onClick={() => setLanguages(languages.filter((x) => x !== item))} className="rounded bg-[#FFFFFF] px-2 py-1 text-[10px] text-[#1E293B] dark:bg-[#0F172A] dark:text-white dark:border dark:border-[#334155]">{item} ×</button>)}</div></div>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-[#D8E3F1] dark:border-[#334155]">
-          <div className="flex items-center justify-between"><div className="text-xs font-mono font-bold text-[#1E293B] uppercase tracking-wider">10. Work Experience &amp; Employer Details</div><button type="button" onClick={() => setEmployerRows([...employerRows, { company: '', title: '', location: '', from: '', to: '', summary: '' }])} className="text-xs font-semibold text-[#1E293B]">+ Add Employer</button></div>
-          {employerRows.map((row, i) => <div key={i} className="grid sm:grid-cols-3 gap-3 rounded-xl border border-[#D8E3F1] p-3"><input aria-label="Employer" placeholder="Company" value={row.company} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, company: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><input aria-label="Role" placeholder="Role / title" value={row.title} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, title: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><input aria-label="Employer location" placeholder="Location" value={row.location} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, location: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><input aria-label="Start date" type="month" value={row.from} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, from: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><input aria-label="End date" type="month" value={row.to} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, to: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /><textarea aria-label="Role summary" placeholder="Responsibilities / achievements" value={row.summary} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, summary: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] border border-[#D8E3F1] rounded-xl text-xs" /></div>)}
+          <div className="flex items-center justify-between"><div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">10. Work Experience &amp; Employer Details</div><button type="button" onClick={() => setEmployerRows([...employerRows, { company: '', title: '', location: '', from: '', to: '', summary: '' }])} className="text-xs font-semibold text-[#1E293B] dark:text-blue-400 hover:underline">+ Add Employer</button></div>
+          {employerRows.map((row, i) => <div key={i} className="grid sm:grid-cols-3 gap-3 rounded-xl border border-[#D8E3F1] dark:border-[#334155] p-3"><input aria-label="Employer" placeholder="Company" value={row.company} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, company: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><input aria-label="Role" placeholder="Role / title" value={row.title} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, title: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><input aria-label="Employer location" placeholder="Location" value={row.location} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, location: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><input aria-label="Start date" type="month" value={row.from} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, from: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><input aria-label="End date" type="month" value={row.to} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, to: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /><textarea aria-label="Role summary" placeholder="Responsibilities / achievements" value={row.summary} onChange={(e) => setEmployerRows(employerRows.map((r, j) => j === i ? { ...r, summary: e.target.value } : r))} className="px-3 py-2 bg-[#FFFFFF] dark:bg-[#0F172A] border border-[#D8E3F1] dark:border-[#334155] dark:text-white rounded-xl text-xs" /></div>)}
         </div>
 
         {/* Submit */}
@@ -483,7 +483,7 @@ export const ApplicantCreate: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('applicants')}
-            className="px-4 py-2 border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#BFDBFE] hover:text-[#1E293B] rounded-xl text-xs font-medium"
+            className="px-4 py-2 border border-[#D8E3F1] dark:border-[#334155] text-[#64748B] dark:text-[#BFDBFE] hover:text-[#1E293B] dark:hover:text-white dark:hover:bg-[#334155] rounded-xl text-xs font-medium"
           >
             Cancel
           </button>

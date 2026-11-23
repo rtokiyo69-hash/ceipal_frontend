@@ -332,13 +332,31 @@ h1, h2, h3, h4, h5, h6, .font-display {
   color: #1e293b;
 }
 
-#root > .blue-clay-theme aside {
+#root > .blue-clay-theme > aside {
   background-color: #17345c;
   border-color: #24456c;
 }
 
-#root > .blue-clay-theme aside [class~="text-[#FFFFFF]"] {
+#root > .blue-clay-theme > aside [class~="text-[#FFFFFF]"] {
   color: #ffffff;
+}
+
+.blue-clay-theme main aside,
+.blue-clay-theme [role="dialog"] aside,
+.blue-clay-theme [role="region"] aside,
+.blue-clay-theme .drawer-panel,
+.blue-clay-theme aside:not(:first-child) {
+  background-color: #ffffff;
+  border-color: #d8e3f1;
+}
+
+.dark .blue-clay-theme main aside,
+.dark .blue-clay-theme [role="dialog"] aside,
+.dark .blue-clay-theme [role="region"] aside,
+.dark .blue-clay-theme .drawer-panel,
+.dark .blue-clay-theme aside:not(:first-child) {
+  background-color: #1e293b;
+  border-color: #334155;
 }
 
 .blue-clay-theme :is(div, section, article, form, nav, header)[class~="bg-white"]:is(.rounded-xl, .rounded-2xl, .rounded-3xl),

@@ -599,6 +599,14 @@ export const ApplicantDetail: React.FC = () => {
   }, []);
 
   const initApplicantFields = (app: Applicant) => {
+    const storedTags = Array.isArray(app.tags)
+      ? app.tags.filter((tag: unknown): tag is string => typeof tag === 'string')
+      : typeof app.customFields?.tags === 'string'
+        ? app.customFields.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+        : typeof app.customFields?.tag === 'string'
+          ? app.customFields.tag.split(',').map((tag) => tag.trim()).filter(Boolean)
+          : null;
+    setTags(storedTags ?? ['Immediate Joiner', 'Verified']);
     setEditName(app.name);
     setEditEmail(app.email);
     setEditPhone(app.phone);
@@ -800,14 +808,84 @@ export const ApplicantDetail: React.FC = () => {
     showToast('Note added successfully.');
   };
 
-  const handleAddTag = () => {
-    if (!newTagInput.trim()) return;
-    if (!tags.includes(newTagInput.trim())) {
-      setTags([...tags, newTagInput.trim()]);
+  const getSubmissionStatusForTag = (tag: string): string | null => {
+    const key = tag.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    const stageStatuses: Record<string, string> = {
+      pipeline: 'Pipeline',
+      submission: 'Waiting for Evaluation by Internal Reviewer',
+      submitted: 'Waiting for Evaluation by Internal Reviewer',
+      'client submission': 'Submitted to Client',
+      'submitted to client': 'Submitted to Client',
+      'client review': 'Client Review',
+      interview: 'Interview Scheduled',
+      'interview requested': 'Interview Requested',
+      'interview scheduled': 'Interview Scheduled',
+      confirmation: 'Offered',
+      selected: 'Offered',
+      offered: 'Offered',
+      placement: 'Placed',
+      placed: 'Placed',
+      'not joined': 'Not Joined'
+    };
+    return stageStatuses[key] ?? null;
+  };
+
+  const persistApplicantTags = async (updatedTags: string[]) => {
+    const updated = {
+      ...applicant,
+      tags: updatedTags,
+      customFields: { ...applicant.customFields, tags: updatedTags.join(', ') }
+    };
+    setApplicant(updated);
+    setAllApplicants((previous) => previous.map((item) =>
+      item.id === applicant.id || item.applicantId === applicant.applicantId ? updated : item
+    ));
+    await ApiService.updateApplicant(applicant.id, {
+      tags: updatedTags,
+      customFields: updated.customFields
+    });
+  };
+
+  const handleAddTag = async () => {
+    const tag = newTagInput.trim();
+    if (!tag) return;
+    const updatedTags = tags.includes(tag) ? tags : [...tags, tag];
+    const status = getSubmissionStatusForTag(tag);
+    try {
+      await persistApplicantTags(updatedTags);
+      setTags(updatedTags);
+      if (status) {
+        const linkedSubmissions = submissionRecords.filter((submission) =>
+          submission.applicantId === applicant.id ||
+          submission.applicantId === applicant.applicantId ||
+          submission.applicantName.toLowerCase() === applicant.name.toLowerCase()
+        );
+        await Promise.all(linkedSubmissions.map((submission) =>
+          ApiService.updateSubmissionStatus(submission.id, status, `Pipeline stage updated from applicant tag: ${tag}`)
+        ));
+        setSubmissionRecords(await ApiService.getSubmissions());
+      }
+    } catch (error) {
+      console.error('Unable to synchronize applicant tag and submission stage:', error);
+      showToast('The tag was saved, but its submission stage could not be synchronized.', 'error');
+      setNewTagInput('');
+      setDialog(null);
+      return;
     }
     setNewTagInput('');
     setDialog(null);
-    showToast('Tag added.');
+    showToast(status ? `Tag added. Related submissions moved to ${status}.` : 'Tag added.');
+  };
+
+  const handleRemoveTag = async (tag: string) => {
+    const updatedTags = tags.filter((item) => item !== tag);
+    setTags(updatedTags);
+    try {
+      await persistApplicantTags(updatedTags);
+    } catch (error) {
+      console.error('Unable to save applicant tags:', error);
+      showToast('The tag could not be removed.', 'error');
+    }
   };
 
   const handleUpdateStatus = async (newStatus: PipelineStage) => {
@@ -1116,15 +1194,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     const fullName = `${empFirstName} ${empLastName}`.trim();
     const officeDisplay = empOfficeNumber
       ? `${empOfficeNumber}${empExtension ? ` Ext: ${empExtension}` : ''}`
-      : 'â€”';
+      : '—';
 
     const newEmp = {
       id: `emp-${Date.now()}`,
       employeeName: fullName || empEmployerName || 'Employee',
-      employer: empEmployerName || 'â€”',
+      employer: empEmployerName || '—',
       officeNumber: officeDisplay,
-      mobile: empMobileNumber || 'â€”',
-      email: empEmailId || 'â€”',
+      mobile: empMobileNumber || '—',
+      email: empEmailId || '—',
       status: (empTypeSelect === 'Select' || empTypeSelect === 'Select Status') ? 'Active' : empTypeSelect
     };
 
@@ -1175,6 +1253,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     ...applicantSubmissions.flatMap((submission) => (submission.notes || []).map((note) => ({
       ...note,
       source: 'submissions' as const,
+      subject: ('subject' in note ? (note as { subject?: string }).subject : '') || '',
       job: submission.jobTitle,
       client: submission.client,
       priority: '',
@@ -1673,7 +1752,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       category: 'all' as const,
       date: '20 Nov 2026',
       time: '16:49:41',
-      description: `Applicant has been submitted to AMP7894 Â· ${applicant.currentDesignation || 'US IT Recruiter'}`,
+      description: `Applicant has been submitted to AMP7894 · ${applicant.currentDesignation || 'US IT Recruiter'}`,
       detail: 'by Jatin Jaiswal',
       icon: Send,
       iconClass: 'bg-blue-50 text-[#2F80ED] dark:bg-[#173B67]'
@@ -1683,7 +1762,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       category: 'documents' as const,
       date: '20 Nov 2026',
       time: '16:49:27',
-      description: 'Uploaded a new resume Â· Mansi Talware.docx',
+      description: 'Uploaded a new resume · Mansi Talware.docx',
       detail: 'by US IT Recruiter (Night Shift)',
       icon: FileText,
       iconClass: 'bg-violet-50 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300'
@@ -1726,7 +1805,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       description: 'Applicant was added to the recruiting pipeline.',
       detail: 'System activity',
       icon: UserPlus,
-      iconClass: 'bg-slate-100 text-slate-600 dark:bg-[#3A3A3A] dark:text-slate-300',
+      iconClass: 'bg-slate-100 text-slate-600 dark:bg-[#334155] dark:text-slate-300',
       older: true
     }
   ];
@@ -1929,7 +2008,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
   };
 
   return (
-    <div className="relative min-h-screen bg-[#F4F6F9] text-[#222] dark:bg-[#1A1A1A] dark:text-[#E0E0E0]">
+    <div className="relative min-h-screen bg-[#F4F6F9] text-[#222] dark:bg-[#0F172A] dark:text-slate-100">
       {/* Toast Notification - z-[9999] so it's always visible above all modals/dialogs */}
       {toastMessage && (
         <div
@@ -1960,7 +2039,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {isTimelineDrawerOpen && createPortal(
         <div className="fixed inset-0 z-[110] flex justify-end" role="presentation">
           <button type="button" aria-label="Close timeline activities" onClick={() => setIsTimelineDrawerOpen(false)} className="absolute inset-0 bg-black/45" />
-          <aside aria-label={`Timeline activities for ${applicant.name}`} className="relative z-10 flex h-full w-full max-w-[700px] flex-col border-l border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+          <aside aria-label={`Timeline activities for ${applicant.name}`} className="drawer-panel relative z-10 flex h-full w-full max-w-[700px] flex-col border-l border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
             <header className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#334155]">
               <div className="min-w-0">
                 <h2 className="truncate text-base font-semibold text-slate-900 dark:text-white">{applicant.applicantId ? `${applicant.applicantId} - ` : ''}{applicant.name}</h2>
@@ -2001,7 +2080,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {avatarEditOpen && <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/50 p-4" onClick={() => setAvatarEditOpen(false)}>
         <section role="dialog" aria-modal="true" aria-label="Change user profile image" onClick={(event) => event.stopPropagation()} className="w-full max-w-[876px] border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
           <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-[#334155]"><h2 className="text-lg font-medium text-slate-700 dark:text-white">Change User Profile Image</h2><button type="button" aria-label="Close image editor" onClick={() => setAvatarEditOpen(false)} className="text-xl text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
-          <div className="p-5"><label className="mb-1 block text-xs text-slate-500 dark:text-slate-300" htmlFor="applicant-profile-image">Upload Image</label><input ref={avatarFileInputRef} id="applicant-profile-image" type="file" accept="image/*" onChange={handleAvatarFileChange} className="block max-w-full text-xs" /><div className="mt-4 flex h-[260px] items-center justify-center border border-slate-200 bg-white dark:border-[#334155] dark:bg-[#172033]">{avatarPreview && <img src={avatarPreview} alt="Profile image preview" className="max-h-full max-w-full object-contain" />}</div></div>
+          <div className="p-5"><label className="mb-1 block text-xs text-slate-500 dark:text-slate-300" htmlFor="applicant-profile-image">Upload Image</label><input ref={avatarFileInputRef} id="applicant-profile-image" type="file" accept="image/*" onChange={handleAvatarFileChange} className="block max-w-full text-xs" /><div className="mt-4 flex h-[260px] items-center justify-center border border-slate-200 bg-white dark:border-[#334155] dark:bg-[#0F172A]">{avatarPreview && <img src={avatarPreview} alt="Profile image preview" className="max-h-full max-w-full object-contain" />}</div></div>
           <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button type="button" onClick={() => void saveApplicantAvatar()} className="rounded bg-[#4387F5] px-5 py-2 text-xs font-semibold text-white hover:bg-blue-600">Save</button><button type="button" onClick={() => setAvatarEditOpen(false)} className="rounded border border-slate-300 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 dark:border-[#475569] dark:text-white dark:hover:bg-[#263449]">Cancel</button></footer>
         </section>
       </div>}
@@ -2059,11 +2138,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {dialog === 'quick-tag-to-job' && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
           <section role="dialog" aria-modal="true" aria-label="Tag to Job" className="w-full max-w-[560px] border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(event) => event.stopPropagation()}>
-            <header className="flex items-center justify-between border-b border-slate-200 bg-[#F8F8F8] px-5 py-3 dark:border-[#334155] dark:bg-[#252525]"><h2 className="text-lg font-medium text-slate-800 dark:text-white">Tag to Job</h2><button type="button" aria-label="Close Tag to Job" onClick={() => setDialog(null)} className="text-xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
-            <div className="px-7 py-7 text-xs leading-5 text-slate-600 dark:text-slate-300"><p>Please select the relevant Job to tag the applicant <strong className="text-slate-800 dark:text-white">{applicant.name}</strong>. This action will add the applicant to the job pipeline</p><label htmlFor="quick-tag-job-search" className="mt-7 mb-2 block text-slate-500">Select Job</label><div className="relative"><div className="flex items-center border border-slate-300 bg-[#F8F8F8] dark:border-[#475569] dark:bg-[#263449]"><input id="quick-tag-job-search" value={jobActionSelectedJobId ? (submissionJobs.find((job) => job.id === jobActionSelectedJobId)?.title || jobActionSearch) : jobActionSearch} onChange={(event) => { setJobActionSelectedJobId(''); setJobActionSearch(event.target.value); setJobActionDropdownOpen(true); }} onFocus={() => setJobActionDropdownOpen(true)} placeholder="Search for a Job" className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-xs italic outline-none dark:text-white" /><button type="button" aria-label="Show jobs" onClick={() => setJobActionDropdownOpen((open) => !open)} className="px-2 text-slate-500">▾</button></div>
-              {jobActionDropdownOpen && <div className="absolute left-0 right-0 top-full z-20 max-h-56 overflow-y-auto border border-slate-300 bg-white shadow-lg dark:border-[#475569] dark:bg-[#263449]">{jobActionSearch.trim().length < 3 ? <p className="px-2 py-2 text-[11px] text-slate-500">Please enter 3 more characters</p> : submissionJobs.filter((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())).map((job) => <button key={job.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setJobActionSelectedJobId(job.id); setJobActionSearch(''); setJobActionDropdownOpen(false); }} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-blue-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">{job.code} - {job.title} ({job.client})</button>)}{jobActionSearch.trim().length >= 3 && !submissionJobs.some((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())) && <p className="px-2 py-2 text-[11px] text-slate-500">No matching jobs found.</p>}</div>}
+            <header className="flex items-center justify-between border-b border-slate-200 bg-[#F8F8F8] px-5 py-3 dark:border-[#334155] dark:bg-[#1E293B]"><h2 className="text-lg font-medium text-slate-800 dark:text-white">Tag to Job</h2><button type="button" aria-label="Close Tag to Job" onClick={() => setDialog(null)} className="text-xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
+            <div className="px-7 py-7 text-xs leading-5 text-slate-600 dark:text-slate-300"><p>Please select the relevant Job to tag the applicant <strong className="text-slate-800 dark:text-white">{applicant.name}</strong>. This action will add the applicant to the job pipeline</p><label htmlFor="quick-tag-job-search" className="mt-7 mb-2 block text-slate-500">Select Job</label><div className="relative"><div className="flex items-center border border-slate-300 bg-[#F8F8F8] dark:border-[#475569] dark:bg-[#0F172A]"><input id="quick-tag-job-search" value={jobActionSelectedJobId ? (submissionJobs.find((job) => job.id === jobActionSelectedJobId)?.title || jobActionSearch) : jobActionSearch} onChange={(event) => { setJobActionSelectedJobId(''); setJobActionSearch(event.target.value); setJobActionDropdownOpen(true); }} onFocus={() => setJobActionDropdownOpen(true)} placeholder="Search for a Job" className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-xs italic outline-none dark:text-white" /><button type="button" aria-label="Show jobs" onClick={() => setJobActionDropdownOpen((open) => !open)} className="px-2 text-slate-500">▾</button></div>
+              {jobActionDropdownOpen && <div className="absolute left-0 right-0 top-full z-20 max-h-56 overflow-y-auto border border-slate-300 bg-white shadow-lg dark:border-[#475569] dark:bg-[#0F172A]">{jobActionSearch.trim().length < 3 ? <p className="px-2 py-2 text-[11px] text-slate-500">Please enter 3 more characters</p> : submissionJobs.filter((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())).map((job) => <button key={job.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setJobActionSelectedJobId(job.id); setJobActionSearch(''); setJobActionDropdownOpen(false); }} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-blue-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">{job.code} - {job.title} ({job.client})</button>)}{jobActionSearch.trim().length >= 3 && !submissionJobs.some((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())) && <p className="px-2 py-2 text-[11px] text-slate-500">No matching jobs found.</p>}</div>}
             </div></div>
-            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button type="button" onClick={() => void completeJobAction()} className="rounded bg-[#4387F5] px-5 py-2 text-xs font-semibold text-white hover:bg-blue-600">Save</button><button type="button" onClick={() => setDialog(null)} className="rounded border border-slate-300 bg-white px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 dark:border-[#475569] dark:bg-[#263449] dark:text-white">Cancel</button></footer>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button type="button" onClick={() => void completeJobAction()} className="rounded bg-[#4387F5] px-5 py-2 text-xs font-semibold text-white hover:bg-blue-600">Save</button><button type="button" onClick={() => setDialog(null)} className="rounded border border-slate-300 bg-white px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white">Cancel</button></footer>
           </section>
         </div>
       )}
@@ -2071,16 +2150,16 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {(dialog === 'tag-to-job' || dialog === 'quick-submit') && (
         <div className="fixed inset-0 z-[110] flex justify-end bg-black/35">
           <button type="button" aria-label="Close job action" onClick={() => setDialog(null)} className="absolute inset-0" />
-          <aside role="dialog" aria-modal="true" aria-label={dialog === 'tag-to-job' ? 'Tag applicant to job' : 'Quick submit applicant'} className="relative z-10 h-full w-full max-w-[860px] overflow-y-auto border-l border-slate-200 bg-[#F8F8F8] shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
-            <header className="flex h-10 items-center justify-between border-b border-slate-300 bg-white px-4 dark:border-[#334155] dark:bg-[#252525]"><h2 className="text-xs font-semibold text-[#1877F2]">◉ {dialog === 'tag-to-job' ? 'Tag to Job' : 'Quick Submission'} - {applicant.name}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)} className="text-2xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
+          <aside role="dialog" aria-modal="true" aria-label={dialog === 'tag-to-job' ? 'Tag applicant to job' : 'Quick submit applicant'} className="drawer-panel relative z-10 h-full w-full max-w-[860px] overflow-y-auto border-l border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+            <header className="flex h-10 items-center justify-between border-b border-slate-300 bg-white px-4 dark:border-[#334155] dark:bg-[#1E293B]"><h2 className="text-xs font-semibold text-[#1877F2]">◉ {dialog === 'tag-to-job' ? 'Tag to Job' : 'Quick Submission'} - {applicant.name}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)} className="text-2xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button></header>
             <div className="grid max-w-[580px] grid-cols-[145px_minmax(0,1fr)] items-center gap-x-5 gap-y-3 px-6 py-6 text-xs">
               <label htmlFor="job-action-search" className="text-slate-500">Select Job <span className="text-red-500">*</span></label>
-              <div className="relative"><div className="flex items-center border border-slate-300 bg-white dark:border-[#475569] dark:bg-[#263449]"><input id="job-action-search" value={jobActionSelectedJobId ? (submissionJobs.find((job) => job.id === jobActionSelectedJobId)?.title || jobActionSearch) : jobActionSearch} onChange={(event) => { setJobActionSelectedJobId(''); setJobActionSearch(event.target.value); setJobActionDropdownOpen(true); }} onFocus={() => setJobActionDropdownOpen(true)} placeholder="Search for a Job" className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-xs outline-none dark:text-white" /><button type="button" aria-label="Show jobs" onClick={() => setJobActionDropdownOpen((open) => !open)} className="px-2 text-slate-500">▾</button></div>
-                {jobActionDropdownOpen && <div className="absolute left-0 right-0 top-full z-20 max-h-64 overflow-y-auto border border-slate-300 bg-white shadow-lg dark:border-[#475569] dark:bg-[#263449]">{jobActionSearch.trim().length < 3 ? <p className="px-2 py-2 text-[11px] text-slate-500">Please enter 3 more characters</p> : submissionJobs.filter((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())).map((job) => <button key={job.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setJobActionSelectedJobId(job.id); setJobActionSearch(''); setJobActionDropdownOpen(false); }} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-blue-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">{job.code} - {job.title} ({job.client})</button>)}{jobActionSearch.trim().length >= 3 && !submissionJobs.some((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())) && <p className="px-2 py-2 text-[11px] text-slate-500">No matching jobs found.</p>}</div>}
+              <div className="relative"><div className="flex items-center border border-slate-300 bg-white dark:border-[#475569] dark:bg-[#0F172A]"><input id="job-action-search" value={jobActionSelectedJobId ? (submissionJobs.find((job) => job.id === jobActionSelectedJobId)?.title || jobActionSearch) : jobActionSearch} onChange={(event) => { setJobActionSelectedJobId(''); setJobActionSearch(event.target.value); setJobActionDropdownOpen(true); }} onFocus={() => setJobActionDropdownOpen(true)} placeholder="Search for a Job" className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-xs outline-none dark:text-white" /><button type="button" aria-label="Show jobs" onClick={() => setJobActionDropdownOpen((open) => !open)} className="px-2 text-slate-500">▾</button></div>
+                {jobActionDropdownOpen && <div className="absolute left-0 right-0 top-full z-20 max-h-64 overflow-y-auto border border-slate-300 bg-white shadow-lg dark:border-[#475569] dark:bg-[#0F172A]">{jobActionSearch.trim().length < 3 ? <p className="px-2 py-2 text-[11px] text-slate-500">Please enter 3 more characters</p> : submissionJobs.filter((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())).map((job) => <button key={job.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => { setJobActionSelectedJobId(job.id); setJobActionSearch(''); setJobActionDropdownOpen(false); }} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-blue-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">{job.code} - {job.title} ({job.client})</button>)}{jobActionSearch.trim().length >= 3 && !submissionJobs.some((job) => ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status) && `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client}`.toLowerCase().includes(jobActionSearch.trim().toLowerCase())) && <p className="px-2 py-2 text-[11px] text-slate-500">No matching jobs found.</p>}</div>}
               </div>
-              <label className="text-slate-500">Candidate Id</label><input readOnly value={applicant.applicantId || applicant.id} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
-              <label className="text-slate-500">Candidate Name</label><input readOnly value={applicant.name} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
-              <label className="text-slate-500">Email Address</label><input readOnly value={applicant.email} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
+              <label className="text-slate-500">Candidate Id</label><input readOnly value={applicant.applicantId || applicant.id} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+              <label className="text-slate-500">Candidate Name</label><input readOnly value={applicant.name} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+              <label className="text-slate-500">Email Address</label><input readOnly value={applicant.email} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
               <span /><div className="flex gap-2 pt-1"><button type="button" onClick={() => void completeJobAction()} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">{dialog === 'tag-to-job' ? 'Tag' : 'Submit'}</button><button type="button" onClick={() => setDialog(null)} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">Cancel</button></div>
             </div>
           </aside>
@@ -2117,7 +2196,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       )}
 
       {/* Top Sub-Navigation Tabs Bar */}
-      <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-1.5 shadow-xs dark:border-[#333] dark:bg-[#1E293B] overflow-visible">
+      <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-1.5 shadow-xs dark:border-[#334155] dark:bg-[#1E293B] overflow-visible">
         <div className="flex items-center gap-1 text-xs overflow-visible">
           <button
             type="button"
@@ -2178,10 +2257,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             {moreSubTabsOpen && (
               <div
                 role="menu"
-                className="absolute right-0 top-full z-50 mt-1.5 w-44 rounded-sm border border-[#CBD5E1] bg-white py-1 shadow-md dark:border-[#444] dark:bg-[#252525]"
+                className="absolute right-0 top-full z-50 mt-1.5 w-44 rounded-sm border border-[#CBD5E1] bg-white py-1 shadow-md dark:border-[#334155] dark:bg-[#1E293B]"
               >
                 {/* Triangular Caret Arrow Pointing Up directly under ... */}
-                <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 border-l border-t border-[#CBD5E1] bg-white dark:border-[#444] dark:bg-[#252525]" />
+                <div className="absolute -top-1.5 right-3 h-3 w-3 rotate-45 border-l border-t border-[#CBD5E1] bg-white dark:border-[#334155] dark:bg-[#1E293B]" />
                 <div className="relative z-10">
                   {dynamicSubTabsPool
                     .filter((item) => item !== currentDynamicTab)
@@ -2195,7 +2274,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           setMoreSubTabsOpen(false);
                         }}
                         role="menuitem"
-                        className="block w-full px-4 py-2 text-left text-xs text-[#555] transition-colors hover:bg-[#F3F4F6] hover:text-[#1877F2] dark:text-[#CCC] dark:hover:bg-[#333]"
+                        className="block w-full px-4 py-2 text-left text-xs text-[#555] transition-colors hover:bg-[#F3F4F6] hover:text-[#1877F2] dark:text-[#CCC] dark:hover:bg-[#334155]"
                       >
                         {item}
                       </button>
@@ -2215,8 +2294,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               title="Settings"
               aria-label="Applicant Settings"
               aria-expanded={settingsMenuOpen}
-              className={`rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-[#333] ${
-                settingsMenuOpen ? 'bg-blue-50 text-[#1877F2] dark:bg-[#333] dark:text-blue-400' : ''
+              className={`rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-[#334155] ${
+                settingsMenuOpen ? 'bg-blue-50 text-[#1877F2] dark:bg-[#334155] dark:text-blue-400' : ''
               }`}
               onClick={() => setSettingsMenuOpen((prev) => !prev)}
             >
@@ -2226,7 +2305,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <div
                 role="menu"
                 aria-label="Applicant Settings Menu"
-                className="absolute right-0 top-full z-50 mt-1.5 w-64 rounded-md border border-[#CED4DA] bg-white py-1.5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B] animate-in fade-in-50 zoom-in-95 duration-100 divide-y divide-gray-50 dark:divide-slate-800/60"
+                className="absolute right-0 top-full z-50 mt-1.5 w-64 rounded-md border border-[#CED4DA] bg-white py-1.5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] animate-in fade-in-50 zoom-in-95 duration-100 divide-y divide-gray-50 dark:divide-slate-800/60"
               >
                 <div className="py-0.5">
                   <button
@@ -2236,7 +2315,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('deactivate-email-merge');
                     }}
-                    className="flex w-full items-center justify-between px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="flex w-full items-center justify-between px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     <span>Deactivate Email Merge</span>
                     {isEmailMergeDeactivated && (
@@ -2254,7 +2333,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setNoteSubject(`New Note Created for ${displayName.toUpperCase()} - ${displayId}.`);
                       setDialog('note');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Add Notes
                   </button>
@@ -2267,7 +2346,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setDocumentFormOpen(true);
                       showToast('Document upload form opened.');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Upload Document
                   </button>
@@ -2278,7 +2357,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('task');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Create Task
                   </button>
@@ -2289,7 +2368,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('add-reference');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Add References
                   </button>
@@ -2300,7 +2379,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('activate-account');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Activate Account
                   </button>
@@ -2311,7 +2390,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('ampcus-print');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Print
                   </button>
@@ -2322,34 +2401,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('request-employee-info');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Request More Details from Applicant
                   </button>
-                  {/*
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setSettingsMenuOpen(false);
-                      setDialog('request-eform-employer');
-                    }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
-                  >
-                    Request eForm to Employer
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setSettingsMenuOpen(false);
-                      setDialog('request-eform-applicant');
-                    }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
-                  >
-                    Request eForm to Applicant
-                  </button>
-                  */}
                   <button
                     type="button"
                     role="menuitem"
@@ -2357,7 +2412,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('download-history');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Resume Download History
                   </button>
@@ -2368,23 +2423,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setSettingsMenuOpen(false);
                       setDialog('rating');
                     }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#2A3441] dark:hover:text-blue-400"
+                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-blue-50 hover:text-[#1877F2] dark:text-[#E2E8F0] dark:hover:bg-[#334155] dark:hover:text-blue-400"
                   >
                     Initiate Feedback Review
                   </button>
-                  {/*
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setSettingsMenuOpen(false);
-                      setDialog('block-contact');
-                    }}
-                    className="block w-full px-3.5 py-1.5 text-left text-xs text-[#333] transition-colors hover:bg-red-50 hover:text-red-600 dark:text-[#E2E8F0] dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                  >
-                    Block This Contact On TextToHire
-                  </button>
-                  */}
                 </div>
               </div>
             )}
@@ -2392,7 +2434,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <button
             type="button"
             title="Share Profile"
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#333]"
+            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#334155]"
             onClick={() => {
               if (navigator.clipboard) {
                 navigator.clipboard.writeText(window.location.href);
@@ -2405,7 +2447,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <button
             type="button"
             title="Email Applicant"
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#333]"
+            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#334155]"
             onClick={() => openEmailComposer()}
           >
             <Mail className="h-4 w-4" />
@@ -2416,13 +2458,13 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <button
               type="button"
               onClick={() => setSubmitMenuOpen((prev) => !prev)}
-              className="flex items-center gap-1 rounded border border-[#CED4DA] bg-white px-2.5 py-1 text-xs font-semibold text-[#333] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+              className="flex items-center gap-1 rounded border border-[#CED4DA] bg-white px-2.5 py-1 text-xs font-semibold text-[#333] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
             >
               <span>Submit</span>
               <ChevronDown className="h-3 w-3" />
             </button>
             {submitMenuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]">
+              <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-[#CED4DA] bg-white py-1 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
                 <button
                   type="button"
                   onClick={() => {
@@ -2433,7 +2475,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     setSubmissionAssignedJobsOnly(false);
                     setDialog('submit-to-job');
                   }}
-                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#334155]"
                 >
                   Submit to Job
                 </button>
@@ -2443,7 +2485,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     setSubmitMenuOpen(false);
                     openJobActionDialog('tag-to-job');
                   }}
-                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#334155]"
                 >
                   Tag to Job
                 </button>
@@ -2456,7 +2498,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     setJobActionDropdownOpen(false);
                     setDialog('quick-tag-to-job');
                   }}
-                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#334155]"
                 >
                   Quick Tag
                 </button>
@@ -2466,7 +2508,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     setSubmitMenuOpen(false);
                     openJobActionDialog('quick-submit');
                   }}
-                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#333]"
+                  className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#334155]"
                 >
                   Quick Submit
                 </button>
@@ -2477,7 +2519,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <button
             type="button"
             title={applicant.isFavorite ? 'Remove Favorite' : 'Add Favorite'}
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#333]"
+            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#334155]"
             onClick={handleToggleFavorite}
           >
             <Star className={`h-4 w-4 ${applicant.isFavorite ? 'fill-[#F2B705] text-[#F2B705]' : ''}`} />
@@ -2486,7 +2528,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <button
             type="button"
             title="Download Profile / Resume"
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#333]"
+            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#334155]"
             onClick={() => {
               const content = `${applicant.applicantId} - ${applicant.name}\n${applicant.currentDesignation}\nEmail: ${applicant.email}\nPhone: ${applicant.phone}\nLocation: ${applicant.location}\nSkills: ${applicant.skills.join(', ')}\nExperience: ${applicant.experienceYears} Years`;
               const blob = new Blob([content], { type: 'text/plain' });
@@ -2516,7 +2558,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       }`}>
         <div className="space-y-3.5">
           {/* 1. Candidate Header Card */}
-          <div className="relative z-20 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
+          <div className="relative z-20 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
               {/* Left Candidate Info */}
               <div className="flex items-start gap-3.5">
@@ -2552,13 +2594,13 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           setCandidateSearchQuery('');
                           window.setTimeout(() => candidateSearchInputRef.current?.focus(), 0);
                         }}
-                        className="rounded p-0.5 text-[#666] hover:bg-blue-50 hover:text-[#1877F2] dark:hover:bg-[#333]"
+                        className="rounded p-0.5 text-[#666] hover:bg-blue-50 hover:text-[#1877F2] dark:hover:bg-[#334155]"
                         title="Search applicants"
                       >
                         <Search className="h-3.5 w-3.5" />
                       </button>
                       {candidateSearchOpen && (
-                        <div className="absolute left-0 top-full z-50 mt-1 w-[min(320px,calc(100vw-40px))] rounded-md border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#444] dark:bg-[#252525]" onClick={(event) => event.stopPropagation()}>
+                        <div className="absolute left-0 top-full z-50 mt-1 w-[min(320px,calc(100vw-40px))] rounded-md border border-[#CBD5E1] bg-white p-2 shadow-xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(event) => event.stopPropagation()}>
                           <label className="flex items-center gap-2 rounded border border-[#2F80ED] px-2 py-1.5 text-[#6B7280] dark:text-[#AAA]">
                             <input
                               ref={candidateSearchInputRef}
@@ -2576,8 +2618,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             {candidateSearchQuery.trim().length < 3 ? (
                               <p className="px-1 py-1.5 text-[11px] text-[#64748B] dark:text-[#AAB2BF]">Please enter {3 - candidateSearchQuery.trim().length} more character{3 - candidateSearchQuery.trim().length === 1 ? '' : 's'}</p>
                             ) : matchingApplicants.length ? matchingApplicants.map((candidate) => (
-                              <button key={candidate.id} type="button" onClick={() => selectSearchedApplicant(candidate)} className="block w-full rounded px-2 py-2 text-left hover:bg-[#EFF6FF] dark:hover:bg-[#333]">
-                                <span className="block truncate text-xs font-medium text-[#334155] dark:text-white">{candidate.applicantId} Ã‚Â· {candidate.name}</span>
+                              <button key={candidate.id} type="button" onClick={() => selectSearchedApplicant(candidate)} className="block w-full rounded px-2 py-2 text-left hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">
+                                <span className="block truncate text-xs font-medium text-[#334155] dark:text-white">{candidate.applicantId} · {candidate.name}</span>
                                 <span className="block truncate text-[10px] text-[#64748B] dark:text-[#AAB2BF]">{candidate.email}</span>
                               </button>
                             )) : <p className="px-2 py-2 text-xs text-[#64748B] dark:text-[#AAB2BF]">No applicants found.</p>}
@@ -2618,14 +2660,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={startEditPersonal}
-                      className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#333]"
+                      className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#334155]"
                     >
                       Edit Applicant
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsResumePanelOpen(true)}
-                      className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#333]"
+                      className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#334155]"
                     >
                       View Resume
                     </button>
@@ -2639,7 +2681,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={() => setDialog('create-resume')}
-                      className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#333]"
+                      className="rounded border border-[#2F80ED] bg-white px-2.5 py-1 text-xs font-medium text-[#2F80ED] hover:bg-blue-50 dark:bg-transparent dark:hover:bg-[#334155]"
                     >
                       Create Resume Builder
                     </button>
@@ -2652,7 +2694,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         onClick={() => setActionMenuOpen((prev) => !prev)}
                         aria-haspopup="menu"
                         aria-expanded={actionMenuOpen}
-                        className="flex items-center gap-1 rounded border border-[#CED4DA] bg-white px-2.5 py-1 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="flex items-center gap-1 rounded border border-[#CED4DA] bg-white px-2.5 py-1 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       >
                         <span>More</span>
                         <ChevronDown className="h-3 w-3" />
@@ -2662,7 +2704,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           ref={actionMenuRef}
                           role="menu"
                           aria-label="Applicant actions"
-                          className="fixed z-[100] w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#444] dark:bg-[#1E293B]"
+                          className="fixed z-[100] w-52 overflow-y-auto rounded-md border border-[#CED4DA] bg-white py-1 shadow-xl dark:border-[#334155] dark:bg-[#1E293B]"
                           style={{
                             top: actionMenuPosition.top,
                             left: actionMenuPosition.left,
@@ -2691,7 +2733,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                                 else if (item === 'Print Dossier') setDialog('ampcus-print');
                                 else showToast(`${item} recorded.`);
                               }}
-                              className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 hover:text-[#1877F2] dark:text-white dark:hover:bg-[#333]"
+                              className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 hover:text-[#1877F2] dark:text-white dark:hover:bg-[#334155]"
                             >
                               {item}
                             </button>
@@ -2712,7 +2754,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         {t}
                         <button
                           type="button"
-                          onClick={() => setTags(tags.filter((x) => x !== t))}
+                          onClick={() => void handleRemoveTag(t)}
                           className="hover:text-red-500"
                         >
                           <X className="h-2.5 w-2.5" aria-hidden="true" />
@@ -2731,14 +2773,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               {/* Right Rating Block & Next/Prev Navigation */}
-              <div className="flex flex-col items-end space-y-2 border-t pt-3 lg:border-t-0 lg:pt-0 dark:border-[#333]">
+              <div className="flex flex-col items-end space-y-2 border-t pt-3 lg:border-t-0 lg:pt-0 dark:border-[#334155]">
                 <div className="flex items-center gap-3">
-                  <div className="flex rounded border border-[#CED4DA] p-0.5 text-xs font-semibold dark:border-[#444]">
+                  <div className="flex rounded border border-[#CED4DA] p-0.5 text-xs font-semibold dark:border-[#334155]">
                     <button
                       type="button"
                       onClick={() => setHeaderViewMode('applicant')}
                       className={`px-2 py-0.5 rounded-sm transition-colors ${
-                        headerViewMode === 'applicant' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#333]'
+                        headerViewMode === 'applicant' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]'
                       }`}
                     >
                       Applicant
@@ -2747,7 +2789,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="button"
                       onClick={() => setHeaderViewMode('submission')}
                       className={`px-2 py-0.5 rounded-sm transition-colors ${
-                        headerViewMode === 'submission' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#333]'
+                        headerViewMode === 'submission' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]'
                       }`}
                     >
                       Submission
@@ -2759,7 +2801,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="button"
                       disabled={currentIndex <= 0}
                       onClick={handlePrevCandidate}
-                      className="rounded border border-[#CED4DA] p-1 hover:bg-gray-100 disabled:opacity-40 dark:border-[#444] dark:hover:bg-[#333]"
+                      className="rounded border border-[#CED4DA] p-1 hover:bg-gray-100 disabled:opacity-40 dark:border-[#334155] dark:hover:bg-[#334155]"
                       title="Previous Applicant"
                     >
                       <ChevronLeft className="h-3 w-3" />
@@ -2768,7 +2810,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="button"
                       disabled={currentIndex >= allApplicants.length - 1}
                       onClick={handleNextCandidate}
-                      className="rounded border border-[#CED4DA] p-1 hover:bg-gray-100 disabled:opacity-40 dark:border-[#444] dark:hover:bg-[#333]"
+                      className="rounded border border-[#CED4DA] p-1 hover:bg-gray-100 disabled:opacity-40 dark:border-[#334155] dark:hover:bg-[#334155]"
                       title="Next Applicant"
                     >
                       <ChevronRight className="h-3 w-3" />
@@ -2813,8 +2855,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           {activeSubTab === 'Snapshot' && (
             <>
               {/* 2. Notes Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-[#1F2937] dark:text-white">Notes</span>
                 <button
@@ -2853,7 +2895,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   aria-label="Filter notes"
                   aria-expanded={notesFilterOpen}
                   onClick={() => setNotesFilterOpen((open) => !open)}
-                  className="rounded p-1 text-[#666] hover:bg-gray-100 dark:hover:bg-[#333]"
+                  className="rounded p-1 text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]"
                 >
                   <Filter className="h-3.5 w-3.5" />
                 </button>
@@ -2870,30 +2912,30 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
             </div>
 
-            {notesFilterOpen && <div className="grid grid-cols-1 gap-3 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 dark:border-[#333] dark:bg-[#202020] sm:grid-cols-2 xl:grid-cols-5">
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Search notes<input type="search" value={notesSearch} onChange={(event) => setNotesSearch(event.target.value)} placeholder="Subject, text, job, clientâ€¦" className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Added by<select value={notesAuthorFilter} onChange={(event) => setNotesAuthorFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Any author</option>{notesAuthorOptions.map((author) => <option key={author} value={author}>{author}</option>)}</select></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Priority<select value={notesPriorityFilter} onChange={(event) => setNotesPriorityFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Any priority</option><option>Urgent</option><option>High</option><option>Medium</option><option>Low</option></select></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">From date<input type="date" value={notesDateFrom} onChange={(event) => setNotesDateFrom(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">To date<input type="date" value={notesDateTo} onChange={(event) => setNotesDateTo(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+            {notesFilterOpen && <div className="grid grid-cols-1 gap-3 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 dark:border-[#334155] dark:bg-[#0F172A] sm:grid-cols-2 xl:grid-cols-5">
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Search notes<input type="search" value={notesSearch} onChange={(event) => setNotesSearch(event.target.value)} placeholder="Subject, text, job, client…" className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Added by<select value={notesAuthorFilter} onChange={(event) => setNotesAuthorFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Any author</option>{notesAuthorOptions.map((author) => <option key={author} value={author}>{author}</option>)}</select></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Priority<select value={notesPriorityFilter} onChange={(event) => setNotesPriorityFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Any priority</option><option>Urgent</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">From date<input type="date" value={notesDateFrom} onChange={(event) => setNotesDateFrom(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">To date<input type="date" value={notesDateTo} onChange={(event) => setNotesDateTo(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
               <div className="flex items-end justify-between gap-2 sm:col-span-2 xl:col-span-5"><span className="text-[11px] text-[#64748B]">Showing {filteredNotes.length} of {notesSourceCounts[activeNotesFilter]} notes</span><button type="button" onClick={() => { setNotesSearch(''); setNotesAuthorFilter(''); setNotesPriorityFilter(''); setNotesDateFrom(''); setNotesDateTo(''); }} className="text-[11px] font-semibold text-[#2F80ED] hover:underline">Clear filters</button></div>
             </div>}
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
                     <th className="px-4 py-2">Added By / On</th>
                     <th className="px-4 py-2">Notes / Description</th>
                     <th className="px-4 py-2 text-right">Action / Priority</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
                   {filteredNotes.length > 0 ? (
                     filteredNotes.map((n) => (
-                      <tr key={n.id} className="hover:bg-gray-50 dark:hover:bg-[#202020]">
+                      <tr key={n.id} className="hover:bg-gray-50 dark:hover:bg-[#22334D]">
                         <td className="whitespace-nowrap px-4 py-2.5 text-[#555] dark:text-[#AAA]">
-                          <span className="font-medium text-[#222] dark:text-white">{n.author}</span>
+                          <span className="font-medium text-[#222] dark:text-slate-100">{n.author}</span>
                           <span className="block text-[10px] text-[#888]">{n.date}</span>
                         </td>
                         <td className="px-4 py-2.5 text-[#333] dark:text-[#DDD]">
@@ -2906,7 +2948,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-[#666] dark:text-[#AAA]">
                             {n.job && <span className="text-[#2F80ED]">Job: {n.job}</span>}
                             {n.client && <span>Client: {n.client}</span>}
-                            {n.action && <span className="rounded bg-gray-100 px-1.5 py-0.2 dark:bg-[#333]">Action: {n.action}</span>}
+                            {n.action && <span className="rounded bg-gray-100 px-1.5 py-0.2 dark:bg-[#0F172A]">Action: {n.action}</span>}
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-4 py-2.5 text-right font-medium">
@@ -2933,10 +2975,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
 
           {/* 3. Documents Section */}
-          <div className="relative z-40 rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="relative z-40 rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-sm font-semibold text-[#1F2937] dark:text-white">Documents</span>
-              <div className="flex items-center divide-x divide-[#CBD5E1] rounded border border-[#CBD5E1] text-[#687789] dark:divide-[#444] dark:border-[#444] dark:text-[#AAA]">
+              <div className="flex items-center divide-x divide-[#CBD5E1] rounded border border-[#CBD5E1] text-[#687789] dark:divide-[#334155] dark:border-[#334155] dark:text-[#AAA]">
                 <button type="button" title="Share selected documents" onClick={() => void runDocumentToolbarAction('share')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Share2 className="h-3.5 w-3.5" /></button>
                 <button type="button" title="Copy selected documents" onClick={() => void runDocumentToolbarAction('copy')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Copy className="h-3.5 w-3.5" /></button>
                 <button type="button" title="Download selected documents" onClick={() => void runDocumentToolbarAction('download')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Download className="h-3.5 w-3.5" /></button>
@@ -2944,14 +2986,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
             </div>
 
-            {documentFormOpen && <div className="border-b border-[#E2E8F0] px-4 py-4 dark:border-[#333]">
+            {documentFormOpen && <div className="border-b border-[#E2E8F0] px-4 py-4 dark:border-[#334155]">
               <div className="grid gap-4 md:grid-cols-3">
-                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Select</option>{['Driving License', 'EMI File', 'Employment Application Form', 'Interview Feedback', 'Passport', 'Resume', 'SSN', 'Transcripts'].map((type) => <option key={type}>{type}</option>)}</select></label>
-                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Title<input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Enter document title" className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
+                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option>{['Driving License', 'EMI File', 'Employment Application Form', 'Interview Feedback', 'Passport', 'Resume', 'SSN', 'Transcripts'].map((type) => <option key={type}>{type}</option>)}</select></label>
+                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Title<input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Enter document title" className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
                 <label className="block space-y-1 text-[11px] text-[#64748B]">Upload Document<input type="file" onChange={(event) => setDocumentFile(event.target.files?.[0] || null)} className="block w-full text-[11px] text-[#334155] file:mr-2 file:border file:border-[#CBD5E1] file:bg-white file:px-2 file:py-1.5 dark:text-white" /></label>
               </div>
-              <label className="mt-3 block space-y-1 text-[11px] text-[#64748B]">Description<textarea rows={2} value={documentDescription} onChange={(event) => setDocumentDescription(event.target.value)} className="w-full resize-y border border-[#CBD5E1] bg-[#F8F8F8] p-2 text-xs text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label>
-              <div className="mt-3 flex gap-2"><button type="button" onClick={() => void handleDocumentUpload()} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white hover:bg-[#1D6FD8]">Save</button><button type="button" onClick={() => { setDocumentFormOpen(false); setDocumentFile(null); setDocumentTitle(''); setDocumentDescription(''); }} className="rounded border border-[#CBD5E1] bg-white px-4 py-2 text-xs text-[#64748B] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white">Cancel</button></div>
+              <label className="mt-3 block space-y-1 text-[11px] text-[#64748B]">Description<textarea rows={2} value={documentDescription} onChange={(event) => setDocumentDescription(event.target.value)} className="w-full resize-y border border-[#CBD5E1] bg-[#F8F8F8] p-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+              <div className="mt-3 flex gap-2"><button type="button" onClick={() => void handleDocumentUpload()} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white hover:bg-[#1D6FD8]">Save</button><button type="button" onClick={() => { setDocumentFormOpen(false); setDocumentFile(null); setDocumentTitle(''); setDocumentDescription(''); }} className="rounded border border-[#CBD5E1] bg-white px-4 py-2 text-xs text-[#64748B] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white">Cancel</button></div>
             </div>}
 
             <div className="space-y-2 p-3">
@@ -2962,16 +3004,16 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <button type="button" onClick={() => viewApplicantDocument(doc)} className="min-w-0 text-left">
                     <span className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#1F2937] hover:text-[#2F80ED] dark:text-white"><span className="break-all">{doc.title || doc.name}</span><Check className="h-3.5 w-3.5 rounded-full bg-[#68C17B] p-0.5 text-white" /></span>
                     <span className="mt-1 block text-[11px] text-[#526174] dark:text-[#AAB2BF]">Created By {doc.createdBy || applicant.createdBy || currentUser?.name || 'User'} on {doc.date || applicant.createdDate || 'N/A'} <span className="text-[#2F80ED]">|</span> Modified By {doc.modifiedBy || doc.createdBy || applicant.createdBy || currentUser?.name || 'User'}</span>
-                    <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` Ã‚Â· ${doc.size}` : ''}</span>
+                    <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` · ${doc.size}` : ''}</span>
                   </button>
                 </div>
                 <div className="relative shrink-0">
                   <button type="button" aria-label={`Options for ${doc.name}`} aria-expanded={documentMenuId === doc.id} onClick={() => setDocumentMenuId((id) => id === doc.id ? null : doc.id)} className="rounded p-1 text-[#718096] hover:bg-white hover:text-[#222]"><MoreVertical className="h-4 w-4" /></button>
-                  {documentMenuId === doc.id && <div className="absolute right-0 top-full z-[60] mt-1 w-36 rounded border border-[#CBD5E1] bg-white py-1 shadow-lg dark:border-[#444] dark:bg-[#252525]">
-                    <button type="button" onClick={() => { viewApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#333]">View</button>
-                    <button type="button" onClick={() => { downloadApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#333]">Download</button>
-                    <button type="button" onClick={async () => { const name = window.prompt('Document title', doc.title || doc.name); if (name?.trim()) { await persistApplicantDocuments(applicantDocuments.map((item) => item.id === doc.id ? { ...item, name: name.trim(), title: name.trim(), modifiedBy: currentUser?.name || 'Current User', date: new Date().toLocaleString() } : item)); showToast('Document title updated.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#333]">Rename</button>
-                    <button type="button" onClick={async () => { if (window.confirm(`Delete ${doc.name}?`)) { await persistApplicantDocuments(applicantDocuments.filter((item) => item.id !== doc.id)); setSelectedDocumentIds((ids) => ids.filter((id) => id !== doc.id)); showToast('Document deleted.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-[#333]">Delete</button>
+                  {documentMenuId === doc.id && <div className="absolute right-0 top-full z-[60] mt-1 w-36 rounded border border-[#CBD5E1] bg-white py-1 shadow-lg dark:border-[#334155] dark:bg-[#1E293B]">
+                    <button type="button" onClick={() => { viewApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">View</button>
+                    <button type="button" onClick={() => { downloadApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">Download</button>
+                    <button type="button" onClick={async () => { const name = window.prompt('Document title', doc.title || doc.name); if (name?.trim()) { await persistApplicantDocuments(applicantDocuments.map((item) => item.id === doc.id ? { ...item, name: name.trim(), title: name.trim(), modifiedBy: currentUser?.name || 'Current User', date: new Date().toLocaleString() } : item)); showToast('Document title updated.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">Rename</button>
+                    <button type="button" onClick={async () => { if (window.confirm(`Delete ${doc.name}?`)) { await persistApplicantDocuments(applicantDocuments.filter((item) => item.id !== doc.id)); setSelectedDocumentIds((ids) => ids.filter((id) => id !== doc.id)); showToast('Document deleted.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-[#334155]">Delete</button>
                   </div>}
                 </div>
               </div>)}
@@ -2980,16 +3022,16 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
 
           {documentShareOpen && <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/50 p-4 pt-[15vh]" onClick={() => setDocumentShareOpen(false)}>
-            <div role="dialog" aria-modal="true" aria-labelledby="document-share-title" onClick={(event) => event.stopPropagation()} className="w-full max-w-md border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#444] dark:bg-[#252525]">
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#333]"><h2 id="document-share-title" className="text-lg font-medium text-[#334155] dark:text-white">Documents Sharing</h2><button type="button" aria-label="Close sharing dialog" onClick={() => setDocumentShareOpen(false)}><X className="h-5 w-5 text-[#777]" /></button></div>
-              <div className="px-5 py-8"><label className="mb-3 block text-xs text-[#64748B]">Choose the users below to share the selected documents</label><select value={documentShareRecipient} onChange={(event) => setDocumentShareRecipient(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2.5 py-2 text-xs dark:border-[#444] dark:bg-[#333] dark:text-white"><option value="">Select a user</option>{Array.from(new Set([currentUser?.name || '', ...allApplicants.map((item) => item.assignedRecruiter).filter(Boolean), 'Recruiting Team'].filter(Boolean))).map((name) => <option key={name} value={name}>{name}</option>)}</select></div>
-              <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#333]"><button type="button" onClick={shareApplicantDocuments} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white">Share</button><button type="button" onClick={() => setDocumentShareOpen(false)} className="rounded border border-[#CBD5E1] px-4 py-2 text-xs text-[#555] dark:border-[#444] dark:text-white">Cancel</button></div>
+            <div role="dialog" aria-modal="true" aria-labelledby="document-share-title" onClick={(event) => event.stopPropagation()} className="w-full max-w-md border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#334155]"><h2 id="document-share-title" className="text-lg font-medium text-[#334155] dark:text-white">Documents Sharing</h2><button type="button" aria-label="Close sharing dialog" onClick={() => setDocumentShareOpen(false)}><X className="h-5 w-5 text-[#777]" /></button></div>
+              <div className="px-5 py-8"><label className="mb-3 block text-xs text-[#64748B]">Choose the users below to share the selected documents</label><select value={documentShareRecipient} onChange={(event) => setDocumentShareRecipient(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2.5 py-2 text-xs dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Select a user</option>{Array.from(new Set([currentUser?.name || '', ...allApplicants.map((item) => item.assignedRecruiter).filter(Boolean), 'Recruiting Team'].filter(Boolean))).map((name) => <option key={name} value={name}>{name}</option>)}</select></div>
+              <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#334155]"><button type="button" onClick={shareApplicantDocuments} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white">Share</button><button type="button" onClick={() => setDocumentShareOpen(false)} className="rounded border border-[#CBD5E1] px-4 py-2 text-xs text-[#555] dark:border-[#334155] dark:text-white">Cancel</button></div>
             </div>
           </div>}
 
           {/* 4. Submissions Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions</span>
               <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                 {[
@@ -3001,7 +3043,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   { label: 'Placements', key: 'placement', count: submissionCounts.placement },
                   { label: 'Not Joined', key: 'not-joined', count: submissionCounts['not-joined'] }
                 ].map((item) => (
-                  <button key={item.key} type="button" onClick={() => setActiveSubmissionsFilter(item.key as typeof activeSubmissionsFilter)} className={`rounded-full px-2.5 py-0.5 font-semibold transition-colors ${activeSubmissionsFilter === item.key ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666] hover:bg-gray-50 dark:hover:bg-[#333]'}`}>
+                  <button key={item.key} type="button" onClick={() => setActiveSubmissionsFilter(item.key as typeof activeSubmissionsFilter)} className={`rounded-full px-2.5 py-0.5 font-semibold transition-colors ${activeSubmissionsFilter === item.key ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666] hover:bg-gray-50 dark:hover:bg-[#334155]'}`}>
                     {item.label} ({item.count})
                   </button>
                 ))}
@@ -3009,26 +3051,26 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
                   <th className="px-4 py-2">Job Details</th><th className="px-4 py-2">Submission Details</th><th className="px-4 py-2">Submitted By</th><th className="px-4 py-2">Client Bill Rate</th><th className="px-4 py-2">Pay Rate</th>
                 </tr></thead>
-                <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#333]">
+                <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
                   {filteredApplicantSubmissions.length === 0 ? <tr><td colSpan={5} className="px-4 py-6 text-center text-xs text-[#888]">No data available</td></tr> : filteredApplicantSubmissions.map((submission) => {
                     const currentStage = getSubmissionStageIndex(submission.status);
                     const steps = ['Pipeline', 'Submission', 'Client Submission', 'Interview', 'Confirmation', 'Placement', 'Not Joined'];
                     const history = submission.statusHistory || [{ status: submission.status, changedAt: submission.submittedDate }];
                     return <React.Fragment key={submission.id}>
-                      <tr className="hover:bg-gray-50 dark:hover:bg-[#202020]">
-                        <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#333]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || 'â€”'}</span></td>
+                      <tr className="hover:bg-gray-50 dark:hover:bg-[#22334D]">
+                        <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#334155]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || '—'}</span></td>
                         <td className="px-4 py-3"><span className="block font-medium text-[#18558A] dark:text-[#90CDF4]">Submission #{submission.submissionId}</span><span className="mt-1 block max-w-[300px] text-xs font-semibold text-emerald-700 dark:text-emerald-400">{submission.status}</span></td>
-                        <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-white">{submission.recruiter || 'â€”'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
+                        <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-slate-100">{submission.recruiter || '—'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
                         <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.billRate ? submission.billRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.payRate ? submission.payRate.toLocaleString() : 'N/A'}</td>
                       </tr>
-                      <tr><td colSpan={5} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#333]"><div className="flex items-start">{steps.map((step, index) => {
+                      <tr><td colSpan={5} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#334155]"><div className="flex items-start">{steps.map((step, index) => {
                         const state = index === 0 || index < currentStage ? 'completed' : index === currentStage ? 'active' : 'upcoming';
                         const entry = history.filter((item) => getSubmissionStageIndex(item.status) === index).slice(-1)[0];
                         const timestamp = index === 1 ? submission.submittedDate : entry?.changedAt;
-                        return <div key={step} className="flex min-w-0 flex-1 flex-col items-center text-center"><div className="relative flex w-full items-center">{index > 0 && <div className={`h-0.5 flex-1 ${index <= currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} />}<div className={`mx-auto flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white ${state === 'completed' || state === 'active' ? 'bg-emerald-500' : 'border border-gray-400 bg-white dark:bg-[#333]'}`}>{state === 'active' ? <Check className="h-2.5 w-2.5" /> : ''}</div>{index < steps.length - 1 && <div className={`h-0.5 flex-1 ${index < currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} />}</div><span className="mt-1 text-[10px] font-medium text-[#333] dark:text-[#DDD]">{step}</span>{timestamp && <span className="mt-0.5 text-[9px] text-[#888]">{timestamp}</span>}</div>;
+                        return <div key={step} className="flex min-w-0 flex-1 flex-col items-center text-center"><div className="relative flex w-full items-center">{index > 0 ? <div className={`h-0.5 flex-1 ${index <= currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} /> : <div aria-hidden="true" className="invisible h-0.5 flex-1" />}<div className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white ${state === 'completed' || state === 'active' ? 'bg-emerald-500' : 'border border-gray-400 bg-white dark:bg-[#0F172A]'}`}>{state === 'active' ? <Check className="h-2.5 w-2.5" /> : ''}</div>{index < steps.length - 1 ? <div className={`h-0.5 flex-1 ${index < currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} /> : <div aria-hidden="true" className="invisible h-0.5 flex-1" />}</div><span className="mt-1 text-[10px] font-medium text-[#333] dark:text-[#DDD]">{step}</span>{timestamp && <span className="mt-0.5 text-[9px] text-[#888]">{timestamp}</span>}</div>;
                       })}</div></td></tr>
                     </React.Fragment>;
                   })}
@@ -3044,34 +3086,34 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             const hireCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) >= 4).length;
             const detailValue = (key: string): string => String(quickViewJob.customFields?.[key] || 'N/A');
             return <div className="fixed inset-0 z-[80] flex justify-end bg-black/50" onClick={() => setQuickViewJob(null)}>
-              <aside role="dialog" aria-modal="true" aria-label={`Job details quick view: ${quickViewJob.title}`} onClick={(event) => event.stopPropagation()} className="flex h-full w-full flex-col border-l border-[#D5D9DE] bg-white shadow-2xl sm:w-[min(56vw,900px)] dark:border-[#444] dark:bg-[#252525]">
-                <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D7DCE2] px-4 py-3 dark:border-[#444]">
+              <aside role="dialog" aria-modal="true" aria-label={`Job details quick view: ${quickViewJob.title}`} onClick={(event) => event.stopPropagation()} className="drawer-panel flex h-full w-full flex-col border-l border-[#D5D9DE] bg-white shadow-2xl sm:w-[min(56vw,900px)] dark:border-[#334155] dark:bg-[#1E293B]">
+                <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D7DCE2] px-4 py-3 dark:border-[#334155]">
                   <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-[#1877F2]"><Briefcase className="h-4 w-4 shrink-0" /><span className="truncate">{quickViewJob.code} {quickViewJob.title}</span></div>
-                  <div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => navigate('job-detail', quickViewJob.id)} className="rounded border border-[#CBD5E1] px-2.5 py-1.5 text-[11px] text-[#475569] hover:bg-[#F1F5F9] dark:border-[#444] dark:text-white dark:hover:bg-[#333]">Open Job Details</button><button type="button" aria-label="Close job details quick view" onClick={() => setQuickViewJob(null)} className="rounded p-1 text-[#6B7280] hover:bg-[#F1F3F5] dark:hover:bg-[#333]"><X className="h-5 w-5" /></button></div>
+                  <div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => navigate('job-detail', quickViewJob.id)} className="rounded border border-[#CBD5E1] px-2.5 py-1.5 text-[11px] text-[#475569] hover:bg-[#F1F5F9] dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">Open Job Details</button><button type="button" aria-label="Close job details quick view" onClick={() => setQuickViewJob(null)} className="rounded p-1 text-[#6B7280] hover:bg-[#F1F3F5] dark:hover:bg-[#334155]"><X className="h-5 w-5" /></button></div>
                 </header>
-                <div className="shrink-0 bg-[#EEF0F2] px-4 py-4 dark:bg-[#303030]">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] sm:grid-cols-2"><div><span className="block uppercase tracking-wide text-[#64748B]">Pay Rate / Salary</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.currency || 'INR'} {quickViewJob.payRate ? quickViewJob.payRate.toLocaleString() : 'N/A'} / {quickViewJob.rateType || 'Yearly'}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Client</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.client}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Country</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{detailValue('country')}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Job Status</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.status}</span></div><div className="col-span-2"><span className="block uppercase tracking-wide text-[#64748B]">Location</span><span className="mt-1 inline-block rounded bg-white px-2 py-1 text-[10px] font-medium text-[#334155] dark:bg-[#252525] dark:text-white">{quickViewJob.location || 'N/A'}</span></div></div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">{[{ label: '# OF SUBMISSIONS', value: jobSubmissions.length, color: 'text-[#1F2937]' }, { label: '# OF PIPELINE', value: pipelineCount, color: 'text-[#1F2937]' }, { label: '# OF CLIENT SUBMISSIONS', value: clientCount, color: 'text-red-500' }, { label: '# OF INTERVIEWS', value: interviewCount, color: 'text-amber-500' }, { label: '# OF HIRES', value: hireCount, color: 'text-blue-500' }].map((item) => <div key={item.label} className="rounded-sm bg-white px-2 py-2 text-center shadow-sm dark:bg-[#252525]"><span className={`block text-lg font-semibold ${item.color}`}>{item.value}</span><span className="block text-[8px] font-semibold text-[#334155] dark:text-[#AAA]">{item.label}</span></div>)}</div>
+                <div className="shrink-0 bg-[#EEF0F2] px-4 py-4 dark:bg-[#0F172A]">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] sm:grid-cols-2"><div><span className="block uppercase tracking-wide text-[#64748B]">Pay Rate / Salary</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.currency || 'INR'} {quickViewJob.payRate ? quickViewJob.payRate.toLocaleString() : 'N/A'} / {quickViewJob.rateType || 'Yearly'}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Client</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.client}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Country</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{detailValue('country')}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Job Status</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.status}</span></div><div className="col-span-2"><span className="block uppercase tracking-wide text-[#64748B]">Location</span><span className="mt-1 inline-block rounded bg-white px-2 py-1 text-[10px] font-medium text-[#334155] dark:bg-[#1E293B] dark:text-white">{quickViewJob.location || 'N/A'}</span></div></div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">{[{ label: '# OF SUBMISSIONS', value: jobSubmissions.length, color: 'text-[#1F2937]' }, { label: '# OF PIPELINE', value: pipelineCount, color: 'text-[#1F2937]' }, { label: '# OF CLIENT SUBMISSIONS', value: clientCount, color: 'text-red-500' }, { label: '# OF INTERVIEWS', value: interviewCount, color: 'text-amber-500' }, { label: '# OF HIRES', value: hireCount, color: 'text-blue-500' }].map((item) => <div key={item.label} className="rounded-sm bg-white px-2 py-2 text-center shadow-sm dark:bg-[#1E293B]"><span className={`block text-lg font-semibold ${item.color}`}>{item.value}</span><span className="block text-[8px] font-semibold text-[#334155] dark:text-[#AAA]">{item.label}</span></div>)}</div>
                 </div>
-                <nav className="flex shrink-0 items-center gap-1 border-b border-[#E2E8F0] px-4 pt-3 dark:border-[#444]">{[{ id: 'details', label: 'Job Details' }, { id: 'skills', label: 'Skills & Job Description' }, { id: 'notes', label: `Notes (${quickViewJob.notes?.length || 0})` }, { id: 'email', label: 'Email Merges' }].map((tab) => <button key={tab.id} type="button" onClick={() => setQuickViewTab(tab.id as typeof quickViewTab)} className={`border-b-2 px-2.5 py-2 text-[11px] ${quickViewTab === tab.id ? 'border-[#2F80ED] bg-[#2F80ED] font-semibold text-white' : 'border-transparent text-[#555] hover:bg-[#F1F5F9] dark:text-[#CCC] dark:hover:bg-[#333]'}`}>{tab.label}</button>)}</nav>
+                <nav className="flex shrink-0 items-center gap-1 border-b border-[#E2E8F0] px-4 pt-3 dark:border-[#334155]">{[{ id: 'details', label: 'Job Details' }, { id: 'skills', label: 'Skills & Job Description' }, { id: 'notes', label: `Notes (${quickViewJob.notes?.length || 0})` }, { id: 'email', label: 'Email Merges' }].map((tab) => <button key={tab.id} type="button" onClick={() => setQuickViewTab(tab.id as typeof quickViewTab)} className={`border-b-2 px-2.5 py-2 text-[11px] ${quickViewTab === tab.id ? 'border-[#2F80ED] bg-[#2F80ED] font-semibold text-white' : 'border-transparent text-[#555] hover:bg-[#F1F5F9] dark:text-[#CCC] dark:hover:bg-[#334155]'}`}>{tab.label}</button>)}</nav>
                 <div className="min-h-0 flex-1 overflow-y-auto p-4 text-xs">
                   {quickViewTab === 'details' && <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">{[['Client Bill Rate / Salary', quickViewJob.billRate ? `${quickViewJob.currency || 'INR'} ${quickViewJob.billRate.toLocaleString()}` : 'N/A'], ['Required Documents for Submission', detailValue('requiredDocuments')], ['End Client', detailValue('endClient')], ['Duration', quickViewJob.duration || 'N/A'], ['Tax Terms', detailValue('taxTerms')], ['Work Authorization', detailValue('workAuthorization')], ['Interview Mode', detailValue('interviewMode')], ['Experience', quickViewJob.experienceRequired || 'N/A'], ['Assigned To', quickViewJob.assignedTo || quickViewJob.assignedRecruiter || 'N/A'], ['Job Type', quickViewJob.type]].map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3"><span className="text-[#7B8490]">{label}</span><span className="font-medium text-[#252525] dark:text-white">{value}</span></div>)}</div>}
-                  {quickViewTab === 'skills' && <div className="space-y-4"><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Skills</h3><div className="flex flex-wrap gap-1.5">{(quickViewJob.primarySkills?.length ? quickViewJob.primarySkills : quickViewJob.skills).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white">{skill}</span>)}</div></div><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Job Description</h3><p className="whitespace-pre-wrap leading-relaxed text-[#475569] dark:text-[#CCC]">{quickViewJob.description || 'No job description available.'}</p></div></div>}
-                  {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#444]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">Â· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
+                  {quickViewTab === 'skills' && <div className="space-y-4"><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Skills</h3><div className="flex flex-wrap gap-1.5">{(quickViewJob.primarySkills?.length ? quickViewJob.primarySkills : quickViewJob.skills).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white">{skill}</span>)}</div></div><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Job Description</h3><p className="whitespace-pre-wrap leading-relaxed text-[#475569] dark:text-[#CCC]">{quickViewJob.description || 'No job description available.'}</p></div></div>}
+                  {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#334155]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
                   {quickViewTab === 'email' && <p className="py-8 text-center text-[#64748B]">No email merges available.</p>}
                 </div>
               </aside>
             </div>;
           })()}
           {/* 5. eInterviews Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">eInterviews</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
                     <th className="px-4 py-2">Initiated By / Initiated On</th>
                     <th className="px-4 py-2">Job Title</th>
                     <th className="px-4 py-2">Template Name</th>
@@ -3091,20 +3133,20 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
 
           {/* 6. eForms Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
             <span className="text-xs font-bold text-[#1F2937] dark:text-white">eForms</span>
             <p className="mt-2 text-center text-xs text-[#888]">No data available</p>
           </div>
 
           {/* 7. Submissions eForms Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
             <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions eForms</span>
             <p className="mt-2 text-center text-xs text-[#888]">No data available</p>
           </div>
 
           {/* 8. Task Manager Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Task Manager</span>
               <button
                 type="button"
@@ -3117,7 +3159,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
                     <th className="px-4 py-2">Assigned By / Created On</th>
                     <th className="px-4 py-2">Due Date / Time</th>
                     <th className="px-4 py-2">Time Zone</th>
@@ -3129,15 +3171,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody>
-                  {applicantTasks.length ? applicantTasks.map((task, index) => <tr key={`${task.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#333]"><td className="px-4 py-2">{currentUser?.name || 'Me'}</td><td className="px-4 py-2">{task.due || 'â€”'}</td><td className="px-4 py-2">Local</td><td className="px-4 py-2">{task.description || task.title}</td><td className="px-4 py-2">{task.assignee}</td><td className="px-4 py-2">â€”</td><td className="px-4 py-2">â€”</td><td className="px-4 py-2">{task.status}</td></tr>) : <tr><td colSpan={8} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
+                  {applicantTasks.length ? applicantTasks.map((task, index) => <tr key={`${task.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{currentUser?.name || 'Me'}</td><td className="px-4 py-2">{task.due || '—'}</td><td className="px-4 py-2">Local</td><td className="px-4 py-2">{task.description || task.title}</td><td className="px-4 py-2">{task.assignee}</td><td className="px-4 py-2">—</td><td className="px-4 py-2">—</td><td className="px-4 py-2">{task.status}</td></tr>) : <tr><td colSpan={8} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
 
           {/* 9. Call Logs Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Call Logs</span>
               <button
                 type="button"
@@ -3150,7 +3192,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
                     <th className="px-4 py-2">Call Types</th>
                     <th className="px-4 py-2">Comments</th>
                     <th className="px-4 py-2">Call Taken</th>
@@ -3160,18 +3202,18 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody>
-                  {callLogs.length ? callLogs.map((call, index) => <tr key={`${call.date}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#333]"><td className="px-4 py-2">{call.type}</td><td className="px-4 py-2">{call.comments}</td><td className="px-4 py-2">{call.date || 'â€”'}</td><td className="px-4 py-2">{call.followUp || 'â€”'}</td><td className="px-4 py-2">{call.date || 'â€”'}</td><td className="px-4 py-2">{call.by}</td></tr>) : <tr><td colSpan={6} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
+                  {callLogs.length ? callLogs.map((call, index) => <tr key={`${call.date}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{call.type}</td><td className="px-4 py-2">{call.comments}</td><td className="px-4 py-2">{call.date || '—'}</td><td className="px-4 py-2">{call.followUp || '—'}</td><td className="px-4 py-2">{call.date || '—'}</td><td className="px-4 py-2">{call.by}</td></tr>) : <tr><td colSpan={6} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
-            <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#333]">
+            <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#334155]">
               Showing 0 to 0 of 0 entries
             </div>
           </div>
 
           {/* 10. Meeting Schedules Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#333]">
+          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Meeting Schedules</span>
               <button
                 type="button"
@@ -3184,7 +3226,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#333] dark:bg-[#202020]">
+                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
                     <th className="px-4 py-2">Meeting For</th>
                     <th className="px-4 py-2">Description</th>
                     <th className="px-4 py-2">Attendees</th>
@@ -3195,11 +3237,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </tr>
                 </thead>
                 <tbody>
-                  {meetings.length ? meetings.map((meeting, index) => <tr key={`${meeting.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#333]"><td className="px-4 py-2">{meeting.title}</td><td className="px-4 py-2">{meeting.description || 'â€”'}</td><td className="px-4 py-2">{meeting.attendees || 'â€”'}</td><td className="px-4 py-2">{meeting.guests || 'â€”'}</td><td className="px-4 py-2">{meeting.time}</td><td className="px-4 py-2">{meeting.by}</td><td className="px-4 py-2">â€”</td></tr>) : <tr><td colSpan={7} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
+                  {meetings.length ? meetings.map((meeting, index) => <tr key={`${meeting.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{meeting.title}</td><td className="px-4 py-2">{meeting.description || '—'}</td><td className="px-4 py-2">{meeting.attendees || '—'}</td><td className="px-4 py-2">{meeting.guests || '—'}</td><td className="px-4 py-2">{meeting.time}</td><td className="px-4 py-2">{meeting.by}</td><td className="px-4 py-2">—</td></tr>) : <tr><td colSpan={7} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
-            <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#333]">
+            <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#334155]">
               Showing 0 to 0 of 0 entries
             </div>
           </div>
@@ -3208,9 +3250,9 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* PERSONAL DETAILS TAB (Image 1 Replication & Editable Mode) */}
           {activeSubTab === 'Personal Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
               {/* Card Header */}
-              <div className="flex flex-wrap items-center justify-between border-b border-[#F1F5F9] pb-3 gap-2 dark:border-[#333]">
+              <div className="flex flex-wrap items-center justify-between border-b border-[#F1F5F9] pb-3 gap-2 dark:border-[#334155]">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">
                     Personal Details {isEditingPersonal && <span className="text-[#2F80ED] font-normal text-xs">(Editing Mode)</span>}
@@ -3229,7 +3271,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={() => setIsEditingPersonal(false)}
-                      className="rounded border border-[#CED4DA] bg-white px-3.5 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="rounded border border-[#CED4DA] bg-white px-3.5 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       Cancel
                     </button>
@@ -3257,7 +3299,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.firstName ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, firstName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3272,7 +3314,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.middleName ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, middleName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3287,7 +3329,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.lastName ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, lastName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3304,7 +3346,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.legalName ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, legalName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3322,7 +3364,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.maidenName ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, maidenName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3337,7 +3379,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="email"
                       value={personalForm.email ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, email: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
@@ -3356,7 +3398,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.homePhone ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, homePhone: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3371,7 +3413,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.phone ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1877F2]">
@@ -3388,7 +3430,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="email"
                       value={personalForm.alternateEmail ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, alternateEmail: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3405,7 +3447,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.otherPhone ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, otherPhone: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3421,7 +3463,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       placeholder="DD/MM/YYYY"
                       value={personalForm.dateOfBirth ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, dateOfBirth: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3436,7 +3478,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.workPhone ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, workPhone: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3453,7 +3495,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.facebookUrl ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, facebookUrl: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3468,7 +3510,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.twitterUrl ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, twitterUrl: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3483,7 +3525,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.linkedinUrl ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, linkedinUrl: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3500,7 +3542,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.workAuthorization ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, workAuthorization: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3515,7 +3557,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.address ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, address: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3530,7 +3572,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.videoReference ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, videoReference: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3547,7 +3589,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.state ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3562,7 +3604,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.city ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, city: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3577,7 +3619,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.country ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3594,7 +3636,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.source ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, source: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3610,7 +3652,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       placeholder="e.g. 9 Years 2 Months"
                       value={personalForm.experienceYears ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, experienceYears: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3625,7 +3667,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.zipCode ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, zipCode: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3642,7 +3684,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.referredBy ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, referredBy: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3656,7 +3698,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <select
                       value={personalForm.status ?? 'New'}
                       onChange={(e) => setPersonalForm({ ...personalForm, status: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       <option value="New">New lead (Allowed to submit)</option>
                       <option value="Screening">Screening</option>
@@ -3682,7 +3724,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.relevantExperience ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, relevantExperience: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3699,7 +3741,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.assignedRecruiter ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, assignedRecruiter: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3714,7 +3756,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.currentDesignation ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, currentDesignation: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3729,7 +3771,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.applicantGroup ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, applicantGroup: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3746,7 +3788,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.currentCTC ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, currentCTC: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3761,7 +3803,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.expectedCTC ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, expectedCTC: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3776,7 +3818,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.currentCompany ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, currentCompany: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3793,7 +3835,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.panCard ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, panCard: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3808,7 +3850,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.aadharNumber ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, aadharNumber: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3823,7 +3865,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.noticePeriod ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, noticePeriod: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3842,7 +3884,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <select
                       value={personalForm.maritalStatus ?? 'Single'}
                       onChange={(e) => setPersonalForm({ ...personalForm, maritalStatus: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       <option value="Single">Single</option>
                       <option value="Married">Married</option>
@@ -3863,7 +3905,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <select
                       value={personalForm.preferredShift ?? 'Day'}
                       onChange={(e) => setPersonalForm({ ...personalForm, preferredShift: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       <option value="Day">Day Shift</option>
                       <option value="Night">Night Shift</option>
@@ -3886,7 +3928,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.passportNumber ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, passportNumber: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3904,7 +3946,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       placeholder="e.g. React, Node.js, Python"
                       value={personalForm.skills ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, skills: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <div className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3916,7 +3958,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             onClick={() => setSkillsExpandedPersonal(false)}
                             className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
                           >
-                            Less Ã¢â€“Â´
+                            Less
                           </button>
                         </div>
                       ) : (
@@ -3928,7 +3970,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             onClick={() => setSkillsExpandedPersonal(true)}
                             className="ml-1 text-[11px] font-normal text-[#1877F2] hover:underline"
                           >
-                            More Ã¢â€“Â¾
+                            More
                           </button>
                         </div>
                       )}
@@ -3942,7 +3984,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.primarySkills ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, primarySkills: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3956,7 +3998,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <select
                       value={personalForm.willingToRelocate ? 'Yes' : 'No'}
                       onChange={(e) => setPersonalForm({ ...personalForm, willingToRelocate: e.target.value === 'Yes' })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
@@ -3976,7 +4018,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.technology ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, technology: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3991,7 +4033,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.industry ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, industry: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4009,7 +4051,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.nationality ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, nationality: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4026,7 +4068,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.referenceId ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, referenceId: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4041,7 +4083,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.applicantRemarks ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, applicantRemarks: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4056,7 +4098,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       type="text"
                       value={personalForm.noticeEligibility ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, noticeEligibility: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4067,7 +4109,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               {/* EEO Details */}
-              <div className="mt-8 border-t border-[#F1F5F9] pt-4 dark:border-[#333]">
+              <div className="mt-8 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">EEO Details</h3>
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 pt-3 md:grid-cols-3">
                   <div>
@@ -4077,7 +4119,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         type="text"
                         value={personalForm.gender ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
-                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.gender || 'N/A'}</p>
@@ -4090,7 +4132,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         type="text"
                         value={personalForm.raceEthnicity ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, raceEthnicity: e.target.value })}
-                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.raceEthnicity || 'N/A'}</p>
@@ -4103,7 +4145,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         type="text"
                         value={personalForm.veteranStatus ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, veteranStatus: e.target.value })}
-                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.veteranStatus || 'N/A'}</p>
@@ -4116,7 +4158,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         type="text"
                         value={personalForm.disability ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, disability: e.target.value })}
-                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.disability || 'N/A'}</p>
@@ -4126,17 +4168,17 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               {/* User Defined Fields */}
-              <div className="mt-8 border-t border-[#F1F5F9] pt-4 dark:border-[#333]">
+              <div className="mt-8 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">User Defined Fields</h3>
               </div>
 
               {/* Bottom Save / Cancel bar when editing */}
               {isEditingPersonal && (
-                <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#333]">
+                <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
                   <button
                     type="button"
                     onClick={() => setIsEditingPersonal(false)}
-                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   >
                     Cancel
                   </button>
@@ -4157,8 +4199,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           {activeSubTab === 'Profession Details' && (
             <div className="space-y-4">
               {/* 1. Education Details Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-                <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Education Details</h3>
                   <button
                     type="button"
@@ -4191,7 +4233,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       </div>
                       <button
                         type="button"
-                        className="rounded p-1 text-[#888] hover:bg-gray-100 hover:text-[#222] dark:hover:bg-[#333]"
+                        className="rounded p-1 text-[#888] hover:bg-gray-100 hover:text-[#222] dark:hover:bg-[#334155]"
                         title="Options"
                       >
                         <MoreVertical className="h-4 w-4" />
@@ -4202,8 +4244,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               {/* 2. Add Certification Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-                <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Add Certification</h3>
                 </div>
                 <form onSubmit={handleSaveCertification} className="space-y-3 pt-3">
@@ -4217,7 +4259,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         placeholder="Required"
                         value={certForm.certification}
                         onChange={(e) => setCertForm({ ...certForm, certification: e.target.value })}
-                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     </div>
                     <div>
@@ -4229,7 +4271,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         placeholder="Required"
                         value={certForm.yearCompleted}
                         onChange={(e) => setCertForm({ ...certForm, yearCompleted: e.target.value })}
-                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     </div>
                     <div>
@@ -4241,7 +4283,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         placeholder=""
                         value={certForm.comments}
                         onChange={(e) => setCertForm({ ...certForm, comments: e.target.value })}
-                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       />
                     </div>
                   </div>
@@ -4255,7 +4297,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={handleResetCertification}
-                      className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       Reset
                     </button>
@@ -4263,10 +4305,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 </form>
 
                 {certificationsList.length > 0 && (
-                  <div className="mt-4 border-t border-[#F1F5F9] pt-3 dark:border-[#333]">
+                  <div className="mt-4 border-t border-[#F1F5F9] pt-3 dark:border-[#334155]">
                     <div className="flex flex-wrap gap-2">
                       {certificationsList.map((c) => (
-                        <div key={c.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-gray-50 px-3 py-1.5 text-xs dark:border-[#444] dark:bg-[#333]">
+                        <div key={c.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-gray-50 px-3 py-1.5 text-xs dark:border-[#334155] dark:bg-[#0F172A]">
                           <Award className="h-3.5 w-3.5 text-[#1877F2]" />
                           <span className="font-semibold text-[#1F2937] dark:text-white">{c.name}</span>
                           <span className="text-[11px] text-[#888]">({c.yearCompleted})</span>
@@ -4285,8 +4327,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               {/* 3. Work Experience Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-                <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Work Experience</h3>
                   <button
                     type="button"
@@ -4308,8 +4350,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               {/* 4. Add Language Details Card */}
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-                <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                   <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Add Language Details</h3>
                 </div>
                 <form onSubmit={handleSaveLanguage} className="space-y-3 pt-3">
@@ -4319,7 +4361,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       <select
                         value={langForm.language}
                         onChange={(e) => setLangForm({ ...langForm, language: e.target.value })}
-                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                        className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                       >
                         <option value="">Select</option>
                         <option value="English">English</option>
@@ -4376,7 +4418,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={handleResetLanguage}
-                      className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
                       Reset
                     </button>
@@ -4384,10 +4426,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 </form>
 
                 {languagesList.length > 0 && (
-                  <div className="mt-4 border-t border-[#F1F5F9] pt-3 dark:border-[#333]">
+                  <div className="mt-4 border-t border-[#F1F5F9] pt-3 dark:border-[#334155]">
                     <div className="flex flex-wrap gap-2">
                       {languagesList.map((lang) => (
-                        <div key={lang.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-gray-50 px-3 py-1.5 text-xs dark:border-[#444] dark:bg-[#333]">
+                        <div key={lang.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-gray-50 px-3 py-1.5 text-xs dark:border-[#334155] dark:bg-[#0F172A]">
                           <Languages className="h-3.5 w-3.5 text-[#1877F2]" />
                           <span className="font-semibold text-[#1F2937] dark:text-white">{lang.language}</span>
                           <span className="text-[11px] text-[#888]">
@@ -4411,8 +4453,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* EMPLOYER DETAILS TAB (Ceipal Replication) */}
           {activeSubTab === 'Employer Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Employer Details</h3>
                 <button
                   type="button"
@@ -4440,7 +4482,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div className="overflow-x-auto pt-2">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]">
                     <tr>
                       <th className="px-4 py-2.5">EMPLOYEE NAME</th>
                       <th className="px-4 py-2.5">EMPLOYER</th>
@@ -4498,8 +4540,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* EMPLOYMENT TEST RESULTS TAB */}
           {activeSubTab === 'Employment Test Results' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#1E293B]">
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Employment Test Results</h3>
                 <button
                   type="button"
@@ -4518,7 +4560,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* ACTIVITIES TAB */}
           {activeSubTab === 'Activities' && (
-            <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#333] dark:bg-[#252525]" aria-labelledby="activities-title">
+            <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]" aria-labelledby="activities-title">
               <div className="border-b border-[#E8EDF3] px-4 py-4 dark:border-[#383838] sm:px-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div>
@@ -4528,12 +4570,12 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       </div>
                       <div>
                         <h3 id="activities-title" className="text-sm font-bold text-[#1F2937] dark:text-white">Activities</h3>
-                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-[#AAA]">A complete record of this applicantâ€™s interactions and updates.</p>
+                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-[#AAA]">A complete record of this applicant’s interactions and updates.</p>
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 dark:bg-[#333] sm:w-auto" role="group" aria-label="Activity type filter">
+                    <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 dark:bg-[#0F172A] sm:w-auto" role="group" aria-label="Activity type filter">
                       {[
                         { id: 'all' as const, label: 'Activities' },
                         { id: 'messages' as const, label: 'Msg Activities' },
@@ -4559,7 +4601,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       <select
                         value={activityPeriod}
                         onChange={(event) => setActivityPeriod(event.target.value as 'last-6-months' | 'older')}
-                        className="h-9 w-full appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-3 pr-9 text-[11px] font-medium text-slate-700 outline-none transition focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:focus:ring-[#1E3A5F] sm:w-40"
+                        className="h-9 w-full appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-3 pr-9 text-[11px] font-medium text-slate-700 outline-none transition focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:focus:ring-[#1E3A5F] sm:w-40"
                       >
                         <option value="last-6-months">Last 6 months</option>
                         <option value="older">Older than 6 months</option>
@@ -4582,7 +4624,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               {visibleActivityEvents.length > 0 ? (
                 <div className="overflow-x-auto border-t border-[#E8EDF3] dark:border-[#383838]">
                   <table className="min-w-[680px] w-full text-left">
-                    <thead className="bg-slate-50 dark:bg-[#2D2D2D]">
+                    <thead className="bg-slate-50 dark:bg-[#0F172A]">
                       <tr className="border-b border-[#E8EDF3] dark:border-[#383838]">
                         <th scope="col" className="w-52 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-[#AAA]">Date &amp; time</th>
                         <th scope="col" className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-[#AAA]">Activity details</th>
@@ -4615,8 +4657,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </table>
                 </div>
               ) : (
-                <div className="flex min-h-60 flex-col items-center justify-center border-t border-dashed border-[#E8EDF3] px-5 text-center dark:border-[#444]">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-[#333]">
+                <div className="flex min-h-60 flex-col items-center justify-center border-t border-dashed border-[#E8EDF3] px-5 text-center dark:border-[#334155]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-[#0F172A]">
                     <Clock className="h-5 w-5" />
                   </div>
                   <h4 className="mt-3 text-sm font-semibold text-slate-700 dark:text-white">No activities found</h4>
@@ -4628,7 +4670,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* EMAIL MERGES TAB (Three-Dot Option 1) */}
           {activeSubTab === 'Email Merges' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
               {isEmailMergeDeactivated && (
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs dark:border-amber-900/50 dark:bg-amber-950/30">
                   <div className="flex items-center gap-2">
@@ -4661,7 +4703,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   </div>
                 </div>
               )}
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Email Merges</h3>
                 <button
                   type="button"
@@ -4674,7 +4716,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div className="overflow-x-auto pt-2">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]">
                     <tr>
                       <th className="px-4 py-2.5">CAMPAIGN / TEMPLATE</th>
                       <th className="px-4 py-2.5">RECIPIENT EMAIL</th>
@@ -4703,31 +4745,31 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* EMAIL ACTIVITY TAB (Three-Dot Option 2) */}
           {activeSubTab === 'Email Activity' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
                 <h3 className="text-sm font-semibold text-[#1F2937] dark:text-white">Email Activity</h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs"><label className="text-[#64748B]">Email Type</label><select value={emailActivityTypeFilter} onChange={(event) => { setEmailActivityTypeFilter(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option>All Types</option>{Array.from(new Set(['Email', 'Job Share', ...emailActivityTypes])).map((type) => <option key={type}>{type}</option>)}</select><select aria-label="Email activity period" value={emailActivityPeriod} onChange={(event) => { setEmailActivityPeriod(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#444] dark:bg-[#333] dark:text-white"><option>Last 6 Months</option><option>Last 30 Days</option><option>Last Year</option><option>All Time</option></select><button type="button" onClick={openEmailComposer} className="rounded bg-[#2F80ED] px-2.5 py-1.5 font-semibold text-white hover:bg-[#1D6FD8]"><Send className="mr-1 inline h-3 w-3" />Compose Email</button></div>
+                <div className="flex flex-wrap items-center gap-2 text-xs"><label className="text-[#64748B]">Email Type</label><select value={emailActivityTypeFilter} onChange={(event) => { setEmailActivityTypeFilter(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option>All Types</option>{Array.from(new Set(['Email', 'Job Share', ...emailActivityTypes])).map((type) => <option key={type}>{type}</option>)}</select><select aria-label="Email activity period" value={emailActivityPeriod} onChange={(event) => { setEmailActivityPeriod(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option>Last 6 Months</option><option>Last 30 Days</option><option>Last Year</option><option>All Time</option></select><button type="button" onClick={openEmailComposer} className="rounded bg-[#2F80ED] px-2.5 py-1.5 font-semibold text-white hover:bg-[#1D6FD8]"><Send className="mr-1 inline h-3 w-3" />Compose Email</button></div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3 text-[11px] dark:border-[#333]"><label className="flex items-center gap-1.5 text-[#64748B]">Search:<input type="search" value={emailActivitySearch} onChange={(event) => { setEmailActivitySearch(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-xs text-[#334155] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white" /></label><label className="flex items-center gap-1.5 text-[#64748B]">Show<select value={emailActivityPageSize} onChange={(event) => { setEmailActivityPageSize(Number(event.target.value)); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1 text-xs dark:border-[#444] dark:bg-[#333] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select>entries</label></div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3 text-[11px] dark:border-[#334155]"><label className="flex items-center gap-1.5 text-[#64748B]">Search:<input type="search" value={emailActivitySearch} onChange={(event) => { setEmailActivitySearch(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-xs text-[#334155] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label><label className="flex items-center gap-1.5 text-[#64748B]">Show<select value={emailActivityPageSize} onChange={(event) => { setEmailActivityPageSize(Number(event.target.value)); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1 text-xs dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select>entries</label></div>
               <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead><tr className="border-b border-[#D8D8D8] text-[10px] font-bold uppercase text-[#444]"><th className="px-2 py-2">Date &amp; Time</th><th className="px-2 py-2">Email Type</th><th className="px-2 py-2">Sent By</th><th className="px-2 py-2">Sent To</th><th className="px-2 py-2">Email Details</th></tr></thead><tbody className="divide-y divide-[#E5E7EB] dark:divide-[#333]">
                 {visibleEmailActivity.length ? visibleEmailActivity.map((email, index) => {
                   const emailId = email.id || `${email.sentAt}-${index}`;
                   const isExpanded = emailActivityExpandedId === emailId;
-                  return <React.Fragment key={emailId}><tr className="hover:bg-slate-50 dark:hover:bg-[#202020]"><td className="whitespace-nowrap px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.sentAt ? new Date(email.sentAt).toLocaleString() : '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.type || 'Email'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.from || '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{(email.to || []).join(', ') || '—'}{email.cc?.length ? <span className="block text-[10px] text-slate-400">CC: {email.cc.join(', ')}</span> : null}</td><td className="px-2 py-2.5"><button type="button" onClick={() => setEmailActivityExpandedId(isExpanded ? null : emailId)} className="font-medium text-[#1877F2] hover:underline">{email.subject || 'View email'} {isExpanded ? '-' : '+'}</button></td></tr>{isExpanded && <tr><td colSpan={5} className="bg-slate-50 px-4 py-3 dark:bg-[#202020]"><p className="font-semibold text-slate-700 dark:text-slate-200">{email.subject || '(No subject)'}</p><p className="mt-2 whitespace-pre-wrap text-slate-600 dark:text-slate-300">{(email.body || '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' ').trim() || '(No message body)'}</p>{email.attachments?.length ? <p className="mt-2 text-[10px] text-slate-500">Attachments: {email.attachments.join(', ')}</p> : null}<p className="mt-2 text-[10px] text-slate-400">Activity: Email composed and saved from this applicant profile.</p></td></tr>}</React.Fragment>;
+                  return <React.Fragment key={emailId}><tr className="hover:bg-slate-50 dark:hover:bg-[#202020]"><td className="whitespace-nowrap px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.sentAt ? new Date(email.sentAt).toLocaleString() : '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.type || 'Email'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.from || '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{(email.to || []).join(', ') || '—'}{email.cc?.length ? <span className="block text-[10px] text-slate-400">CC: {email.cc.join(', ')}</span> : null}</td><td className="px-2 py-2.5"><button type="button" onClick={() => setEmailActivityExpandedId(isExpanded ? null : emailId)} className="font-medium text-[#1877F2] hover:underline">{email.subject || 'View email'} {isExpanded ? '-' : '+'}</button></td></tr>{isExpanded && <tr><td colSpan={5} className="bg-slate-50 px-4 py-3 dark:bg-[#0F172A]"><p className="font-semibold text-slate-700 dark:text-slate-200">{email.subject || '(No subject)'}</p><p className="mt-2 whitespace-pre-wrap text-slate-600 dark:text-slate-300">{(email.body || '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' ').trim() || '(No message body)'}</p>{email.attachments?.length ? <p className="mt-2 text-[10px] text-slate-500">Attachments: {email.attachments.join(', ')}</p> : null}<p className="mt-2 text-[10px] text-slate-400">Activity: Email composed and saved from this applicant profile.</p></td></tr>}</React.Fragment>;
                 }) : <tr><td colSpan={5} className="px-2 py-3 text-center text-xs text-[#666]">No data available in table</td></tr>}
               </tbody></table></div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-[10px] text-[#64748B]"><span>Showing {emailActivityFiltered.length ? emailActivityPage * emailActivityPageSize + 1 : 0} to {Math.min((emailActivityPage + 1) * emailActivityPageSize, emailActivityFiltered.length)} of {emailActivityFiltered.length} entries</span><div className="flex gap-1"><button type="button" aria-label="Previous email activity page" disabled={emailActivityPage === 0} onClick={() => setEmailActivityPage((page) => Math.max(0, page - 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#444]">‹</button><button type="button" aria-label="Next email activity page" disabled={emailActivityPage + 1 >= emailActivityPageCount} onClick={() => setEmailActivityPage((page) => Math.min(emailActivityPageCount - 1, page + 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#444]">›</button></div></div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-[10px] text-[#64748B]"><span>Showing {emailActivityFiltered.length ? emailActivityPage * emailActivityPageSize + 1 : 0} to {Math.min((emailActivityPage + 1) * emailActivityPageSize, emailActivityFiltered.length)} of {emailActivityFiltered.length} entries</span><div className="flex gap-1"><button type="button" aria-label="Previous email activity page" disabled={emailActivityPage === 0} onClick={() => setEmailActivityPage((page) => Math.max(0, page - 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#334155]">‹</button><button type="button" aria-label="Next email activity page" disabled={emailActivityPage + 1 >= emailActivityPageCount} onClick={() => setEmailActivityPage((page) => Math.min(emailActivityPageCount - 1, page + 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#334155]">›</button></div></div>
             </div>
           )}
           {/* HIRES TAB (Three-Dot Option 3) */}
           {activeSubTab === 'Hires' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
-              <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+              <div className="border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Hires & Onboarding Records</h3>
               </div>
               <div className="overflow-x-auto pt-2">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]">
                     <tr>
                       <th className="px-4 py-2.5">JOB CODE & TITLE</th>
                       <th className="px-4 py-2.5">CLIENT</th>
@@ -4758,8 +4800,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* SURVEYS TAB (Three-Dot Option 4) */}
           {activeSubTab === 'Surveys' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#333] dark:bg-[#252525]">
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#333]">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3 dark:border-[#334155]">
                 <h3 className="text-xs font-bold text-[#1F2937] dark:text-white">Candidate Experience Surveys</h3>
                 <button
                   type="button"
@@ -4772,7 +4814,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div className="overflow-x-auto pt-2">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#333] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+                  <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-wider text-[#475569] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]">
                     <tr>
                       <th className="px-4 py-2.5">SURVEY NAME</th>
                       <th className="px-4 py-2.5">DISPATCHED DATE</th>
@@ -4790,7 +4832,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           Completed
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#F2B705] font-bold">5 / 5 Ã¢Ëœâ€¦</td>
+                      <td className="px-4 py-3 text-[#F2B705] font-bold">5 / 5 stars</td>
                       <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">"Recruitment team was very responsive and professional."</td>
                     </tr>
                   </tbody>
@@ -4805,14 +4847,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             {/* RIGHT-SIDE SLIDE-OUT RESUME PANEL (Matching Reference UI) */}
       {isResumePanelOpen && (
         <div
-          className={`fixed bottom-0 right-0 top-[56px] z-40 flex flex-col border-l border-[#E2E8F0] bg-white shadow-2xl transition-all duration-300 dark:border-[#333] dark:bg-[#1E1E1E] ${
+          className={`drawer-panel fixed bottom-0 right-0 top-[56px] z-40 flex flex-col border-l border-[#E2E8F0] bg-white shadow-2xl transition-all duration-300 dark:border-[#334155] dark:bg-[#1E293B] ${
             resumeFullscreen
               ? 'left-0 w-full'
               : 'w-full sm:w-[500px] md:w-[550px] lg:w-[48%] xl:w-[45%]'
           }`}
         >
           {/* Top Header */}
-          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2.5 dark:border-[#333] dark:bg-[#252525]">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2.5 dark:border-[#334155] dark:bg-[#1E293B]">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-[#1877F2]" />
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">
@@ -4825,7 +4867,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 type="button"
                 onClick={handleDownloadResume}
                 title="Download Resume"
-                className="rounded p-1.5 hover:bg-gray-100 hover:text-[#1877F2] dark:hover:bg-[#333]"
+                className="rounded p-1.5 hover:bg-gray-100 hover:text-[#1877F2] dark:hover:bg-[#334155]"
               >
                 <Download className="h-4 w-4" />
               </button>
@@ -4833,7 +4875,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 type="button"
                 onClick={() => setResumeFullscreen(!resumeFullscreen)}
                 title={resumeFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-                className="rounded p-1.5 hover:bg-gray-100 hover:text-[#1877F2] dark:hover:bg-[#333]"
+                className="rounded p-1.5 hover:bg-gray-100 hover:text-[#1877F2] dark:hover:bg-[#334155]"
               >
                 <Maximize2 className="h-4 w-4" />
               </button>
@@ -4841,7 +4883,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 type="button"
                 onClick={() => setIsResumePanelOpen(false)}
                 title="Close Resume"
-                className="rounded p-1.5 text-[#666] hover:bg-gray-100 hover:text-red-500 dark:hover:bg-[#333]"
+                className="rounded p-1.5 text-[#666] hover:bg-gray-100 hover:text-red-500 dark:hover:bg-[#334155]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -4849,7 +4891,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
 
           {/* Sub Bar with Resume Tab */}
-          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-1.5 dark:border-[#333] dark:bg-[#202020]">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-1.5 dark:border-[#334155] dark:bg-[#0F172A]">
             <div className="flex items-center gap-2">
               <div className="rounded-t-md bg-[#2F80ED] px-3.5 py-1 text-[11px] font-semibold text-white shadow-xs">
                 Resume
@@ -4863,27 +4905,27 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* Resume Document Canvas / Paper */}
           <div className="flex-1 overflow-y-auto bg-[#F1F5F9] p-4 md:p-6 dark:bg-[#121212]">
-            <div className="mx-auto max-w-[620px] rounded border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm space-y-5 text-xs text-[#1F2937] dark:border-[#333] dark:bg-[#1E1E1E] dark:text-[#E0E0E0]">
+            <div className="mx-auto max-w-[620px] rounded border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm space-y-5 text-xs text-[#1F2937] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#E0E0E0]">
               {/* Header */}
               <div className="text-center space-y-1">
                 <h1 className="text-xl font-bold tracking-tight text-[#111827] dark:text-white">
                   {displayName}
                 </h1>
                 <p className="text-xs text-[#4B5563] dark:text-[#9CA3AF]">
-                  {applicant.city || applicant.location || 'Nashik, Maharashtra, India'} Ã‚Â· {applicant.email || 'applicant@email.com'} Ã‚Â· {applicant.phone || '+91-9876543210'}
+                  {applicant.city || applicant.location || 'Nashik, Maharashtra, India'} · {applicant.email || 'applicant@email.com'} · {applicant.phone || '+91-9876543210'}
                 </p>
                 <div className="flex justify-center items-center gap-3 text-xs text-[#1877F2] pt-1">
                   <a href={applicant.portfolioUrl || '#'} className="hover:underline">Portfolio</a>
-                  <span>Ã‚Â·</span>
+                  <span>·</span>
                   <a href={applicant.githubUrl || '#'} className="hover:underline">GitHub</a>
-                  <span>Ã‚Â·</span>
+                  <span>·</span>
                   <a href={applicant.linkedinUrl || '#'} className="hover:underline">LinkedIn</a>
                 </div>
               </div>
 
               {/* Summary */}
               <div className="space-y-1.5">
-                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#334155] dark:text-white">
                   Summary
                 </h2>
                 <p className="text-xs text-[#4B5563] dark:text-[#CCC] leading-relaxed">
@@ -4894,7 +4936,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
               {/* Education */}
               <div className="space-y-2">
-                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#334155] dark:text-white">
                   Education
                 </h2>
                 <table className="w-full text-left text-xs">
@@ -4933,7 +4975,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
               {/* Technical Skills */}
               <div className="space-y-2">
-                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#334155] dark:text-white">
                   Technical Skills
                 </h2>
                 <div className="space-y-1 text-xs">
@@ -4946,7 +4988,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
               {/* Work Experience */}
               <div className="space-y-2">
-                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#333] dark:text-white">
+                <h2 className="border-b border-[#E2E8F0] pb-1 text-xs font-bold uppercase tracking-wider text-[#1F2937] dark:border-[#334155] dark:text-white">
                   Work Experience & Projects
                 </h2>
                 <div className="space-y-3">
@@ -4982,13 +5024,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
       {/* RIGHT SIDEBAR (Fixed / Sticky Right Panel matching Ceipal reference) */}
       <aside
-        className={`fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#333] dark:bg-[#1E293B] ${
+        aria-label="Applicant Details Panel"
+        className={`drawer-panel fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#334155] dark:bg-[#1E293B] ${
           isResumePanelOpen || sidebarCollapsed
             ? 'w-0 overflow-hidden border-none pointer-events-none'
             : 'w-[305px] overflow-hidden'
         }`}
       >
-        <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 pb-3 pt-4 dark:border-[#333] dark:bg-[#252525]">
+        <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 pb-3 pt-4 dark:border-[#334155] dark:bg-[#1E293B]">
           <h2 className="m-0 block text-sm font-semibold leading-5 text-[#1F2937] dark:text-white">Applicant Details</h2>
         </div>
         <div className="space-y-5 overflow-y-auto p-4 text-xs">
@@ -4996,14 +5039,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <div>
             <div className="space-y-2.5">
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Ownership</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Ownership</span>
                 <span className="font-semibold text-[#222] dark:text-white">{applicant.assignedRecruiter || 'Ganesh Kshirsagar'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Applicant Status</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Applicant Status</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-[#222] dark:text-white">{applicant.status || 'New lead (Allowed to submit)'}</span>
+                  <span className="font-medium text-[#222] dark:text-slate-100">{applicant.status || 'New lead (Allowed to submit)'}</span>
                   <button
                     type="button"
                     onClick={() => setDialog('status')}
@@ -5016,9 +5059,9 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Applicant Group</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Applicant Group</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-[#222] dark:text-white">{applicant.applicantGroup || 'N/A'}</span>
+                  <span className="font-medium text-[#222] dark:text-slate-100">{applicant.applicantGroup || 'N/A'}</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -5038,22 +5081,22 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Source</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.source || 'Naukri'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Source</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.source || 'Naukri'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Work Authorization</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.workAuthorization || 'N/A'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Work Authorization</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.workAuthorization || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Home Phone Number</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.homePhone || 'N/A'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Home Phone Number</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.homePhone || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Skills</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Skills</span>
                 <p className="leading-snug text-[#444] dark:text-[#CCC]">
                   {applicant.skills?.length ? applicant.skills.join(', ') : '.NET FRAMEWORK, E-Commerce, Datadog, Root Cause Analysis, Salesforce Comme'}
                 </p>
@@ -5063,96 +5106,96 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Experience</span>
-                <span className="font-medium text-[#222] dark:text-white">
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Experience</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">
                   {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
                 </span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Expected CTC</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.expectedCTC || applicant.expectedSalary || 'N/A'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Expected CTC</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.expectedCTC || applicant.expectedSalary || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Current CTC</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.currentCTC || 'N/A'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Current CTC</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.currentCTC || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Notice Period</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.noticePeriod || 'N/A'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Notice Period</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.noticePeriod || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Date Of Birth</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.dateOfBirth || '17/02/1993 (33) Years'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Date Of Birth</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.dateOfBirth || '17/02/1993 (33) Years'}</span>
               </div>
 
               <div>
-                <span className="block text-[10px] font-medium text-[#888]">Relocation</span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.willingToRelocate !== false ? 'Yes' : 'No'}</span>
+                <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Relocation</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.willingToRelocate !== false ? 'Yes' : 'No'}</span>
               </div>
             </div>
           </div>
 
-          <hr className="border-[#E2E8F0] dark:border-[#333]" />
+          <hr className="border-[#E2E8F0] dark:border-[#334155]" />
 
           {/* Section 2: Personal Details */}
           <div>
             <h2 className="mb-3 text-xs font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
             <div className="space-y-2.5">
               <div>
-                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888]">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
                   Maiden Name
                   <CircleHelp className="h-3 w-3 text-[#2F80ED]" />
                 </span>
-                <span className="font-medium text-[#222] dark:text-white">N/A</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">N/A</span>
               </div>
 
               <div>
-                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888]">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
                   Relevant experience
                   <CircleHelp className="h-3 w-3 text-[#2F80ED]" />
                 </span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.relevantExperience ? `${applicant.relevantExperience} Years` : 'N/A'}</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.relevantExperience ? `${applicant.relevantExperience} Years` : 'N/A'}</span>
               </div>
 
               <div>
-                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888]">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
                   Passport number
                   <CircleHelp className="h-3 w-3 text-[#2F80ED]" />
                 </span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.passportNumber || 'N/A'}</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.passportNumber || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888]">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
                   Marital status
                   <CircleHelp className="h-3 w-3 text-[#2F80ED]" />
                 </span>
-                <span className="font-medium text-[#222] dark:text-white">N/A</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">N/A</span>
               </div>
 
               <div>
-                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888]">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
                   Preferred Shift
                   <CircleHelp className="h-3 w-3 text-[#2F80ED]" />
                 </span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.preferredShift || 'N/A'}</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.preferredShift || 'N/A'}</span>
               </div>
 
               <div>
-                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888]">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
                   Nationality
                   <CircleHelp className="h-3 w-3 text-[#2F80ED]" />
                 </span>
-                <span className="font-medium text-[#222] dark:text-white">{applicant.customFields?.nationality || 'N/A'}</span>
+                <span className="font-medium text-[#222] dark:text-slate-100">{applicant.customFields?.nationality || 'N/A'}</span>
               </div>
             </div>
           </div>
 
-          <hr className="border-[#E2E8F0] dark:border-[#333]" />
+          <hr className="border-[#E2E8F0] dark:border-[#334155]" />
 
           {/* Section 3: User Defined Fields */}
           <div>
@@ -5180,8 +5223,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Edit Applicant Modal */}
       {dialog === 'edit' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-lg rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Edit Applicant Profile</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
@@ -5193,7 +5236,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 />
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -5202,7 +5245,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <input
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </label>
                 <label className="block space-y-1">
@@ -5210,7 +5253,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <input
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </label>
               </div>
@@ -5220,7 +5263,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <input
                     value={editDesignation}
                     onChange={(e) => setEditDesignation(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </label>
                 <label className="block space-y-1">
@@ -5228,7 +5271,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <input
                     value={editLocation}
                     onChange={(e) => setEditLocation(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </label>
               </div>
@@ -5238,7 +5281,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   type="number"
                   value={editExperience}
                   onChange={(e) => setEditExperience(Number(e.target.value))}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 />
               </label>
               <label className="block space-y-1">
@@ -5247,15 +5290,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   rows={2}
                   value={editSkills}
                   onChange={(e) => setEditSkills(e.target.value)}
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 />
               </label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
+            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#444] dark:text-white"
+                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#334155] dark:text-white"
               >
                 Cancel
               </button>
@@ -5274,18 +5317,18 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* View Resume Modal */}
       {dialog === 'resume' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <div>
-                <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Resume Document â€” {applicant.name}</h2>
-                <p className="text-[11px] text-[#888]">{applicant.currentDesignation} Â· {applicant.location}</p>
+                <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Resume Document — {applicant.name}</h2>
+                <p className="text-[11px] text-[#888]">{applicant.currentDesignation} · {applicant.location}</p>
               </div>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="my-4 max-h-[60vh] space-y-3 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-[#FAFAFA] p-5 text-xs font-mono leading-relaxed dark:border-[#333] dark:bg-[#202020]">
-              <div className="border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+            <div className="my-4 max-h-[60vh] space-y-3 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-[#FAFAFA] p-5 text-xs font-mono leading-relaxed dark:border-[#334155] dark:bg-[#0F172A]">
+              <div className="border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
                 <h3 className="text-base font-bold text-[#222] dark:text-white">{applicant.name}</h3>
                 <p className="text-xs text-[#2F80ED]">{applicant.currentDesignation}</p>
                 <p className="text-[11px] text-[#666] dark:text-[#AAA]">{applicant.email} | {applicant.phone} | {applicant.location}</p>
@@ -5296,18 +5339,18 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Core Technical Skills</h4>
-                <p className="text-[#555] dark:text-[#BBB]">{applicant.skills.join(' Ã‚Â· ')}</p>
+                <p className="text-[#555] dark:text-[#BBB]">{applicant.skills.join(' · ')}</p>
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Experience</h4>
                 <p className="text-[#555] dark:text-[#BBB]">{applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months of industry experience.` : '9 Years 2 Months of industry experience.'}</p>
               </div>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
+            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#444] dark:text-white"
+                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#334155] dark:text-white"
               >
                 Close
               </button>
@@ -5319,8 +5362,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Add Note Modal (Exact Replication of Reference Image 1) */}
       {dialog === 'note' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-2xl rounded-xl border border-[#CBD5E1] bg-white p-6 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Note</h3>
                 {applicant.notes && applicant.notes.length > 0 && (
@@ -5374,14 +5417,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     type="text"
                     readOnly
                     value={displayName}
-                    className="w-full rounded border border-[#CBD5E1] bg-gray-50 p-2 text-xs font-semibold text-[#1F2937] outline-none dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CBD5E1] bg-gray-50 p-2 text-xs font-semibold text-[#1F2937] outline-none dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </div>
                 <div>
                   <select
                     value={noteJob}
                     onChange={(e) => setNoteJob(e.target.value)}
-                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   >
                     <option value="">Search for a Job</option>
                     <option value="AMP12294">AMP12294 - E-commerce Production Support</option>
@@ -5397,7 +5440,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <select
                     value={newNotePriority}
                     onChange={(e) => setNewNotePriority(e.target.value)}
-                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
@@ -5409,7 +5452,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <select
                     value={noteClient}
                     onChange={(e) => setNoteClient(e.target.value)}
-                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   >
                     <option value="">Search for a Client</option>
                     <option value="Dentsu">Dentsu</option>
@@ -5426,7 +5469,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <select
                     value={noteContact}
                     onChange={(e) => setNoteContact(e.target.value)}
-                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   >
                     <option value="">Select</option>
                     <option value="Primary Contact">Primary Contact</option>
@@ -5438,7 +5481,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <select
                     value={noteAction}
                     onChange={(e) => setNoteAction(e.target.value)}
-                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   >
                     <option value="">Select Actions</option>
                     <option value="Call">Call Candidate</option>
@@ -5468,7 +5511,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   value={noteSubject || `New Note Created for ${displayName} - ${displayId}.`}
                   onChange={(e) => setNoteSubject(e.target.value)}
                   placeholder={`New Note Created for ${displayName} - ${displayId}.`}
-                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs font-medium outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs font-medium outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 />
               </div>
 
@@ -5492,7 +5535,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </label>
             </div>
 
-            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#333]">
+            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={handleAddNote}
@@ -5503,7 +5546,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white transition-colors"
+                className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -5515,28 +5558,28 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Add Task Modal */}
       {dialog === 'task' && (
         <div className="fixed inset-0 z-[100] flex justify-end bg-black/50" onClick={() => setDialog(null)}>
-          <section aria-label="Create new task" className="flex h-full w-full max-w-[900px] flex-col overflow-y-auto bg-white shadow-2xl dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3 dark:border-[#334155] dark:bg-[#172033]"><h2 className="text-base font-semibold text-slate-800 dark:text-white"><span className="mr-2 text-blue-500">â†</span>Create New Task</h2><button aria-label="Close task form" onClick={() => setDialog(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white"><X className="h-5 w-5" /></button></header>
+          <section aria-label="Create new task" className="drawer-panel flex h-full w-full max-w-[900px] flex-col overflow-y-auto bg-white shadow-2xl dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3 dark:border-[#334155] dark:bg-[#0F172A]"><h2 className="flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-white"><ArrowLeft className="h-4 w-4 text-blue-500" aria-hidden="true" />Create New Task</h2><button aria-label="Close task form" onClick={() => setDialog(null)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white"><X className="h-5 w-5" /></button></header>
             <div className="grid flex-1 grid-cols-1 gap-6 p-5 lg:grid-cols-[1.2fr_0.8fr]">
               <div className="space-y-3 text-xs">
-                <div className="flex gap-2"><input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Enter Title" className="min-w-0 flex-1 border border-slate-300 bg-slate-50 px-2 py-1.5 outline-none focus:border-blue-500 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /><select aria-label="Priority" className="border border-slate-300 bg-slate-50 px-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>ðŸŒŸ</option><option>High</option><option>Normal</option></select></div>
-                <textarea value={newTaskDescription} onChange={(e) => setNewTaskDescription(e.target.value)} placeholder="Enter a brief description of the task" rows={3} className="w-full border border-slate-300 bg-slate-50 p-2 outline-none focus:border-blue-500 dark:border-[#475569] dark:bg-[#263449] dark:text-white" />
+                <div className="flex gap-2"><input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Enter Title" className="min-w-0 flex-1 border border-slate-300 bg-slate-50 px-2 py-1.5 outline-none focus:border-blue-500 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /><select aria-label="Priority" className="border border-slate-300 bg-slate-50 px-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option value="Low">Low Priority</option><option value="High">High</option><option value="Normal">Normal</option></select></div>
+                <textarea value={newTaskDescription} onChange={(e) => setNewTaskDescription(e.target.value)} placeholder="Enter a brief description of the task" rows={3} className="w-full border border-slate-300 bg-slate-50 p-2 outline-none focus:border-blue-500 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="space-y-1 text-slate-500">Task Type<select value={newTaskType} onChange={(e) => setNewTaskType(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Call</option><option>Follow-up</option><option>Meeting</option><option>Screening</option><option>Other</option></select></label>
-                  <label className="space-y-1 text-slate-500">Task Category<select value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option value="">Select</option><option>Recruiting</option><option>Follow-up</option><option>Interview</option><option>Administrative</option></select></label>
-                  <label className="space-y-1 text-slate-500">Related To<input readOnly value="Applicant" className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-                  <label className="space-y-1 text-slate-500">Applicant<input readOnly value={`${applicant.applicantId ? `${applicant.applicantId} - ` : ''}${applicant.name}`} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-                  <label className="space-y-1 text-slate-500">Due Date<input type="datetime-local" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-                  <label className="space-y-1 text-slate-500">Status<select value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Deferred</option></select></label>
-                  <label className="space-y-1 text-slate-500">Assign To<input value={newTaskAssignee} onChange={(e) => setNewTaskAssignee(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-                  <label className="space-y-1 text-slate-500">Escalate To<input className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 dark:border-[#475569] dark:bg-[#263449]" /></label>
-                  <label className="space-y-1 text-slate-500">Reminder<select value={newTaskReminder} onChange={(e) => setNewTaskReminder(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>None</option><option>At due time</option><option>15 minutes before</option><option>1 hour before</option><option>1 day before</option></select></label>
-                  <label className="space-y-1 text-slate-500">Ownership<input className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 dark:border-[#475569] dark:bg-[#263449]" /></label>
+                  <label className="space-y-1 text-slate-500">Task Type<select value={newTaskType} onChange={(e) => setNewTaskType(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>Call</option><option>Follow-up</option><option>Meeting</option><option>Screening</option><option>Other</option></select></label>
+                  <label className="space-y-1 text-slate-500">Task Category<select value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option><option>Recruiting</option><option>Follow-up</option><option>Interview</option><option>Administrative</option></select></label>
+                  <label className="space-y-1 text-slate-500">Related To<input readOnly value="Applicant" className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Applicant<input readOnly value={`${applicant.applicantId ? `${applicant.applicantId} - ` : ''}${applicant.name}`} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Due Date<input type="datetime-local" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Status<select value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Deferred</option></select></label>
+                  <label className="space-y-1 text-slate-500">Assign To<input value={newTaskAssignee} onChange={(e) => setNewTaskAssignee(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <label className="space-y-1 text-slate-500">Escalate To<input className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 dark:border-[#475569] dark:bg-[#0F172A]" /></label>
+                  <label className="space-y-1 text-slate-500">Reminder<select value={newTaskReminder} onChange={(e) => setNewTaskReminder(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>None</option><option>At due time</option><option>15 minutes before</option><option>1 hour before</option><option>1 day before</option></select></label>
+                  <label className="space-y-1 text-slate-500">Ownership<input className="block w-full border border-slate-300 bg-slate-50 px-2 py-1.5 dark:border-[#475569] dark:bg-[#0F172A]" /></label>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300"><label><input type="checkbox" className="mr-2" />Notify Via Email</label><label><input type="checkbox" className="mr-2" />Show task on event calendar</label><label><input type="checkbox" className="mr-2" />Recurrence Task</label></div>
                 <div className="flex gap-2 pt-3"><button type="button" onClick={() => { if (!newTaskTitle.trim()) { showToast('Enter a task title.'); return; } setApplicantTasks((items) => [...items, { title: newTaskTitle.trim(), description: newTaskDescription, due: newTaskDue, status: newTaskStatus, assignee: newTaskAssignee }]); setNewTaskTitle(''); setNewTaskDescription(''); setNewTaskDue(''); setDialog(null); showToast('Task added to applicant workspace.'); }} className="rounded bg-[#2F80ED] px-4 py-2 font-semibold text-white hover:bg-[#1D6FD8]">Create Task</button><button type="button" onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button></div>
               </div>
-              <aside className="min-h-72 bg-slate-50 p-4 dark:bg-[#172033]"><h3 className="font-semibold text-slate-800 dark:text-white">Assigned Tasks</h3>{applicantTasks.length ? <ul className="mt-3 space-y-2">{applicantTasks.map((task, i) => <li key={`${task.title}-${i}`} className="border-b border-slate-200 py-2 dark:border-[#334155]"><p className="font-medium text-slate-700 dark:text-slate-200">{task.title}</p><p className="text-[11px] text-slate-500">{task.status}{task.due ? ` Â· ${task.due}` : ''}</p></li>)}</ul> : <p className="mt-3 text-center italic text-slate-400">No data available</p>}</aside>
+              <aside className="drawer-panel min-h-72 bg-slate-50 p-4 dark:bg-[#0F172A]"><h3 className="font-semibold text-slate-800 dark:text-white">Assigned Tasks</h3>{applicantTasks.length ? <ul className="mt-3 space-y-2">{applicantTasks.map((task, i) => <li key={`${task.title}-${i}`} className="border-b border-slate-200 py-2 dark:border-[#334155]"><p className="font-medium text-slate-700 dark:text-slate-200">{task.title}</p><p className="text-[11px] text-slate-500">{task.status}{task.due ? ` · ${task.due}` : ''}</p></li>)}</ul> : <p className="mt-3 text-center italic text-slate-400">No data available</p>}</aside>
             </div>
           </section>
         </div>
@@ -5547,13 +5590,13 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <section aria-label="Call Logs" className="w-full max-w-xl border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-[#334155]"><h2 className="text-base font-medium text-slate-800 dark:text-white">Call Logs</h2><button aria-label="Close call log form" onClick={() => setDialog(null)}><X className="h-4 w-4 text-slate-500" /></button></header>
             <div className="space-y-4 p-5 text-xs">
-              <div className="grid grid-cols-2 gap-4"><label className="space-y-1 text-slate-500">Call Type<select value={newCallType} onChange={(e) => setNewCallType(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Call</option><option>Incoming Call</option><option>Outgoing Call</option><option>Video Call</option></select></label><label className="space-y-1 text-slate-500">Call Taken On<input type="datetime-local" value={newCallDate} onChange={(e) => setNewCallDate(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label></div>
-              <label className="block space-y-1 text-slate-500">Comments<textarea value={newCallComments} onChange={(e) => setNewCallComments(e.target.value)} rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <div className="grid grid-cols-2 gap-4"><label className="space-y-1 text-slate-500">Call Type<select value={newCallType} onChange={(e) => setNewCallType(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>Call</option><option>Incoming Call</option><option>Outgoing Call</option><option>Video Call</option></select></label><label className="space-y-1 text-slate-500">Call Taken On<input type="datetime-local" value={newCallDate} onChange={(e) => setNewCallDate(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label></div>
+              <label className="block space-y-1 text-slate-500">Comments<textarea value={newCallComments} onChange={(e) => setNewCallComments(e.target.value)} rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
               <h3 className="pt-1 text-sm font-semibold text-slate-800 dark:text-white">Follow Up Notes</h3>
-              <label className="block max-w-xs space-y-1 text-slate-500">Date &amp; Time<input type="datetime-local" value={newCallFollowUp} onChange={(e) => setNewCallFollowUp(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="block max-w-xs space-y-1 text-slate-500">Date &amp; Time<input type="datetime-local" value={newCallFollowUp} onChange={(e) => setNewCallFollowUp(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
               <p className="text-[11px] text-slate-500">Time Zone: (UTC+05:30) IST</p>
-              <label className="block max-w-xs space-y-1 text-slate-500">Reminder<select className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>Select Reminder</option><option>At follow-up time</option><option>15 minutes before</option><option>1 hour before</option></select></label>
-              <label className="block space-y-1 text-slate-500">Notes<textarea rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="block max-w-xs space-y-1 text-slate-500">Reminder<select className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 text-slate-800 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>Select Reminder</option><option>At follow-up time</option><option>15 minutes before</option><option>1 hour before</option></select></label>
+              <label className="block space-y-1 text-slate-500">Notes<textarea rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
             </div>
             <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button><button onClick={() => { setCallLogs((items) => [...items, { type: newCallType, comments: newCallComments, followUp: newCallFollowUp, date: newCallDate || new Date().toLocaleString(), by: currentUser?.name || 'Current User' }]); setNewCallComments(''); setNewCallFollowUp(''); setNewCallDate(''); setDialog(null); showToast('Call log saved.'); }} className="rounded bg-[#2F80ED] px-5 py-2 font-semibold text-white">Save</button></footer>
           </section>
@@ -5565,17 +5608,17 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <section aria-label="Schedule Meeting" className="w-full max-w-xl border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
             <header className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-[#334155]"><h2 className="text-base font-medium text-slate-800 dark:text-white">Schedule Meeting</h2><button aria-label="Close meeting form" onClick={() => setDialog(null)}><X className="h-4 w-4 text-slate-500" /></button></header>
             <div className="grid grid-cols-2 gap-4 p-5 text-xs">
-              <label className="col-span-2 space-y-1 text-slate-500">Meeting Title<input value={newMeetingTitle} onChange={(e) => setNewMeetingTitle(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-              <label className="col-span-2 space-y-1 text-slate-500">Meeting Description<textarea value={newMeetingDescription} onChange={(e) => setNewMeetingDescription(e.target.value)} rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-              <label className="space-y-1 text-slate-500">Meeting Mode<select value={newMeetingMode} onChange={(e) => setNewMeetingMode(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option value="">Select</option><option>Online</option><option>In Person</option><option>Phone</option></select></label>
-              <label className="space-y-1 text-slate-500">Meeting Date<input type="date" value={newMeetingDate} onChange={(e) => setNewMeetingDate(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-              <label className="space-y-1 text-slate-500">Meeting Time<input type="time" value={newMeetingTime} onChange={(e) => setNewMeetingTime(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-              <label className="space-y-1 text-slate-500">Duration<select value={newMeetingDuration} onChange={(e) => setNewMeetingDuration(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white"><option>30 mins</option><option>15 mins</option><option>45 mins</option><option>1 hour</option><option>90 mins</option></select></label>
-              <label className="space-y-1 text-slate-500">Add an Attendee<input readOnly value={currentUser?.name || 'Me'} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
-              <label className="space-y-1 text-slate-500">Guest Attendees<textarea value={newMeetingGuests} onChange={(e) => setNewMeetingGuests(e.target.value)} placeholder="Enter Email-IDs with comma separator" rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#263449] dark:text-white" /></label>
+              <label className="col-span-2 space-y-1 text-slate-500">Meeting Title<input value={newMeetingTitle} onChange={(e) => setNewMeetingTitle(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="col-span-2 space-y-1 text-slate-500">Meeting Description<textarea value={newMeetingDescription} onChange={(e) => setNewMeetingDescription(e.target.value)} rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Meeting Mode<select value={newMeetingMode} onChange={(e) => setNewMeetingMode(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option><option>Online</option><option>In Person</option><option>Phone</option></select></label>
+              <label className="space-y-1 text-slate-500">Meeting Date<input type="date" value={newMeetingDate} onChange={(e) => setNewMeetingDate(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Meeting Time<input type="time" value={newMeetingTime} onChange={(e) => setNewMeetingTime(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Duration<select value={newMeetingDuration} onChange={(e) => setNewMeetingDuration(e.target.value)} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>30 mins</option><option>15 mins</option><option>45 mins</option><option>1 hour</option><option>90 mins</option></select></label>
+              <label className="space-y-1 text-slate-500">Add an Attendee<input readOnly value={currentUser?.name || 'Me'} className="block w-full border border-slate-300 bg-slate-50 px-2 py-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
+              <label className="space-y-1 text-slate-500">Guest Attendees<textarea value={newMeetingGuests} onChange={(e) => setNewMeetingGuests(e.target.value)} placeholder="Enter Email-IDs with comma separator" rows={2} className="block w-full border border-slate-300 bg-slate-50 p-2 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /></label>
               <label className="col-span-2 text-slate-600 dark:text-slate-300"><input type="checkbox" className="mr-2" />Notify Via Email</label>
             </div>
-            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button><button onClick={() => { if (!newMeetingTitle.trim()) { showToast('Enter a meeting title.'); return; } const meetingTime = [newMeetingDate, newMeetingTime].filter(Boolean).join(' '); setMeetings((items) => [...items, { title: newMeetingTitle.trim(), description: `${newMeetingMode ? `${newMeetingMode} Â· ` : ''}${newMeetingDescription}`, attendees: currentUser?.name || 'Me', guests: newMeetingGuests, time: `${meetingTime}${meetingTime ? ` Â· ${newMeetingDuration}` : newMeetingDuration}`, by: currentUser?.name || 'Current User' }]); setNewMeetingTitle(''); setNewMeetingDescription(''); setNewMeetingDate(''); setNewMeetingTime(''); setNewMeetingGuests(''); setDialog(null); showToast('Meeting scheduled.'); }} className="rounded bg-[#2F80ED] px-5 py-2 font-semibold text-white">Schedule</button></footer>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 dark:border-[#334155]"><button onClick={() => setDialog(null)} className="rounded border border-slate-300 px-4 py-2 text-slate-600 dark:border-[#475569] dark:text-slate-200">Cancel</button><button onClick={() => { if (!newMeetingTitle.trim()) { showToast('Enter a meeting title.'); return; } const meetingTime = [newMeetingDate, newMeetingTime].filter(Boolean).join(' '); setMeetings((items) => [...items, { title: newMeetingTitle.trim(), description: `${newMeetingMode ? `${newMeetingMode} · ` : ''}${newMeetingDescription}`, attendees: currentUser?.name || 'Me', guests: newMeetingGuests, time: `${meetingTime}${meetingTime ? ` · ${newMeetingDuration}` : newMeetingDuration}`, by: currentUser?.name || 'Current User' }]); setNewMeetingTitle(''); setNewMeetingDescription(''); setNewMeetingDate(''); setNewMeetingTime(''); setNewMeetingGuests(''); setDialog(null); showToast('Meeting scheduled.'); }} className="rounded bg-[#2F80ED] px-5 py-2 font-semibold text-white">Schedule</button></footer>
           </section>
         </div>
       )}
@@ -5583,8 +5626,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Add Tag Modal */}
       {dialog === 'tag' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Tag</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
@@ -5599,15 +5642,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   onChange={(e) => setNewTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                   placeholder="e.g. Relocation Ready, Silver Medalist"
-                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  className="w-full rounded border border-[#CED4DA] p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 />
               </label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
+            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#444] dark:text-white"
+                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#334155] dark:text-white"
               >
                 Cancel
               </button>
@@ -5626,8 +5669,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Matching Jobs Modal */}
       {dialog === 'matching-jobs' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-xl rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <div>
                 <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Matching Requisitions</h2>
                 <p className="text-[11px] text-[#888]">Matched based on candidate skills and role experience</p>
@@ -5642,7 +5685,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 { title: 'Principal Cloud AI Architect', client: 'CloudScale Enterprises', score: 88 },
                 { title: 'Senior Platform Support Engineer', client: 'FinEdge Capital', score: 82 }
               ].map((job) => (
-                <div key={job.title} className="flex items-center justify-between rounded-lg border border-[#E2E8F0] p-3 hover:bg-gray-50 dark:border-[#333] dark:hover:bg-[#202020]">
+                <div key={job.title} className="flex items-center justify-between rounded-lg border border-[#E2E8F0] p-3 hover:bg-gray-50 dark:border-[#334155] dark:hover:bg-[#202020]">
                   <div>
                     <h3 className="font-semibold text-[#18558A] dark:text-[#90CDF4]">{job.title}</h3>
                     <p className="text-[11px] text-[#666] dark:text-[#AAA]">Client: {job.client}</p>
@@ -5664,11 +5707,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 </div>
               ))}
             </div>
-            <div className="flex justify-end border-t border-[#E2E8F0] pt-3 dark:border-[#333]">
+            <div className="flex justify-end border-t border-[#E2E8F0] pt-3 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#444] dark:text-white"
+                className="rounded border border-[#CED4DA] px-3 py-1.5 text-xs text-[#555] hover:bg-gray-50 dark:border-[#334155] dark:text-white"
               >
                 Close
               </button>
@@ -5680,8 +5723,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Edit Status Modal */}
       {dialog === 'status' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#444] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-sm rounded-xl border border-[#CBD5E1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <h2 className="text-sm font-bold text-[#1F2937] dark:text-white">Change Applicant Status</h2>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
@@ -5705,7 +5748,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   className={`block w-full rounded px-3 py-2 text-left transition-colors ${
                     applicant.status === st
                       ? 'bg-[#2F80ED] font-semibold text-white'
-                      : 'hover:bg-gray-100 dark:hover:bg-[#333]'
+                      : 'hover:bg-gray-100 dark:hover:bg-[#334155]'
                   }`}
                 >
                   {st}
@@ -5722,9 +5765,9 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             role="dialog"
             aria-modal="true"
             aria-labelledby="education-dialog-title"
-            className="flex h-[min(46rem,calc(100dvh-1.5rem))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#454545] dark:bg-[#252525] sm:h-[min(46rem,calc(100dvh-3rem))]"
+            className="flex h-[min(46rem,calc(100dvh-1.5rem))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] sm:h-[min(46rem,calc(100dvh-3rem))]"
           >
-            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#3A3A3A] sm:px-7 sm:py-5">
+            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#334155] sm:px-7 sm:py-5">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2F80ED] dark:bg-[#1E3A5F]">
                   <GraduationCap className="h-5 w-5" />
@@ -5735,7 +5778,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Record a qualification to complete the applicant profile.</p>
                 </div>
               </div>
-              <button type="button" aria-label="Close education form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#333] dark:hover:text-white">
+              <button type="button" aria-label="Close education form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#334155] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -5755,7 +5798,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         <h4 id="education-fields-title" className="text-sm font-bold text-slate-800 dark:text-white">Qualification information</h4>
                         <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Fields marked <span className="font-semibold text-red-500">*</span> are required.</p>
                       </div>
-                      <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 sm:inline-block dark:bg-[#333] dark:text-[#BBB]">Step 1 of 1</span>
+                      <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 sm:inline-block dark:bg-[#0F172A] dark:text-[#BBB]">Step 1 of 1</span>
                     </div>
                     <div className="grid gap-5 md:grid-cols-2">
                       <label className="block space-y-2 md:col-span-2">
@@ -5766,7 +5809,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           placeholder="e.g. Bachelor of Technology in Computer Science"
                           value={newDegree}
                           onChange={(e) => setNewDegree(e.target.value)}
-                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
                       </label>
                       <label className="block space-y-2 md:col-span-2">
@@ -5776,7 +5819,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           placeholder="e.g. Nandha College of Technology, Erode"
                           value={newInstitution}
                           onChange={(e) => setNewInstitution(e.target.value)}
-                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
                       </label>
                       <label className="block space-y-2">
@@ -5785,27 +5828,27 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           placeholder="e.g. January 2013"
                           value={newEduPeriod}
                           onChange={(e) => setNewEduPeriod(e.target.value)}
-                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
                       </label>
                     </div>
                   </section>
 
-                  <aside className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-[#444] dark:bg-[#2D2D2D]">
+                  <aside className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-[#334155] dark:bg-[#0F172A]">
                     <div className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-white"><FileText className="h-4 w-4 text-[#2F80ED]" /> Profile preview</div>
                     <div className="border-l-2 border-[#2F80ED] pl-3">
                       <p className="text-sm font-bold text-slate-800 dark:text-white">{newDegree || 'Your degree or program'}</p>
                       <p className="mt-1 text-xs text-slate-600 dark:text-[#BBB]">{newInstitution || 'Your college or institution'}</p>
                       <p className="mt-2 text-[11px] font-medium text-slate-400">{newEduPeriod || 'Graduation period'}</p>
                     </div>
-                    <p className="mt-5 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 dark:border-[#444] dark:text-[#AAA]"></p>
+                    <p className="mt-5 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 dark:border-[#334155] dark:text-[#AAA]"></p>
                   </aside>
                 </div>
               </div>
-              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-[#3A3A3A] dark:bg-[#252525]">
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-[#334155] dark:bg-[#1E293B]">
                 <p className="text-[11px] text-slate-500 dark:text-[#AAA]">You can add another qualification after saving.</p>
                 <div className="flex items-center justify-end gap-3">
-                  <button type="button" onClick={() => setDialog(null)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-[#555] dark:text-white dark:hover:bg-[#333]">Cancel</button>
+                  <button type="button" onClick={() => setDialog(null)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">Cancel</button>
                   <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-[#2F80ED] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1D6FD8] focus:outline-none focus:ring-4 focus:ring-blue-200"><Check className="h-3.5 w-3.5" /> Save education</button>
                 </div>
               </div>
@@ -5821,9 +5864,9 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             role="dialog"
             aria-modal="true"
             aria-labelledby="experience-dialog-title"
-            className="flex h-[min(46rem,calc(100dvh-1.5rem))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#454545] dark:bg-[#252525] sm:h-[min(46rem,calc(100dvh-3rem))]"
+            className="flex h-[min(46rem,calc(100dvh-1.5rem))] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] sm:h-[min(46rem,calc(100dvh-3rem))]"
           >
-            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#3A3A3A] sm:px-7 sm:py-5">
+            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-[#334155] sm:px-7 sm:py-5">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2F80ED] dark:bg-[#1E3A5F]">
                   <Briefcase className="h-5 w-5" />
@@ -5831,10 +5874,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2F80ED]">Professional details</p>
                   <h3 id="experience-dialog-title" className="text-base font-bold text-[#172033] dark:text-white">Add work experience</h3>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Capture a role that shows the applicantâ€™s professional journey.</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Capture a role that shows the applicant’s professional journey.</p>
                 </div>
               </div>
-              <button type="button" aria-label="Close work experience form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#333] dark:hover:text-white">
+              <button type="button" aria-label="Close work experience form" onClick={() => setDialog(null)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#334155] dark:hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -5854,7 +5897,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         <h4 id="experience-fields-title" className="text-sm font-bold text-slate-800 dark:text-white">Role information</h4>
                         <p className="mt-1 text-xs text-slate-500 dark:text-[#AAA]">Fields marked <span className="font-semibold text-red-500">*</span> are required.</p>
                       </div>
-                      <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 sm:inline-block dark:bg-[#333] dark:text-[#BBB]">Step 1 of 1</span>
+                      <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500 sm:inline-block dark:bg-[#0F172A] dark:text-[#BBB]">Step 1 of 1</span>
                     </div>
                     <div className="grid gap-5 md:grid-cols-2">
                       <label className="block space-y-2">
@@ -5865,7 +5908,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           placeholder="e.g. Infosys Pvt Ltd"
                           value={newExpCompany}
                           onChange={(e) => setNewExpCompany(e.target.value)}
-                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
                       </label>
                       <label className="block space-y-2">
@@ -5875,37 +5918,37 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           placeholder="e.g. Technical Support Engineer (L2)"
                           value={newExpDesignation}
                           onChange={(e) => setNewExpDesignation(e.target.value)}
-                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
                       </label>
                       <label className="block space-y-2 md:col-span-2">
                         <span className="text-xs font-semibold text-slate-700 dark:text-[#DDD]">Employment period</span>
                         <input
-                          placeholder="e.g. October 2021 â€“ Present"
+                          placeholder="e.g. October 2021 – Present"
                           value={newExpPeriod}
                           onChange={(e) => setNewExpPeriod(e.target.value)}
-                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#4A4A4A] dark:bg-[#303030] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
+                          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:placeholder:text-[#888] dark:focus:ring-[#1E3A5F]"
                         />
-                        <span className="block text-[11px] text-slate-400 dark:text-[#999]">Use â€œPresentâ€ for a current role.</span>
+                        <span className="block text-[11px] text-slate-400 dark:text-[#999]">Use “Present” for a current role.</span>
                       </label>
                     </div>
                   </section>
 
-                  <aside className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-[#444] dark:bg-[#2D2D2D]">
+                  <aside className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-[#334155] dark:bg-[#0F172A]">
                     <div className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-white"><Briefcase className="h-4 w-4 text-[#2F80ED]" /> Profile preview</div>
                     <div className="border-l-2 border-[#2F80ED] pl-3">
                       <p className="text-sm font-bold text-slate-800 dark:text-white">{newExpCompany || 'Company name'}</p>
                       <p className="mt-1 text-xs text-slate-600 dark:text-[#BBB]">{newExpDesignation || 'Role or designation'}</p>
                       <p className="mt-2 text-[11px] font-medium text-slate-400">{newExpPeriod || 'Employment period'}</p>
                     </div>
-                    <p className="mt-5 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 dark:border-[#444] dark:text-[#AAA]"></p>
+                    <p className="mt-5 border-t border-slate-200 pt-4 text-[11px] leading-5 text-slate-500 dark:border-[#334155] dark:text-[#AAA]"></p>
                   </aside>
                 </div>
               </div>
-              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-[#3A3A3A] dark:bg-[#252525]">
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-[#334155] dark:bg-[#1E293B]">
                 <p className="text-[11px] text-slate-500 dark:text-[#AAA]">Keep periods consistent for a clean candidate timeline.</p>
                 <div className="flex items-center justify-end gap-3">
-                  <button type="button" onClick={() => setDialog(null)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-[#555] dark:text-white dark:hover:bg-[#333]">Cancel</button>
+                  <button type="button" onClick={() => setDialog(null)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">Cancel</button>
                   <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-[#2F80ED] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1D6FD8] focus:outline-none focus:ring-4 focus:ring-blue-200"><Check className="h-3.5 w-3.5" /> Save experience</button>
                 </div>
               </div>
@@ -5918,7 +5961,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {dialog === 'add-employer' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Add Employer Details</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222]">
                 <X className="h-5 w-5" />
@@ -5987,7 +6030,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       className={`w-full flex items-center justify-between rounded border ${
                         empModalError && !selectedVendorContact
                           ? 'border-red-400 bg-red-50/20'
-                          : 'border-[#CED4DA] bg-white dark:border-[#444] dark:bg-[#333]'
+                          : 'border-[#CED4DA] bg-white dark:border-[#334155] dark:bg-[#0F172A]'
                       } px-3 py-2 text-xs text-left outline-none transition-colors hover:border-[#2F80ED] cursor-pointer`}
                     >
                       {selectedVendorContact ? (
@@ -6011,7 +6054,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           className="fixed inset-0 z-30"
                           onClick={() => setVendorSearchOpen(false)}
                         />
-                        <div className="absolute left-0 right-0 top-full mt-1 z-40 rounded border border-[#CED4DA] bg-white p-2 shadow-2xl dark:border-[#444] dark:bg-[#252525] animate-in fade-in zoom-in-95 duration-100">
+                        <div className="absolute left-0 right-0 top-full mt-1 z-40 rounded border border-[#CED4DA] bg-white p-2 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] animate-in fade-in zoom-in-95 duration-100">
                           {/* Search Input Box */}
                           <div className="relative mb-2">
                             <input
@@ -6019,7 +6062,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                               placeholder=""
                               value={vendorSearchQuery}
                               onChange={(e) => setVendorSearchQuery(e.target.value)}
-                              className="w-full rounded border border-[#2F80ED] bg-white px-2.5 py-1.5 pr-8 text-xs text-[#333] outline-none focus:ring-1 focus:ring-[#2F80ED] dark:border-[#2F80ED] dark:bg-[#333] dark:text-white"
+                              className="w-full rounded border border-[#2F80ED] bg-white px-2.5 py-1.5 pr-8 text-xs text-[#333] outline-none focus:ring-1 focus:ring-[#2F80ED] dark:border-[#2F80ED] dark:bg-[#0F172A] dark:text-white"
                               autoFocus
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -6027,7 +6070,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           </div>
 
                           {/* Filtered Records List */}
-                          <div className="max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-[#333]">
+                          <div className="max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-[#334155]">
                             {filteredVendors.length > 0 ? (
                               filteredVendors.map((v) => (
                                 <div
@@ -6036,7 +6079,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                                   className={`cursor-pointer rounded px-2.5 py-2 text-xs transition-colors ${
                                     selectedVendorContact === v.id
                                       ? 'bg-blue-50 text-[#2F80ED] font-medium dark:bg-[#1E3A8A]/30'
-                                      : 'text-[#333] hover:bg-[#F3F4F6] dark:text-gray-200 dark:hover:bg-[#333]'
+                                      : 'text-[#333] hover:bg-[#F3F4F6] dark:text-gray-200 dark:hover:bg-[#334155]'
                                   }`}
                                 >
                                   {v.displayName}
@@ -6062,7 +6105,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         setEmpFirstName(e.target.value);
                         if (empModalError) setEmpModalError(null);
                       }}
-                      className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                      className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   </div>
                 )}
@@ -6072,7 +6115,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     placeholder="Last Name"
                     value={empLastName}
                     onChange={(e) => setEmpLastName(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </div>
               </div>
@@ -6091,7 +6134,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     className={`w-full rounded border ${
                       empModalError && !empEmployerName.trim()
                         ? 'border-red-400 bg-red-50/20'
-                        : 'border-[#CED4DA] bg-white dark:border-[#444] dark:bg-[#333]'
+                        : 'border-[#CED4DA] bg-white dark:border-[#334155] dark:bg-[#0F172A]'
                     } px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:text-white`}
                   />
                 </div>
@@ -6101,14 +6144,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     placeholder="Office Number"
                     value={empOfficeNumber}
                     onChange={(e) => setEmpOfficeNumber(e.target.value)}
-                    className="flex-1 rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="flex-1 rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                   <input
                     type="text"
                     placeholder="Extension"
                     value={empExtension}
                     onChange={(e) => setEmpExtension(e.target.value)}
-                    className="w-24 rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-24 rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </div>
               </div>
@@ -6121,7 +6164,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     placeholder="Email ID"
                     value={empEmailId}
                     onChange={(e) => setEmpEmailId(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </div>
                 <div>
@@ -6130,7 +6173,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     placeholder="Mobile Number"
                     value={empMobileNumber}
                     onChange={(e) => setEmpMobileNumber(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                   />
                 </div>
               </div>
@@ -6141,7 +6184,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <select
                     value={empTypeSelect}
                     onChange={(e) => setEmpTypeSelect(e.target.value)}
-                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer"
+                    className="w-full rounded border border-[#CED4DA] bg-white px-3 py-2 text-xs text-[#333] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white cursor-pointer"
                   >
                     <option value="Select Status">Select Status</option>
                     <option value="Active">Active</option>
@@ -6153,7 +6196,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             </div>
 
             {/* Modal Footer Buttons */}
-            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-6 py-4 mt-4 dark:border-[#333]">
+            <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-6 py-4 mt-4 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={handleAddEmployer}
@@ -6168,7 +6211,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   setVendorSearchOpen(false);
                   setEmpModalError(null);
                 }}
-                className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer"
+                className="rounded border border-[#CED4DA] bg-white px-5 py-1.5 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white cursor-pointer"
               >
                 Cancel
               </button>
@@ -6180,7 +6223,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Modal: Ceipal Vendor Contact Notification Prompt (1:1 Replica from user screenshot) */}
       {dialog === 'confirm-vendor-create' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-[540px] rounded-xs bg-white px-8 py-10 shadow-2xl dark:bg-[#252525] border border-gray-200 dark:border-[#333] text-center animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-[540px] rounded-xs bg-white px-8 py-10 shadow-2xl dark:bg-[#1E293B] border border-gray-200 dark:border-[#334155] text-center animate-in fade-in zoom-in-95 duration-150">
             <p className="text-lg sm:text-xl font-light text-[#4A5568] dark:text-[#E2E8F0] leading-relaxed">
               Do you want to create a vendor contact from the employer details?
             </p>
@@ -6195,7 +6238,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <button
                 type="button"
                 onClick={() => finalizeEmployerSave(false)}
-                className="min-w-[100px] rounded border border-[#CED4DA] bg-white px-6 py-2 text-sm font-medium text-[#4A5568] shadow-2xs hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white cursor-pointer transition-colors"
+                className="min-w-[100px] rounded border border-[#CED4DA] bg-white px-6 py-2 text-sm font-medium text-[#4A5568] shadow-2xs hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -6207,8 +6250,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* Modal: Create Resume Builder (Replicating Reference Image 2) */}
       {dialog === 'create-resume' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDialog(null)}>
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-[#252525]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#333]">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3 dark:border-[#334155]">
               <h3 className="text-sm font-bold text-[#1F2937] dark:text-white">Create Resume Builder</h3>
               <button onClick={() => setDialog(null)} className="text-[#888] hover:text-[#222] dark:hover:text-white">
                 <X className="h-5 w-5" />
@@ -6222,7 +6265,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <select
                   value={resumeTemplate}
                   onChange={(e) => setResumeTemplate(e.target.value)}
-                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#444] dark:bg-[#333] dark:text-white"
+                  className="w-full rounded border border-[#CBD5E1] bg-white p-2 text-xs outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                 >
                   <option value="">Select</option>
                   <option value="Standard Corporate Template">Standard Corporate Template</option>
@@ -6233,7 +6276,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] pt-4 dark:border-[#333]">
+            <div className="flex justify-end gap-2.5 border-t border-[#E2E8F0] pt-4 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={() => {
@@ -6252,7 +6295,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#444] dark:bg-[#333] dark:text-white"
+                className="rounded border border-[#CED4DA] bg-white px-4 py-1.5 text-xs font-semibold text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
               >
                 Cancel
               </button>

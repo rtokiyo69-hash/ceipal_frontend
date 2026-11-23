@@ -314,7 +314,8 @@ export const SUBMISSION_STATUS_OPTIONS = [
 ] as const;
 
 export function getSubmissionStageIndex(status: string): number {
-  const value = status.toLowerCase();
+  const value = status.trim().toLowerCase();
+  if (value === 'pipeline') return 0;
   if (value.includes('not joined')) return 6;
   if (value.includes('placed')) return 5;
   if (value.includes('offer') || value.includes('confirm') || value.includes('selected')) return 4;
