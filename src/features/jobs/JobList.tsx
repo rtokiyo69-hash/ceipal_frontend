@@ -24,6 +24,10 @@ import {
   ArrowUpDown,
   ExternalLink,
   ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
+  MoveHorizontal,
   FileText,
   Eye,
   Check,
@@ -37,7 +41,6 @@ import {
   Paperclip,
   Settings,
   Upload,
-  ChevronLeft,
   ArrowLeft,
   Download
 } from 'lucide-react';
@@ -1244,6 +1247,96 @@ export const JobList: React.FC = () => {
     return result;
   }, [jobs, submissions, currentUser, search, searchScope, statusFilter, priorityFilter, businessUnitFilter, activePredefinedFilter, activeFilterRules, columnFilters, sortBy]);
 
+  // Horizontal Table Scroll Management & Drag-to-Scroll
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const isSyncingScrollRef = useRef(false);
+
+  const updateScrollState = () => {
+    if (!tableContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+    setCanScrollLeft(scrollLeft > 10);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    const maxScroll = scrollWidth - clientWidth;
+    setScrollProgress(maxScroll > 0 ? Math.round((scrollLeft / maxScroll) * 100) : 0);
+
+    if (!isSyncingScrollRef.current && topScrollRef.current) {
+      isSyncingScrollRef.current = true;
+      topScrollRef.current.scrollLeft = scrollLeft;
+      requestAnimationFrame(() => {
+        isSyncingScrollRef.current = false;
+      });
+    }
+  };
+
+  const handleTopScroll = () => {
+    if (!topScrollRef.current || !tableContainerRef.current || isSyncingScrollRef.current) return;
+    isSyncingScrollRef.current = true;
+    tableContainerRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    requestAnimationFrame(() => {
+      isSyncingScrollRef.current = false;
+    });
+  };
+
+  const scrollTable = (direction: 'left' | 'right' | 'start' | 'end', amount = 450) => {
+    if (!tableContainerRef.current) return;
+    const container = tableContainerRef.current;
+    if (direction === 'start') {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    } else if (direction === 'end') {
+      container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+    } else if (direction === 'left') {
+      container.scrollBy({ left: -amount, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
+  // Mouse click-and-drag horizontal scrolling
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, a, textarea, [role="button"], .ceipal-no-drag, th')) {
+      return;
+    }
+    if (!tableContainerRef.current) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - tableContainerRef.current.offsetLeft;
+    scrollLeftRef.current = tableContainerRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !tableContainerRef.current) return;
+    const x = e.pageX - tableContainerRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    if (Math.abs(walk) > 3) {
+      e.preventDefault();
+      tableContainerRef.current.scrollLeft = scrollLeftRef.current - walk;
+    }
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDraggingRef.current = false;
+  };
+
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [visibleColumns, filteredJobs.length]);
+
   const activeFiltersCount = Object.keys(columnFilters).length +
     (statusFilter !== 'All' ? 1 : 0) +
     (priorityFilter !== 'All' ? 1 : 0) +
@@ -2302,7 +2395,14 @@ export const JobList: React.FC = () => {
       {/* Ceipal-Style High Density Data Grid with DUAL Scrollbars */}
       <div className="bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-2xl shadow-xs overflow-hidden relative">
         {/* Table Container with ceipal-table-scroll class for prominent vertical & horizontal scrollbars */}
-        <div className="ceipal-table-scroll max-h-[68vh] overflow-x-auto overflow-y-auto">
+        <div
+          ref={tableContainerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          className="ceipal-table-scroll max-h-[68vh] overflow-x-auto overflow-y-auto cursor-grab active:cursor-grabbing select-none"
+        >
           <table className="w-full text-left border-collapse text-xs" style={{ minWidth: '2200px' }}>
             {/* Sticky Table Header */}
             <thead>
