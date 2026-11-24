@@ -194,10 +194,6 @@ Preferred Qualifications:
 
 Educational Qualification: Bachelor's degree in Computer Science, Information Technology, or a related field, or equivalent practical experience.
 Salary: As per industry standards and candidate experience.`,
-    documents: [
-      { id: 'jobdoc-1', name: 'Demo_User_Resume_Gibberish.pdf', type: 'application/pdf', size: 3481 },
-      { id: 'jobdoc-2', name: 'AMP12262_Job_Specification.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 28400 }
-    ],
     notes: [
       { id: 'jn-1', author: 'Ganesh Godse', text: 'Requisition initialized with Python, ReactJS and PostgreSQL criteria. Candidate pipeline ready for review.', date: '10/11/2026 20:00:51', category: 'Job Posting' }
     ]

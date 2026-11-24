@@ -161,7 +161,6 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
-  const [isSourceMode, setIsSourceMode] = useState(false);
   const [selectedFont, setSelectedFont] = useState('Arial');
   const [selectedFontSize, setSelectedFontSize] = useState('3');
   const [selectedFormat, setSelectedFormat] = useState('Normal');
@@ -180,11 +179,61 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
+  const [isSourceMode, setIsSourceMode] = useState(false);
 
   useEffect(() => {
     if (isSourceMode || !editorRef.current) return;
     editorRef.current.innerHTML = sanitizeEmailHtml(value);
   }, [isSourceMode, resetKey]);
+
+  useEffect(() => {
+    const updateFormattingControls = () => {
+      const editor = editorRef.current;
+      const selection = window.getSelection();
+      if (!editor || !selection?.rangeCount || !selection.anchorNode || !editor.contains(selection.anchorNode)) return;
+
+      const element = selection.anchorNode instanceof Element
+        ? selection.anchorNode
+        : selection.anchorNode.parentElement;
+      const caretElement = element?.closest('[style],h1,h2,h3,h4,h5,h6,blockquote,p,div,pre,span') as HTMLElement | null;
+      if (!caretElement) return;
+
+      const computed = window.getComputedStyle(caretElement);
+      const fontFamily = computed.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+      if (FONT_FAMILIES.includes(fontFamily)) setSelectedFont(fontFamily);
+
+      const fontSizePx = parseFloat(computed.fontSize);
+      if (Number.isFinite(fontSizePx)) {
+        const fontSizePt = Math.round(fontSizePx * 0.75);
+        const closest = [
+          ['1', 8], ['2', 10], ['3', 12], ['4', 14],
+          ['5', 18], ['6', 24], ['7', 36]
+        ].reduce((best, option) =>
+          Math.abs(Number(option[1]) - fontSizePt) < Math.abs(Number(best[1]) - fontSizePt) ? option : best
+        );
+        setSelectedFontSize(String(closest[0]));
+      }
+
+      const blockTag = caretElement.closest('h1,h2,h3,h4,h5,h6,p,pre,blockquote')?.tagName;
+      if (blockTag === 'H1') setSelectedFormat('Heading 1');
+      else if (blockTag === 'H2') setSelectedFormat('Heading 2');
+      else if (blockTag === 'H3') setSelectedFormat('Heading 3');
+      else if (blockTag === 'H4') setSelectedFormat('Heading 4');
+      else if (blockTag === 'H5') setSelectedFormat('Heading 5');
+      else if (blockTag === 'H6') setSelectedFormat('Heading 6');
+      else if (blockTag === 'PRE') setSelectedFormat('Formatted');
+      else if (blockTag === 'BLOCKQUOTE') setSelectedFormat('Normal');
+      else setSelectedFormat('Normal');
+
+      if (caretElement.closest('blockquote')) setSelectedStyle('Quote');
+      else if (computed.fontStyle === 'italic') setSelectedStyle('Italic Title');
+      else if (computed.backgroundColor !== 'rgba(0, 0, 0, 0)' && computed.backgroundColor !== 'transparent') setSelectedStyle('Badge Tag');
+      else setSelectedStyle('Normal');
+    };
+
+    document.addEventListener('selectionchange', updateFormattingControls);
+    return () => document.removeEventListener('selectionchange', updateFormattingControls);
+  }, []);
 
   const saveSelection = () => {
     const editor = editorRef.current;
@@ -217,6 +266,48 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
     restoreSelection();
     editor.focus();
     document.execCommand(command, false, commandValue);
+    syncEditor();
+  };
+
+  const applyFontSize = (fontSizeKey: string) => {
+    const sizes: Record<string, number> = {
+      '1': 8,
+      '2': 10,
+      '3': 12,
+      '4': 14,
+      '5': 18,
+      '6': 24,
+      '7': 36
+    };
+    const pointSize = sizes[fontSizeKey] || 12;
+    restoreSelection();
+    const selection = window.getSelection();
+    if (!selection?.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    if (range.collapsed) {
+      const span = document.createElement('span');
+      span.style.fontSize = `${pointSize}pt`;
+      span.appendChild(document.createTextNode('\u200B'));
+      range.insertNode(span);
+      range.setStart(span.firstChild || span, 1);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      savedRangeRef.current = range.cloneRange();
+    } else {
+      const span = document.createElement('span');
+      span.style.fontSize = `${pointSize}pt`;
+      try {
+        range.surroundContents(span);
+      } catch {
+        const fragment = range.extractContents();
+        span.appendChild(fragment);
+        range.insertNode(span);
+      }
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
     syncEditor();
     saveSelection();
   };
@@ -443,9 +534,10 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
         </div>
 
         <span className="mx-1 h-4 border-l border-[#D8E3F1] dark:border-[#475569]" />
-        <select value={selectedStyle} onMouseDown={saveSelection} onChange={(event) => { setSelectedStyle(event.target.value); if (event.target.value === 'Lead Paragraph') runCommand('formatBlock', 'blockquote'); if (event.target.value === 'Italic Title') runCommand('italic'); if (event.target.value === 'Badge Tag') runCommand('hiliteColor', '#FFFFFF'); }} aria-label="Text style" className="max-w-32 rounded border border-[#D8E3F1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
-          <option>Styles</option>
+        <select value={selectedStyle} onMouseDown={saveSelection} onChange={(event) => { setSelectedStyle(event.target.value); if (event.target.value === 'Lead Paragraph' || event.target.value === 'Quote') runCommand('formatBlock', 'blockquote'); else if (event.target.value === 'Italic Title') runCommand('italic'); else if (event.target.value === 'Badge Tag') runCommand('hiliteColor', '#FFF0E8'); else runCommand('removeFormat'); }} aria-label="Text style" className="max-w-32 rounded border border-[#D8E3F1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
+          <option value="Normal">Styles</option>
           <option>Lead Paragraph</option>
+          <option>Quote</option>
           <option>Badge Tag</option>
           <option>Italic Title</option>
         </select>
@@ -454,12 +546,15 @@ export const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({
           <option value="Heading 1">Heading 1</option>
           <option value="Heading 2">Heading 2</option>
           <option value="Heading 3">Heading 3</option>
+          <option value="Heading 4">Heading 4</option>
+          <option value="Heading 5">Heading 5</option>
+          <option value="Heading 6">Heading 6</option>
           <option value="Formatted">Formatted</option>
         </select>
         <select value={selectedFont} onMouseDown={saveSelection} onChange={(event) => { setSelectedFont(event.target.value); runCommand('fontName', event.target.value); }} aria-label="Font family" className="max-w-40 rounded border border-[#D8E3F1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
           {FONT_FAMILIES.map((font) => <option key={font} value={font}>{font}</option>)}
         </select>
-        <select value={selectedFontSize} onMouseDown={saveSelection} onChange={(event) => { setSelectedFontSize(event.target.value); runCommand('fontSize', event.target.value); }} aria-label="Font size" className="w-20 rounded border border-[#D8E3F1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
+        <select value={selectedFontSize} onMouseDown={saveSelection} onChange={(event) => { setSelectedFontSize(event.target.value); applyFontSize(event.target.value); }} aria-label="Font size" className="w-20 rounded border border-[#D8E3F1] bg-white px-2 py-1 text-[10px] text-[#334155] dark:border-[#475569] dark:bg-[#1E293B] dark:text-white">
           <option value="1">8 pt</option>
           <option value="2">10 pt</option>
           <option value="3">12 pt</option>

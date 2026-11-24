@@ -103,6 +103,63 @@ function saveJobDocuments(files: File[]): Promise<JobDocument[]> {
   }));
 }
 
+function openApplicantDocumentDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('talentember-applicant-documents', 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('documents', { keyPath: 'id' });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Unable to open applicant document storage.'));
+  });
+}
+
+function saveApplicantDocuments(
+  applicantId: string,
+  files: File[]
+): Promise<NonNullable<Applicant['documents']>> {
+  if (files.length === 0) return Promise.resolve([]);
+
+  return openApplicantDocumentDatabase().then((database) => new Promise((resolve, reject) => {
+    const transaction = database.transaction('documents', 'readwrite');
+    const documents = files.map((file) => {
+      const fileId = `appdoc-${applicantId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const sizeInKilobytes = file.size / 1024;
+      const extension = file.name.includes('.') ? file.name.split('.').pop() : '';
+      return {
+        id: fileId,
+        applicantId,
+        file,
+        metadata: {
+          fileId,
+          name: file.name,
+          size: sizeInKilobytes < 1024
+            ? `${Math.max(1, Math.round(sizeInKilobytes))} KB`
+            : `${(sizeInKilobytes / 1024).toFixed(1)} MB`,
+          date: new Date().toLocaleDateString(),
+          type: /resume|cv/i.test(file.name)
+            ? 'Resume'
+            : file.type || (extension ? `${extension.toUpperCase()} file` : 'Applicant Document')
+        }
+      };
+    });
+
+    documents.forEach((document) => transaction.objectStore('documents').put(document));
+    transaction.oncomplete = () => {
+      database.close();
+      resolve(documents.map(({ metadata }) => metadata));
+    };
+    transaction.onerror = () => {
+      database.close();
+      reject(transaction.error || new Error('Unable to save applicant documents.'));
+    };
+    transaction.onabort = () => {
+      database.close();
+      reject(transaction.error || new Error('Applicant document storage was interrupted.'));
+    };
+  }));
+}
+
 export const ApiService = {
   // Authentication & Users
   async getCurrentUser(): Promise<User> {
@@ -123,7 +180,21 @@ export const ApiService = {
   // Jobs
   async getJobs(): Promise<Job[]> {
     await delay(150);
-    return getStorage<Job[]>(STORAGE_KEYS.JOBS, INITIAL_JOBS);
+    const jobs = getStorage<Job[]>(STORAGE_KEYS.JOBS, INITIAL_JOBS);
+    const demoDocumentIds = new Set(['jobdoc-1', 'jobdoc-2']);
+    let removedMissingDemoDocuments = false;
+    const migratedJobs = jobs.map((job) => {
+      if (job.id !== 'job-12262' || !job.documents?.some((document) => demoDocumentIds.has(document.id))) {
+        return job;
+      }
+      removedMissingDemoDocuments = true;
+      return {
+        ...job,
+        documents: job.documents.filter((document) => !demoDocumentIds.has(document.id))
+      };
+    });
+    if (removedMissingDemoDocuments) setStorage(STORAGE_KEYS.JOBS, migratedJobs);
+    return migratedJobs;
   },
 
   async getJobById(id: string): Promise<Job | undefined> {
@@ -299,6 +370,38 @@ export const ApiService = {
     applicants[index] = updated;
     setStorage(STORAGE_KEYS.APPLICANTS, applicants);
     return updated;
+  },
+
+  async addApplicantDocuments(id: string, files: File[]): Promise<Applicant> {
+    await delay(100);
+    const applicants = await this.getApplicants();
+    const index = applicants.findIndex((applicant) => applicant.id === id);
+    if (index === -1) throw new Error('Applicant not found');
+
+    const additions = await saveApplicantDocuments(id, files);
+    const updated = {
+      ...applicants[index],
+      documents: [...(applicants[index].documents || []), ...additions]
+    };
+    applicants[index] = updated;
+    setStorage(STORAGE_KEYS.APPLICANTS, applicants);
+    return updated;
+  },
+
+  async getApplicantDocument(fileId: string): Promise<Blob | undefined> {
+    const database = await openApplicantDocumentDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction('documents', 'readonly');
+      const request = transaction.objectStore('documents').get(fileId);
+      request.onsuccess = () => {
+        database.close();
+        resolve(request.result?.file as Blob | undefined);
+      };
+      request.onerror = () => {
+        database.close();
+        reject(request.error || new Error('Unable to retrieve applicant document.'));
+      };
+    });
   },
 
   async toggleFavorite(id: string): Promise<boolean> {
@@ -527,6 +630,7 @@ export const ApiService = {
       status,
       approvalStatus: submissionData.approvalStatus || 'Pending Review',
       submissionDetails: submissionData.submissionDetails,
+      quickSubmissionDetails: submissionData.quickSubmissionDetails,
       statusHistory: [{ status, changedAt: submittedDate }]
     };
     const updated = [newSubmission, ...submissions];
@@ -543,7 +647,11 @@ export const ApiService = {
       author: noteData.author,
       text: noteData.text,
       date: noteData.date || new Date().toLocaleString(),
-      category: noteData.category || 'Job Posting'
+      category: noteData.category || 'Job Posting',
+      action: noteData.action,
+      priority: noteData.priority,
+      applicantRef: noteData.applicantRef,
+      notifiedTo: noteData.notifiedTo
     };
     if (job) {
       job.notes = [newNote, ...(job.notes || [])];
@@ -570,6 +678,20 @@ export const ApiService = {
       job.documents = [...(job.documents || []), doc];
       setStorage(STORAGE_KEYS.JOBS, jobs);
     }
+  },
+
+  async uploadJobDocuments(jobId: string, files: File[]): Promise<JobDocument[]> {
+    await delay(100);
+    const jobs = await this.getJobs();
+    const jobIndex = jobs.findIndex((job) => job.id === jobId);
+    if (jobIndex === -1) throw new Error('Job not found');
+    const documents = await saveJobDocuments(files);
+    jobs[jobIndex] = {
+      ...jobs[jobIndex],
+      documents: [...(jobs[jobIndex].documents || []), ...documents]
+    };
+    setStorage(STORAGE_KEYS.JOBS, jobs);
+    return documents;
   },
 
   async deleteJobDocument(jobId: string, docId: string): Promise<void> {

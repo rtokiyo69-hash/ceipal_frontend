@@ -57,6 +57,7 @@ export interface Job {
   endDate?: string;
   category?: string;
   skillType?: string;
+  skillMatrix?: string;
   respondBy?: string;
   remoteJob?: 'Yes' | 'No' | 'Hybrid';
   states?: string;
@@ -125,6 +126,10 @@ export interface JobNote {
   text: string;
   date: string;
   category?: 'Job Posting' | 'Applicant Reference';
+  action?: string;
+  priority?: 'Low' | 'Medium' | 'High';
+  applicantRef?: string;
+  notifiedTo?: string[];
 }
 
 export type PipelineStage = 
@@ -161,7 +166,7 @@ export interface Applicant {
   summary?: string;
   education?: { degree: string; school: string; year: string }[];
   workHistory?: { role: string; company: string; duration: string; summary: string }[];
-  documents?: { id?: string; name: string; size: string; date: string; type: string; mimeType?: string; dataUrl?: string; title?: string; description?: string; comments?: string; createdBy?: string; modifiedBy?: string; liked?: boolean }[];
+  documents?: { id?: string; fileId?: string; name: string; size: string; date: string; type: string; mimeType?: string; dataUrl?: string; title?: string; description?: string; comments?: string; createdBy?: string; modifiedBy?: string; liked?: boolean }[];
   notes?: { id: string; author: string; text: string; date: string; subject?: string; priority?: string; job?: string; client?: string; action?: string; pinned?: boolean }[];
   isEmailMergeDeactivated?: boolean;
   emailMergeOptOutUntil?: string;
@@ -297,6 +302,22 @@ export interface Submission {
   score?: number;
   groups?: string[];
   notes?: { id: string; author: string; text: string; date: string }[];
+  quickSubmissionDetails?: {
+    noticePeriod: string;
+    relocation: 'Yes' | 'No';
+    currency: string;
+    rateType: string;
+    resumeName: string;
+    videoLink: string;
+    availableDocument: string;
+    additionalAttachmentName: string;
+    eForm: string;
+    recipients: string;
+    additionalNotifiers: string;
+    otherEmailIds: string;
+    comments: string;
+    employerDetails: string;
+  };
 }
 
 export const SUBMISSION_STATUS_OPTIONS = [
@@ -347,7 +368,23 @@ export interface TaskItem {
   priority: Priority;
   assignedTo: string;
   status: 'Pending' | 'In Progress' | 'Completed';
-  category: 'Interview Follow-up' | 'Offer Release' | 'Vendor Verification' | 'Client Review';
+  category: 'Interview Follow-up' | 'Offer Release' | 'Vendor Verification' | 'Client Review' | 'Task';
+  jobId?: string;
+  description?: string;
+  businessUnit?: string;
+  taskType?: string;
+  relatedTo?: string;
+  timeZone?: string;
+  assignedBy?: string;
+  createdOn?: string;
+  modifiedOn?: string;
+  statusModifiedOn?: string;
+  escalateTo?: string;
+  reminder?: string;
+  ownership?: string;
+  notifyViaEmail?: boolean;
+  recurrenceTask?: boolean;
+  showOnCalendar?: boolean;
 }
 
 export interface ActivityLog {

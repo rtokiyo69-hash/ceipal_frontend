@@ -163,8 +163,8 @@ export const Sidebar: React.FC = () => {
                 currentRoute === item.id ||
                 (role === 'admin' && item.id === 'settings' && (currentRoute === 'dashboard' || currentRoute === 'settings')) ||
                 (role === 'admin' && item.id === 'jobs' && currentRoute === 'job-detail') ||
-                (role !== 'admin' && item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-detail')) ||
-                (item.id === 'applicants' && currentRoute === 'applicant-detail');
+                (item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-edit' || currentRoute === 'job-detail')) ||
+                (item.id === 'applicants' && (currentRoute === 'applicant-detail' || currentRoute === 'client-submission'));
 
               return (
                 <motion.button

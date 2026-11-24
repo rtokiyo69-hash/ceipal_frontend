@@ -16,6 +16,8 @@ import { JobList } from './features/jobs/JobList';
 import { JobCreate } from './features/jobs/JobCreate';
 import { JobDetail } from './features/jobs/JobDetail';
 import { AIMatchingJobs } from './features/jobs/AIMatchingJobs';
+import { ApplicantProfileSubmission } from './features/jobs/ApplicantProfileSubmission';
+import { ClientSubmission } from './features/submissions/ClientSubmission';
 import { ApplicantList } from './features/applicants/ApplicantList';
 import { ApplicantCreate } from './features/applicants/ApplicantCreate';
 import { ApplicantDetail } from './features/applicants/ApplicantDetail';
@@ -32,7 +34,7 @@ import { UserManagement } from './features/admin/UserManagement';
 import { PlatformSettings } from './features/settings/PlatformSettings';
 
 export default function App() {
-  const { currentRoute, isAuthenticated, isDark, currentUser } = useAppStore();
+  const { currentRoute, selectedId, isAuthenticated, isDark, currentUser } = useAppStore();
   const isRecruiter = currentUser?.role === 'recruiter';
   const isRecruiterFullBleed = isRecruiter && (currentRoute === 'applicant-detail' || currentRoute === 'job-detail');
   const isAdminModuleView =
@@ -67,12 +69,18 @@ export default function App() {
         return <JobList />;
       case 'job-new':
         return <JobCreate key="new-job" />;
+      case 'job-edit':
+        return <JobCreate key={`edit-job-${selectedId}`} initialMode="manual" />;
       case 'job-templates':
         return <JobCreate key="job-templates" initialMode="template" />;
       case 'job-detail':
         return <JobDetail />;
       case 'matching-jobs':
         return <AIMatchingJobs />;
+      case 'applicant-profile-submission':
+        return <ApplicantProfileSubmission />;
+      case 'client-submission':
+        return <ClientSubmission />;
       case 'applicants':
         return <ApplicantList />;
       case 'applicant-new':
