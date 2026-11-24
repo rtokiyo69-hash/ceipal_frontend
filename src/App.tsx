@@ -44,7 +44,10 @@ export default function App() {
   (currentRoute === 'applicants' ||
     currentRoute === 'settings' ||
     currentRoute === 'dashboard' ||
-    currentRoute === 'clients');
+    currentRoute === 'clients' ||
+    currentRoute === 'job-new');
+  const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs';
+  const isFullWidth = isRecruiter || isFullBleed || isAdminModuleView;
   const useBlueClayTheme = isAuthenticated;
 
   useEffect(() => {
@@ -124,17 +127,17 @@ export default function App() {
   };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-[#FFFFFF] dark:bg-[#1E40AF] text-[#1E293B] dark:text-[#FFFFFF] ${isRecruiter ? 'recruiter-shell' : ''} ${useBlueClayTheme ? 'blue-clay-theme' : ''}`}>
+    <div className={`app-shell flex h-screen w-screen overflow-hidden bg-[#FFFFFF] dark:bg-[#1E40AF] text-[#1E293B] dark:text-[#FFFFFF] ${isRecruiter ? 'recruiter-shell' : ''} ${useBlueClayTheme ? 'blue-clay-theme' : ''}`}>
       {!isRecruiter && <Sidebar />}
 
       {/* Main Workspace Frame */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="app-workspace flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         {/* Top Navigation */}
         <TopBar />
 
         {/* Viewport Content */}
-        <main className={`flex-1 overflow-y-auto ${isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs' ? 'p-0' : isAdminModuleView ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : isRecruiter ? 'p-4 sm:p-5 md:p-6' : 'p-6 md:p-8'}`}>
-          <div className={isRecruiter || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs' || isAdminModuleView ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
+        <main className={`app-content flex-1 min-h-0 overflow-y-auto ${isFullBleed ? 'p-0' : isAdminModuleView ? 'px-3 pb-3 pt-0 md:px-4 md:pb-4 md:pt-0' : isRecruiter ? 'p-4 sm:p-5 md:p-6' : 'p-6 md:p-8'}`}>
+          <div className={isFullWidth ? 'w-full' : 'max-w-7xl mx-auto'}>{renderCurrentView()}</div>
         </main>
       </div>
 

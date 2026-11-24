@@ -19,6 +19,7 @@ import {
   ListFilter,
   ArrowRight,
   FileSpreadsheet,
+  FileText,
   Settings,
   GripVertical,
   ChevronUp,
