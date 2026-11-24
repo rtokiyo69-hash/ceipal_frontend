@@ -2433,14 +2433,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
           <button
             type="button"
-            title="Share Profile"
+            title="Share via Email"
+            aria-label="Share via Email"
             className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#334155]"
-            onClick={() => {
-              if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href);
-                showToast('Applicant profile link copied to clipboard.');
-              }
-            }}
+            onClick={() => navigate('applicant-email-share', applicant.id)}
           >
             <Share2 className="h-4 w-4" />
           </button>
@@ -2547,14 +2543,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       </div>
 
       {/* Main 2-Column Body Content */}
-      <div className={`p-3 transition-all ${
+      <div className={`applicant-detail-main p-3 transition-all ${
         isResumePanelOpen
           ? resumeFullscreen
             ? 'hidden'
             : 'lg:pr-[49%] xl:pr-[46%]'
           : sidebarCollapsed
-          ? 'pr-4'
-          : 'lg:pr-[318px]'
+          ? 'sidebar-collapsed pr-4'
+          : 'sidebar-expanded lg:pr-[318px]'
       }`}>
         <div className="space-y-3.5">
           {/* 1. Candidate Header Card */}
@@ -5025,10 +5021,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* RIGHT SIDEBAR (Fixed / Sticky Right Panel matching Ceipal reference) */}
       <aside
         aria-label="Applicant Details Panel"
-        className={`drawer-panel fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#334155] dark:bg-[#1E293B] ${
+        className={`applicant-details-sidebar drawer-panel fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#334155] dark:bg-[#1E293B] ${
           isResumePanelOpen || sidebarCollapsed
-            ? 'w-0 overflow-hidden border-none pointer-events-none'
-            : 'w-[305px] overflow-hidden'
+            ? 'sidebar-collapsed w-0 overflow-hidden border-none pointer-events-none'
+            : 'sidebar-expanded w-[305px] overflow-hidden'
         }`}
       >
         <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 pb-3 pt-4 dark:border-[#334155] dark:bg-[#1E293B]">
@@ -5210,8 +5206,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
         type="button"
         onClick={() => setSidebarCollapsed((prev) => !prev)}
         style={{ top: '48%' }}
-        className={`fixed z-30 flex h-8 w-4 items-center justify-center rounded-l bg-[#2F80ED] text-white shadow-lg transition-all ${
-          sidebarCollapsed ? 'right-0' : 'right-[305px]'
+        className={`applicant-sidebar-toggle fixed z-30 flex h-8 w-4 items-center justify-center rounded-l bg-[#2F80ED] text-white shadow-lg transition-all ${
+          sidebarCollapsed ? 'sidebar-collapsed right-0' : 'sidebar-expanded right-[305px]'
         }`}
         title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
       >

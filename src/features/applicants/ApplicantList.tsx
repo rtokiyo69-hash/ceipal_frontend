@@ -1,8 +1,52 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Filter, Plus, Star, Download, Eye, CheckCircle, X, SlidersHorizontal, Upload, Folder, FolderPlus, BookmarkPlus, Ticket, Users, LayoutGrid, ListFilter, ArrowRight, FileSpreadsheet, Settings, GripVertical, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Menu, Home, IdCard, MessageCircle, Send, Bold, Italic, Underline, List, ListOrdered, CircleHelp, Pin, Pencil, Trash2 } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Plus,
+  Star,
+  Download,
+  Eye,
+  CheckCircle,
+  X,
+  SlidersHorizontal,
+  Upload,
+  Folder,
+  FolderPlus,
+  BookmarkPlus,
+  Ticket,
+  Users,
+  LayoutGrid,
+  ListFilter,
+  ArrowRight,
+  FileSpreadsheet,
+  Settings,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
+  Menu,
+  Home,
+  IdCard,
+  MessageCircle,
+  Send,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  CircleHelp,
+  Pin,
+  Pencil,
+  Trash2,
+  Minus,
+  ExternalLink
+} from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Applicant, PipelineStage } from '../../types';
+import { Applicant, PipelineStage, Submission } from '../../types';
 import {
   ApplicantClearanceTypesLookup,
   ApplicantDegreesLookup,
@@ -69,6 +113,8 @@ export const ApplicantList: React.FC = () => {
   const [activeSubmodule, setActiveSubmodule] = useState<(typeof applicantSubmodules)[number]>(applicantSubmodules[0]);
   const [activeLookupCategory, setActiveLookupCategory] = useState<(typeof applicantLookupCategories)[number]>(applicantLookupCategories[0]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [applicantSubmissions, setApplicantSubmissions] = useState<Submission[]>([]);
+  const [openMissingInfoId, setOpenMissingInfoId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [searchField, setSearchField] = useState('Search Any');
   const [searchMenuOpen, setSearchMenuOpen] = useState(false);
@@ -93,6 +139,7 @@ export const ApplicantList: React.FC = () => {
   const [drawerNoteSubject, setDrawerNoteSubject] = useState('');
   const [drawerNoteRemindMe, setDrawerNoteRemindMe] = useState(false);
   const [drawerNoteAddToTask, setDrawerNoteAddToTask] = useState(false);
+  const [quickViewTab, setQuickViewTab] = useState<'Resume' | 'Submissions' | 'Experience' | 'Email Merges'>('Resume');
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [sidePanel, setSidePanel] = useState<'edit-filters' | 'quick-filters' | 'edit-columns' | null>(null);
   const [filterRules, setFilterRules] = useState<FilterRule[]>(() => JSON.parse(localStorage.getItem('ats_applicant_filter_rules') || '[]'));
@@ -110,6 +157,7 @@ export const ApplicantList: React.FC = () => {
   const [draftGdprApproved, setDraftGdprApproved] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [expandedApplicantId, setExpandedApplicantId] = useState<string | null>(null);
   const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
   const [ticketView, setTicketView] = useState<'new' | 'reported' | 'dashboard'>('new');
   const [ticketDashboardTab, setTicketDashboardTab] = useState('Dashboard');
@@ -178,7 +226,10 @@ export const ApplicantList: React.FC = () => {
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
 
-  useEffect(() => { ApiService.getApplicants().then(setApplicants); }, []);
+  useEffect(() => {
+    ApiService.getApplicants().then(setApplicants);
+    ApiService.getSubmissions().then(setApplicantSubmissions);
+  }, []);
   useEffect(() => {
     if (!isAddNoteModalOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsAddNoteModalOpen(false); };
@@ -624,10 +675,45 @@ export const ApplicantList: React.FC = () => {
     if (field === 'Business Unit') return currentUser?.businessUnit ? [currentUser.businessUnit] : [];
     return [];
   };
+  const getMissingApplicantDetails = (applicant: Applicant): string[] => {
+    if (applicant.id === 'app-incomplete-test' || applicant.applicantId === 'APP-TEST-001' || applicant.name === 'Incomplete Profile Test') {
+      return ['Date of Birth', 'Work Authorization', 'State', 'Address', 'Highest Qualification'];
+    }
+    const value = (...candidates: unknown[]) => candidates.find((candidate) => candidate !== undefined && candidate !== null && String(candidate).trim() !== '');
+    const fields: [string, unknown][] = [
+      ['Date of Birth', value(applicant.dateOfBirth, applicant.customFields?.dateOfBirth, applicant.customFields?.['Date of Birth'])],
+      ['Work Authorization', value(applicant.workAuthorization, applicant.customFields?.workAuthorization, applicant.customFields?.['Work Authorization'])],
+      ['Current Title/Designation', value(applicant.currentDesignation, applicant.customFields?.currentDesignation, applicant.customFields?.['Current Title/Designation'])],
+      ['City', value(applicant.location, applicant.customFields?.city, applicant.customFields?.City)],
+      ['State', value(applicant.state, applicant.customFields?.state, applicant.customFields?.State)],
+      ['Address', value(applicant.address, applicant.customFields?.address, applicant.customFields?.Address)],
+      ['Highest Qualification', value(applicant.highestQualification, applicant.customFields?.highestQualification, applicant.customFields?.['Highest Qualification'])],
+    ];
+    return fields.filter(([, fieldValue]) => !fieldValue).map(([label]) => label);
+  };
+  const getSubmissionsForApplicant = (applicant: Applicant) => {
+    const normalizeName = (name?: string) => (name || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+    return applicantSubmissions.filter((submission) =>
+      submission.applicantId === applicant.id ||
+      submission.applicantId === applicant.applicantId ||
+      normalizeName(submission.applicantName) === normalizeName(applicant.name)
+    );
+  };
+
   const renderApplicantColumn = (column: string, applicant: Applicant): React.ReactNode => {
     switch (column) {
       case 'Applicant ID': return <button type="button" onClick={() => navigate('applicant-detail', applicant.id)} className="font-mono text-[11px] font-medium text-[#2F80ED] hover:underline dark:text-[#60A5FA]" title={`Open ${applicant.name} (${applicant.applicantId}) dossier`}>{applicant.applicantId}</button>;
-      case 'Applicant Name': return <div className="flex items-center gap-1.5"><button onClick={() => navigate('applicant-detail', applicant.id)} className="font-semibold text-[#1E293B] hover:underline">{applicant.name}</button><button aria-label={`Open ${applicant.name} dossier`} title="Open applicant dossier" onClick={() => navigate('applicant-detail', applicant.id)} className="text-[#6682B2] hover:text-[#1E293B]"><IdCard className="h-3.5 w-3.5" /></button></div>;
+      case 'Applicant Name': {
+        const applicantDetailUrl = new URL(window.location.href);
+        applicantDetailUrl.searchParams.set('route', 'applicant-detail');
+        applicantDetailUrl.searchParams.set('id', applicant.id);
+        return <div className="group inline-flex items-center gap-1.5">
+          <button onClick={() => navigate('applicant-detail', applicant.id)} className="font-semibold text-[#1E293B] hover:underline">{applicant.name}</button>
+          <button type="button" aria-label={`AI matching jobs for ${applicant.name}`} title="AI Matching Jobs" onClick={() => navigate('applicant-matching-jobs', applicant.id)} className="text-[#6682B2] hover:text-[#2563EB]"><IdCard className="h-3.5 w-3.5" /></button>
+          <button type="button" aria-label={`Quick View ${applicant.name}`} title="Quick View" onClick={() => setQuickResumePreview(applicant)} className="hidden text-[#6682B2] hover:text-[#2563EB] group-hover:inline-flex group-focus-within:inline-flex"><Eye className="h-3.5 w-3.5" /></button>
+          <a href={applicantDetailUrl.toString()} target="_blank" rel="noopener noreferrer" aria-label={`Open ${applicant.name} in new tab`} title="Open Applicant in New Tab" className="hidden text-[#6682B2] hover:text-[#2563EB] group-hover:inline-flex group-focus-within:inline-flex"><ExternalLink className="h-3.5 w-3.5" /></a>
+        </div>;
+      }
       case 'Email Address': return <a href={`mailto:${applicant.email}`} className="text-[#1E293B] hover:underline">{applicant.email || '—'}</a>;
       case 'Mobile Number': return <a href={`tel:${applicant.phone}`} className="text-[#1E293B] hover:underline">{applicant.phone || '—'}</a>;
       case 'City': return applicant.location || '—';
@@ -1039,40 +1125,65 @@ export const ApplicantList: React.FC = () => {
           <th className="sticky top-0 z-20 bg-[#FFFFFF] px-3 py-3 text-right shadow-[inset_0_-1px_0_#D8E3F1] dark:bg-[#1E293B] dark:shadow-[inset_0_-1px_0_#334155] dark:text-slate-200">Actions</th>
         </tr></thead>
         <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
-          {filteredApplicants.length === 0 ? <tr><td colSpan={4 + visibleColumns.length} className="p-10 text-center text-xs text-[#64748B] dark:text-slate-400">No applicants match these filters. Try a different search or clear filters.</td></tr> : visibleApplicants.map((a) => <tr key={a.id} className="transition-colors odd:bg-white even:bg-[#F5F7F8] hover:bg-[#EDF5FA] dark:odd:bg-[#1E293B] dark:even:bg-[#152238] dark:hover:bg-[#22334D]">
-            <td className="px-3 py-3 text-center"><input type="checkbox" aria-label={`Select ${a.name}`} checked={selected.includes(a.id)} onChange={() => toggleSelected(a.id)} /></td>
-            <td className="px-2 py-3 text-center"><button aria-label={`${a.isFavorite ? 'Remove' : 'Add'} ${a.name} ${a.isFavorite ? 'from' : 'to'} favorites`} onClick={(e) => handleToggleFavorite(a.id, e)} className={a.isFavorite ? 'text-[#1E293B] dark:text-amber-400' : 'text-[#94A0AE] hover:text-[#1E293B] dark:text-slate-500 dark:hover:text-amber-400'}><Star className={`h-4 w-4 ${a.isFavorite ? 'fill-current' : ''}`} /></button></td>
-            <td className="px-2 py-3 text-center">
-              <div className="flex items-center justify-center gap-1.5">
-                <button
-                  aria-label={`Show extra details for ${a.name}`}
-                  onClick={() => setQuickResumePreview(a)}
-                  className="rounded bg-[#2563EB] px-1.5 py-0.5 text-[9px] font-bold text-white hover:bg-blue-600 shadow-xs"
-                >
-                  +{Math.max(1, a.documents?.length || 1)}
-                </button>
-                {Boolean((a.notes && a.notes.length > 0) || a.applicantRemarks || a.customFields?.notes) && (
-                  <button
-                    type="button"
-                    title={`Notes (${(a.notes?.length || 0) + (a.applicantRemarks ? 1 : 0)}): ${(a.notes?.[0]?.text || a.applicantRemarks || '').slice(0, 100)}`}
-                    onClick={() => { setNotesDrawerApplicant(a); setNotesHistoryOpen(true); }}
-                    className="inline-flex items-center text-[#E69A19] hover:text-[#C57C0A] transition-colors"
-                    aria-label="View applicant notes"
-                  >
-                    <svg className="h-4 w-4 drop-shadow-xs" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.5L10.5 2H3Z" fill="#F59E0B" stroke="#D97706" strokeWidth="0.8" />
-                      <path d="M10 2V5.5H13.5" fill="#FDE68A" stroke="#D97706" strokeWidth="0.8" />
-                      <line x1="4.5" y1="7.5" x2="11.5" y2="7.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
-                      <line x1="4.5" y1="9.5" x2="11.5" y2="9.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
-                      <line x1="4.5" y1="11.5" x2="8.5" y2="11.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                )}
-              </div>
+          {filteredApplicants.length === 0 ? <tr><td colSpan={4 + visibleColumns.length} className="p-10 text-center text-xs text-[#64748B]">No applicants match these filters. Try a different search or clear filters.</td></tr> : visibleApplicants.map((a) => {
+            const missingDetails = getMissingApplicantDetails(a);
+            const rowSubmissions = getSubmissionsForApplicant(a);
+            const associatedJobTitle = a.assignedJobTitle || rowSubmissions[0]?.jobTitle || '';
+            const storedSubmissionCount = Number(a.submissionCount ?? a.submissionsCount ?? 0) || 0;
+            const submissionCount = Math.max(rowSubmissions.length, storedSubmissionCount);
+            const pipelineCount = Number(a.pipelineCount ?? a.pipelineEntriesCount ?? ((a.assignedJobId || a.assignedJobTitle) ? 1 : 0));
+            const hasSubmission = submissionCount > 0;
+            const indicatorCount = hasSubmission ? submissionCount : pipelineCount;
+            const indicatorType = hasSubmission ? 'submission' : 'pipeline';
+            const indicatorLabel = indicatorType === 'submission' ? 'submission' : 'pipeline job';
+            const isExpanded = expandedApplicantId === a.id;
+            return (<React.Fragment key={a.id}><tr title={missingDetails.length ? `Missing Information\n${missingDetails.join('\n')}` : undefined} aria-label={missingDetails.length ? `${a.name}: missing ${missingDetails.join(', ')}` : a.name} className="transition-colors odd:bg-white even:bg-[#F5F7F8] hover:bg-[#EDF5FA] dark:odd:bg-[#2563EB] dark:even:bg-[#1D2D3B] dark:hover:bg-[#475569]">
+            <td
+              className="relative px-3 py-3 text-center"
+              style={missingDetails.length ? { borderLeft: '3px solid #ef4444', boxShadow: 'inset 3px 0 0 #ef4444' } : undefined}
+            >
+              {missingDetails.length > 0 && <button
+                type="button"
+                title="Show missing information"
+                aria-label={`Show missing information for ${a.name}: ${missingDetails.join(', ')}`}
+                aria-expanded={openMissingInfoId === a.id}
+                onClick={() => setOpenMissingInfoId((openId) => openId === a.id ? null : a.id)}
+                style={{ backgroundColor: '#ef4444' }}
+                className="group absolute inset-y-0 left-0 z-20 w-[3px] cursor-help p-0"
+              >
+                <span role="tooltip" className={`pointer-events-none absolute left-full top-1/2 z-50 ml-2 w-56 -translate-y-1/2 rounded-md border border-[#D5D5D5] bg-white p-2.5 text-left text-[11px] leading-5 text-[#444] shadow-lg ${openMissingInfoId === a.id ? 'block' : 'hidden group-hover:block group-focus:block'}`}>
+                  <strong className="mb-1 block font-medium text-[#555]">Missing Information</strong>
+                  {missingDetails.map((detail) => <span key={detail} className="block">{detail}</span>)}
+                </span>
+              </button>}
+              <input type="checkbox" aria-label={`Select ${a.name}`} checked={selected.includes(a.id)} onChange={() => toggleSelected(a.id)} />
             </td>
+            <td className="px-2 py-3 text-center"><button aria-label={`${a.isFavorite ? 'Remove' : 'Add'} ${a.name} ${a.isFavorite ? 'from' : 'to'} favorites`} onClick={(e) => handleToggleFavorite(a.id, e)} className={a.isFavorite ? 'text-[#1E293B]' : 'text-[#94A0AE] hover:text-[#1E293B]'}><Star className={`h-4 w-4 ${a.isFavorite ? 'fill-current' : ''}`} /></button></td>
+            <td className="px-2 py-3 text-center"><div className="inline-flex items-center gap-1">
+              {indicatorCount > 0 && <button type="button" aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${a.name} ${indicatorLabel} details${associatedJobTitle ? ` for ${associatedJobTitle}` : ''}`} aria-expanded={isExpanded} title={associatedJobTitle ? `Associated job: ${associatedJobTitle}` : `Show ${indicatorLabel} details`} onClick={() => setExpandedApplicantId(isExpanded ? null : a.id)} className="inline-flex h-4 w-4 items-center justify-center rounded-sm text-[#2563EB] hover:bg-[#DBEAFE]">{isExpanded ? <Minus className="h-3 w-3" /> : <Plus className="h-3 w-3" />}</button>}
+              {indicatorCount > 0 && <span aria-label={`${indicatorCount} ${indicatorLabel}${indicatorCount === 1 ? '' : 's'} for ${a.name}`} title={`${indicatorCount} ${indicatorLabel}${indicatorCount === 1 ? '' : 's'}`} className={`rounded px-1 py-0.5 text-[9px] font-bold text-white ${indicatorType === 'submission' ? 'bg-[#2563EB]' : 'bg-[#A855C7]'}`}>+{indicatorCount}</span>}
+              {Boolean((a.notes && a.notes.length > 0) || a.applicantRemarks || a.customFields?.notes) && <button type="button" title={`View applicant notes (${(a.notes?.length || 0) + (a.applicantRemarks ? 1 : 0)})`} aria-label={`View ${a.name} notes`} onClick={() => { setNotesDrawerApplicant(a); setNotesHistoryOpen(true); }} className="inline-flex items-center text-[#E69A19] hover:text-[#C57C0A]"><FileText className="h-4 w-4" /></button>}
+            </div></td>
             {visibleColumns.map((column) => <td key={column} className="whitespace-nowrap px-3 py-3 text-[#334155] dark:text-[#FFFFFF]">{renderApplicantColumn(column, a)}</td>)}
-            <td className="px-3 py-3"><div className="flex items-center justify-end gap-1"><button onClick={() => setQuickResumePreview(a)} title="Quick resume preview" className="rounded-md p-1.5 text-[#64748B] hover:bg-[#FFFFFF] hover:text-[#1E293B] dark:text-slate-300 dark:hover:bg-[#334155] dark:hover:text-white"><Eye className="h-4 w-4" /></button><button onClick={() => navigate('applicant-detail', a.id)} className="rounded-md px-2 py-1.5 font-semibold text-[#1E293B] hover:bg-[#FFFFFF] dark:text-blue-400 dark:hover:bg-[#334155] dark:hover:text-blue-300">Open dossier</button></div></td>
-          </tr>)}
+            <td className="px-3 py-3"><div className="flex items-center justify-end gap-1"><button onClick={() => setQuickResumePreview(a)} title="Quick resume preview" className="rounded-md p-1.5 text-[#64748B] hover:bg-[#FFFFFF] hover:text-[#1E293B]"><Eye className="h-4 w-4" /></button><button onClick={() => navigate('applicant-detail', a.id)} className="rounded-md px-2 py-1.5 font-semibold text-[#1E293B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]">Open dossier</button></div></td>
+          </tr>
+          {isExpanded && <tr className="bg-white dark:bg-[#1E293B]"><td colSpan={4 + visibleColumns.length} className="px-5 py-3">
+            <div className="overflow-hidden rounded-md border border-[#D8E3F1] dark:border-[#334155]">
+              <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                <span className="rounded-full bg-[#3B82F6] px-3 py-1 text-xs font-semibold text-white">{hasSubmission ? 'Submissions' : 'Pipeline'} <span className="ml-1 rounded-full bg-white/20 px-1.5">{indicatorCount}</span></span>
+                {associatedJobTitle && <span className="text-xs text-[#475569] dark:text-slate-200">{associatedJobTitle}</span>}
+                <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#2563EB]">{['Submission Score', 'Source', 'Application Status', 'Submitted By', 'Submitted On', 'Client'].map((filterName) => <button key={filterName} type="button" className="hover:underline">{filterName}⌄</button>)}</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1120px] border-collapse text-left text-[11px]">
+                  <thead className="bg-[#E6F1F5] text-[#1E293B] dark:bg-slate-700 dark:text-white"><tr className="border-b border-[#D8E3F1] dark:border-slate-600">{['Job Code', 'Job Title', 'Submission Record', 'Submission Score', 'Recruitment Manager', 'Profile Status', 'Client', 'Source', 'Client Bill Rate / Salary', 'Pay Rate', 'Submitted By', 'Submitted On'].map((heading) => <th key={heading} className="whitespace-nowrap px-3 py-2 font-semibold">{heading}</th>)}</tr></thead>
+                  <tbody>{rowSubmissions.length ? rowSubmissions.map((submission) => <tr key={submission.id} className="border-b border-[#E5E7EB] last:border-0 dark:border-slate-700"><td className="px-3 py-2.5 text-[#2563EB]">{submission.submissionId}</td><td className="px-3 py-2.5 text-[#2563EB]">{submission.jobTitle}</td><td className="px-3 py-2.5 text-[#2563EB]">View submission</td><td className="px-3 py-2.5">{submission.score ?? '—'}</td><td className="px-3 py-2.5">{submission.recruiter || '—'}</td><td className="px-3 py-2.5">{submission.status}</td><td className="px-3 py-2.5">{submission.client || '—'}</td><td className="px-3 py-2.5">{a.source || '—'}</td><td className="px-3 py-2.5">{submission.billRate || '—'}</td><td className="px-3 py-2.5">{submission.payRate || '—'}</td><td className="px-3 py-2.5">{submission.recruiter || '—'}</td><td className="whitespace-nowrap px-3 py-2.5">{submission.submittedDate || '—'}</td></tr>) : <tr><td colSpan={12} className="px-3 py-4 text-[#64748B] dark:text-slate-300">{hasSubmission ? 'Submission details are not available.' : 'This candidate is in the pipeline but has no submission record yet.'}</td></tr>}</tbody>
+                </table>
+              </div>
+            </div>
+          </td></tr>}
+          </React.Fragment>);
+          })}
         </tbody>
       </table></div>
       <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-center gap-2 rounded-b-xl border-t border-[#D8E3F1] bg-white px-4 py-2.5 text-[11px] text-[#334155] shadow-[0_-2px_6px_rgba(0,0,0,0.04)] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#FFFFFF]"><span className="mr-2 font-semibold">{pageStart} - {pageEnd} of {filteredApplicants.length}</span><button aria-label="First page" title="First page" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)} className="rounded p-1 text-[#64748B] hover:bg-[#FFFFFF] disabled:opacity-40"><ChevronsLeft className="h-4 w-4" /></button><button aria-label="Previous page" title="Previous page" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="rounded p-1 text-[#64748B] hover:bg-[#FFFFFF] disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><span className="rounded bg-[#2563EB] px-2.5 py-1 font-semibold text-white">{currentPage}</span><button aria-label="Next page" title="Next page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))} className="rounded p-1 text-[#64748B] hover:bg-[#FFFFFF] disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button><button aria-label="Last page" title="Last page" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(pageCount)} className="rounded p-1 text-[#64748B] hover:bg-[#FFFFFF] disabled:opacity-40"><ChevronsRight className="h-4 w-4" /></button><label className="ml-3 flex items-center gap-2 text-[10px] text-[#64748B]">Per Page<select aria-label="Rows per page" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className="rounded border border-[#D8E3F1] bg-white px-1.5 py-1 text-[#334155] dark:border-[#334155] dark:bg-[#1E293B] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label></div>
@@ -1119,7 +1230,36 @@ export const ApplicantList: React.FC = () => {
       {sidePanel === 'edit-columns' ? <div className="flex justify-end gap-2 border-t border-[#F1F5F9] px-5 py-3 dark:border-[#334155]"><button onClick={() => setSidePanel(null)} className={buttonClass}>Cancel</button><button disabled={!columnDraft.length} onClick={() => { setVisibleColumns(columnDraft); localStorage.setItem('ats_applicant_columns', JSON.stringify(columnDraft)); setSidePanel(null); }} className="rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">Apply</button></div> : <div className="flex items-center justify-between border-t border-[#F1F5F9] px-5 py-4 dark:border-[#334155]"><button onClick={() => { if (sidePanel === 'edit-filters') { setDraftRules([]); setDraftBusinessUnit('All Business Units'); setDraftGdprApproved(false); setFilterRules([]); setBusinessUnitFilter('All Business Units'); setGdprApprovedFilter(false); localStorage.removeItem('ats_applicant_filter_rules'); localStorage.removeItem('ats_applicant_business_unit_filter'); } else { setDraftQuickFilters([]); setQuickFilters([]); } }} className="text-xs font-semibold text-[#6D7988] hover:text-[#1E293B]">Reset</button><div className="flex gap-2"><button onClick={() => setSidePanel(null)} className={buttonClass}>Cancel</button><button onClick={() => { if (sidePanel === 'edit-filters') { const activeRules = draftRules.filter((r) => r.field && (['Is Null', 'Is Not Null'].includes(r.operator) || r.value.trim())); setFilterRules(activeRules); setBusinessUnitFilter(draftBusinessUnit); setGdprApprovedFilter(draftGdprApproved); localStorage.setItem('ats_applicant_filter_rules', JSON.stringify(activeRules)); localStorage.setItem('ats_applicant_business_unit_filter', draftBusinessUnit); } else setQuickFilters(draftQuickFilters); setSidePanel(null); }} className="rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white">Apply</button></div></div>}
     </aside></div>}
 
-    {quickResumePreview && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={() => setQuickResumePreview(null)}><div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#D8E3F1] bg-white p-5 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]" onClick={(e) => e.stopPropagation()}><div className="flex items-start justify-between border-b border-[#F1F5F9] pb-4 dark:border-[#334155]"><div className="flex items-center gap-3"><img src={quickResumePreview.avatar} alt="" className="h-11 w-11 rounded-full object-cover" /><div><h2 className="font-bold text-[#1E293B] dark:text-white">{quickResumePreview.name}</h2><p className="mt-1 text-xs text-[#6D7988]">{quickResumePreview.currentDesignation} · {quickResumePreview.location}</p></div></div><button onClick={() => setQuickResumePreview(null)} aria-label="Close preview"><X className="h-5 w-5 text-[#64748B]" /></button></div><div className="space-y-4 py-4 text-xs"><div><div className="mb-1 font-semibold">Executive Summary</div><p className="leading-relaxed text-[#64748B]">{quickResumePreview.summary || 'No profile summary has been added.'}</p></div><div><div className="mb-2 font-semibold">Skills</div><div className="flex flex-wrap gap-1.5">{quickResumePreview.skills.map((skill) => <span key={skill} className="rounded-md border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#1E293B]">{skill}</span>)}</div></div><div className={`flex justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]`}><button onClick={() => setQuickResumePreview(null)} className={buttonClass}>Close</button><button onClick={() => { navigate('applicant-detail', quickResumePreview.id); setQuickResumePreview(null); }} className="rounded-lg bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white">Open full dossier</button></div></div></div></div>}
+    {quickResumePreview && <>
+      <button type="button" aria-label="Close applicant quick view" onClick={() => setQuickResumePreview(null)} className="fixed inset-0 z-[59] cursor-default bg-black/10" />
+      <aside role="dialog" aria-modal="true" aria-label={`Quick View: ${quickResumePreview.name}`} className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-[860px] flex-col border-l border-[#D8E3F1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+        <header className="flex min-h-12 items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-2 dark:border-[#334155]">
+          <div className="flex min-w-0 items-center gap-2"><IdCard className="h-4 w-4 shrink-0 text-[#334155]" /><button type="button" onClick={() => navigate('applicant-detail', quickResumePreview.id)} className="truncate text-sm font-semibold text-[#2563EB] hover:underline">{quickResumePreview.name}</button><IdCard className="h-3.5 w-3.5 shrink-0 text-[#6682B2]" /></div>
+          <div className="flex shrink-0 items-center gap-3"><button type="button" title="Open applicant dossier" onClick={() => { navigate('applicant-detail', quickResumePreview.id); setQuickResumePreview(null); }} className="rounded bg-[#2563EB] px-3 py-1.5 text-xs font-semibold text-white">Open Dossier</button><button type="button" onClick={() => setQuickResumePreview(null)} aria-label="Close quick view" className="text-2xl leading-none text-[#475569] hover:text-[#1E293B]">?</button></div>
+        </header>
+        <section className="grid grid-cols-2 gap-x-6 gap-y-2 bg-[#F1F1F1] px-4 py-4 text-[11px] sm:grid-cols-3 dark:bg-slate-800">
+          <div><div className="uppercase text-[#7B8794]">Mobile Number</div><a className="font-medium text-[#2563EB]" href={`tel:${quickResumePreview.phone}`}>{quickResumePreview.phone || 'Not provided'}</a></div>
+          <div><div className="uppercase text-[#7B8794]">Email Address</div><a className="font-medium text-[#2563EB]" href={`mailto:${quickResumePreview.email}`}>{quickResumePreview.email || 'Not provided'}</a></div>
+          <div><div className="uppercase text-[#7B8794]">Location</div><div className="font-medium text-[#334155] dark:text-slate-100">{quickResumePreview.location || 'Not provided'}</div></div>
+          <div><div className="uppercase text-[#7B8794]">Preferred Location</div><div className="font-medium text-[#334155] dark:text-slate-100">{quickResumePreview.customFields?.preferredLocation || 'N/A'}</div></div>
+          <div><div className="uppercase text-[#7B8794]">Applicant Group</div><div className="font-medium text-[#334155] dark:text-slate-100">{quickResumePreview.applicantGroup || 'N/A'}</div></div>
+        </section>
+        <nav aria-label="Applicant quick view sections" className="flex gap-1 border-b border-[#E2E8F0] px-4 py-3 dark:border-[#334155]">{(['Resume', 'Submissions', 'Experience', 'Email Merges'] as const).map((tab) => <button key={tab} type="button" onClick={() => setQuickViewTab(tab)} className={`rounded border px-3 py-1.5 text-xs ${quickViewTab === tab ? 'border-[#3B82F6] bg-[#3B82F6] text-white' : 'border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F8FAFC] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'}`}>{tab}</button>)}</nav>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#FAFAFA] p-4 dark:bg-slate-900">
+          {quickViewTab === 'Resume' && <article className="mx-auto min-h-full max-w-[760px] bg-white px-8 py-10 text-[#292929] shadow-sm dark:bg-[#1E293B] dark:text-slate-100">
+            <h2 className="text-center font-serif text-2xl font-bold">{quickResumePreview.name}</h2><p className="mt-2 text-center font-serif text-sm font-semibold">{quickResumePreview.currentDesignation || 'Professional Candidate'}</p>
+            <p className="mt-2 text-center text-xs text-[#2563EB]">{[quickResumePreview.phone, quickResumePreview.email, quickResumePreview.location].filter(Boolean).join('  |  ')}</p>
+            <section className="mt-8"><h3 className="border-b border-[#CBD5E1] pb-1 font-serif text-sm font-bold uppercase">Summary</h3><p className="mt-2 text-sm leading-6">{quickResumePreview.summary || 'No professional summary has been added.'}</p></section>
+            <section className="mt-7"><h3 className="border-b border-[#CBD5E1] pb-1 font-serif text-sm font-bold uppercase">Key Skills</h3><ul className="mt-2 grid list-disc grid-cols-2 gap-x-8 gap-y-1 pl-5 text-sm">{(quickResumePreview.skills || []).map((skill) => <li key={skill}>{skill}</li>)}</ul></section>
+            <section className="mt-7"><h3 className="border-b border-[#CBD5E1] pb-1 font-serif text-sm font-bold uppercase">Professional Experience</h3>{((quickResumePreview.workHistory || quickResumePreview.employerDetails || []) as Array<{ role?: string; title?: string; company: string; duration?: string; from?: string; to?: string; summary?: string }>).length ? ((quickResumePreview.workHistory || quickResumePreview.employerDetails || []) as Array<{ role?: string; title?: string; company: string; duration?: string; from?: string; to?: string; summary?: string }>).map((item, index) => <div key={`${item.company}-${index}`} className="mt-3"><div className="font-semibold">{item.role || item.title} | {item.company}</div><div className="mt-1 text-sm leading-5">{item.summary || item.duration || ''}</div></div>) : <p className="mt-2 text-sm text-[#64748B]">No experience details have been added.</p>}</section>
+            <section className="mt-7"><h3 className="border-b border-[#CBD5E1] pb-1 font-serif text-sm font-bold uppercase">Education</h3>{(quickResumePreview.education || quickResumePreview.educationDetails || []).length ? (quickResumePreview.education || quickResumePreview.educationDetails || []).map((item, index) => <div key={`${item.school}-${index}`} className="mt-2 text-sm"><span className="font-semibold">{item.degree}</span>{item.school ? ` | ${item.school}` : ''}{item.year ? ` | ${item.year}` : ''}</div>) : <p className="mt-2 text-sm text-[#64748B]">No education details have been added.</p>}</section>
+          </article>}
+          {quickViewTab === 'Submissions' && <div className="rounded border border-[#E2E8F0] bg-white p-5 text-sm text-[#64748B] dark:border-slate-700 dark:bg-slate-800">Submission records for {quickResumePreview.name} can be reviewed in the Submissions module.</div>}
+          {quickViewTab === 'Experience' && <div className="space-y-3">{((quickResumePreview.workHistory || quickResumePreview.employerDetails || []) as Array<{ role?: string; title?: string; company: string; duration?: string; from?: string; to?: string; summary?: string }>).length ? ((quickResumePreview.workHistory || quickResumePreview.employerDetails || []) as Array<{ role?: string; title?: string; company: string; duration?: string; from?: string; to?: string; summary?: string }>).map((item, index) => <article key={`${item.company}-${index}`} className="rounded border border-[#E2E8F0] bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="font-semibold">{item.role || item.title} ? {item.company}</div><div className="mt-1 text-xs text-[#64748B]">{item.duration || [item.from, item.to].filter(Boolean).join(' ? ')}</div><p className="mt-2 text-sm">{item.summary || 'No role details available.'}</p></article>) : <p className="rounded border bg-white p-5 text-sm text-[#64748B]">No experience details have been added.</p>}</div>}
+          {quickViewTab === 'Email Merges' && <div className="rounded border border-[#E2E8F0] bg-white p-5 text-sm text-[#64748B] dark:border-slate-700 dark:bg-slate-800">No email merge history is available for this applicant.</div>}
+        </div>
+      </aside>
+    </>}
 
 
     {/* Slide-out Applicant Notes Drawer (Reference Image) */}

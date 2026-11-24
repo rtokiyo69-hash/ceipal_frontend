@@ -117,6 +117,7 @@ export const ApplicantCreate: React.FC = () => {
       summary,
       middleName: profileFields.middleName,
       legalName: profileFields.legalName,
+      nameAsPerAadhaar: profileFields.nameAsPerAadhaar,
       alternateEmail: profileFields.alternateEmail,
       homePhone: profileFields.homePhone,
       workPhone: profileFields.workPhone,
@@ -436,7 +437,7 @@ export const ApplicantCreate: React.FC = () => {
           <div className="text-xs font-mono font-bold text-[#1E293B] dark:text-[#93C5FD] uppercase tracking-wider">05. Personal Details &amp; Work Authorization</div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
             {[
-              ['Middle Name', 'middleName'], ['Legal Name', 'legalName'], ['Alternate Email', 'alternateEmail'],
+              ['Middle Name', 'middleName'], ['Legal Name', 'legalName'], ['Name (As per Aadhaar)', 'nameAsPerAadhaar'], ['Alternate Email', 'alternateEmail'],
               ['Home Phone Number', 'homePhone'], ['Work Phone Number', 'workPhone'], ['Date of Birth', 'dateOfBirth', 'date'],
               ['LinkedIn Profile URL', 'linkedinUrl'], ['Portfolio / Social URL', 'portfolioUrl'], ['Work Authorization', 'workAuthorization'],
               ['Street Address', 'address'], ['Country', 'country'], ['State / Province', 'state'], ['ZIP / Postal Code', 'zipCode'],
