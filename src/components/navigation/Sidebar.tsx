@@ -54,7 +54,7 @@ export const Sidebar: React.FC = () => {
             { id: 'dashboard', label: 'Global Settings', icon: Settings },
             { id: 'job-new', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Applicants', icon: Users },
-            { id: 'jobs', label: 'Requisitions', icon: Layers }
+            { id: 'requisition-code', label: 'Requisitions', icon: Layers }
           ]
         }
       ];
@@ -164,6 +164,7 @@ export const Sidebar: React.FC = () => {
                 currentRoute === item.id ||
                 (role === 'admin' && item.id === 'dashboard' && currentRoute === 'settings') ||
                 (role === 'admin' && item.id === 'jobs' && currentRoute === 'job-detail') ||
+                (role === 'admin' && item.id === 'requisition-code' && ['requisition-code', 'requisition-lookups', 'requisition-settings', 'requisition-workflows'].includes(currentRoute)) ||
                 (role !== 'admin' && item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-detail')) ||
                 (item.id === 'applicants' && currentRoute === 'applicant-detail');
 

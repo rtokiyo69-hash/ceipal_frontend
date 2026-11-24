@@ -25,6 +25,10 @@ export type AppRoute =
   | 'tasks'
   | 'reports'
   | 'admin-users'
+  | 'requisition-code'
+  | 'requisition-lookups'
+  | 'requisition-settings'
+  | 'requisition-workflows'
   | 'settings';
 
 export type ThemePalette = 'indigo' | 'emerald' | 'teal' | 'violet';
