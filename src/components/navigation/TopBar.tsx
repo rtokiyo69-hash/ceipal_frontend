@@ -308,6 +308,14 @@ export const TopBar: React.FC = () => {
         return ['Analytics', 'Recruiter Performance & Hiring Velocity'];
       case 'admin-users':
         return ['Governance', 'Users, Roles & Access Control'];
+      case 'requisition-code':
+        return ['Requisitions', 'Job Requisition Code'];
+      case 'requisition-lookups':
+        return ['Requisitions', 'Job Requisition Lookups'];
+      case 'requisition-settings':
+        return ['Requisitions', 'Job Requisition Settings'];
+      case 'requisition-workflows':
+        return ['Requisitions', 'Requisition Workflows'];
       case 'settings':
         return ['Administration', 'Global Settings'];
       default:

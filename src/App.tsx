@@ -34,6 +34,7 @@ import { TaskManager } from './features/tasks/TaskManager';
 import { ReportsAnalytics } from './features/reports/ReportsAnalytics';
 import { UserManagement } from './features/admin/UserManagement';
 import { PlatformSettings } from './features/settings/PlatformSettings';
+import { RequisitionAdministration } from './features/admin/RequisitionAdministration';
 
 export default function App() {
   const { currentRoute, selectedId, isAuthenticated, isDark, currentUser } = useAppStore();
@@ -41,11 +42,15 @@ export default function App() {
   const isRecruiterFullBleed = isRecruiter && (currentRoute === 'applicant-detail' || currentRoute === 'job-detail');
   const isAdminModuleView =
     currentUser?.role === 'admin' &&
-  (currentRoute === 'applicants' ||
+    (currentRoute === 'applicants' ||
     currentRoute === 'settings' ||
     currentRoute === 'dashboard' ||
     currentRoute === 'clients' ||
-    currentRoute === 'job-new');
+    currentRoute === 'job-new' ||
+    currentRoute === 'requisition-code' ||
+    currentRoute === 'requisition-lookups' ||
+    currentRoute === 'requisition-settings' ||
+    currentRoute === 'requisition-workflows');
   const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs';
   const isFullWidth = isRecruiter || isFullBleed || isAdminModuleView;
   const useBlueClayTheme = isAuthenticated;
@@ -119,6 +124,11 @@ export default function App() {
         return <ReportsAnalytics />;
       case 'admin-users':
         return <UserManagement />;
+      case 'requisition-code':
+      case 'requisition-lookups':
+      case 'requisition-settings':
+      case 'requisition-workflows':
+        return <RequisitionAdministration />;
       case 'settings':
         return <PlatformSettings />;
       default:

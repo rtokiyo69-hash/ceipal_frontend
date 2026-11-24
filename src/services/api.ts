@@ -268,10 +268,48 @@ export const ApiService = {
   // Applicants
   async getApplicants(): Promise<Applicant[]> {
     await delay(150);
-    const stored = getStorage<Applicant[]>(STORAGE_KEYS.APPLICANTS, INITIAL_APPLICANTS);
+    const rawStored = getStorage<unknown>(STORAGE_KEYS.APPLICANTS, INITIAL_APPLICANTS);
+    // Profiles can be incomplete (for example, created before all form fields were
+    // added). Normalize them before the roster filters read strings and arrays.
+    const stored: Applicant[] = (Array.isArray(rawStored) ? rawStored : INITIAL_APPLICANTS)
+      .filter((candidate): candidate is Record<string, unknown> => Boolean(candidate) && typeof candidate === 'object' && !Array.isArray(candidate))
+      .map((candidate, index) => {
+        const skills = Array.isArray(candidate.skills)
+          ? candidate.skills.map(String).filter(Boolean)
+          : typeof candidate.skills === 'string'
+            ? candidate.skills.split(',').map((skill) => skill.trim()).filter(Boolean)
+            : [];
+        const customFields = candidate.customFields && typeof candidate.customFields === 'object' && !Array.isArray(candidate.customFields)
+          ? candidate.customFields as Record<string, string>
+          : {};
+
+        return {
+          ...candidate,
+          id: String(candidate.id || candidate.applicantId || `applicant-${index + 1}`),
+          applicantId: String(candidate.applicantId || candidate.id || ''),
+          name: String(candidate.name || 'Unnamed Candidate'),
+          email: String(candidate.email || ''),
+          phone: String(candidate.phone || ''),
+          currentDesignation: String(candidate.currentDesignation || ''),
+          location: String(candidate.location || ''),
+          experienceYears: Number.isFinite(Number(candidate.experienceYears)) ? Number(candidate.experienceYears) : 0,
+          skills,
+          source: (candidate.source || 'Direct Career Portal') as Applicant['source'],
+          status: (candidate.status || 'New') as Applicant['status'],
+          assignedRecruiter: String(candidate.assignedRecruiter || ''),
+          matchScore: Number.isFinite(Number(candidate.matchScore)) ? Number(candidate.matchScore) : 0,
+          avatar: String(candidate.avatar || ''),
+          state: String(candidate.state || ''),
+          workAuthorization: String(candidate.workAuthorization || ''),
+          customFields,
+          notes: Array.isArray(candidate.notes) ? candidate.notes : [],
+          workHistory: Array.isArray(candidate.workHistory) ? candidate.workHistory : [],
+          education: Array.isArray(candidate.education) ? candidate.education : [],
+        } as Applicant;
+      });
     // Ensure initial applicants like Test Dummy, DURAI KANDASAMY are present if storage predated them
     const existingIds = new Set(stored.map((a) => a.applicantId || a.id));
-    let modified = false;
+    let modified = !Array.isArray(rawStored) || rawStored.length !== stored.length;
     for (const initApp of INITIAL_APPLICANTS) {
       if (!existingIds.has(initApp.applicantId) && !existingIds.has(initApp.id)) {
         stored.push(initApp);
