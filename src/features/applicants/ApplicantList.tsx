@@ -19,6 +19,7 @@ import {
   ListFilter,
   ArrowRight,
   FileSpreadsheet,
+  FileText,
   Settings,
   GripVertical,
   ChevronUp,
@@ -108,6 +109,32 @@ function parseCSV(text: string): string[][] {
   row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); return rows;
 }
 
+function readStoredArray<T>(key: string, fallback: T[]): T[] {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(key) || 'null');
+    return Array.isArray(value) ? value as T[] : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readStoredObject<T extends Record<string, unknown>>(key: string, fallback: T): T {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(key) || 'null');
+    return value && typeof value === 'object' && !Array.isArray(value) ? { ...fallback, ...value } as T : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readAdvancedCriteria(): AdvancedCriteria {
+  const value = readStoredObject<AdvancedCriteria & Record<string, unknown>>(
+    'ats_applicant_advanced_criteria',
+    emptyAdvancedCriteria,
+  );
+  return { ...emptyAdvancedCriteria, ...value, terms: Array.isArray(value.terms) ? value.terms : [] };
+}
+
 export const ApplicantList: React.FC = () => {
   const { navigate, currentUser } = useAppStore();
   const [activeSubmodule, setActiveSubmodule] = useState<(typeof applicantSubmodules)[number]>(applicantSubmodules[0]);
@@ -142,7 +169,7 @@ export const ApplicantList: React.FC = () => {
   const [quickViewTab, setQuickViewTab] = useState<'Resume' | 'Submissions' | 'Experience' | 'Email Merges'>('Resume');
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [sidePanel, setSidePanel] = useState<'edit-filters' | 'quick-filters' | 'edit-columns' | null>(null);
-  const [filterRules, setFilterRules] = useState<FilterRule[]>(() => JSON.parse(localStorage.getItem('ats_applicant_filter_rules') || '[]'));
+  const [filterRules, setFilterRules] = useState<FilterRule[]>(() => readStoredArray<FilterRule>('ats_applicant_filter_rules', []));
   const [draftRules, setDraftRules] = useState<FilterRule[]>([]);
   const [columnFilterOpen, setColumnFilterOpen] = useState<string | null>(null);
   const [columnFilterAlign, setColumnFilterAlign] = useState<'left' | 'right'>('left');
@@ -164,24 +191,24 @@ export const ApplicantList: React.FC = () => {
   const [ticketDashboardSearch, setTicketDashboardSearch] = useState('');
   const [ticketOtpAllowed, setTicketOtpAllowed] = useState(false);
   const [ticketAttachments, setTicketAttachments] = useState<string[]>([]);
-  const [reportedTickets, setReportedTickets] = useState<{ id: string; type: string; title?: string; priority: string; description: string; status?: string; attachments?: string[]; createdAt: string }[]>(() => JSON.parse(localStorage.getItem('ats_applicant_tickets') || '[]'));
+  const [reportedTickets, setReportedTickets] = useState<{ id: string; type: string; title?: string; priority: string; description: string; status?: string; attachments?: string[]; createdAt: string }[]>(() => readStoredArray('ats_applicant_tickets', []));
   const [quickToolsOpen, setQuickToolsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
-  const [chatContacts, setChatContacts] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_text_to_hire_contacts') || '[]'));
+  const [chatContacts, setChatContacts] = useState<string[]>(() => readStoredArray('ats_text_to_hire_contacts', []));
   const [chatContactId, setChatContactId] = useState('');
   const [chatTab, setChatTab] = useState<'all' | 'favourites'>('all');
   const [fetchContactsOpen, setFetchContactsOpen] = useState(false);
   const [bestPracticesOpen, setBestPracticesOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<TextToHireMessage[]>(() => JSON.parse(localStorage.getItem('ats_text_to_hire_messages') || '[]'));
-  const [savedViews, setSavedViews] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_views') || '["All Applicants","My Applicants","Favorites"]'));
-  const [viewConfigs, setViewConfigs] = useState<Record<string, { stage?: string; location?: string; experience?: string; skill?: string; source?: string; recruiter?: string; columns?: string[]; filters?: FilterRule[]; businessUnit?: string; gdprApproved?: boolean }>>(() => JSON.parse(localStorage.getItem('ats_applicant_view_configs') || '{}'));
+  const [chatMessages, setChatMessages] = useState<TextToHireMessage[]>(() => readStoredArray('ats_text_to_hire_messages', []));
+  const [savedViews, setSavedViews] = useState<string[]>(() => readStoredArray('ats_applicant_views', ['All Applicants', 'My Applicants', 'Favorites']));
+  const [viewConfigs, setViewConfigs] = useState<Record<string, { stage?: string; location?: string; experience?: string; skill?: string; source?: string; recruiter?: string; columns?: string[]; filters?: FilterRule[]; businessUnit?: string; gdprApproved?: boolean }>>(() => readStoredObject('ats_applicant_view_configs', {}));
   const [folders, setFolders] = useState<string[]>(() => {
-    const stored = JSON.parse(localStorage.getItem('ats_applicant_folders') || 'null') as string[] | null;
+    const stored = readStoredArray<string>('ats_applicant_folders', []);
     if (stored && Array.isArray(stored) && stored.length > 0) return stored;
     return ['All Profiles', 'Python devloper'];
   });
-  const [folderConfigs, setFolderConfigs] = useState<Record<string, { columns: string[]; businessUnit: string }>>(() => JSON.parse(localStorage.getItem('ats_applicant_folder_configs') || '{}'));
+  const [folderConfigs, setFolderConfigs] = useState<Record<string, { columns: string[]; businessUnit: string }>>(() => readStoredObject('ats_applicant_folder_configs', {}));
   const [activeView, setActiveView] = useState(() => localStorage.getItem('ats_default_applicant_view') || 'All Applicants');
   const [folderFilter, setFolderFilter] = useState('All Profiles');
   const [addViewMenuOpen, setAddViewMenuOpen] = useState(false);
@@ -191,15 +218,15 @@ export const ApplicantList: React.FC = () => {
   const [advancedMenuOpen, setAdvancedMenuOpen] = useState(false);
   const [advancedProvider, setAdvancedProvider] = useState('Internal DB');
   const [advancedTab, setAdvancedTab] = useState<'options' | 'exclude'>('options');
-  const [advancedDraft, setAdvancedDraft] = useState<AdvancedCriteria>(() => JSON.parse(localStorage.getItem('ats_applicant_advanced_criteria') || JSON.stringify(emptyAdvancedCriteria)));
-  const [advancedCriteria, setAdvancedCriteria] = useState<AdvancedCriteria>(() => JSON.parse(localStorage.getItem('ats_applicant_advanced_criteria') || JSON.stringify(emptyAdvancedCriteria)));
-  const [advancedHistory, setAdvancedHistory] = useState<AdvancedCriteria[]>(() => JSON.parse(localStorage.getItem('ats_applicant_advanced_history') || '[]'));
-  const [savedAdvancedSearches, setSavedAdvancedSearches] = useState<{ name: string; criteria: AdvancedCriteria }[]>(() => JSON.parse(localStorage.getItem('ats_applicant_saved_searches') || '[]'));
+  const [advancedDraft, setAdvancedDraft] = useState<AdvancedCriteria>(readAdvancedCriteria);
+  const [advancedCriteria, setAdvancedCriteria] = useState<AdvancedCriteria>(readAdvancedCriteria);
+  const [advancedHistory, setAdvancedHistory] = useState<AdvancedCriteria[]>(() => readStoredArray('ats_applicant_advanced_history', []));
+  const [savedAdvancedSearches, setSavedAdvancedSearches] = useState<{ name: string; criteria: AdvancedCriteria }[]>(() => readStoredArray('ats_applicant_saved_searches', []));
   const [savedSearchName, setSavedSearchName] = useState('');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [makeViewDefault, setMakeViewDefault] = useState(false);
-  const [viewColumnsDraft, setViewColumnsDraft] = useState<string[]>(() => JSON.parse(localStorage.getItem('ats_applicant_columns') || JSON.stringify(defaultApplicantColumns)));
+  const [viewColumnsDraft, setViewColumnsDraft] = useState<string[]>(() => readStoredArray('ats_applicant_columns', defaultApplicantColumns));
   const [viewRulesDraft, setViewRulesDraft] = useState<FilterRule[]>([]);
   const [viewBusinessUnit, setViewBusinessUnit] = useState('All Business Units');
   const [viewGdprApproved, setViewGdprApproved] = useState(false);
@@ -215,7 +242,7 @@ export const ApplicantList: React.FC = () => {
   const [importRows, setImportRows] = useState<Partial<Applicant>[]>([]);
   const [duplicatePolicy, setDuplicatePolicy] = useState<'Skip' | 'Overwrite'>('Skip');
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    const stored = JSON.parse(localStorage.getItem('ats_applicant_columns') || 'null') as string[] | null;
+    const stored = readStoredArray<string>('ats_applicant_columns', []);
     if (!stored) return defaultApplicantColumns;
     const legacy: Record<string, string[]> = { 'Role & Location': ['Current Title/Designation', 'City'], Stage: ['Applicant Status'], Recruiter: ['Ownership'] };
     const migrated = stored.flatMap((column) => legacy[column] || [column]).filter((column) => allApplicantColumns.includes(column));
@@ -449,7 +476,7 @@ export const ApplicantList: React.FC = () => {
     const matchesSource = sourceFilter === 'All' || a.source === sourceFilter;
     const matchesRecruiter = recruiterFilter === 'All' || a.assignedRecruiter === recruiterFilter;
     const matchesView = activeView === 'Favorites' ? !!a.isFavorite : activeView === 'My Applicants' ? a.assignedRecruiter === (currentUser?.name || 'Priya Sharma') : true;
-    const membership = JSON.parse(localStorage.getItem('ats_applicant_folder_memberships') || '{}') as Record<string, string[]>;
+    const membership = readStoredObject<Record<string, string[]>>('ats_applicant_folder_memberships', {});
     const matchesFolder = folderFilter === 'All Profiles' || (membership[folderFilter] || []).includes(a.id);
     const matchesQuick = (!quickFilters.includes('Favorites') || !!a.isFavorite) && (!quickFilters.includes('High Match') || a.matchScore >= 90) && (!quickFilters.includes('Has Resume') || !!a.documents?.some((doc) => /resume|cv/i.test(doc.name))) && (!quickFilters.includes('New Applicants') || a.status === 'New');
     const hasGdprConsent = a.gdprApproved === true || ['yes', 'true', 'approved'].includes((a.customFields?.gdprApproved || '').toLowerCase());
