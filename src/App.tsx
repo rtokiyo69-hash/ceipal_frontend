@@ -37,7 +37,10 @@ export default function App() {
   const isRecruiterFullBleed = isRecruiter && (currentRoute === 'applicant-detail' || currentRoute === 'job-detail');
   const isAdminModuleView =
     currentUser?.role === 'admin' &&
-    (currentRoute === 'applicants' || currentRoute === 'settings' || currentRoute === 'dashboard');
+  (currentRoute === 'applicants' ||
+    currentRoute === 'settings' ||
+    currentRoute === 'dashboard' ||
+    currentRoute === 'clients');
   const useBlueClayTheme = isAuthenticated;
 
   useEffect(() => {

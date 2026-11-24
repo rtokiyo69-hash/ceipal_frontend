@@ -54,7 +54,8 @@ export const Sidebar: React.FC = () => {
             { id: 'settings', label: 'Global Settings', icon: Settings },
             { id: 'job-new', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Applicants', icon: Users },
-            { id: 'jobs', label: 'Requisitions', icon: Layers }
+            { id: 'jobs', label: 'Requisitions', icon: Layers },
+            { id: 'clients', label: 'Client', icon: Building2 }
           ]
         }
       ];
@@ -176,8 +177,8 @@ export const Sidebar: React.FC = () => {
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 32, mass: 0.45 }}
                   className={`relative isolate w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium ${isActive
-                      ? 'font-semibold'
-                      : 'text-[#FFFFFF] hover:bg-white/10 hover:text-white'
+                    ? 'font-semibold'
+                    : 'text-[#FFFFFF] hover:bg-white/10 hover:text-white'
                     } ${collapsed ? 'justify-center' : ''}`}
                 >
                   {isActive && (
