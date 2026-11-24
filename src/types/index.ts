@@ -186,6 +186,7 @@ export interface Applicant {
   // Optional recruiter profile fields collected by the frontend applicant form.
   middleName?: string;
   legalName?: string;
+  nameAsPerAadhaar?: string;
   alternateEmail?: string;
   homePhone?: string;
   workPhone?: string;
@@ -277,6 +278,7 @@ export interface Submission {
   submissionId: string;
   applicantId: string;
   applicantName: string;
+  nameAsPerAadhaar?: string;
   jobId: string;
   jobTitle: string;
   client: string;

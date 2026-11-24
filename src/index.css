@@ -337,7 +337,111 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border-color: #24456c;
 }
 
-#root > .blue-clay-theme > aside [class~="text-[#FFFFFF]"] {
+/* The email share customization form uses the light Ceipal panel in either theme. */
+#root > .blue-clay-theme aside.email-share-customize-panel,
+.dark #root > .blue-clay-theme aside.email-share-customize-panel {
+  background-color: #ffffff;
+  border-color: #d0d0d0;
+  color: #444444;
+}
+
+#root > .blue-clay-theme aside.email-share-customize-panel label,
+#root > .blue-clay-theme aside.email-share-customize-panel h3,
+#root > .blue-clay-theme aside.email-share-customize-panel span {
+  color: #475569;
+}
+
+#root > .blue-clay-theme aside.email-share-customize-panel input:not([type="checkbox"]):not([type="color"]),
+#root > .blue-clay-theme aside.email-share-customize-panel select {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+.dark #root > .blue-clay-theme aside.email-share-customize-panel input:not([type="checkbox"]):not([type="color"]),
+.dark #root > .blue-clay-theme aside.email-share-customize-panel select {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+#root > .blue-clay-theme aside.email-share-customize-panel button {
+  color: #334155;
+}
+
+#root > .blue-clay-theme aside.email-share-customize-panel button.text-\[\#3B82F6\] {
+  color: #2563eb;
+}
+
+/* Applicant profile details stay readable in the light blue-clay theme. */
+#root > .blue-clay-theme aside.applicant-details-sidebar {
+  background-color: #ffffff;
+  border-color: #d8e3f1;
+  color: #1e293b;
+}
+
+@media (min-width: 1024px) {
+  #root > .blue-clay-theme aside.applicant-details-sidebar.sidebar-expanded {
+    width: clamp(360px, 28vw, 530px) !important;
+  }
+
+  #root > .blue-clay-theme .applicant-detail-main.sidebar-expanded {
+    padding-right: calc(clamp(360px, 28vw, 530px) + 13px) !important;
+  }
+
+  #root > .blue-clay-theme .applicant-sidebar-toggle.sidebar-expanded {
+    right: clamp(360px, 28vw, 530px) !important;
+  }
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar [class~="text-[#888]"] {
+  color: #64748b;
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar [class~="text-[#222]"] {
+  color: #1e293b;
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar [class~="text-[#444]"] {
+  color: #334155;
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar h2 {
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar .text-\[10px\] {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar .font-medium,
+#root > .blue-clay-theme aside.applicant-details-sidebar .font-semibold {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+#root > .blue-clay-theme aside.applicant-details-sidebar .text-\[11px\] {
+  font-size: 13px;
+}
+
+.dark #root > .blue-clay-theme aside.applicant-details-sidebar {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dark #root > .blue-clay-theme aside.applicant-details-sidebar [class~="text-[#888]"] {
+  color: #94a3b8;
+}
+
+.dark #root > .blue-clay-theme aside.applicant-details-sidebar [class~="text-[#222]"],
+.dark #root > .blue-clay-theme aside.applicant-details-sidebar [class~="text-[#444]"] {
+  color: #f1f5f9;
+}
+
+#root > .blue-clay-theme aside [class~="text-[#FFFFFF]"] {
   color: #ffffff;
 }
 

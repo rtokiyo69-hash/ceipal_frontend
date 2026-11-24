@@ -615,11 +615,21 @@ export const ApiService = {
     const submissions = await this.getSubmissions();
     const submittedDate = new Date().toLocaleString();
     const status = submissionData.status === 'Client Submission' ? 'Submitted to Client' : submissionData.status === 'In Review' ? 'Client Review' : submissionData.status === 'Submitted' ? 'Waiting for Evaluation by Internal Reviewer' : submissionData.status || 'Waiting for Evaluation by Internal Reviewer';
+
+    const applicant = submissionData.applicantId
+      ? await this.getApplicantById(submissionData.applicantId)
+      : undefined;
     const newSubmission: Submission = {
       id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       submissionId: `${Math.floor(40000 + Math.random() * 20000)}`,
       applicantId: submissionData.applicantId || '',
-      applicantName: submissionData.applicantName || 'Candidate',
+      applicantName: submissionData.applicantName || applicant?.name || 'Candidate',
+      nameAsPerAadhaar: submissionData.nameAsPerAadhaar
+        || applicant?.nameAsPerAadhaar
+        || applicant?.customFields?.nameAsPerAadhaar
+        || applicant?.customFields?.['Name (As per Aadhaar)']
+        || applicant?.customFields?.legalName
+        || applicant?.legalName,
       jobId: submissionData.jobId || '',
       jobTitle: submissionData.jobTitle || 'Requisition',
       client: submissionData.client || '',

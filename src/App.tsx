@@ -21,6 +21,8 @@ import { ClientSubmission } from './features/submissions/ClientSubmission';
 import { ApplicantList } from './features/applicants/ApplicantList';
 import { ApplicantCreate } from './features/applicants/ApplicantCreate';
 import { ApplicantDetail } from './features/applicants/ApplicantDetail';
+import { ApplicantMatchingJobs } from './features/applicants/ApplicantMatchingJobs';
+import { ApplicantEmailShare } from './features/applicants/ApplicantEmailShare';
 import { PipelineKanban } from './features/pipeline/PipelineKanban';
 import { ClientList } from './features/clients/ClientList';
 import { VendorList } from './features/vendors/VendorList';
@@ -87,6 +89,10 @@ export default function App() {
         return <ApplicantCreate />;
       case 'applicant-detail':
         return <ApplicantDetail />;
+      case 'applicant-matching-jobs':
+        return <ApplicantMatchingJobs />;
+      case 'applicant-email-share':
+        return <ApplicantEmailShare />;
       case 'pipeline':
         return <PipelineKanban />;
       case 'clients':

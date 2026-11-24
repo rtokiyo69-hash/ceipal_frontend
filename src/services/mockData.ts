@@ -784,6 +784,24 @@ export const INITIAL_APPLICANTS: Applicant[] = [
     expectedSalary: '€135,000',
     noticePeriod: 'Complete',
     summary: 'Successfully placed at CloudScale Enterprises on Oct 15, 2026. Onboarding completed with stellar feedback.'
+  },
+  {
+    id: 'app-incomplete-test',
+    applicantId: 'APP-TEST-001',
+    name: 'Incomplete Profile Test',
+    email: 'incomplete.profile.test@example.com',
+    phone: '+91 90000 00001',
+    currentDesignation: 'QA Test Candidate',
+    location: 'Pune, India',
+    experienceYears: 2,
+    skills: ['Manual Testing'],
+    source: 'Direct Career Portal',
+    status: 'New',
+    assignedRecruiter: 'Priya Sharma',
+    matchScore: 50,
+    avatar: '',
+    summary: 'Test profile with intentionally missing details for the applicant missing-information indicator.'
+    // Date of birth, work authorization, state, address, and highest qualification are intentionally blank.
   }
 ];
 
