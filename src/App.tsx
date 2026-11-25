@@ -21,6 +21,7 @@ import { ClientSubmission } from './features/submissions/ClientSubmission';
 import { ApplicantList } from './features/applicants/ApplicantList';
 import { ApplicantCreate } from './features/applicants/ApplicantCreate';
 import { ApplicantDetail } from './features/applicants/ApplicantDetail';
+import { ApplicantPipelineDetail } from './features/applicants/ApplicantPipelineDetail';
 import { ApplicantMatchingJobs } from './features/applicants/ApplicantMatchingJobs';
 import { ApplicantEmailShare } from './features/applicants/ApplicantEmailShare';
 import { PipelineKanban } from './features/pipeline/PipelineKanban';
@@ -53,7 +54,7 @@ export default function App() {
     currentRoute === 'requisition-lookups' ||
     currentRoute === 'requisition-settings' ||
     currentRoute === 'requisition-workflows');
-  const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs';
+  const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'applicant-pipeline-detail' || currentRoute === 'matching-jobs';
   const isFullWidth = isRecruiter || isFullBleed || isAdminModuleView;
   const useBlueClayTheme = isAuthenticated;
 
@@ -102,6 +103,8 @@ export default function App() {
         return <ApplicantCreate />;
       case 'applicant-detail':
         return <ApplicantDetail />;
+      case 'applicant-pipeline-detail':
+        return <ApplicantPipelineDetail />;
       case 'applicant-matching-jobs':
         return <ApplicantMatchingJobs />;
       case 'applicant-email-share':

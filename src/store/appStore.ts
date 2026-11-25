@@ -18,6 +18,7 @@ export type AppRoute =
   | 'applicants'
   | 'applicant-new'
   | 'applicant-detail'
+  | 'applicant-pipeline-detail'
   | 'applicant-matching-jobs'
   | 'applicant-email-share'
   | 'pipeline'
