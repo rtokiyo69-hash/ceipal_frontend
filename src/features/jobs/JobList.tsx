@@ -120,6 +120,14 @@ const BULK_JOB_ACTIONS: { id: BulkJobAction; label: string }[] = [
   { id: 'mail-merge-limit', label: 'Set Mail Merge Limit' },
   { id: 'publish-campuses', label: 'Publish to Campuses' }
 ];
+const NOTE_SOURCES = ['Added Through Naukri', 'Note from FG', 'Note from iLabor', 'Note from IQN'];
+const MACRO_FIELDS = ['Job Title', 'Career Portal Published Date', 'Job Status', 'Current Filed', 'Recruitment Manager', 'Industry', 'Comments', 'Priority', 'Experience', 'Degree', 'Primary Recruiter', 'Assigned To', 'Sales Manager', 'Number of Positions', 'Duration', 'Country & States', 'Account Manager', 'Respond By', 'Post Jobs On Career Portal', 'Custom Fields'];
+const COUNTRY_OPTIONS = ['Afghanistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'Canada', 'China', 'France', 'Germany', 'India', 'Japan', 'Singapore', 'United Arab Emirates', 'United Kingdom', 'United States'];
+const CAMPUS_OPTIONS = [
+  { id: 'blr-engineering', name: 'Bengaluru Engineering Campus', type: 'Technology', head: 'Ananya Rao', state: 'Karnataka', country: 'India', ownership: 'Ampcus' },
+  { id: 'hyd-digital', name: 'Hyderabad Digital Campus', type: 'Technology', head: 'Ravi Kumar', state: 'Telangana', country: 'India', ownership: 'Ampcus' },
+  { id: 'pune-business', name: 'Pune Business Campus', type: 'Business', head: 'Meera Shah', state: 'Maharashtra', country: 'India', ownership: 'Partner' }
+];
 const EMAIL_JOB_FIELDS = [
   'Job Title',
   'Job Code',
@@ -656,8 +664,27 @@ export const JobList: React.FC = () => {
   const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false);
   const [bulkAction, setBulkAction] = useState<BulkJobAction | null>(null);
   const [bulkActionValue, setBulkActionValue] = useState('');
+  const [noteSource, setNoteSource] = useState('');
+  const [notifyJobAssociates, setNotifyJobAssociates] = useState(false);
+  const [noteEditorResetKey, setNoteEditorResetKey] = useState(0);
+  const [statusComment, setStatusComment] = useState('');
+  const [priorityComment, setPriorityComment] = useState('');
+  const [macroField, setMacroField] = useState('');
+  const [selectedBenchConsultantIds, setSelectedBenchConsultantIds] = useState<string[]>([]);
+  const [benchConsultantSearch, setBenchConsultantSearch] = useState('');
+  const [selectedRolloverUserIds, setSelectedRolloverUserIds] = useState<string[]>([]);
+  const [rolloverUserSearch, setRolloverUserSearch] = useState('');
+  const [isRolloverUserPickerOpen, setIsRolloverUserPickerOpen] = useState(false);
+  const [rolloverComment, setRolloverComment] = useState('');
+  const [campusType, setCampusType] = useState('');
+  const [campusCountry, setCampusCountry] = useState('India');
+  const [campusState, setCampusState] = useState('');
+  const [campusSpecialization, setCampusSpecialization] = useState('');
+  const [campusSearch, setCampusSearch] = useState('');
+  const [selectedCampusIds, setSelectedCampusIds] = useState<string[]>([]);
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const rolloverUserPickerRef = useRef<HTMLDivElement>(null);
 
   // Send Requirement modal
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -695,6 +722,9 @@ export const JobList: React.FC = () => {
       }
       if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
         setIsSettingsMenuOpen(false);
+      }
+      if (rolloverUserPickerRef.current && !rolloverUserPickerRef.current.contains(e.target as Node)) {
+        setIsRolloverUserPickerOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -1571,14 +1601,57 @@ export const JobList: React.FC = () => {
     setBulkActionValue(
       action === 'status' ? 'Active' :
       action === 'priority' ? 'High' :
-      action === 'macro' ? 'Set Active' : ''
+      ''
     );
+    setNoteSource('');
+    setNotifyJobAssociates(false);
+    setNoteEditorResetKey((key) => key + 1);
+    setStatusComment('');
+    setPriorityComment('');
+    setMacroField('');
+    setSelectedBenchConsultantIds([]);
+    setBenchConsultantSearch('');
+    setSelectedRolloverUserIds([]);
+    setRolloverUserSearch('');
+    setIsRolloverUserPickerOpen(false);
+    setRolloverComment('');
+    setCampusType('');
+    setCampusCountry('India');
+    setCampusState('');
+    setCampusSpecialization('');
+    setCampusSearch('');
+    setSelectedCampusIds([]);
     setIsBulkActionsOpen(false);
   };
 
   const applyBulkJobAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bulkAction || !bulkActionValue.trim()) return;
+    if (!bulkAction) return;
+
+    const selectedBenchConsultants = users.filter((user) => selectedBenchConsultantIds.includes(user.id));
+    const selectedRolloverUsers = users.filter((user) => selectedRolloverUserIds.includes(user.id));
+    const selectedCampuses = CAMPUS_OPTIONS.filter((campus) => selectedCampusIds.includes(campus.id));
+    const actionValue = bulkAction === 'bench-consultant'
+      ? selectedBenchConsultants.map((user) => user.name).join(', ')
+      : bulkAction === 'publish-campuses'
+        ? selectedCampuses.map((campus) => campus.name).join(', ')
+        : bulkActionValue.trim();
+    const noteText = actionValue.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
+    if (!actionValue || (bulkAction === 'notes' && (!noteSource || !noteText)) || (bulkAction === 'macro' && !macroField)) {
+      showToast(
+        bulkAction === 'notes' ? 'Select a note action and enter a note.' :
+        bulkAction === 'macro' ? 'Choose a field and enter a value.' :
+        bulkAction === 'bench-consultant' ? 'Select at least one bench consultant.' :
+        bulkAction === 'publish-campuses' ? 'Select at least one campus to publish to.' :
+        'Complete the required fields before continuing.'
+      );
+      return;
+    }
+    if (bulkAction === 'rollover' && selectedRolloverUsers.length === 0) {
+      showToast('Select at least one user to assign the rollover job.');
+      return;
+    }
 
     const jobsToUpdate = jobs.filter((job) => selectedIds.includes(job.id));
     const updatedJobs: Job[] = [];
@@ -1591,7 +1664,7 @@ export const JobList: React.FC = () => {
             const note: JobNote = {
               id: `note-${Date.now()}-${job.id}`,
               author: currentUser?.name || 'Current User',
-              text: bulkActionValue.trim(),
+              text: `<p><strong>${escapeHtml(noteSource)}</strong></p>${actionValue}`,
               date: new Date().toISOString().split('T')[0],
               category: 'Job Posting'
             };
@@ -1599,29 +1672,36 @@ export const JobList: React.FC = () => {
             break;
           }
           case 'folder':
-            updates = { folder: bulkActionValue.trim() };
+            updates = { folder: actionValue };
             break;
           case 'status':
-            updates = { status: bulkActionValue as JobStatus };
+            updates = { status: actionValue as JobStatus, comments: statusComment.trim() || job.comments };
             break;
           case 'macro':
-            updates = bulkActionValue === 'Set Active'
-              ? { status: 'Active' }
-              : bulkActionValue === 'Mark High Priority'
-                ? { priority: 'High' }
-                : { status: 'Closed' };
+            updates = macroField === 'Job Status'
+              ? { status: actionValue as JobStatus }
+              : macroField === 'Priority'
+                ? { priority: actionValue as Priority }
+                : macroField === 'Comments'
+                  ? { comments: actionValue }
+                  : { customFields: { ...(job.customFields || {}), [macroField]: actionValue } };
             break;
           case 'bench-consultant':
-            updates = { benchConsultant: bulkActionValue.trim(), assignedTo: bulkActionValue.trim() };
+            updates = { benchConsultant: actionValue, assignedTo: actionValue };
             break;
           case 'priority':
-            updates = { priority: bulkActionValue as Priority };
+            updates = { priority: actionValue as Priority, comments: priorityComment.trim() || job.comments };
             break;
           case 'rollover':
-            updates = { status: 'Active', endDate: bulkActionValue };
+            updates = {
+              status: 'Active',
+              endDate: actionValue,
+              assignedTo: selectedRolloverUsers.map((user) => user.name).join(', '),
+              comments: rolloverComment.trim() || job.comments
+            };
             break;
           case 'mail-merge-limit': {
-            const limit = Number(bulkActionValue);
+            const limit = Number(actionValue);
             if (!Number.isInteger(limit) || limit < 0) {
               showToast('Enter a whole number of 0 or greater for the mail merge limit.');
               return;
@@ -1630,7 +1710,7 @@ export const JobList: React.FC = () => {
             break;
           }
           case 'publish-campuses': {
-            const campuses = bulkActionValue.split(',').map((campus) => campus.trim()).filter(Boolean);
+            const campuses = selectedCampuses.map((campus) => campus.name);
             if (campuses.length === 0) {
               showToast('Enter at least one campus to publish to.');
               return;
@@ -1647,7 +1727,7 @@ export const JobList: React.FC = () => {
       setSelectedIds([]);
       setBulkAction(null);
       setBulkActionValue('');
-      showToast(`${BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label} applied to ${updatedJobs.length} job${updatedJobs.length === 1 ? '' : 's'}.`);
+      showToast(`${BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label} applied to ${updatedJobs.length} job${updatedJobs.length === 1 ? '' : 's'}${bulkAction === 'notes' && notifyJobAssociates ? '; job associates notified.' : '.'}`);
     } catch (error) {
       console.error('Failed to apply bulk job action:', error);
       const updatedById = new Map(updatedJobs.map((job) => [job.id, job]));
@@ -3712,21 +3792,23 @@ export const JobList: React.FC = () => {
       )}
 
       {bulkAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="bulk-job-action-title"
-            className="w-full max-w-lg space-y-4 rounded-2xl border border-[#D8E3F1] bg-white p-6 shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]"
+            className={`w-full border border-[#D8E3F1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B] ${bulkAction === 'mail-merge-limit' ? 'max-w-[300px] overflow-hidden rounded-sm p-0' : `space-y-4 rounded-2xl p-6 ${bulkAction === 'publish-campuses' ? 'max-w-6xl' : bulkAction === 'notes' ? 'max-w-3xl' : bulkAction === 'rollover' ? 'max-w-lg' : 'max-w-xl'}`}`}
           >
-            <div className="flex items-center justify-between border-b border-[#D8E3F1] pb-3 dark:border-[#334155]">
+            <div className={`flex items-center justify-between border-b border-[#D8E3F1] dark:border-[#334155] ${bulkAction === 'mail-merge-limit' ? 'bg-[#F1F1F1] px-3 py-2 dark:bg-[#334155]' : 'pb-3'}`}>
               <div>
-                <h3 id="bulk-job-action-title" className="text-base font-bold text-[#1E293B] dark:text-white">
-                  {BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label}
+                <h3 id="bulk-job-action-title" className={`${bulkAction === 'mail-merge-limit' ? 'text-sm font-normal text-[#555] dark:text-[#E2E8F0]' : 'text-base font-bold text-[#1E293B] dark:text-white'}`}>
+                  {bulkAction === 'rollover' ? 'Assign the Rollover Job' : bulkAction === 'bench-consultant' ? 'Send Requirement' : BULK_JOB_ACTIONS.find((action) => action.id === bulkAction)?.label}
                 </h3>
-                <p className="mt-1 text-xs text-[#64748B] dark:text-[#BFDBFE]">
-                  Apply to {selectedIds.length} selected job{selectedIds.length === 1 ? '' : 's'}
-                </p>
+                {bulkAction !== 'mail-merge-limit' && (
+                  <p className="mt-1 text-xs text-[#64748B] dark:text-[#BFDBFE]">
+                    Apply to {selectedIds.length} selected job{selectedIds.length === 1 ? '' : 's'}
+                  </p>
+                )}
               </div>
               <button
                 type="button"
@@ -3738,93 +3820,183 @@ export const JobList: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={applyBulkJobAction} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label htmlFor="bulk-job-action-value" className="font-semibold text-[#1E293B] dark:text-white">
-                  {bulkAction === 'notes' ? 'Note' :
-                    bulkAction === 'folder' ? 'Folder name' :
-                    bulkAction === 'status' ? 'New status' :
-                    bulkAction === 'macro' ? 'Choose a macro' :
-                    bulkAction === 'bench-consultant' ? 'Bench consultant' :
-                    bulkAction === 'priority' ? 'New priority' :
-                    bulkAction === 'rollover' ? 'New end date' :
-                    bulkAction === 'mail-merge-limit' ? 'Mail merge limit' :
-                    'Campus names (comma-separated)'}
-                </label>
+            <form onSubmit={applyBulkJobAction} className={`${bulkAction === 'mail-merge-limit' ? 'space-y-0' : 'space-y-4'} text-xs`}>
+              {bulkAction === 'publish-campuses' && (
+                <div className="overflow-hidden rounded-lg border border-[#D8E3F1]">
+                  <table className="w-full text-left">
+                    <thead className="bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wide text-[#475569]">
+                      <tr><th className="p-3">Job title</th><th className="p-3">Pay rate</th><th className="p-3">Job type</th><th className="p-3">Job code</th><th className="p-3">Primary skills</th><th className="p-3">End client</th><th className="p-3">Location</th></tr>
+                    </thead>
+                    <tbody><tr className="text-[#475569]"><td className="p-3 font-semibold text-[#334155]">{jobs.find((job) => job.id === selectedIds[0])?.title || '—'}</td><td className="p-3">{jobs.find((job) => job.id === selectedIds[0])?.payRate || 'N/A'}</td><td className="p-3">{jobs.find((job) => job.id === selectedIds[0])?.type || '—'}</td><td className="p-3">{jobs.find((job) => job.id === selectedIds[0])?.code || '—'}</td><td className="p-3">{jobs.find((job) => job.id === selectedIds[0])?.skills?.slice(0, 3).join(', ') || '—'}</td><td className="p-3">{jobs.find((job) => job.id === selectedIds[0])?.client || 'N/A'}</td><td className="p-3">{jobs.find((job) => job.id === selectedIds[0])?.location || 'N/A'}</td></tr></tbody>
+                  </table>
+                </div>
+              )}
+              {bulkAction === 'notes' ? (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end gap-4">
+                    <label className="w-60 space-y-1"><span className="font-semibold text-[#475569]">Select action</span><select value={noteSource} onChange={(event) => setNoteSource(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB] dark:bg-[#475569]"> <option value="">Select action</option>{NOTE_SOURCES.map((source) => <option key={source}>{source}</option>)}</select></label>
+                    <label className="flex items-center gap-2 pb-2 text-[#475569]"><input type="checkbox" checked={notifyJobAssociates} onChange={(event) => setNotifyJobAssociates(event.target.checked)} className="rounded border-[#94A3B8] text-[#2563EB]" />Notify job associates</label>
+                  </div>
+                  <EmailRichTextEditor value={bulkActionValue} resetKey={noteEditorResetKey} accentColor="#2563EB" onChange={setBulkActionValue} onError={showToast} />
+                </div>
+              ) : bulkAction === 'status' ? (
+                <div className="grid gap-4 sm:grid-cols-[150px_1fr]">
+                  <label className="space-y-1"><span className="font-semibold text-[#475569]">Job status</span><select value={bulkActionValue} onChange={(event) => setBulkActionValue(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB] dark:bg-[#475569]">{JOB_STATUSES.map((status) => <option key={status}>{status}</option>)}</select></label>
+                  <label className="space-y-1"><span className="font-semibold text-[#475569]">Comment <span className="font-normal text-[#94A3B8]">(optional)</span></span><textarea rows={4} value={statusComment} onChange={(event) => setStatusComment(event.target.value)} placeholder="Add context for this status change..." className="w-full resize-none rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB] dark:bg-[#475569]" /></label>
+                </div>
+              ) : bulkAction === 'bench-consultant' ? (
+                <div className="space-y-3"><label className="block space-y-1"><span className="font-semibold text-[#475569]">Select bench consultants</span><div className="rounded-lg border border-[#CBD5E1] bg-white p-2 dark:bg-[#475569]"><input value={benchConsultantSearch} onChange={(event) => setBenchConsultantSearch(event.target.value)} placeholder="Search by name or email..." className="w-full border-b border-[#E2E8F0] bg-transparent px-2 pb-2 outline-none" /><div className="mt-1 max-h-40 overflow-y-auto">{users.filter((user) => user.name.toLowerCase().includes(benchConsultantSearch.toLowerCase()) || user.email.toLowerCase().includes(benchConsultantSearch.toLowerCase())).map((user) => <label key={user.id} className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 hover:bg-[#F1F5F9]"><input type="checkbox" checked={selectedBenchConsultantIds.includes(user.id)} onChange={() => setSelectedBenchConsultantIds((ids) => ids.includes(user.id) ? ids.filter((id) => id !== user.id) : [...ids, user.id])} className="rounded text-[#2563EB]" /><span><strong className="block text-[#334155]">{user.name}</strong><span className="text-[10px] text-[#64748B]">{user.email}</span></span></label>)}</div></div></label><p className="rounded-lg bg-[#EFF6FF] px-3 py-2 text-[11px] text-[#1D4ED8]">Selected consultants will receive this requirement and be assigned to the job.</p></div>
+              ) : bulkAction === 'rollover' ? (
+                <div className="space-y-4">
+                  <p className="rounded-lg bg-[#F8FAFC] p-3 text-[11px] text-[#475569]">
+                    Please select the users to assign the rollover job for{' '}
+                    <strong className="text-[#1E293B]">
+                      {jobs.find((job) => job.id === selectedIds[0])?.code || 'selected job'}
+                      {jobs.find((job) => job.id === selectedIds[0])?.title
+                        ? ` ${jobs.find((job) => job.id === selectedIds[0])?.title}`
+                        : ''}
+                    </strong>.
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-[72px_1fr] sm:items-start">
+                    <label htmlFor="rollover-user-picker" className="pt-2 font-semibold text-[#475569]">Assign To</label>
+                    <div className="relative" ref={rolloverUserPickerRef}>
+                      {(() => {
+                        const selectedUsers = users.filter((user) => selectedRolloverUserIds.includes(user.id));
+                        const visibleUsers = users.filter((user) =>
+                          `${user.name} ${user.email}`.toLowerCase().includes(rolloverUserSearch.toLowerCase())
+                        );
+                        const allVisibleSelected = visibleUsers.length > 0 &&
+                          visibleUsers.every((user) => selectedRolloverUserIds.includes(user.id));
+                        const selectionLabel = selectedUsers.length === 0
+                          ? 'Select users'
+                          : `Users: ${selectedUsers[0].name} (${selectedUsers[0].email})${selectedUsers.length > 1 ? `, +${selectedUsers.length - 1} more` : ''}`;
 
-                {bulkAction === 'notes' ? (
-                  <textarea
-                    id="bulk-job-action-value"
-                    required
-                    rows={4}
-                    value={bulkActionValue}
-                    onChange={(e) => setBulkActionValue(e.target.value)}
-                    placeholder="Add a note to the selected jobs..."
-                    className="w-full resize-y rounded-xl border border-[#D8E3F1] bg-[#FFFFFF] px-3 py-2 text-xs text-[#1E293B] focus:border-[#2563EB] focus:outline-none dark:border-[#334155] dark:bg-[#475569] dark:text-white"
-                  />
-                ) : bulkAction === 'status' || bulkAction === 'priority' || bulkAction === 'macro' ? (
-                  <select
-                    id="bulk-job-action-value"
-                    required
-                    value={bulkActionValue}
-                    onChange={(e) => setBulkActionValue(e.target.value)}
-                    className="w-full rounded-xl border border-[#D8E3F1] bg-[#FFFFFF] px-3 py-2 text-xs text-[#1E293B] focus:border-[#2563EB] focus:outline-none dark:border-[#334155] dark:bg-[#475569] dark:text-white"
+                        return (
+                          <>
+                            <button
+                              id="rollover-user-picker"
+                              type="button"
+                              aria-haspopup="listbox"
+                              aria-expanded={isRolloverUserPickerOpen}
+                              onClick={() => setIsRolloverUserPickerOpen((open) => !open)}
+                              className="flex w-full items-center justify-between gap-2 rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-left text-xs text-[#334155] outline-none hover:border-[#94A3B8] focus:border-[#2563EB] dark:bg-[#475569] dark:text-white"
+                            >
+                              <span className="truncate">{selectionLabel}</span>
+                              <ChevronDown className="h-4 w-4 shrink-0 text-[#64748B]" />
+                            </button>
+                            {isRolloverUserPickerOpen && (
+                              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-lg border border-[#CBD5E1] bg-white shadow-xl dark:border-[#334155] dark:bg-[#1E293B]">
+                                <div className="border-b border-[#E2E8F0] p-2 dark:border-[#334155]">
+                                  <input
+                                    autoFocus
+                                    type="search"
+                                    value={rolloverUserSearch}
+                                    onChange={(event) => setRolloverUserSearch(event.target.value)}
+                                    placeholder="Search users..."
+                                    aria-label="Search users"
+                                    className="w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs outline-none focus:border-[#2563EB] dark:bg-[#475569]"
+                                  />
+                                </div>
+                                <div className="max-h-48 overflow-y-auto p-2" role="listbox" aria-label="Users to assign">
+                                  <label className="flex cursor-pointer items-center gap-2 border-b border-[#E2E8F0] px-1 pb-2 text-xs text-[#2563EB] dark:border-[#334155]">
+                                    <input
+                                      type="checkbox"
+                                      checked={allVisibleSelected}
+                                      disabled={visibleUsers.length === 0}
+                                      onChange={(event) => {
+                                        const shouldSelect = event.target.checked;
+                                        setSelectedRolloverUserIds((ids) => {
+                                          const visibleIds = visibleUsers.map((user) => user.id);
+                                          return shouldSelect
+                                            ? Array.from(new Set([...ids, ...visibleIds]))
+                                            : ids.filter((id) => !visibleIds.includes(id));
+                                        });
+                                      }}
+                                      className="rounded border-[#94A3B8] text-[#2563EB]"
+                                    />
+                                    <span>[Select all]</span>
+                                  </label>
+                                  <p className="px-1 pb-1 pt-2 text-[10px] font-semibold text-[#64748B]">Teams</p>
+                                  {visibleUsers.length > 0 ? visibleUsers.map((user) => (
+                                    <label key={user.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-xs text-[#475569] hover:bg-[#F1F5F9] dark:text-[#E2E8F0] dark:hover:bg-[#334155]">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedRolloverUserIds.includes(user.id)}
+                                        onChange={() => setSelectedRolloverUserIds((ids) =>
+                                          ids.includes(user.id) ? ids.filter((id) => id !== user.id) : [...ids, user.id]
+                                        )}
+                                        className="rounded border-[#94A3B8] text-[#2563EB]"
+                                      />
+                                      <span className="min-w-0 truncate">{user.name} ({user.email})</span>
+                                    </label>
+                                  )) : (
+                                    <p className="px-1 py-3 text-center text-xs text-[#64748B]">No users found.</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <label htmlFor="rollover-till-date" className="pt-2 font-semibold text-[#475569]">Till Date</label>
+                    <input
+                      id="rollover-till-date"
+                      type="date"
+                      required
+                      value={bulkActionValue}
+                      onChange={(event) => setBulkActionValue(event.target.value)}
+                      className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB] dark:bg-[#475569]"
+                    />
+                    <label htmlFor="rollover-comment" className="pt-2 font-semibold text-[#475569]">Comment</label>
+                    <textarea
+                      id="rollover-comment"
+                      rows={3}
+                      value={rolloverComment}
+                      onChange={(event) => setRolloverComment(event.target.value)}
+                      placeholder="Comment"
+                      className="w-full resize-none rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB] dark:bg-[#475569]"
+                    />
+                  </div>
+                </div>
+              ) : bulkAction === 'publish-campuses' ? (
+                <div className="space-y-4"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><label className="space-y-1"><span className="text-[10px] font-semibold uppercase text-[#64748B]">Campus type</span><select value={campusType} onChange={(event) => setCampusType(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-2 py-2"><option value="">All types</option><option>Technology</option><option>Business</option></select></label><label className="space-y-1"><span className="text-[10px] font-semibold uppercase text-[#64748B]">Country</span><select value={campusCountry} onChange={(event) => setCampusCountry(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-2 py-2"><option>India</option><option>United States</option></select></label><label className="space-y-1"><span className="text-[10px] font-semibold uppercase text-[#64748B]">State</span><select value={campusState} onChange={(event) => setCampusState(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-2 py-2"><option value="">All states</option><option>Karnataka</option><option>Telangana</option><option>Maharashtra</option></select></label><label className="space-y-1"><span className="text-[10px] font-semibold uppercase text-[#64748B]">Specialization</span><select value={campusSpecialization} onChange={(event) => setCampusSpecialization(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-2 py-2"><option value="">All</option><option>Engineering</option><option>Digital</option><option>Business</option></select></label></div><div className="flex items-center justify-between"><input value={campusSearch} onChange={(event) => setCampusSearch(event.target.value)} placeholder="Search campuses..." className="rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none" /><span className="text-[#64748B]">{selectedCampusIds.length} selected</span></div><div className="overflow-hidden rounded-lg border border-[#D8E3F1]"><table className="w-full text-left"><thead className="bg-[#F1F5F9] text-[10px] uppercase text-[#475569]"><tr><th className="p-3"><input type="checkbox" checked={CAMPUS_OPTIONS.every((campus) => selectedCampusIds.includes(campus.id))} onChange={(event) => setSelectedCampusIds(event.target.checked ? CAMPUS_OPTIONS.map((campus) => campus.id) : [])} /></th><th className="p-3">Campus name</th><th className="p-3">Type</th><th className="p-3">Campus head</th><th className="p-3">State</th><th className="p-3">Country</th></tr></thead><tbody>{CAMPUS_OPTIONS.filter((campus) => (!campusType || campus.type === campusType) && (!campusState || campus.state === campusState) && (!campusSpecialization || campus.name.includes(campusSpecialization)) && campus.name.toLowerCase().includes(campusSearch.toLowerCase())).map((campus) => <tr key={campus.id} className="border-t border-[#E2E8F0]"><td className="p-3"><input type="checkbox" checked={selectedCampusIds.includes(campus.id)} onChange={() => setSelectedCampusIds((ids) => ids.includes(campus.id) ? ids.filter((id) => id !== campus.id) : [...ids, campus.id])} /></td><td className="p-3 font-semibold text-[#334155]">{campus.name}</td><td className="p-3">{campus.type}</td><td className="p-3">{campus.head}</td><td className="p-3">{campus.state}</td><td className="p-3">{campus.country}</td></tr>)}</tbody></table></div></div>
+              ) : bulkAction === 'macro' ? (
+                <div className="space-y-3"><p className="text-[11px] italic text-[#2563EB]">Macros are helpful to change a field value for one or more documents with a single click.</p><div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1"><span className="font-semibold text-[#475569]">Select field</span><select value={macroField} onChange={(event) => { setMacroField(event.target.value); setBulkActionValue(''); }} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB]"><option value="">Select field</option>{MACRO_FIELDS.map((field) => <option key={field}>{field}</option>)}</select></label><label className="space-y-1"><span className="font-semibold text-[#475569]">New value</span>{macroField === 'Job Status' ? <select value={bulkActionValue} onChange={(event) => setBulkActionValue(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2"><option value="">Select</option>{JOB_STATUSES.map((status) => <option key={status}>{status}</option>)}</select> : macroField === 'Priority' ? <select value={bulkActionValue} onChange={(event) => setBulkActionValue(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2"><option value="">Select</option>{JOB_PRIORITIES.map((priority) => <option key={priority}>{priority}</option>)}</select> : <input value={bulkActionValue} onChange={(event) => setBulkActionValue(event.target.value)} disabled={!macroField} placeholder={macroField ? 'Enter new value' : 'Choose a field first'} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 disabled:bg-[#F8FAFC]" />}</label></div></div>
+              ) : bulkAction === 'priority' ? (
+                <div className="grid gap-4 sm:grid-cols-[170px_1fr]"><label className="space-y-1"><span className="font-semibold text-[#475569]">Priority</span><select value={bulkActionValue} onChange={(event) => setBulkActionValue(event.target.value)} className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB]"><option value="">Select</option>{JOB_PRIORITIES.map((priority) => <option key={priority}>{priority}</option>)}</select></label><label className="space-y-1"><span className="font-semibold text-[#475569]">Comment</span><textarea rows={4} value={priorityComment} onChange={(event) => setPriorityComment(event.target.value)} placeholder="Add a note about this priority change..." className="w-full resize-none rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 outline-none focus:border-[#2563EB]" /></label></div>
+              ) : (
+                <div className={`space-y-2 ${bulkAction === 'mail-merge-limit' ? 'px-3 py-3' : ''}`}>
+                  <label
+                    htmlFor="bulk-job-action-value"
+                    className={bulkAction === 'mail-merge-limit' ? 'block text-[10px] font-normal text-[#315D88]' : 'font-semibold text-[#1E293B]'}
                   >
-                    {bulkAction === 'status' ? JOB_STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    )) : bulkAction === 'priority' ? JOB_PRIORITIES.map((priority) => (
-                      <option key={priority} value={priority}>{priority}</option>
-                    )) : (
-                      <>
-                        <option value="Set Active">Set Active</option>
-                        <option value="Mark High Priority">Mark High Priority</option>
-                        <option value="Close Job">Close Job</option>
-                      </>
-                    )}
-                  </select>
-                ) : (
+                    {bulkAction === 'folder' ? 'Folder name' : 'Mail Merge Limit'}
+                  </label>
                   <input
                     id="bulk-job-action-value"
                     required
-                    type={bulkAction === 'rollover' ? 'date' : bulkAction === 'mail-merge-limit' ? 'number' : 'text'}
-                    min={bulkAction === 'mail-merge-limit' ? 0 : undefined}
-                    step={bulkAction === 'mail-merge-limit' ? 1 : undefined}
+                    autoFocus={bulkAction === 'mail-merge-limit'}
+                    type="text"
                     value={bulkActionValue}
-                    onChange={(e) => setBulkActionValue(e.target.value)}
-                    placeholder={
-                      bulkAction === 'folder' ? 'e.g. Q4 priority roles' :
-                      bulkAction === 'bench-consultant' ? 'Enter consultant name' :
-                      bulkAction === 'publish-campuses' ? 'e.g. New York, London' : undefined
-                    }
-                    className="w-full rounded-xl border border-[#D8E3F1] bg-[#FFFFFF] px-3 py-2 text-xs text-[#1E293B] focus:border-[#2563EB] focus:outline-none dark:border-[#334155] dark:bg-[#475569] dark:text-white"
+                    onChange={(event) => setBulkActionValue(event.target.value)}
+                    className={`${bulkAction === 'mail-merge-limit' ? 'h-5 w-[175px] rounded-none px-1 text-[10px] leading-4' : 'w-full rounded-lg px-3 py-2'} border border-[#CBD5E1] bg-white outline-none focus:border-[#4387F5]`}
                   />
-                )}
-              </div>
-
-              {bulkAction === 'rollover' && (
-                <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
-                  The selected jobs will be set to Active and updated with this end date.
-                </p>
+                </div>
               )}
-              {bulkAction === 'publish-campuses' && (
-                <p className="text-[11px] text-[#64748B] dark:text-[#BFDBFE]">
-                  This enables career portal publishing and saves the campus list on each job.
-                </p>
-              )}
-
-              <div className="flex justify-end gap-2 pt-2">
+              <div className={`flex justify-end gap-2 border-t border-[#D8E3F1] dark:border-[#334155] ${bulkAction === 'mail-merge-limit' ? 'px-3 py-2' : 'pt-4'}`}>
                 <button
                   type="button"
                   onClick={() => setBulkAction(null)}
-                  className="rounded-xl border border-[#D8E3F1] px-4 py-2 text-xs font-semibold text-[#64748B] hover:bg-[#FFFFFF] dark:border-[#334155] dark:text-[#BFDBFE] dark:hover:bg-[#475569]"
+                  className={`border border-[#D8E3F1] px-3 py-1.5 text-xs font-semibold text-[#64748B] hover:bg-[#FFFFFF] dark:border-[#334155] dark:text-[#BFDBFE] dark:hover:bg-[#475569] ${bulkAction === 'mail-merge-limit' ? 'order-2 rounded-sm px-2 py-1 text-[10px] leading-3' : 'rounded-xl px-4 py-2'}`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1D4ED8]"
+                  className={`font-semibold text-white shadow-sm transition-colors ${bulkAction === 'mail-merge-limit' ? 'order-1 rounded-sm bg-[#4387F5] px-2 py-1 text-[10px] leading-3 hover:bg-[#286FE0]' : 'rounded-xl bg-[#2563EB] px-4 py-2 text-xs hover:bg-[#1D4ED8]'}`}
                 >
-                  Apply to selected jobs
+                  {bulkAction === 'notes' ? 'Add Note' : bulkAction === 'status' ? 'Update Status' : bulkAction === 'bench-consultant' ? 'Share Requirement' : bulkAction === 'rollover' ? 'Save' : bulkAction === 'publish-campuses' ? 'Publish' : bulkAction === 'mail-merge-limit' ? 'Save' : bulkAction === 'priority' ? 'Update' : bulkAction === 'macro' ? 'Apply Macro' : 'Apply to selected jobs'}
                 </button>
               </div>
             </form>
