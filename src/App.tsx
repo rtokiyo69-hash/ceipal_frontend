@@ -35,6 +35,7 @@ import { ReportsAnalytics } from './features/reports/ReportsAnalytics';
 import { UserManagement } from './features/admin/UserManagement';
 import { PlatformSettings } from './features/settings/PlatformSettings';
 import { RequisitionAdministration } from './features/admin/RequisitionAdministration';
+import { OrganizationAdmin } from './features/admin/OrganizationAdmin';
 
 export default function App() {
   const { currentRoute, selectedId, isAuthenticated, isDark, currentUser } = useAppStore();
@@ -44,6 +45,7 @@ export default function App() {
     currentUser?.role === 'admin' &&
     (currentRoute === 'applicants' ||
     currentRoute === 'settings' ||
+    currentRoute === 'organization' ||
     currentRoute === 'dashboard' ||
     currentRoute === 'clients' ||
     currentRoute === 'job-new' ||
@@ -124,6 +126,8 @@ export default function App() {
         return <ReportsAnalytics />;
       case 'admin-users':
         return <UserManagement />;
+      case 'organization':
+        return <OrganizationAdmin />;
       case 'requisition-code':
       case 'requisition-lookups':
       case 'requisition-settings':

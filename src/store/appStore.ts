@@ -30,6 +30,7 @@ export type AppRoute =
   | 'tasks'
   | 'reports'
   | 'admin-users'
+  | 'organization'
   | 'requisition-code'
   | 'requisition-lookups'
   | 'requisition-settings'

@@ -568,6 +568,14 @@ export const ApiService = {
     return normalized;
   },
 
+  async deleteSubmission(id: string): Promise<void> {
+    await delay(120);
+    const submissions = await this.getSubmissions();
+    const updated = submissions.filter((submission) => submission.id !== id);
+    if (updated.length === submissions.length) throw new Error('Submission not found.');
+    setStorage(STORAGE_KEYS.SUBMISSIONS, updated);
+  },
+
   async updateSubmissionApproval(id: string, approvalStatus: Submission['approvalStatus']): Promise<void> {
     await delay(140);
     const submissions = await this.getSubmissions();

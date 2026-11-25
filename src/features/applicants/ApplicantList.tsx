@@ -1028,7 +1028,7 @@ export const ApplicantList: React.FC = () => {
                 {actionsMenuOpen && (
                   <>
                     <button aria-label="Close actions menu" className="fixed inset-0 z-40 cursor-default" onClick={() => setActionsMenuOpen(false)} />
-                    <div role="menu" className="absolute left-0 top-full z-50 mt-1 grid max-h-[min(70vh,620px)] w-[min(560px,calc(100vw-32px))] grid-flow-col grid-rows-11 overflow-y-auto rounded-md border border-[#D9DDE2] bg-white py-2 text-left normal-case tracking-normal shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+                    <div role="menu" className="absolute left-0 top-full z-50 mt-1 grid max-h-[min(60vh,420px)] w-[min(440px,calc(100vw-32px))] grid-flow-col grid-rows-11 overflow-y-auto rounded-md border border-[#D9DDE2] bg-white py-1 text-left normal-case tracking-normal shadow-xl dark:border-[#334155] dark:bg-[#1E293B]">
                       {applicantActions.flatMap((row, rowIndex) =>
                         row.map((action, columnIndex) => (
                           <button
@@ -1036,7 +1036,7 @@ export const ApplicantList: React.FC = () => {
                             role="menuitem"
                             onClick={() => void runApplicantAction(action)}
                             style={{ gridColumnStart: columnIndex + 1, gridRowStart: rowIndex + 1 }}
-                            className="min-h-11 px-5 py-2.5 text-left text-sm font-normal text-[#777777] transition-colors hover:bg-[#F2F6FA] hover:text-[#333333] dark:text-[#E2E8F0] dark:hover:bg-[#334155]"
+                            className="min-h-8 px-3 py-1.5 text-left text-[13px] font-normal text-[#777777] transition-colors hover:bg-[#F2F6FA] hover:text-[#333333] dark:text-[#E2E8F0] dark:hover:bg-[#334155]"
                           >
                             {action}
                           </button>

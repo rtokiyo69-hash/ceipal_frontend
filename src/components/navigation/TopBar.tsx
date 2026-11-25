@@ -308,6 +308,8 @@ export const TopBar: React.FC = () => {
         return ['Analytics', 'Recruiter Performance & Hiring Velocity'];
       case 'admin-users':
         return ['Governance', 'Users, Roles & Access Control'];
+      case 'organization':
+        return ['Administration', 'Organization'];
       case 'requisition-code':
         return ['Requisitions', 'Job Requisition Code'];
       case 'requisition-lookups':
