@@ -9,12 +9,17 @@ export type AppRoute =
   | 'dashboard'
   | 'jobs'
   | 'job-new'
+  | 'job-edit'
   | 'job-detail'
+  | 'applicant-profile-submission'
+  | 'client-submission'
   | 'job-templates'
   | 'matching-jobs'
   | 'applicants'
   | 'applicant-new'
   | 'applicant-detail'
+  | 'applicant-matching-jobs'
+  | 'applicant-email-share'
   | 'pipeline'
   | 'clients'
   | 'vendors'
@@ -25,6 +30,10 @@ export type AppRoute =
   | 'tasks'
   | 'reports'
   | 'admin-users'
+  | 'requisition-code'
+  | 'requisition-lookups'
+  | 'requisition-settings'
+  | 'requisition-workflows'
   | 'settings';
 
 export type ThemePalette = 'indigo' | 'emerald' | 'teal' | 'violet';

@@ -11,17 +11,32 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Submission } from '../../types';
+import { Applicant, Submission } from '../../types';
 
 export const SubmissionList: React.FC = () => {
   const { navigate } = useAppStore();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [search, setSearch] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    ApiService.getSubmissions().then(setSubmissions);
+    Promise.all([ApiService.getSubmissions(), ApiService.getApplicants()]).then(([nextSubmissions, nextApplicants]) => {
+      setSubmissions(nextSubmissions);
+      setApplicants(nextApplicants);
+    });
   }, []);
+
+  const getAadhaarName = (submission: Submission) => {
+    const applicant = applicants.find((item) => item.id === submission.applicantId || item.name === submission.applicantName);
+    return submission.nameAsPerAadhaar
+      || applicant?.nameAsPerAadhaar
+      || applicant?.customFields?.nameAsPerAadhaar
+      || applicant?.customFields?.['Name (As per Aadhaar)']
+      || applicant?.customFields?.legalName
+      || applicant?.legalName
+      || '';
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -38,6 +53,7 @@ export const SubmissionList: React.FC = () => {
   const filtered = submissions.filter(
     (s) =>
       s.applicantName.toLowerCase().includes(search.toLowerCase()) ||
+      getAadhaarName(s).toLowerCase().includes(search.toLowerCase()) ||
       s.jobTitle.toLowerCase().includes(search.toLowerCase()) ||
       s.client.toLowerCase().includes(search.toLowerCase()) ||
       s.recruiter.toLowerCase().includes(search.toLowerCase())
@@ -102,6 +118,9 @@ export const SubmissionList: React.FC = () => {
                 >
                   <td className="p-3.5">
                     <div className="font-bold text-[#1E293B] dark:text-white">{s.applicantName}</div>
+                    <div className="mt-0.5 text-[11px] text-[#6D7988] dark:text-slate-400">
+                      Name (As per Aadhaar): <span className="font-medium text-[#344252] dark:text-slate-200">{getAadhaarName(s) || 'Not provided'}</span>
+                    </div>
                     <div className="font-mono text-[11px] text-[#1E293B] dark:text-[#64748B] font-semibold">{s.submissionId}</div>
                   </td>
 

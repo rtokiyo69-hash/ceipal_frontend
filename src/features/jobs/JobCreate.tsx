@@ -62,16 +62,42 @@ import {
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { JobType, Priority, JobStatus } from '../../types';
+import { JobDisqualificationReasons } from './JobDisqualificationReasons';
+import { JobInterviewSettings } from './JobInterviewSettings';
+import { JobLookups } from './JobLookups';
+import { JobSettings } from './JobSettings';
+import { JobStatuses } from './JobStatuses';
+import { JobSummary, KeywordMasking, JobPriorities } from './JobContentSettings';
+import './job-posting.css';
 
 interface JobCreateProps {
   initialMode?: 'select' | 'manual' | 'template' | 'parse';
 }
 
+const jobPostingSubmodules = [
+  'Company Overview',
+  'Disqualification Reasons',
+  'Interview Settings',
+  'Job Lookups',
+  'Job Settings',
+  'Job Statuses',
+  'Job Summary',
+  'Keyword Masking',
+  'Priorities',
+  'ITAR Summary'
+] as const;
+
 export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) => {
-  const { navigate } = useAppStore();
+  const { navigate, currentUser } = useAppStore();
   
   // Creation Flow Mode: 'select' (3-box Ceipal landing) | 'manual' | 'template' | 'parse'
   const [creationMode, setCreationMode] = useState<'select' | 'manual' | 'template' | 'parse'>(initialMode);
+  const [activeSubmodule, setActiveSubmodule] = useState<(typeof jobPostingSubmodules)[number]>(jobPostingSubmodules[0]);
+  const [companyOverviewTargets, setCompanyOverviewTargets] = useState({
+    jobBoards: false,
+    candidatePortal: false,
+    referralPortal: false
+  });
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('');
   const [rawJdText, setRawJdText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -628,8 +654,95 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
     void saveJob(true);
   };
 
+  const handleSubmoduleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
+    let nextIndex: number;
+    if (event.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % jobPostingSubmodules.length;
+    } else if (event.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + jobPostingSubmodules.length) % jobPostingSubmodules.length;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    setActiveSubmodule(jobPostingSubmodules[nextIndex]);
+    event.currentTarget
+      .closest('nav')
+      ?.querySelectorAll<HTMLButtonElement>('button')[nextIndex]
+      ?.focus();
+  };
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in">
+    <div className={`w-full space-y-3 pb-12 animate-in fade-in ${currentUser?.role === 'admin' && initialMode === 'select' ? 'job-posting-settings' : ''}`}>
+      {currentUser?.role === 'admin' && (
+        <div className="posting-navigation sticky top-0 z-40 space-y-1 bg-[#FFFFFF] pb-1 dark:bg-[#0F172A]">
+          <nav
+            aria-label="Job Posting submodules"
+            className="flex overflow-x-auto rounded-xl border border-[#D8E3F1] bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-[#1E293B]"
+          >
+            {jobPostingSubmodules.map((submodule, index) => (
+              <button
+                key={submodule}
+                type="button"
+                aria-current={activeSubmodule === submodule ? 'page' : undefined}
+                tabIndex={activeSubmodule === submodule ? 0 : -1}
+                onClick={() => setActiveSubmodule(submodule)}
+                onKeyDown={(event) => handleSubmoduleKeyDown(event, index)}
+                className={`shrink-0 rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors ${
+                  activeSubmodule === submodule
+                    ? 'bg-[#DCE8FF] text-[#125B97] dark:bg-[#475569] dark:text-white'
+                    : 'text-[#475569] hover:bg-[#FFFFFF] hover:text-[#1E293B] dark:text-[#BFDBFE] dark:hover:bg-[#475569]'
+                }`}
+              >
+                {submodule}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <div className="posting-content max-w-6xl mx-auto space-y-6">
+      {currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Company Overview' ? (
+        <section className="posting-panel" aria-labelledby="company-overview-heading">
+          <div className="posting-panel-heading"><div className="posting-section-icon"><Building2 size={21} /></div><div><h2 id="company-overview-heading">Company overview</h2><p>Introduce your company wherever candidates discover your opportunities.</p></div></div>
+          <div className="posting-panel-body">
+            <h3 className="posting-field-title">Include company overview on</h3>
+            <p className="posting-description">Select the channels where your company overview should appear with a job posting.</p>
+            <div className="posting-channel-grid">
+              {([
+                { key: 'jobBoards', label: 'Job Boards', description: 'Share your company story on external job boards.', icon: Globe },
+                { key: 'candidatePortal', label: 'Candidate Portal', description: 'Help applicants learn about your organization.', icon: Building2 },
+                { key: 'referralPortal', label: 'Referral Portal', description: 'Give referred candidates context about your team.', icon: Link2 }
+              ] as const).map(({ key, label, description, icon: Icon }) => (
+                <label key={key} className={`posting-channel ${companyOverviewTargets[key] ? 'is-selected' : ''}`}>
+                  <div className="posting-channel-top"><span className="posting-section-icon"><Icon size={22} /></span><input type="checkbox" checked={companyOverviewTargets[key]} onChange={(event) => setCompanyOverviewTargets(current => ({ ...current, [key]: event.target.checked }))} /></div>
+                  <strong>{label}</strong><span>{description}</span>
+                </label>
+              ))}
+            </div>
+            <div className="posting-note"><HelpCircle size={18} /><span>Choose any combination of channels to match your recruitment workflow.</span></div>
+          </div>
+        </section>
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Disqualification Reasons' ? (
+        <JobDisqualificationReasons />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Interview Settings' ? (
+        <JobInterviewSettings />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Job Lookups' ? (
+        <JobLookups />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Job Settings' ? (
+        <JobSettings />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Job Statuses' ? (
+        <JobStatuses />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Job Summary' ? (
+        <JobSummary key="job-summary" />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Keyword Masking' ? (
+        <KeywordMasking />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'Priorities' ? (
+        <JobPriorities />
+      ) : currentUser?.role === 'admin' && initialMode === 'select' && activeSubmodule === 'ITAR Summary' ? (
+        <JobSummary key="itar-summary" itar />
+      ) : (
+        <>
       {/* Top Header & Navigation Strip */}
       {creationMode === 'select' ? (
         <div className="flex items-center justify-between pb-2">
@@ -3170,6 +3283,9 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
           </div>
         </form>
       )}
+        </>
+      )}
+      </div>
     </div>
   );
 };

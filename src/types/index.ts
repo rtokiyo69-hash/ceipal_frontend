@@ -57,6 +57,7 @@ export interface Job {
   endDate?: string;
   category?: string;
   skillType?: string;
+  skillMatrix?: string;
   respondBy?: string;
   remoteJob?: 'Yes' | 'No' | 'Hybrid';
   states?: string;
@@ -125,6 +126,10 @@ export interface JobNote {
   text: string;
   date: string;
   category?: 'Job Posting' | 'Applicant Reference';
+  action?: string;
+  priority?: 'Low' | 'Medium' | 'High';
+  applicantRef?: string;
+  notifiedTo?: string[];
 }
 
 export type PipelineStage = 
@@ -161,11 +166,27 @@ export interface Applicant {
   summary?: string;
   education?: { degree: string; school: string; year: string }[];
   workHistory?: { role: string; company: string; duration: string; summary: string }[];
-  documents?: { id?: string; name: string; size: string; date: string; type: string; mimeType?: string; dataUrl?: string; title?: string; description?: string; comments?: string; createdBy?: string; modifiedBy?: string; liked?: boolean }[];
+  documents?: { id?: string; fileId?: string; name: string; size: string; date: string; type: string; mimeType?: string; dataUrl?: string; title?: string; description?: string; comments?: string; createdBy?: string; modifiedBy?: string; liked?: boolean }[];
   notes?: { id: string; author: string; text: string; date: string; subject?: string; priority?: string; job?: string; client?: string; action?: string; pinned?: boolean }[];
+  isEmailMergeDeactivated?: boolean;
+  emailMergeOptOutUntil?: string;
+  emailMergeReason?: string;
+  portalAccountActive?: boolean;
+  isBlockedOnTextToHire?: boolean;
+  references?: {
+    name: string;
+    company: string;
+    contactNumber?: string;
+    email?: string;
+    referenceType?: string;
+    designation?: string;
+    yearsAcquainted?: string;
+    summary?: string;
+  }[];
   // Optional recruiter profile fields collected by the frontend applicant form.
   middleName?: string;
   legalName?: string;
+  nameAsPerAadhaar?: string;
   alternateEmail?: string;
   homePhone?: string;
   workPhone?: string;
@@ -257,6 +278,7 @@ export interface Submission {
   submissionId: string;
   applicantId: string;
   applicantName: string;
+  nameAsPerAadhaar?: string;
   jobId: string;
   jobTitle: string;
   client: string;
@@ -278,9 +300,26 @@ export interface Submission {
     | (string & {});
   approvalStatus: 'Approved' | 'Pending Approval' | 'Revision Requested' | 'Pending Review' | (string & {});
   statusHistory?: { status: string; changedAt: string; changedBy?: string; comments?: string }[];
+  submissionDetails?: Record<string, unknown>;
   score?: number;
   groups?: string[];
   notes?: { id: string; author: string; text: string; date: string }[];
+  quickSubmissionDetails?: {
+    noticePeriod: string;
+    relocation: 'Yes' | 'No';
+    currency: string;
+    rateType: string;
+    resumeName: string;
+    videoLink: string;
+    availableDocument: string;
+    additionalAttachmentName: string;
+    eForm: string;
+    recipients: string;
+    additionalNotifiers: string;
+    otherEmailIds: string;
+    comments: string;
+    employerDetails: string;
+  };
 }
 
 export const SUBMISSION_STATUS_OPTIONS = [
@@ -298,7 +337,8 @@ export const SUBMISSION_STATUS_OPTIONS = [
 ] as const;
 
 export function getSubmissionStageIndex(status: string): number {
-  const value = status.toLowerCase();
+  const value = status.trim().toLowerCase();
+  if (value === 'pipeline') return 0;
   if (value.includes('not joined')) return 6;
   if (value.includes('placed')) return 5;
   if (value.includes('offer') || value.includes('confirm') || value.includes('selected')) return 4;
@@ -330,7 +370,23 @@ export interface TaskItem {
   priority: Priority;
   assignedTo: string;
   status: 'Pending' | 'In Progress' | 'Completed';
-  category: 'Interview Follow-up' | 'Offer Release' | 'Vendor Verification' | 'Client Review';
+  category: 'Interview Follow-up' | 'Offer Release' | 'Vendor Verification' | 'Client Review' | 'Task';
+  jobId?: string;
+  description?: string;
+  businessUnit?: string;
+  taskType?: string;
+  relatedTo?: string;
+  timeZone?: string;
+  assignedBy?: string;
+  createdOn?: string;
+  modifiedOn?: string;
+  statusModifiedOn?: string;
+  escalateTo?: string;
+  reminder?: string;
+  ownership?: string;
+  notifyViaEmail?: boolean;
+  recurrenceTask?: boolean;
+  showOnCalendar?: boolean;
 }
 
 export interface ActivityLog {

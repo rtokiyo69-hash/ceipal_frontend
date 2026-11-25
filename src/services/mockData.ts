@@ -194,10 +194,6 @@ Preferred Qualifications:
 
 Educational Qualification: Bachelor's degree in Computer Science, Information Technology, or a related field, or equivalent practical experience.
 Salary: As per industry standards and candidate experience.`,
-    documents: [
-      { id: 'jobdoc-1', name: 'Demo_User_Resume_Gibberish.pdf', type: 'application/pdf', size: 3481 },
-      { id: 'jobdoc-2', name: 'AMP12262_Job_Specification.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 28400 }
-    ],
     notes: [
       { id: 'jn-1', author: 'Ganesh Godse', text: 'Requisition initialized with Python, ReactJS and PostgreSQL criteria. Candidate pipeline ready for review.', date: '10/11/2026 20:00:51', category: 'Job Posting' }
     ]
@@ -788,6 +784,24 @@ export const INITIAL_APPLICANTS: Applicant[] = [
     expectedSalary: '€135,000',
     noticePeriod: 'Complete',
     summary: 'Successfully placed at CloudScale Enterprises on Oct 15, 2026. Onboarding completed with stellar feedback.'
+  },
+  {
+    id: 'app-incomplete-test',
+    applicantId: 'APP-TEST-001',
+    name: 'Incomplete Profile Test',
+    email: 'incomplete.profile.test@example.com',
+    phone: '+91 90000 00001',
+    currentDesignation: 'QA Test Candidate',
+    location: 'Pune, India',
+    experienceYears: 2,
+    skills: ['Manual Testing'],
+    source: 'Direct Career Portal',
+    status: 'New',
+    assignedRecruiter: 'Priya Sharma',
+    matchScore: 50,
+    avatar: '',
+    summary: 'Test profile with intentionally missing details for the applicant missing-information indicator.'
+    // Date of birth, work authorization, state, address, and highest qualification are intentionally blank.
   }
 ];
 

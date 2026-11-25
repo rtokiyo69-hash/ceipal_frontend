@@ -169,10 +169,22 @@ export const ManagerDashboard: React.FC = () => {
 
           <div className="divide-y divide-[#D8E3F1] dark:divide-[#334155]">
             {submissions.map((sub) => (
+              (() => {
+                const applicant = applicants.find((item) => item.id === sub.applicantId || item.name === sub.applicantName);
+                const aadhaarName = sub.nameAsPerAadhaar
+                  || applicant?.nameAsPerAadhaar
+                  || applicant?.customFields?.nameAsPerAadhaar
+                  || applicant?.customFields?.['Name (As per Aadhaar)']
+                  || applicant?.customFields?.legalName
+                  || applicant?.legalName;
+                return (
               <div key={sub.id} className="py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-[#1E293B] dark:text-white truncate">
                     {sub.applicantName}
+                  </div>
+                  <div className="text-[11px] text-[#6D7988] dark:text-slate-400 truncate">
+                    Name (As per Aadhaar): <span className="font-medium">{aadhaarName || 'Not provided'}</span>
                   </div>
                   <div className="text-[11px] text-[#64748B] dark:text-[#BFDBFE] truncate">
                     {sub.jobTitle} · Client: {sub.client}
@@ -206,6 +218,8 @@ export const ManagerDashboard: React.FC = () => {
                   )}
                 </div>
               </div>
+                );
+              })()
             ))}
           </div>
         </div>

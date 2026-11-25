@@ -103,6 +103,63 @@ function saveJobDocuments(files: File[]): Promise<JobDocument[]> {
   }));
 }
 
+function openApplicantDocumentDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('talentember-applicant-documents', 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('documents', { keyPath: 'id' });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Unable to open applicant document storage.'));
+  });
+}
+
+function saveApplicantDocuments(
+  applicantId: string,
+  files: File[]
+): Promise<NonNullable<Applicant['documents']>> {
+  if (files.length === 0) return Promise.resolve([]);
+
+  return openApplicantDocumentDatabase().then((database) => new Promise((resolve, reject) => {
+    const transaction = database.transaction('documents', 'readwrite');
+    const documents = files.map((file) => {
+      const fileId = `appdoc-${applicantId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const sizeInKilobytes = file.size / 1024;
+      const extension = file.name.includes('.') ? file.name.split('.').pop() : '';
+      return {
+        id: fileId,
+        applicantId,
+        file,
+        metadata: {
+          fileId,
+          name: file.name,
+          size: sizeInKilobytes < 1024
+            ? `${Math.max(1, Math.round(sizeInKilobytes))} KB`
+            : `${(sizeInKilobytes / 1024).toFixed(1)} MB`,
+          date: new Date().toLocaleDateString(),
+          type: /resume|cv/i.test(file.name)
+            ? 'Resume'
+            : file.type || (extension ? `${extension.toUpperCase()} file` : 'Applicant Document')
+        }
+      };
+    });
+
+    documents.forEach((document) => transaction.objectStore('documents').put(document));
+    transaction.oncomplete = () => {
+      database.close();
+      resolve(documents.map(({ metadata }) => metadata));
+    };
+    transaction.onerror = () => {
+      database.close();
+      reject(transaction.error || new Error('Unable to save applicant documents.'));
+    };
+    transaction.onabort = () => {
+      database.close();
+      reject(transaction.error || new Error('Applicant document storage was interrupted.'));
+    };
+  }));
+}
+
 export const ApiService = {
   // Authentication & Users
   async getCurrentUser(): Promise<User> {
@@ -123,7 +180,21 @@ export const ApiService = {
   // Jobs
   async getJobs(): Promise<Job[]> {
     await delay(150);
-    return getStorage<Job[]>(STORAGE_KEYS.JOBS, INITIAL_JOBS);
+    const jobs = getStorage<Job[]>(STORAGE_KEYS.JOBS, INITIAL_JOBS);
+    const demoDocumentIds = new Set(['jobdoc-1', 'jobdoc-2']);
+    let removedMissingDemoDocuments = false;
+    const migratedJobs = jobs.map((job) => {
+      if (job.id !== 'job-12262' || !job.documents?.some((document) => demoDocumentIds.has(document.id))) {
+        return job;
+      }
+      removedMissingDemoDocuments = true;
+      return {
+        ...job,
+        documents: job.documents.filter((document) => !demoDocumentIds.has(document.id))
+      };
+    });
+    if (removedMissingDemoDocuments) setStorage(STORAGE_KEYS.JOBS, migratedJobs);
+    return migratedJobs;
   },
 
   async getJobById(id: string): Promise<Job | undefined> {
@@ -197,10 +268,48 @@ export const ApiService = {
   // Applicants
   async getApplicants(): Promise<Applicant[]> {
     await delay(150);
-    const stored = getStorage<Applicant[]>(STORAGE_KEYS.APPLICANTS, INITIAL_APPLICANTS);
+    const rawStored = getStorage<unknown>(STORAGE_KEYS.APPLICANTS, INITIAL_APPLICANTS);
+    // Profiles can be incomplete (for example, created before all form fields were
+    // added). Normalize them before the roster filters read strings and arrays.
+    const stored: Applicant[] = (Array.isArray(rawStored) ? rawStored : INITIAL_APPLICANTS)
+      .filter((candidate): candidate is Record<string, unknown> => Boolean(candidate) && typeof candidate === 'object' && !Array.isArray(candidate))
+      .map((candidate, index) => {
+        const skills = Array.isArray(candidate.skills)
+          ? candidate.skills.map(String).filter(Boolean)
+          : typeof candidate.skills === 'string'
+            ? candidate.skills.split(',').map((skill) => skill.trim()).filter(Boolean)
+            : [];
+        const customFields = candidate.customFields && typeof candidate.customFields === 'object' && !Array.isArray(candidate.customFields)
+          ? candidate.customFields as Record<string, string>
+          : {};
+
+        return {
+          ...candidate,
+          id: String(candidate.id || candidate.applicantId || `applicant-${index + 1}`),
+          applicantId: String(candidate.applicantId || candidate.id || ''),
+          name: String(candidate.name || 'Unnamed Candidate'),
+          email: String(candidate.email || ''),
+          phone: String(candidate.phone || ''),
+          currentDesignation: String(candidate.currentDesignation || ''),
+          location: String(candidate.location || ''),
+          experienceYears: Number.isFinite(Number(candidate.experienceYears)) ? Number(candidate.experienceYears) : 0,
+          skills,
+          source: (candidate.source || 'Direct Career Portal') as Applicant['source'],
+          status: (candidate.status || 'New') as Applicant['status'],
+          assignedRecruiter: String(candidate.assignedRecruiter || ''),
+          matchScore: Number.isFinite(Number(candidate.matchScore)) ? Number(candidate.matchScore) : 0,
+          avatar: String(candidate.avatar || ''),
+          state: String(candidate.state || ''),
+          workAuthorization: String(candidate.workAuthorization || ''),
+          customFields,
+          notes: Array.isArray(candidate.notes) ? candidate.notes : [],
+          workHistory: Array.isArray(candidate.workHistory) ? candidate.workHistory : [],
+          education: Array.isArray(candidate.education) ? candidate.education : [],
+        } as Applicant;
+      });
     // Ensure initial applicants like Test Dummy, DURAI KANDASAMY are present if storage predated them
     const existingIds = new Set(stored.map((a) => a.applicantId || a.id));
-    let modified = false;
+    let modified = !Array.isArray(rawStored) || rawStored.length !== stored.length;
     for (const initApp of INITIAL_APPLICANTS) {
       if (!existingIds.has(initApp.applicantId) && !existingIds.has(initApp.id)) {
         stored.push(initApp);
@@ -299,6 +408,38 @@ export const ApiService = {
     applicants[index] = updated;
     setStorage(STORAGE_KEYS.APPLICANTS, applicants);
     return updated;
+  },
+
+  async addApplicantDocuments(id: string, files: File[]): Promise<Applicant> {
+    await delay(100);
+    const applicants = await this.getApplicants();
+    const index = applicants.findIndex((applicant) => applicant.id === id);
+    if (index === -1) throw new Error('Applicant not found');
+
+    const additions = await saveApplicantDocuments(id, files);
+    const updated = {
+      ...applicants[index],
+      documents: [...(applicants[index].documents || []), ...additions]
+    };
+    applicants[index] = updated;
+    setStorage(STORAGE_KEYS.APPLICANTS, applicants);
+    return updated;
+  },
+
+  async getApplicantDocument(fileId: string): Promise<Blob | undefined> {
+    const database = await openApplicantDocumentDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction('documents', 'readonly');
+      const request = transaction.objectStore('documents').get(fileId);
+      request.onsuccess = () => {
+        database.close();
+        resolve(request.result?.file as Blob | undefined);
+      };
+      request.onerror = () => {
+        database.close();
+        reject(request.error || new Error('Unable to retrieve applicant document.'));
+      };
+    });
   },
 
   async toggleFavorite(id: string): Promise<boolean> {
@@ -512,11 +653,21 @@ export const ApiService = {
     const submissions = await this.getSubmissions();
     const submittedDate = new Date().toLocaleString();
     const status = submissionData.status === 'Client Submission' ? 'Submitted to Client' : submissionData.status === 'In Review' ? 'Client Review' : submissionData.status === 'Submitted' ? 'Waiting for Evaluation by Internal Reviewer' : submissionData.status || 'Waiting for Evaluation by Internal Reviewer';
+
+    const applicant = submissionData.applicantId
+      ? await this.getApplicantById(submissionData.applicantId)
+      : undefined;
     const newSubmission: Submission = {
       id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       submissionId: `${Math.floor(40000 + Math.random() * 20000)}`,
       applicantId: submissionData.applicantId || '',
-      applicantName: submissionData.applicantName || 'Candidate',
+      applicantName: submissionData.applicantName || applicant?.name || 'Candidate',
+      nameAsPerAadhaar: submissionData.nameAsPerAadhaar
+        || applicant?.nameAsPerAadhaar
+        || applicant?.customFields?.nameAsPerAadhaar
+        || applicant?.customFields?.['Name (As per Aadhaar)']
+        || applicant?.customFields?.legalName
+        || applicant?.legalName,
       jobId: submissionData.jobId || '',
       jobTitle: submissionData.jobTitle || 'Requisition',
       client: submissionData.client || '',
@@ -526,6 +677,8 @@ export const ApiService = {
       payRate: submissionData.payRate || 0,
       status,
       approvalStatus: submissionData.approvalStatus || 'Pending Review',
+      submissionDetails: submissionData.submissionDetails,
+      quickSubmissionDetails: submissionData.quickSubmissionDetails,
       statusHistory: [{ status, changedAt: submittedDate }]
     };
     const updated = [newSubmission, ...submissions];
@@ -542,7 +695,11 @@ export const ApiService = {
       author: noteData.author,
       text: noteData.text,
       date: noteData.date || new Date().toLocaleString(),
-      category: noteData.category || 'Job Posting'
+      category: noteData.category || 'Job Posting',
+      action: noteData.action,
+      priority: noteData.priority,
+      applicantRef: noteData.applicantRef,
+      notifiedTo: noteData.notifiedTo
     };
     if (job) {
       job.notes = [newNote, ...(job.notes || [])];
@@ -569,6 +726,20 @@ export const ApiService = {
       job.documents = [...(job.documents || []), doc];
       setStorage(STORAGE_KEYS.JOBS, jobs);
     }
+  },
+
+  async uploadJobDocuments(jobId: string, files: File[]): Promise<JobDocument[]> {
+    await delay(100);
+    const jobs = await this.getJobs();
+    const jobIndex = jobs.findIndex((job) => job.id === jobId);
+    if (jobIndex === -1) throw new Error('Job not found');
+    const documents = await saveJobDocuments(files);
+    jobs[jobIndex] = {
+      ...jobs[jobIndex],
+      documents: [...(jobs[jobIndex].documents || []), ...documents]
+    };
+    setStorage(STORAGE_KEYS.JOBS, jobs);
+    return documents;
   },
 
   async deleteJobDocument(jobId: string, docId: string): Promise<void> {

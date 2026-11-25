@@ -276,8 +276,12 @@ export const TopBar: React.FC = () => {
           : ['Job Posting', 'All Job Postings'];
       case 'job-new':
         return ['Job Posting', 'New Job Posting'];
+      case 'job-edit':
+        return ['Job Posting', 'Edit Job Posting'];
       case 'job-detail':
         return ['Job Posting', 'Job Posting Dossier'];
+      case 'client-submission':
+        return ['Job Posting', 'Client Submission'];
       case 'applicants':
         return ['Talent Pool', 'Candidate Roster'];
       case 'applicant-new':
@@ -304,6 +308,14 @@ export const TopBar: React.FC = () => {
         return ['Analytics', 'Recruiter Performance & Hiring Velocity'];
       case 'admin-users':
         return ['Governance', 'Users, Roles & Access Control'];
+      case 'requisition-code':
+        return ['Requisitions', 'Job Requisition Code'];
+      case 'requisition-lookups':
+        return ['Requisitions', 'Job Requisition Lookups'];
+      case 'requisition-settings':
+        return ['Requisitions', 'Job Requisition Settings'];
+      case 'requisition-workflows':
+        return ['Requisitions', 'Requisition Workflows'];
       case 'settings':
         return ['Administration', 'Global Settings'];
       default:
@@ -322,10 +334,10 @@ export const TopBar: React.FC = () => {
     ];
     const isTabActive = (route: (typeof recruiterTabs)[number]['route']) => {
       if (route === 'jobs') {
-        return ['jobs', 'job-new', 'job-detail'].includes(currentRoute);
+        return ['jobs', 'job-new', 'job-edit', 'job-detail', 'client-submission'].includes(currentRoute);
       }
       if (route === 'applicants') {
-        return ['applicants', 'applicant-new', 'applicant-detail'].includes(currentRoute);
+        return ['applicants', 'applicant-new', 'applicant-detail', 'client-submission'].includes(currentRoute);
       }
       return currentRoute === route;
     };

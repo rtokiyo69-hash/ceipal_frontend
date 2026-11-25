@@ -51,10 +51,11 @@ export const Sidebar: React.FC = () => {
         {
           groupTitle: 'ADMIN MODULES',
           items: [
-            { id: 'dashboard', label: 'Global Settings', icon: Settings },
+            { id: 'settings', label: 'Global Settings', icon: Settings },
             { id: 'job-new', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Applicants', icon: Users },
-            { id: 'jobs', label: 'Requisitions', icon: Layers }
+            { id: 'requisition-code', label: 'Requisitions', icon: Layers },
+            { id: 'clients', label: 'Client', icon: Building2 }
           ]
         }
       ];
@@ -126,9 +127,8 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside
-      className={`relative flex flex-col bg-[#1E293B] text-white border-r border-[#334155] transition-all duration-200 select-none z-30 shrink-0 ${
-        collapsed ? 'w-20' : 'w-64'
-      }`}
+      className={`relative flex flex-col bg-[#1E293B] text-white border-r border-[#334155] transition-all duration-200 select-none z-30 shrink-0 ${collapsed ? 'w-20' : 'w-64'
+        }`}
     >
       {/* Brand Header */}
       <div className="h-16 flex items-center justify-between px-5 border-b border-[#334155]">
@@ -162,10 +162,12 @@ export const Sidebar: React.FC = () => {
               const Icon = item.icon;
               const isActive =
                 currentRoute === item.id ||
-                (role === 'admin' && item.id === 'dashboard' && currentRoute === 'settings') ||
-                (role === 'admin' && item.id === 'jobs' && currentRoute === 'job-detail') ||
+                (role === 'admin' && item.id === 'settings' && (currentRoute === 'dashboard' || currentRoute === 'settings')) ||
+                (role === 'admin' && item.id === 'requisition-code' && ['requisition-code', 'requisition-lookups', 'requisition-settings', 'requisition-workflows'].includes(currentRoute)) ||
                 (role !== 'admin' && item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-detail')) ||
                 (item.id === 'applicants' && currentRoute === 'applicant-detail');
+                (item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-edit' || currentRoute === 'job-detail')) ||
+                (item.id === 'applicants' && (currentRoute === 'applicant-detail' || currentRoute === 'client-submission'));
 
               return (
                 <motion.button
@@ -176,11 +178,10 @@ export const Sidebar: React.FC = () => {
                   whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.01 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 32, mass: 0.45 }}
-                  className={`relative isolate w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium ${
-                    isActive
-                      ? 'font-semibold'
-                      : 'text-[#FFFFFF] hover:bg-white/10 hover:text-white'
-                  } ${collapsed ? 'justify-center' : ''}`}
+                  className={`relative isolate w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium ${isActive
+                    ? 'font-semibold'
+                    : 'text-[#FFFFFF] hover:bg-white/10 hover:text-white'
+                    } ${collapsed ? 'justify-center' : ''}`}
                 >
                   {isActive && (
                     <motion.span
@@ -196,9 +197,8 @@ export const Sidebar: React.FC = () => {
                   )}
                   {!collapsed && item.badge && (
                     <span
-                      className={`relative z-10 text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                        isActive ? 'bg-[#2563EB]/20 text-[#FFFFFF]' : 'bg-[#2563EB] text-white'
-                      }`}
+                      className={`relative z-10 text-[10px] font-mono px-1.5 py-0.2 rounded ${isActive ? 'bg-[#2563EB]/20 text-[#FFFFFF]' : 'bg-[#2563EB] text-white'
+                        }`}
                     >
                       {item.badge}
                     </span>
@@ -234,9 +234,8 @@ export const Sidebar: React.FC = () => {
                       loginAs(r);
                       setRoleSwitcherOpen(false);
                     }}
-                    className={`w-full text-left px-2 py-1 rounded-md capitalize transition-colors ${
-                      role === r ? 'bg-[#2563EB]/20 text-[#FFFFFF] font-medium' : 'text-[#FFFFFF] hover:bg-white/10'
-                    }`}
+                    className={`w-full text-left px-2 py-1 rounded-md capitalize transition-colors ${role === r ? 'bg-[#2563EB]/20 text-[#FFFFFF] font-medium' : 'text-[#FFFFFF] hover:bg-white/10'
+                      }`}
                   >
                     {r === 'admin' ? 'Admin' : r.replace('_', ' ')}
                   </button>

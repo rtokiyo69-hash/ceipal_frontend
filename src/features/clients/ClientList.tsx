@@ -10,14 +10,17 @@ import {
   CheckCircle,
   X,
   ExternalLink,
-  MapPin
+  MapPin,
+  Settings
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Client } from '../../types';
+import { ClientAdmin } from './ClientAdmin';
 
 export const ClientList: React.FC = () => {
-  const { navigate } = useAppStore();
+  const { navigate, currentUser } = useAppStore();
+  const [adminViewMode, setAdminViewMode] = useState<'settings' | 'directory'>('settings');
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -66,6 +69,10 @@ export const ClientList: React.FC = () => {
       c.location.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (currentUser?.role === 'admin' && adminViewMode === 'settings') {
+    return <ClientAdmin onSwitchToDirectory={() => setAdminViewMode('directory')} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Toast */}
@@ -87,13 +94,26 @@ export const ClientList: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2563EB]/30 transition-all flex items-center gap-1.5"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Enterprise Client</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {currentUser?.role === 'admin' && (
+            <button
+              type="button"
+              onClick={() => setAdminViewMode('settings')}
+              className="px-3.5 py-2 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] text-[#125B97] dark:text-[#93C5FD] rounded-xl text-xs font-semibold shadow-xs hover:bg-[#F8FAFC] transition-all flex items-center gap-1.5"
+            >
+              <Settings className="w-4 h-4" />
+              <span>Client Admin Settings</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setModalOpen(true)}
+            className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs font-semibold shadow-xs shadow-[#2563EB]/30 transition-all flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Enterprise Client</span>
+          </button>
+        </div>
       </div>
 
       {/* Search */}
