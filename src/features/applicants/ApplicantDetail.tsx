@@ -57,6 +57,145 @@ import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, Job, PipelineStage, Submission, getSubmissionStageIndex } from '../../types';
 import { EmailRichTextEditor } from '../../components/common/EmailRichTextEditor';
+import { getAllCountries } from 'countries-and-timezones';
+
+const PERSONAL_COUNTRY_OPTIONS = Object.values(getAllCountries())
+  .map((country) => country.name)
+  .sort((left, right) => left.localeCompare(right));
+const PERSONAL_STATE_OPTIONS = [
+  'Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+  'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu', 'Delhi', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+  'Mizoram', 'Nagaland', 'Odisha', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim',
+  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+];
+const PERSONAL_SOURCE_OPTIONS = [
+  'Apollo', 'Career Portal', 'ContactOut', 'Definitive Healthcare', 'Employee Referral',
+  'LinkedIn', 'Naukri', 'Vendor', 'Walk In', 'ZoomInfo'
+];
+const PERSONAL_SOURCE_ALIASES: Record<string, string> = {
+  'Direct Career Portal': 'Career Portal',
+  Referral: 'Employee Referral',
+  'Vendor Partner': 'Vendor'
+};
+const PERSONAL_NATIONALITY_ALIASES: Record<string, string> = {
+  Indian: 'India',
+  American: 'USA',
+  British: 'UK'
+};
+const PERSONAL_WORK_AUTHORIZATION_OPTIONS = ['Citizen'];
+const PERSONAL_TITLE_OPTIONS = [
+  'Software Engineer', 'Senior Software Engineer', 'Technical Support Engineer',
+  'Technical Support Engineer (L2)', 'Software Developer', 'Project Manager',
+  'Data Analyst', 'Business Analyst', 'QA Engineer', 'DevOps Engineer',
+  'Cloud Architect', 'Recruiter', 'Other'
+];
+const PERSONAL_INDUSTRY_OPTIONS = [
+  'Accounting - Finance', 'Advertising', 'Agriculture', 'Airline - Aviation',
+  'Architecture - Building', 'Art - Photography - Journalism', 'Automotive - Motor Vehicles - Parts',
+  'Banking - Financial Services', 'Biotechnology', 'BPO', 'Broadcasting - Radio - TV',
+  'Building Materials', 'Chemical', 'Computer Hardware', 'Computer Software', 'Construction',
+  'Consulting', 'Consumer Products', 'Credit - Loan - Collections', 'Defense - Aerospace',
+  'Education - Teaching - Administration', 'Electronics', 'Employment - Recruiting - Staffing',
+  'Energy - Utilities - Gas - Electric', 'Entertainment', 'Environmental', 'Exercise - Fitness',
+  'Fashion - Apparel - Textile', 'Food', 'Funeral - Cemetery', 'Government - Civil Service',
+  'Healthcare - Health Services', 'Homebuilding', 'Hospitality', 'Hotel - Resort', 'HVAC',
+  'Import - Export', 'Industrial', 'Information technology', 'Insurance', 'Internet - ECommerce',
+  'IT KPO', 'Landscaping', 'Law Enforcement', 'Legal', 'Library Science', 'Managed Care',
+  'Manufacturing', 'Medical Equipment', 'Merchandising', 'Military', 'Mortgage', 'Newspaper',
+  'Not for Profit - Charitable', 'Office Supplies - Equipment',
+  'Oil Refining - Petroleum - Drilling', 'Other Great Industries', 'Packaging', 'Pharmaceutical',
+  'Printing - Publishing', 'Public Relations', 'Real Estate - Property Mgt', 'Recreation',
+  'Restaurant', 'Retail', 'Sales - Marketing', 'Securities', 'Security', 'Semiconductor',
+  'Social Services', 'Telecommunications', 'Training', 'Transportation', 'Travel',
+  'Us Retirment', 'Wireless'
+];
+const PERSONAL_NATIONALITY_OPTIONS = ['India', 'USA', 'UK'];
+const PERSONAL_DEMOGRAPHIC_NATIONALITY_OPTIONS = [
+  'Afghan', 'Albanian', 'Algerian', 'American', 'Angolan', 'Antiguan', 'Argentine', 'Armenian',
+  'Aruban', 'Australian', 'Austrian', 'Azerbaijanian', 'Bahamian', 'Bahrainian',
+  'Bangladeshian', 'Barbadian', 'Basotho', 'Batswana', 'Belarusian', 'Belgian', 'Beninese',
+  'Bermudian', 'Bhutanese', 'Bolivian', 'Bosnian', 'Brazilian', 'British', 'Bruneian',
+  'Bulgarian', 'Burkinabe', 'Cambodian', 'Cameroonian', 'Canadian', 'Caymanian',
+  'Central African', 'Chadian', 'Chilean', 'Chinese', 'Colombian', 'Congolese', 'Costa Rican',
+  'Croatian', 'Cuban', 'Cypriot', 'Czech', 'Danish', 'Djiboutian', 'Dominican', 'Dutch',
+  'Dutch Antillean', 'Ecuadorian', 'Egyptian', 'Emirati', 'Estonian', 'Ethiopean', 'Fijian',
+  'Finnish', 'French', 'French Citizen', 'Gabonese', 'Georgian', 'German', 'Ghanaian',
+  'Gibraltarian', 'Greek', 'Guatemalan', 'Guinean', 'Guyanese', 'Haitian', 'Honduran',
+  'Hong Kongers/ Hungarians', 'Hungarian', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish',
+  'Israeli', 'Italian', 'Ivorian', 'Jamaican', 'Japanese', 'Jordan', 'Kazakstani', 'Kenyan',
+  'Korean', 'Kosovarisch', 'Kuwaiti', 'Kyrgyz', 'Laotian', 'Latvian', 'Lebanese', 'Liberian',
+  'Libyan', 'Liechtensteiner', 'Lithuanian', 'Luxembourger', 'Macedonian', 'Malagasy',
+  'Malawian', 'Malaysian', 'Maldivian', 'Malian', 'Maltese', 'Martinican', 'Mauritian',
+  'Mexican', 'Moldovan', 'Mongolian', 'Moroccan', 'Mozambican', 'Myanmarese', 'Namibian',
+  'Nepalese', 'New Zealander', 'Nicaraguan', 'Nigerian', 'Nigerien', 'Northern Mariana Islander',
+  'Norwegian', 'Omani', 'Pakistani', 'Palestinian', 'Panamanian', 'Papua New Guinean',
+  'Peruvian', 'Philippine', 'Polish', 'Portuguese', 'Puerto Rican', 'Qatari', 'Reunionnais',
+  'Romanian', 'Russian', 'Rwandan', 'Salvadoran', 'Samoan', 'Saudi Arabian', 'Scots',
+  'Senegalese', 'Serbisch', 'Seychellois', 'Sierra Leonean', 'Singaporean', 'Slovak',
+  'South African', 'Spanish', 'Sri Lankan', 'St. Lucian', 'Sudanese', 'Surinamese', 'Swazi',
+  'Swedish', 'Swiss', 'Syrian', 'Taiwanese', 'Tanzanian', 'Thai', 'Togolese',
+  'Trinidad and Tobago', 'Tunisian', 'Turk', 'Turkish', 'Ugandan', 'Ukrainian', 'Uruguayan',
+  'Venezuelan', 'Vietnamese', 'Yemeni', 'Zambian', 'Zimbabwean'
+];
+const PERSONAL_GENDER_OPTIONS = ['Decline to Self Identify', 'Female', 'Male', 'Others'];
+const PERSONAL_RACE_OPTIONS = [
+  'American Indian / Alaska Native', 'Asian / Pacific Islander', 'Black / American African',
+  'Decline to Designate', 'Hispanic', 'Native Hawaiian', 'White'
+];
+const PERSONAL_VETERAN_OPTIONS = ['Decline to Designate', 'No', 'Yes'];
+const PERSONAL_DISABILITY_OPTIONS = [
+  "I don't wish to answer",
+  "No, I don't have a disability or a history / record of having a disability",
+  'Yes, I have a disability or have a history / record of having a disability'
+];
+const PERSONAL_NOTICE_PERIOD_OPTIONS = [
+  '1 Month', '2 Months', '3 Months', '7 Days', '15 Days or less', '45 Days', 'Any',
+  'Currently Serving Notice Period', 'Immediate Joiner', 'More than 3 Months'
+];
+const PERSONAL_CURRENCY_OPTIONS = Array.from(new Set([
+  'INR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'AED', 'SGD',
+  ...(typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('currency') : [])
+])).sort((left, right) => left.localeCompare(right));
+const PERSONAL_CTC_PERIOD_OPTIONS = ['Yearly', 'Hourly'];
+const withCurrentOption = (options: string[], current: unknown): string[] => {
+  const currentValue = typeof current === 'string' ? current : '';
+  return Array.from(new Set([...(currentValue ? [currentValue] : []), ...options]));
+};
+const getCompensationParts = (value: string) => {
+  const currencyCode = value.match(/\b[A-Z]{3}\b/i)?.[0].toUpperCase();
+  const currencySymbol = value.includes('₹') ? 'INR' : value.includes('$') ? 'USD' : '';
+  const periodValue = value.match(/\b(hourly|yearly|annual|pa)\b/i)?.[0].toLowerCase();
+  return {
+    currency: (currencyCode && PERSONAL_CURRENCY_OPTIONS.includes(currencyCode) ? currencyCode : undefined)
+      || currencySymbol
+      || 'INR',
+    amount: value.replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0] || '',
+    period: periodValue === 'hourly' ? 'Hourly' : 'Yearly'
+  };
+};
+const formatExperience = (experience: number) => {
+  const totalMonths = Math.max(0, Math.round(experience * 12));
+  return `${Math.floor(totalMonths / 12)} Years ${totalMonths % 12} Months`;
+};
+const getAgeFromDate = (value: string) => {
+  const dayFirstMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const isoMatch = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  const birthDate = dayFirstMatch
+    ? new Date(Number(dayFirstMatch[3]), Number(dayFirstMatch[2]) - 1, Number(dayFirstMatch[1]))
+    : isoMatch
+      ? new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]))
+      : new Date(value);
+  if (!value || Number.isNaN(birthDate.getTime())) return undefined;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (today.getMonth() < birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+  return age >= 0 ? age : undefined;
+};
 
 export const ApplicantDetail: React.FC = () => {
   const { selectedId, navigate, currentUser } = useAppStore();
@@ -80,6 +219,7 @@ export const ApplicantDetail: React.FC = () => {
   const [skillsExpandedPersonal, setSkillsExpandedPersonal] = useState(false);
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [personalForm, setPersonalForm] = useState<Record<string, any>>({});
+  const personalDetailsRef = useRef<HTMLDivElement>(null);
   const [isResumePanelOpen, setIsResumePanelOpen] = useState(false);
   const [resumeFullscreen, setResumeFullscreen] = useState(false);
   const [moreSubTabsOpen, setMoreSubTabsOpen] = useState(false);
@@ -542,6 +682,12 @@ export const ApplicantDetail: React.FC = () => {
   const [editStatusValue, setEditStatusValue] = useState('');
   const [editGroupValue, setEditGroupValue] = useState('');
 
+  useEffect(() => {
+    if (isEditingPersonal && activeSubTab === 'Personal Details') {
+      personalDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeSubTab, isEditingPersonal]);
+
   // Ratings state
   const [ratings, setRatings] = useState({
     technical: 4,
@@ -906,6 +1052,10 @@ export const ApplicantDetail: React.FC = () => {
   };
 
   const avatarInitial = applicant.name.charAt(0).toUpperCase() || 'A';
+  const dateOfBirthForAge = isEditingPersonal
+    ? personalForm.dateOfBirth || ''
+    : applicant.dateOfBirth || applicant.dob || '';
+  const applicantAge = getAgeFromDate(dateOfBirthForAge);
   const openAvatarEditor = () => {
     setAvatarMenuOpen(false);
     setAvatarPreview(applicant.avatar || '');
@@ -937,7 +1087,12 @@ export const ApplicantDetail: React.FC = () => {
   const startEditPersonal = () => {
     if (!applicant) return;
     const [fName = '', ...lNames] = (applicant.name || '').split(' ');
+    const currentCTC = applicant.currentCTC || '';
+    const expectedCTC = applicant.expectedCTC || applicant.expectedSalary || '';
+    const currentCTCParts = getCompensationParts(currentCTC);
+    const expectedCTCParts = getCompensationParts(expectedCTC);
     setPersonalForm({
+      namePrefix: (applicant.namePrefix || '').replace(/\.$/, ''),
       firstName: applicant.firstName || fName || 'SIVAKRISHNAN',
       middleName: applicant.middleName || '',
       lastName: applicant.lastName || lNames.join(' ') || 'D',
@@ -959,33 +1114,40 @@ export const ApplicantDetail: React.FC = () => {
       state: applicant.state || 'Tamil Nadu',
       city: applicant.city || applicant.location?.split(',')[0]?.trim() || 'Coimbatore',
       country: applicant.country || 'India',
-      source: applicant.source || 'Naukri',
-      experienceYears: applicant.experienceYears || 9,
+      source: PERSONAL_SOURCE_ALIASES[applicant.source || ''] || applicant.source || 'Naukri',
+      experienceYears: applicant.experienceYears ?? 0,
       zipCode: applicant.zipCode || '',
       referredBy: applicant.referredBy || '',
-      status: applicant.status || 'New',
       relevantExperience: applicant.relevantExperience || '',
       assignedRecruiter: applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar',
       currentDesignation: applicant.currentDesignation || 'Technical Support Engineer (L2)',
       applicantGroup: applicant.applicantGroup || '',
-      currentCTC: applicant.currentCTC || 'N/A',
-      expectedCTC: applicant.expectedCTC || applicant.expectedSalary || 'N/A',
+      currentCTC,
+      currentCTCCurrency: currentCTCParts.currency,
+      currentCTCAmount: currentCTCParts.amount,
+      currentCTCPeriod: currentCTCParts.period,
+      currentCTCOriginal: currentCTC,
+      expectedCTC,
+      expectedCTCCurrency: expectedCTCParts.currency,
+      expectedCTCAmount: expectedCTCParts.amount,
+      expectedCTCPeriod: expectedCTCParts.period,
+      expectedCTCOriginal: expectedCTC,
       currentCompany: applicant.currentCompany || 'Infosys PVT LTD',
       panCard: applicant.panCard || '',
       aadharNumber: applicant.aadharNumber || '',
       noticePeriod: applicant.noticePeriod || '',
-      maritalStatus: applicant.maritalStatus || 'Single',
-      preferredShift: applicant.preferredShift || 'Day',
+      maritalStatus: applicant.maritalStatus || '',
+      preferredShift: applicant.preferredShift || '',
       passportNumber: applicant.passportNumber || '',
       skills: (applicant.skills || []).join(', '),
       primarySkills: (applicant.primarySkills || []).join(', '),
       willingToRelocate: applicant.willingToRelocate !== false,
       technology: applicant.technology || '',
       industry: applicant.industry || '',
-      nationality: applicant.nationality || 'Indian',
+      nationality: PERSONAL_NATIONALITY_ALIASES[applicant.nationality || ''] || applicant.nationality || '',
+      customNationality: applicant.customFields?.nationality || '',
       referenceId: applicant.referenceId || '',
       applicantRemarks: applicant.applicantRemarks || '',
-      noticeEligibility: applicant.noticeEligibility || '',
       gender: applicant.gender || '',
       raceEthnicity: applicant.raceEthnicity || '',
       veteranStatus: applicant.veteranStatus || '',
@@ -998,6 +1160,34 @@ export const ApplicantDetail: React.FC = () => {
   const handleSavePersonal = async () => {
     if (!applicant) return;
     const fullName = `${personalForm.firstName || ''} ${personalForm.middleName || ''} ${personalForm.lastName || ''}`.replace(/\s+/g, ' ').trim() || applicant.name;
+    const {
+      currentCTCCurrency,
+      currentCTCAmount,
+      currentCTCPeriod,
+      currentCTCOriginal,
+      expectedCTCCurrency,
+      expectedCTCAmount,
+      expectedCTCPeriod,
+      expectedCTCOriginal,
+      customNationality,
+      ...personalFields
+    } = personalForm;
+    const originalCurrentCTCParts = getCompensationParts(currentCTCOriginal);
+    const originalExpectedCTCParts = getCompensationParts(expectedCTCOriginal);
+    const currentCTCUnchanged = !/\b(daily|weekly|monthly)\b/i.test(currentCTCOriginal)
+      && currentCTCCurrency === originalCurrentCTCParts.currency
+      && currentCTCAmount === originalCurrentCTCParts.amount
+      && currentCTCPeriod === originalCurrentCTCParts.period;
+    const expectedCTCUnchanged = !/\b(daily|weekly|monthly)\b/i.test(expectedCTCOriginal)
+      && expectedCTCCurrency === originalExpectedCTCParts.currency
+      && expectedCTCAmount === originalExpectedCTCParts.amount
+      && expectedCTCPeriod === originalExpectedCTCParts.period;
+    const currentCTC = currentCTCUnchanged
+      ? currentCTCOriginal
+      : currentCTCAmount ? `${currentCTCCurrency} ${currentCTCAmount} ${currentCTCPeriod}` : '';
+    const expectedCTC = expectedCTCUnchanged
+      ? expectedCTCOriginal
+      : expectedCTCAmount ? `${expectedCTCCurrency} ${expectedCTCAmount} ${expectedCTCPeriod}` : '';
     const parsedSkills = typeof personalForm.skills === 'string'
       ? personalForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
       : applicant.skills;
@@ -1007,11 +1197,19 @@ export const ApplicantDetail: React.FC = () => {
 
     const updatedApplicant: Applicant = {
       ...applicant,
-      ...personalForm,
+      ...personalFields,
       name: fullName,
       skills: parsedSkills.length > 0 ? parsedSkills : applicant.skills,
       primarySkills: parsedPrimary,
-      experienceYears: Number(personalForm.experienceYears) || applicant.experienceYears,
+      experienceYears: Number.isFinite(Number(personalFields.experienceYears))
+        ? Number(personalFields.experienceYears)
+        : applicant.experienceYears,
+      currentCTC,
+      expectedCTC,
+      customFields: {
+        ...applicant.customFields,
+        nationality: customNationality
+      },
     };
 
     setApplicant(updatedApplicant);
@@ -3306,7 +3504,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* PERSONAL DETAILS TAB (Image 1 Replication & Editable Mode) */}
           {activeSubTab === 'Personal Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div ref={personalDetailsRef} className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
               {/* Card Header */}
               <div className="flex flex-wrap items-center justify-between border-b border-[#F1F5F9] pb-3 gap-2 dark:border-[#334155]">
                 <div className="flex items-center gap-2">
@@ -3322,7 +3520,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      <span>Save Changes</span>
+                      <span>Save</span>
                     </button>
                     <button
                       type="button"
@@ -3349,14 +3547,25 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <div className="grid grid-cols-1 gap-x-8 gap-y-4 pt-4 md:grid-cols-3">
                 {/* Row 1 */}
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">First Name as per Aadhaar</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">First Name as per Aadhaar <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.firstName ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, firstName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex gap-1">
+                      <select
+                        aria-label="Name prefix"
+                        value={personalForm.namePrefix ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, namePrefix: e.target.value })}
+                        className="w-20 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        <option value="">Select</option>
+                                        {['Mr', 'Mrs', 'Ms'].map((prefix) => <option key={prefix}>{prefix}</option>)}
+                      </select>
+                      <input
+                        type="text"
+                        value={personalForm.firstName ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, firstName: e.target.value })}
+                        className="min-w-0 flex-1 rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      />
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.firstName || applicant.name?.split(' ')[0] || 'SIVAKRISHNAN'}
@@ -3379,7 +3588,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Last Name as per Aadhaar</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Last Name as per Aadhaar <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
                     <input
                       type="text"
@@ -3429,7 +3638,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Email Address</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Email Address <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
                     <input
                       type="email"
@@ -3463,10 +3672,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Mobile Number</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Mobile Number <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
                     <input
                       type="text"
+                      required
                       value={personalForm.phone ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
@@ -3512,7 +3722,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Date Of Birth</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
+                    Date Of Birth <span className="text-red-500">*</span>
+                    {applicantAge !== undefined && <span className="ml-1 text-[#6B7280]">(Age: {applicantAge} Yrs)</span>}
+                  </p>
                   {isEditingPersonal ? (
                     <input
                       type="text"
@@ -3594,12 +3807,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Work Authorization</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.workAuthorization ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, workAuthorization: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_WORK_AUTHORIZATION_OPTIONS.map((option) => <option key={option}>{option}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.workAuthorization || 'N/A'}
@@ -3641,12 +3856,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">State</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.state ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_STATE_OPTIONS, personalForm.state).map((state) => <option key={state}>{state}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.state || 'Tamil Nadu'}
@@ -3671,12 +3888,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Country</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.country ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_COUNTRY_OPTIONS, personalForm.country).map((country) => <option key={country}>{country}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.country || 'India'}
@@ -3688,12 +3907,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Source</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.source ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, source: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_SOURCE_OPTIONS.map((source) => <option key={source}>{source}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.source || 'Naukri'}
@@ -3703,16 +3924,36 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Experience</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      placeholder="e.g. 9 Years 2 Months"
-                      value={personalForm.experienceYears ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, experienceYears: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <select
+                        aria-label="Experience years"
+                        value={Math.floor(Number(personalForm.experienceYears) || 0)}
+                        onChange={(e) => {
+                          const months = Math.round(((Number(personalForm.experienceYears) || 0) % 1) * 12);
+                          setPersonalForm({ ...personalForm, experienceYears: Number(e.target.value) + months / 12 });
+                        }}
+                        className="w-16 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {Array.from({ length: 51 }, (_, year) => <option key={year} value={year}>{year}</option>)}
+                      </select>
+                      <span className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">Years</span>
+                      <select
+                        aria-label="Experience months"
+                        value={Math.round(((Number(personalForm.experienceYears) || 0) % 1) * 12)}
+                        onChange={(e) => {
+                          const years = Math.floor(Number(personalForm.experienceYears) || 0);
+                          setPersonalForm({ ...personalForm, experienceYears: years + Number(e.target.value) / 12 });
+                        }}
+                        className="w-16 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        <option value="">Select</option>
+                        {Array.from({ length: 12 }, (_, month) => <option key={month} value={month}>{month}</option>)}
+                      </select>
+                      <span className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">Months</span>
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
+                      {applicant.experienceYears ? formatExperience(applicant.experienceYears) : 'N/A'}
                     </p>
                   )}
                 </div>
@@ -3749,28 +3990,6 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Status</p>
-                  {isEditingPersonal ? (
-                    <select
-                      value={personalForm.status ?? 'New'}
-                      onChange={(e) => setPersonalForm({ ...personalForm, status: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    >
-                      <option value="New">New lead (Allowed to submit)</option>
-                      <option value="Screening">Screening</option>
-                      <option value="Submitted">Submitted</option>
-                      <option value="Interview">Interview</option>
-                      <option value="Offered">Offered</option>
-                      <option value="Hired">Hired</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  ) : (
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.status || 'New lead (Allowed to submit)'}
-                    </p>
-                  )}
-                </div>
-                <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Relevant experience</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
@@ -3793,12 +4012,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Ownership</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
+                      disabled
+                      aria-label="Ownership (read-only)"
                       value={personalForm.assignedRecruiter ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, assignedRecruiter: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                      className="mt-1 w-full cursor-not-allowed rounded border border-[#CBD5E1] bg-[#F3F4F6] px-2.5 py-1.5 text-xs text-[#1F2937] opacity-70 outline-none dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(
+                        Array.from(new Set([currentUser?.name || '', ...allApplicants.map((candidate) => candidate.assignedRecruiter)]))
+                          .filter(Boolean)
+                          .sort((left, right) => left.localeCompare(right))
+                          .slice(0, 100),
+                        personalForm.assignedRecruiter
+                      ).map((recruiter) => <option key={recruiter}>{recruiter}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar'}
@@ -3808,12 +4036,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current Title/Designation</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.currentDesignation ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, currentDesignation: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_TITLE_OPTIONS, personalForm.currentDesignation)
+                        .map((title) => <option key={title}>{title}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.currentDesignation || 'technical support engineer (L2)'}
@@ -3840,12 +4071,33 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current CTC</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.currentCTC ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, currentCTC: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex gap-1">
+                      <select
+                        aria-label="Current CTC currency"
+                        value={personalForm.currentCTCCurrency}
+                        onChange={(e) => setPersonalForm({ ...personalForm, currentCTCCurrency: e.target.value })}
+                        className="w-[4.5rem] rounded border border-[#CBD5E1] bg-white px-1.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CURRENCY_OPTIONS.map((currency) => <option key={currency}>{currency}</option>)}
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        aria-label="Current CTC amount"
+                        value={personalForm.currentCTCAmount}
+                        onChange={(e) => setPersonalForm({ ...personalForm, currentCTCAmount: e.target.value })}
+                        className="min-w-0 flex-1 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      />
+                      <select
+                        aria-label="Current CTC period"
+                        value={personalForm.currentCTCPeriod}
+                        onChange={(e) => setPersonalForm({ ...personalForm, currentCTCPeriod: e.target.value })}
+                        className="w-[5.5rem] rounded border border-[#CBD5E1] bg-white px-1 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CTC_PERIOD_OPTIONS.map((period) => <option key={period}>{period}</option>)}
+                      </select>
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.currentCTC || 'N/A'}
@@ -3855,12 +4107,33 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Expected CTC</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.expectedCTC ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, expectedCTC: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex gap-1">
+                      <select
+                        aria-label="Expected CTC currency"
+                        value={personalForm.expectedCTCCurrency}
+                        onChange={(e) => setPersonalForm({ ...personalForm, expectedCTCCurrency: e.target.value })}
+                        className="w-[4.5rem] rounded border border-[#CBD5E1] bg-white px-1.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CURRENCY_OPTIONS.map((currency) => <option key={currency}>{currency}</option>)}
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        aria-label="Expected CTC amount"
+                        value={personalForm.expectedCTCAmount}
+                        onChange={(e) => setPersonalForm({ ...personalForm, expectedCTCAmount: e.target.value })}
+                        className="min-w-0 flex-1 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      />
+                      <select
+                        aria-label="Expected CTC period"
+                        value={personalForm.expectedCTCPeriod}
+                        onChange={(e) => setPersonalForm({ ...personalForm, expectedCTCPeriod: e.target.value })}
+                        className="w-[5.5rem] rounded border border-[#CBD5E1] bg-white px-1 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CTC_PERIOD_OPTIONS.map((period) => <option key={period}>{period}</option>)}
+                      </select>
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.expectedCTC || applicant.expectedSalary || 'N/A'}
@@ -3917,12 +4190,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Notice Period</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.noticePeriod ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, noticePeriod: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_NOTICE_PERIOD_OPTIONS.map((period) => <option key={period}>{period}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.noticePeriod || 'N/A'}
@@ -3942,9 +4217,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       onChange={(e) => setPersonalForm({ ...personalForm, maritalStatus: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
-                      <option value="Single">Single</option>
-                      <option value="Married">Married</option>
-                      <option value="N/A">N/A</option>
+                      <option value="">Select</option>
+                      {['Married', 'Single'].map((status) => <option key={status}>{status}</option>)}
                     </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -3963,10 +4237,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       onChange={(e) => setPersonalForm({ ...personalForm, preferredShift: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
-                      <option value="Day">Day Shift</option>
-                      <option value="Night">Night Shift</option>
-                      <option value="Flexible">Flexible / Rotational</option>
-                      <option value="N/A">N/A</option>
+                      <option value="">Select</option>
+                      {['Day', 'Night', 'Mid'].map((shift) => <option key={shift}>{shift}</option>)}
                     </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4051,17 +4323,40 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Relocation</p>
                   {isEditingPersonal ? (
-                    <select
-                      value={personalForm.willingToRelocate ? 'Yes' : 'No'}
-                      onChange={(e) => setPersonalForm({ ...personalForm, willingToRelocate: e.target.value === 'Yes' })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
+                    <div className="mt-2 flex items-center gap-4 text-xs text-[#1F2937] dark:text-white">
+                      {['Yes', 'No'].map((value) => (
+                        <label key={value} className="inline-flex items-center gap-1">
+                          <input
+                            type="radio"
+                            name="personal-relocation"
+                            checked={personalForm.willingToRelocate === (value === 'Yes')}
+                            onChange={() => setPersonalForm({ ...personalForm, willingToRelocate: value === 'Yes' })}
+                            className="accent-[#2F80ED]"
+                          />
+                          {value}
+                        </label>
+                      ))}
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.willingToRelocate !== false ? 'Yes' : 'No'}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Nationality</p>
+                  {isEditingPersonal ? (
+                    <select
+                      value={personalForm.nationality ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, nationality: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_NATIONALITY_OPTIONS.map((nationality) => <option key={nationality}>{nationality}</option>)}
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.nationality || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -4085,12 +4380,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Industry</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.industry ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, industry: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_INDUSTRY_OPTIONS, personalForm.industry)
+                        .map((industry) => <option key={industry}>{industry}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.industry || 'N/A'}
@@ -4098,20 +4396,19 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
-                    <span>Nationality</span>
-                    <CircleHelp className="h-3 w-3 text-[#1877F2]" />
-                  </div>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Nationality</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.nationality ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, nationality: e.target.value })}
+                    <select
+                      value={personalForm.customNationality ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, customNationality: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_DEMOGRAPHIC_NATIONALITY_OPTIONS.map((nationality) => <option key={nationality}>{nationality}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.nationality || 'N/A'}
+                      {applicant.customFields?.nationality || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -4135,30 +4432,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Remarks</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={personalForm.applicantRemarks ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, applicantRemarks: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      className="mt-1 w-full resize-y rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.applicantRemarks || 'N/A'}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Notice/Eligibility</p>
-                  {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.noticeEligibility ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, noticeEligibility: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
-                  ) : (
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.noticeEligibility || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -4171,12 +4453,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Gender</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.gender ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_GENDER_OPTIONS.map((gender) => <option key={gender}>{gender}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.gender || 'N/A'}</p>
                     )}
@@ -4184,12 +4468,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Race/Ethnicity</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.raceEthnicity ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, raceEthnicity: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_RACE_OPTIONS.map((race) => <option key={race}>{race}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.raceEthnicity || 'N/A'}</p>
                     )}
@@ -4197,12 +4483,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Veteran Status</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.veteranStatus ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, veteranStatus: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_VETERAN_OPTIONS.map((status) => <option key={status}>{status}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.veteranStatus || 'N/A'}</p>
                     )}
@@ -4210,12 +4498,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Disability</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.disability ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, disability: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_DISABILITY_OPTIONS.map((status) => <option key={status}>{status}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.disability || 'N/A'}</p>
                     )}
@@ -4230,21 +4520,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
               {/* Bottom Save / Cancel bar when editing */}
               {isEditingPersonal && (
-                <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingPersonal(false)}
-                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                  >
-                    Cancel
-                  </button>
+                <div className="mt-6 flex items-center justify-start gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
                   <button
                     type="button"
                     onClick={handleSavePersonal}
                     className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
                   >
                     <Check className="h-4 w-4" />
-                    <span>Save Changes</span>
+                    <span>Save</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingPersonal(false)}
+                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                  >
+                    Cancel
                   </button>
                 </div>
               )}
@@ -5160,7 +5450,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <div>
                 <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Experience</span>
                 <span className="font-medium text-[#222] dark:text-slate-100">
-                  {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
+                  {applicant.experienceYears ? formatExperience(applicant.experienceYears) : 'N/A'}
                 </span>
               </div>
 
@@ -5195,7 +5485,18 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* Section 2: Personal Details */}
           <div>
-            <h2 className="mb-3 text-xs font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-xs font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
+              <button
+                type="button"
+                onClick={startEditPersonal}
+                className="inline-flex h-5 w-5 items-center justify-center rounded text-[#2F80ED] hover:bg-blue-50 hover:text-[#18558A] dark:hover:bg-[#1E3A5F]"
+                title="Edit Personal Details"
+                aria-label="Edit Personal Details"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            </div>
             <div className="space-y-2.5">
               <div>
                 <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
@@ -5394,7 +5695,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Experience</h4>
-                <p className="text-[#555] dark:text-[#BBB]">{applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months of industry experience.` : '9 Years 2 Months of industry experience.'}</p>
+                <p className="text-[#555] dark:text-[#BBB]">{applicant.experienceYears ? `${formatExperience(applicant.experienceYears)} of industry experience.` : 'N/A'}</p>
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#334155]">
@@ -7872,7 +8173,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Source</td>
                     <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.source || 'Naukri'}</td>
                     <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Experience</td>
-                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.experienceYears ? `${applicant.experienceYears} Years 10 Months` : '5 Years 10 Months'}</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.experienceYears ? formatExperience(applicant.experienceYears) : 'N/A'}</td>
                   </tr>
                   <tr>
                     <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Relevant experiece</td>
