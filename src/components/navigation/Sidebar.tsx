@@ -52,6 +52,7 @@ export const Sidebar: React.FC = () => {
         {
           groupTitle: 'ADMIN MODULES',
           items: [
+            { id: 'organization', label: 'Organization', icon: Building2 },
             { id: 'settings', label: 'Global Settings', icon: Settings },
             { id: 'job-new', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Applicants', icon: Users },

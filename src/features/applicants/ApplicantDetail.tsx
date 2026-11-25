@@ -50,12 +50,152 @@ import {
   Square,
   CheckSquare,
   FileCheck2,
+  Tag,
   AlertTriangle
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, Job, PipelineStage, Submission, getSubmissionStageIndex } from '../../types';
 import { EmailRichTextEditor } from '../../components/common/EmailRichTextEditor';
+import { getAllCountries } from 'countries-and-timezones';
+
+const PERSONAL_COUNTRY_OPTIONS = Object.values(getAllCountries())
+  .map((country) => country.name)
+  .sort((left, right) => left.localeCompare(right));
+const PERSONAL_STATE_OPTIONS = [
+  'Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+  'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu', 'Delhi', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+  'Mizoram', 'Nagaland', 'Odisha', 'Pondicherry', 'Punjab', 'Rajasthan', 'Sikkim',
+  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+];
+const PERSONAL_SOURCE_OPTIONS = [
+  'Apollo', 'Career Portal', 'ContactOut', 'Definitive Healthcare', 'Employee Referral',
+  'LinkedIn', 'Naukri', 'Vendor', 'Walk In', 'ZoomInfo'
+];
+const PERSONAL_SOURCE_ALIASES: Record<string, string> = {
+  'Direct Career Portal': 'Career Portal',
+  Referral: 'Employee Referral',
+  'Vendor Partner': 'Vendor'
+};
+const PERSONAL_NATIONALITY_ALIASES: Record<string, string> = {
+  Indian: 'India',
+  American: 'USA',
+  British: 'UK'
+};
+const PERSONAL_WORK_AUTHORIZATION_OPTIONS = ['Citizen'];
+const PERSONAL_TITLE_OPTIONS = [
+  'Software Engineer', 'Senior Software Engineer', 'Technical Support Engineer',
+  'Technical Support Engineer (L2)', 'Software Developer', 'Project Manager',
+  'Data Analyst', 'Business Analyst', 'QA Engineer', 'DevOps Engineer',
+  'Cloud Architect', 'Recruiter', 'Other'
+];
+const PERSONAL_INDUSTRY_OPTIONS = [
+  'Accounting - Finance', 'Advertising', 'Agriculture', 'Airline - Aviation',
+  'Architecture - Building', 'Art - Photography - Journalism', 'Automotive - Motor Vehicles - Parts',
+  'Banking - Financial Services', 'Biotechnology', 'BPO', 'Broadcasting - Radio - TV',
+  'Building Materials', 'Chemical', 'Computer Hardware', 'Computer Software', 'Construction',
+  'Consulting', 'Consumer Products', 'Credit - Loan - Collections', 'Defense - Aerospace',
+  'Education - Teaching - Administration', 'Electronics', 'Employment - Recruiting - Staffing',
+  'Energy - Utilities - Gas - Electric', 'Entertainment', 'Environmental', 'Exercise - Fitness',
+  'Fashion - Apparel - Textile', 'Food', 'Funeral - Cemetery', 'Government - Civil Service',
+  'Healthcare - Health Services', 'Homebuilding', 'Hospitality', 'Hotel - Resort', 'HVAC',
+  'Import - Export', 'Industrial', 'Information technology', 'Insurance', 'Internet - ECommerce',
+  'IT KPO', 'Landscaping', 'Law Enforcement', 'Legal', 'Library Science', 'Managed Care',
+  'Manufacturing', 'Medical Equipment', 'Merchandising', 'Military', 'Mortgage', 'Newspaper',
+  'Not for Profit - Charitable', 'Office Supplies - Equipment',
+  'Oil Refining - Petroleum - Drilling', 'Other Great Industries', 'Packaging', 'Pharmaceutical',
+  'Printing - Publishing', 'Public Relations', 'Real Estate - Property Mgt', 'Recreation',
+  'Restaurant', 'Retail', 'Sales - Marketing', 'Securities', 'Security', 'Semiconductor',
+  'Social Services', 'Telecommunications', 'Training', 'Transportation', 'Travel',
+  'Us Retirment', 'Wireless'
+];
+const PERSONAL_NATIONALITY_OPTIONS = ['India', 'USA', 'UK'];
+const PERSONAL_DEMOGRAPHIC_NATIONALITY_OPTIONS = [
+  'Afghan', 'Albanian', 'Algerian', 'American', 'Angolan', 'Antiguan', 'Argentine', 'Armenian',
+  'Aruban', 'Australian', 'Austrian', 'Azerbaijanian', 'Bahamian', 'Bahrainian',
+  'Bangladeshian', 'Barbadian', 'Basotho', 'Batswana', 'Belarusian', 'Belgian', 'Beninese',
+  'Bermudian', 'Bhutanese', 'Bolivian', 'Bosnian', 'Brazilian', 'British', 'Bruneian',
+  'Bulgarian', 'Burkinabe', 'Cambodian', 'Cameroonian', 'Canadian', 'Caymanian',
+  'Central African', 'Chadian', 'Chilean', 'Chinese', 'Colombian', 'Congolese', 'Costa Rican',
+  'Croatian', 'Cuban', 'Cypriot', 'Czech', 'Danish', 'Djiboutian', 'Dominican', 'Dutch',
+  'Dutch Antillean', 'Ecuadorian', 'Egyptian', 'Emirati', 'Estonian', 'Ethiopean', 'Fijian',
+  'Finnish', 'French', 'French Citizen', 'Gabonese', 'Georgian', 'German', 'Ghanaian',
+  'Gibraltarian', 'Greek', 'Guatemalan', 'Guinean', 'Guyanese', 'Haitian', 'Honduran',
+  'Hong Kongers/ Hungarians', 'Hungarian', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish',
+  'Israeli', 'Italian', 'Ivorian', 'Jamaican', 'Japanese', 'Jordan', 'Kazakstani', 'Kenyan',
+  'Korean', 'Kosovarisch', 'Kuwaiti', 'Kyrgyz', 'Laotian', 'Latvian', 'Lebanese', 'Liberian',
+  'Libyan', 'Liechtensteiner', 'Lithuanian', 'Luxembourger', 'Macedonian', 'Malagasy',
+  'Malawian', 'Malaysian', 'Maldivian', 'Malian', 'Maltese', 'Martinican', 'Mauritian',
+  'Mexican', 'Moldovan', 'Mongolian', 'Moroccan', 'Mozambican', 'Myanmarese', 'Namibian',
+  'Nepalese', 'New Zealander', 'Nicaraguan', 'Nigerian', 'Nigerien', 'Northern Mariana Islander',
+  'Norwegian', 'Omani', 'Pakistani', 'Palestinian', 'Panamanian', 'Papua New Guinean',
+  'Peruvian', 'Philippine', 'Polish', 'Portuguese', 'Puerto Rican', 'Qatari', 'Reunionnais',
+  'Romanian', 'Russian', 'Rwandan', 'Salvadoran', 'Samoan', 'Saudi Arabian', 'Scots',
+  'Senegalese', 'Serbisch', 'Seychellois', 'Sierra Leonean', 'Singaporean', 'Slovak',
+  'South African', 'Spanish', 'Sri Lankan', 'St. Lucian', 'Sudanese', 'Surinamese', 'Swazi',
+  'Swedish', 'Swiss', 'Syrian', 'Taiwanese', 'Tanzanian', 'Thai', 'Togolese',
+  'Trinidad and Tobago', 'Tunisian', 'Turk', 'Turkish', 'Ugandan', 'Ukrainian', 'Uruguayan',
+  'Venezuelan', 'Vietnamese', 'Yemeni', 'Zambian', 'Zimbabwean'
+];
+const PERSONAL_GENDER_OPTIONS = ['Decline to Self Identify', 'Female', 'Male', 'Others'];
+const PERSONAL_RACE_OPTIONS = [
+  'American Indian / Alaska Native', 'Asian / Pacific Islander', 'Black / American African',
+  'Decline to Designate', 'Hispanic', 'Native Hawaiian', 'White'
+];
+const PERSONAL_VETERAN_OPTIONS = ['Decline to Designate', 'No', 'Yes'];
+const PERSONAL_DISABILITY_OPTIONS = [
+  "I don't wish to answer",
+  "No, I don't have a disability or a history / record of having a disability",
+  'Yes, I have a disability or have a history / record of having a disability'
+];
+const PERSONAL_NOTICE_PERIOD_OPTIONS = [
+  '1 Month', '2 Months', '3 Months', '7 Days', '15 Days or less', '45 Days', 'Any',
+  'Currently Serving Notice Period', 'Immediate Joiner', 'More than 3 Months'
+];
+const PERSONAL_CURRENCY_OPTIONS = Array.from(new Set([
+  'INR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'AED', 'SGD',
+  ...(typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('currency') : [])
+])).sort((left, right) => left.localeCompare(right));
+const PERSONAL_CTC_PERIOD_OPTIONS = ['Yearly', 'Hourly'];
+const withCurrentOption = (options: string[], current: unknown): string[] => {
+  const currentValue = typeof current === 'string' ? current : '';
+  return Array.from(new Set([...(currentValue ? [currentValue] : []), ...options]));
+};
+const getCompensationParts = (value: string) => {
+  const currencyCode = value.match(/\b[A-Z]{3}\b/i)?.[0].toUpperCase();
+  const currencySymbol = value.includes('₹') ? 'INR' : value.includes('$') ? 'USD' : '';
+  const periodValue = value.match(/\b(hourly|yearly|annual|pa)\b/i)?.[0].toLowerCase();
+  return {
+    currency: (currencyCode && PERSONAL_CURRENCY_OPTIONS.includes(currencyCode) ? currencyCode : undefined)
+      || currencySymbol
+      || 'INR',
+    amount: value.replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0] || '',
+    period: periodValue === 'hourly' ? 'Hourly' : 'Yearly'
+  };
+};
+const formatExperience = (experience: number) => {
+  const totalMonths = Math.max(0, Math.round(experience * 12));
+  return `${Math.floor(totalMonths / 12)} Years ${totalMonths % 12} Months`;
+};
+const getAgeFromDate = (value: string) => {
+  const dayFirstMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const isoMatch = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  const birthDate = dayFirstMatch
+    ? new Date(Number(dayFirstMatch[3]), Number(dayFirstMatch[2]) - 1, Number(dayFirstMatch[1]))
+    : isoMatch
+      ? new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]))
+      : new Date(value);
+  if (!value || Number.isNaN(birthDate.getTime())) return undefined;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (today.getMonth() < birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+  return age >= 0 ? age : undefined;
+};
 
 export const ApplicantDetail: React.FC = () => {
   const { selectedId, navigate, currentUser } = useAppStore();
@@ -79,6 +219,7 @@ export const ApplicantDetail: React.FC = () => {
   const [skillsExpandedPersonal, setSkillsExpandedPersonal] = useState(false);
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [personalForm, setPersonalForm] = useState<Record<string, any>>({});
+  const personalDetailsRef = useRef<HTMLDivElement>(null);
   const [isResumePanelOpen, setIsResumePanelOpen] = useState(false);
   const [resumeFullscreen, setResumeFullscreen] = useState(false);
   const [moreSubTabsOpen, setMoreSubTabsOpen] = useState(false);
@@ -91,6 +232,7 @@ export const ApplicantDetail: React.FC = () => {
   const avatarMenuRef = useRef<HTMLDivElement>(null);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const documentMenuRef = useRef<HTMLDivElement>(null);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [isEmailMergeDeactivated, setIsEmailMergeDeactivated] = useState(false);
   const [emailMergeOptOutUntil, setEmailMergeOptOutUntil] = useState('');
@@ -244,6 +386,9 @@ export const ApplicantDetail: React.FC = () => {
       }
       if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
         setSettingsMenuOpen(false);
+      }
+      if (documentMenuRef.current && !documentMenuRef.current.contains(event.target as Node)) {
+        setDocumentMenuId(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -502,6 +647,9 @@ export const ApplicantDetail: React.FC = () => {
   const [submissionJobSearch, setSubmissionJobSearch] = useState('');
   const [submissionBusinessUnit, setSubmissionBusinessUnit] = useState('Ampcus Tech Pvt Ltd.');
   const [submissionAssignedJobsOnly, setSubmissionAssignedJobsOnly] = useState(false);
+  const [submissionJobFilterOpen, setSubmissionJobFilterOpen] = useState(false);
+  const [submissionJobsPage, setSubmissionJobsPage] = useState(1);
+  const [submissionJobsPageSize, setSubmissionJobsPageSize] = useState(10);
   const [selectedSubmissionJobIds, setSelectedSubmissionJobIds] = useState<string[]>([]);
   const [submissionNoticePeriod, setSubmissionNoticePeriod] = useState('');
   const [submissionRelocation, setSubmissionRelocation] = useState<'Yes' | 'No'>('Yes');
@@ -534,6 +682,12 @@ export const ApplicantDetail: React.FC = () => {
   const [editStatusValue, setEditStatusValue] = useState('');
   const [editGroupValue, setEditGroupValue] = useState('');
 
+  useEffect(() => {
+    if (isEditingPersonal && activeSubTab === 'Personal Details') {
+      personalDetailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeSubTab, isEditingPersonal]);
+
   // Ratings state
   const [ratings, setRatings] = useState({
     technical: 4,
@@ -548,6 +702,7 @@ export const ApplicantDetail: React.FC = () => {
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [documentMenuId, setDocumentMenuId] = useState<string | null>(null);
+  const [documentMenuOpenUp, setDocumentMenuOpenUp] = useState(false);
   const [documentShareOpen, setDocumentShareOpen] = useState(false);
   const [documentShareRecipient, setDocumentShareRecipient] = useState('');
 
@@ -558,6 +713,7 @@ export const ApplicantDetail: React.FC = () => {
   useEffect(() => {
     setSelectedDocumentIds([]);
     setDocumentMenuId(null);
+    setDocumentMenuOpenUp(false);
     setDocumentShareOpen(false);
     ApiService.getApplicants().then((list) => {
       setAllApplicants(list);
@@ -896,6 +1052,10 @@ export const ApplicantDetail: React.FC = () => {
   };
 
   const avatarInitial = applicant.name.charAt(0).toUpperCase() || 'A';
+  const dateOfBirthForAge = isEditingPersonal
+    ? personalForm.dateOfBirth || ''
+    : applicant.dateOfBirth || applicant.dob || '';
+  const applicantAge = getAgeFromDate(dateOfBirthForAge);
   const openAvatarEditor = () => {
     setAvatarMenuOpen(false);
     setAvatarPreview(applicant.avatar || '');
@@ -927,7 +1087,12 @@ export const ApplicantDetail: React.FC = () => {
   const startEditPersonal = () => {
     if (!applicant) return;
     const [fName = '', ...lNames] = (applicant.name || '').split(' ');
+    const currentCTC = applicant.currentCTC || '';
+    const expectedCTC = applicant.expectedCTC || applicant.expectedSalary || '';
+    const currentCTCParts = getCompensationParts(currentCTC);
+    const expectedCTCParts = getCompensationParts(expectedCTC);
     setPersonalForm({
+      namePrefix: (applicant.namePrefix || '').replace(/\.$/, ''),
       firstName: applicant.firstName || fName || 'SIVAKRISHNAN',
       middleName: applicant.middleName || '',
       lastName: applicant.lastName || lNames.join(' ') || 'D',
@@ -949,33 +1114,40 @@ export const ApplicantDetail: React.FC = () => {
       state: applicant.state || 'Tamil Nadu',
       city: applicant.city || applicant.location?.split(',')[0]?.trim() || 'Coimbatore',
       country: applicant.country || 'India',
-      source: applicant.source || 'Naukri',
-      experienceYears: applicant.experienceYears || 9,
+      source: PERSONAL_SOURCE_ALIASES[applicant.source || ''] || applicant.source || 'Naukri',
+      experienceYears: applicant.experienceYears ?? 0,
       zipCode: applicant.zipCode || '',
       referredBy: applicant.referredBy || '',
-      status: applicant.status || 'New',
       relevantExperience: applicant.relevantExperience || '',
       assignedRecruiter: applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar',
       currentDesignation: applicant.currentDesignation || 'Technical Support Engineer (L2)',
       applicantGroup: applicant.applicantGroup || '',
-      currentCTC: applicant.currentCTC || 'N/A',
-      expectedCTC: applicant.expectedCTC || applicant.expectedSalary || 'N/A',
+      currentCTC,
+      currentCTCCurrency: currentCTCParts.currency,
+      currentCTCAmount: currentCTCParts.amount,
+      currentCTCPeriod: currentCTCParts.period,
+      currentCTCOriginal: currentCTC,
+      expectedCTC,
+      expectedCTCCurrency: expectedCTCParts.currency,
+      expectedCTCAmount: expectedCTCParts.amount,
+      expectedCTCPeriod: expectedCTCParts.period,
+      expectedCTCOriginal: expectedCTC,
       currentCompany: applicant.currentCompany || 'Infosys PVT LTD',
       panCard: applicant.panCard || '',
       aadharNumber: applicant.aadharNumber || '',
       noticePeriod: applicant.noticePeriod || '',
-      maritalStatus: applicant.maritalStatus || 'Single',
-      preferredShift: applicant.preferredShift || 'Day',
+      maritalStatus: applicant.maritalStatus || '',
+      preferredShift: applicant.preferredShift || '',
       passportNumber: applicant.passportNumber || '',
       skills: (applicant.skills || []).join(', '),
       primarySkills: (applicant.primarySkills || []).join(', '),
       willingToRelocate: applicant.willingToRelocate !== false,
       technology: applicant.technology || '',
       industry: applicant.industry || '',
-      nationality: applicant.nationality || 'Indian',
+      nationality: PERSONAL_NATIONALITY_ALIASES[applicant.nationality || ''] || applicant.nationality || '',
+      customNationality: applicant.customFields?.nationality || '',
       referenceId: applicant.referenceId || '',
       applicantRemarks: applicant.applicantRemarks || '',
-      noticeEligibility: applicant.noticeEligibility || '',
       gender: applicant.gender || '',
       raceEthnicity: applicant.raceEthnicity || '',
       veteranStatus: applicant.veteranStatus || '',
@@ -988,6 +1160,34 @@ export const ApplicantDetail: React.FC = () => {
   const handleSavePersonal = async () => {
     if (!applicant) return;
     const fullName = `${personalForm.firstName || ''} ${personalForm.middleName || ''} ${personalForm.lastName || ''}`.replace(/\s+/g, ' ').trim() || applicant.name;
+    const {
+      currentCTCCurrency,
+      currentCTCAmount,
+      currentCTCPeriod,
+      currentCTCOriginal,
+      expectedCTCCurrency,
+      expectedCTCAmount,
+      expectedCTCPeriod,
+      expectedCTCOriginal,
+      customNationality,
+      ...personalFields
+    } = personalForm;
+    const originalCurrentCTCParts = getCompensationParts(currentCTCOriginal);
+    const originalExpectedCTCParts = getCompensationParts(expectedCTCOriginal);
+    const currentCTCUnchanged = !/\b(daily|weekly|monthly)\b/i.test(currentCTCOriginal)
+      && currentCTCCurrency === originalCurrentCTCParts.currency
+      && currentCTCAmount === originalCurrentCTCParts.amount
+      && currentCTCPeriod === originalCurrentCTCParts.period;
+    const expectedCTCUnchanged = !/\b(daily|weekly|monthly)\b/i.test(expectedCTCOriginal)
+      && expectedCTCCurrency === originalExpectedCTCParts.currency
+      && expectedCTCAmount === originalExpectedCTCParts.amount
+      && expectedCTCPeriod === originalExpectedCTCParts.period;
+    const currentCTC = currentCTCUnchanged
+      ? currentCTCOriginal
+      : currentCTCAmount ? `${currentCTCCurrency} ${currentCTCAmount} ${currentCTCPeriod}` : '';
+    const expectedCTC = expectedCTCUnchanged
+      ? expectedCTCOriginal
+      : expectedCTCAmount ? `${expectedCTCCurrency} ${expectedCTCAmount} ${expectedCTCPeriod}` : '';
     const parsedSkills = typeof personalForm.skills === 'string'
       ? personalForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
       : applicant.skills;
@@ -997,11 +1197,19 @@ export const ApplicantDetail: React.FC = () => {
 
     const updatedApplicant: Applicant = {
       ...applicant,
-      ...personalForm,
+      ...personalFields,
       name: fullName,
       skills: parsedSkills.length > 0 ? parsedSkills : applicant.skills,
       primarySkills: parsedPrimary,
-      experienceYears: Number(personalForm.experienceYears) || applicant.experienceYears,
+      experienceYears: Number.isFinite(Number(personalFields.experienceYears))
+        ? Number(personalFields.experienceYears)
+        : applicant.experienceYears,
+      currentCTC,
+      expectedCTC,
+      customFields: {
+        ...applicant.customFields,
+        nationality: customNationality
+      },
     };
 
     setApplicant(updatedApplicant);
@@ -1345,6 +1553,27 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     await persistApplicantDocuments(next);
     setDocumentFormOpen(false); setDocumentTitle(''); setDocumentDescription(''); setDocumentFile(null); setDocumentType('');
     showToast('Document uploaded successfully.');
+  };
+  const handleDocumentMenuToggle = (docId: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (documentMenuId === docId) {
+      setDocumentMenuId(null);
+      setDocumentMenuOpenUp(false);
+      return;
+    }
+    const button = event.currentTarget;
+    const buttonRect = button.getBoundingClientRect();
+    const container = button.closest('[data-section="documents"]');
+    const containerRect = container?.getBoundingClientRect();
+
+    const spaceBelowInContainer = containerRect ? containerRect.bottom - buttonRect.bottom : 200;
+    const spaceAboveInContainer = containerRect ? buttonRect.top - containerRect.top : 200;
+    const spaceBelowViewport = window.innerHeight - buttonRect.bottom;
+
+    const shouldOpenUp = (spaceBelowInContainer < 150 && spaceAboveInContainer >= 80) || spaceBelowViewport < 160;
+
+    setDocumentMenuOpenUp(shouldOpenUp);
+    setDocumentMenuId(docId);
   };
   const runDocumentToolbarAction = async (action: 'download' | 'copy' | 'share') => {
     const selectedDocs = applicantDocuments.filter((doc) => selectedDocumentIds.includes(doc.id));
@@ -2091,6 +2320,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     const matchesAssigned = !submissionAssignedJobsOnly || job.assignedRecruiter === currentUser?.name || job.recruiterId === currentUser?.id;
     return matchesSearch && matchesBusinessUnit && matchesAssigned && ['Open', 'Active', 'Sourcing', 'In Review'].includes(job.status);
   });
+  const submitJobsPageCount = Math.max(1, Math.ceil(filteredSubmitJobs.length / submissionJobsPageSize));
+  const visibleSubmitJobs = filteredSubmitJobs.slice((submissionJobsPage - 1) * submissionJobsPageSize, submissionJobsPage * submissionJobsPageSize);
 
   const openSubmissionDetails = () => {
     if (!selectedSubmissionJobIds.length) { showToast('Select at least one job to continue.', 'error'); return; }
@@ -2193,10 +2424,38 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
         jobTitle: job.title,
         client: job.client,
         recruiter: currentUser?.name || job.assignedRecruiter,
-        billRate: job.billRate || 0,
+        billRate: Number(submissionBillRate) || job.billRate || 0,
         payRate: job.payRate || 0,
         status: isTag ? 'Pipeline' : 'Waiting for Evaluation by Internal Reviewer',
-        submissionDetails: isTag ? { action: 'Tag to Job' } : { action: 'Quick Submit' }
+        submissionDetails: {
+          action: isTag ? 'Tag to Job' : 'Quick Submit',
+          noticePeriod: submissionNoticePeriod,
+          currency: submissionCurrency,
+          rateType: submissionRateType,
+          additionalAttachmentNames: submissionAdditionalAttachments.map((file) => file.name),
+          eForm: submissionEForm,
+          recipients: submissionRecipients,
+          additionalNotifiers: submissionNotifiers,
+          otherEmailIds: submissionOtherEmails,
+          comments: submissionComments,
+          employerDetails: submissionEmployer.mode
+        },
+        quickSubmissionDetails: {
+          noticePeriod: submissionNoticePeriod,
+          relocation: submissionRelocation,
+          currency: submissionCurrency,
+          rateType: submissionRateType,
+          resumeName: submissionResumeName,
+          videoLink: submissionVideoLink,
+          availableDocument: submissionResumeName,
+          additionalAttachmentName: submissionAdditionalAttachments.map((file) => file.name).join(', '),
+          eForm: submissionEForm,
+          recipients: submissionRecipients,
+          additionalNotifiers: submissionNotifiers,
+          otherEmailIds: submissionOtherEmails,
+          comments: submissionComments,
+          employerDetails: submissionEmployer.mode
+        }
       });
       setSubmissionRecords(await ApiService.getSubmissions());
       setDialog(null);
@@ -2206,18 +2465,28 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
     }
   };
 
+  const untagSubmission = async (submission: Submission) => {
+    if (!window.confirm(`Remove ${applicant.name} from ${submission.jobTitle}'s pipeline?`)) return;
+    try {
+      await ApiService.deleteSubmission(submission.id);
+      setSubmissionRecords(await ApiService.getSubmissions());
+      showToast(`${applicant.name} removed from ${submission.jobTitle}'s pipeline.`);
+    } catch {
+      showToast('The applicant could not be removed from this job pipeline.', 'error');
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-[#F4F6F9] text-[#222] dark:bg-[#0F172A] dark:text-slate-100">
       {/* Toast Notification - z-[9999] so it's always visible above all modals/dialogs */}
       {toastMessage && (
         <div
-          className={`fixed right-6 top-6 z-[9999] flex items-center gap-2.5 rounded-lg border px-4 py-3 text-xs font-medium text-white shadow-2xl transition-all duration-200 animate-in fade-in slide-in-from-top-4 ${
-            toastType === 'error'
-              ? 'border-red-600 bg-red-600 shadow-red-500/20'
-              : toastType === 'info'
+          className={`fixed right-6 top-6 z-[9999] flex items-center gap-2.5 rounded-lg border px-4 py-3 text-xs font-medium text-white shadow-2xl transition-all duration-200 animate-in fade-in slide-in-from-top-4 ${toastType === 'error'
+            ? 'border-red-600 bg-red-600 shadow-red-500/20'
+            : toastType === 'info'
               ? 'border-blue-600 bg-blue-600 shadow-blue-500/20'
               : 'border-[#2F80ED] bg-[#2F80ED] shadow-blue-500/20'
-          }`}
+            }`}
         >
           {toastType === 'error' ? (
             <AlertCircle className="h-4 w-4 shrink-0 text-white" />
@@ -2292,16 +2561,16 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             <div className="mb-3 flex items-center justify-between"><h1 className="text-lg font-semibold text-slate-800">{displayName}'s Profile</h1><button type="button" aria-label="Close job selection" onClick={() => setDialog(null)} className="rounded bg-[#4387F5] px-3 py-1.5 text-sm font-semibold text-white">←</button></div>
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2.3fr)_minmax(280px,0.95fr)]">
               <section className="rounded border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="mb-2 flex flex-wrap items-center gap-4"><label className="flex items-center gap-3 text-xs text-slate-500">Business Units<select value={submissionBusinessUnit} onChange={(event) => setSubmissionBusinessUnit(event.target.value)} className="min-w-64 border border-slate-300 bg-slate-50 px-2 py-2 text-slate-700"><option>All Business Units</option>{Array.from(new Set(submissionJobs.map((job) => job.businessUnit).filter(Boolean))).map((unit) => <option key={unit}>{unit}</option>)}</select></label>{selectedSubmissionJobIds.length > 0 && <button type="button" onClick={openSubmissionDetails} className="ml-auto rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">Submit to Jobs</button>}</div>
-                <div className="flex items-center justify-between gap-3"><div className="flex min-w-0 flex-1"><input value={submissionJobSearch} onChange={(event) => setSubmissionJobSearch(event.target.value)} placeholder="Job Code, Job Title, Client Job ID, Client" className="w-full max-w-[420px] border border-slate-300 px-2.5 py-1.5 text-xs outline-none focus:border-blue-500" /><button type="button" onClick={() => setSubmissionAssignedJobsOnly((value) => !value)} className={`rounded-r px-3 py-1.5 text-xs font-semibold text-white ${submissionAssignedJobsOnly ? 'bg-slate-600' : 'bg-[#4387F5]'}`}>Assigned Jobs ⌄</button></div><label className="flex items-center gap-1 text-[10px] text-slate-500">Show<select className="border border-slate-300 px-2 py-1"><option>10</option><option>25</option><option>50</option></select>entries</label></div>
+                <div className="mb-2 flex flex-wrap items-center gap-4"><label className="flex items-center gap-3 text-xs text-slate-500">Business Units<select value={submissionBusinessUnit} onChange={(event) => { setSubmissionBusinessUnit(event.target.value); setSubmissionJobsPage(1); }} className="min-w-64 border border-slate-300 bg-slate-50 px-2 py-2 text-slate-700"><option>All Business Units</option>{Array.from(new Set(submissionJobs.map((job) => job.businessUnit).filter(Boolean))).map((unit) => <option key={unit}>{unit}</option>)}</select></label>{selectedSubmissionJobIds.length > 0 && <button type="button" onClick={openSubmissionDetails} className="ml-auto rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">Submit to Jobs</button>}</div>
+                <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex min-w-0 flex-1"><input value={submissionJobSearch} onChange={(event) => { setSubmissionJobSearch(event.target.value); setSubmissionJobsPage(1); }} placeholder="Job Code, Job Title, Client Job ID, Client" className="w-full max-w-[420px] border border-slate-300 px-2.5 py-1.5 text-xs outline-none focus:border-blue-500" /><div className="relative"><button type="button" aria-haspopup="menu" aria-expanded={submissionJobFilterOpen} onClick={() => setSubmissionJobFilterOpen((open) => !open)} className="rounded-r bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white">{submissionAssignedJobsOnly ? 'Assigned Jobs' : 'All Jobs'} ⌄</button>{submissionJobFilterOpen && <div role="menu" className="absolute right-0 top-full z-30 mt-1 w-36 rounded border border-slate-200 bg-white py-1 shadow-lg"><button type="button" role="menuitem" onClick={() => { setSubmissionAssignedJobsOnly(false); setSubmissionJobsPage(1); setSubmissionJobFilterOpen(false); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-blue-50">All Jobs</button><button type="button" role="menuitem" onClick={() => { setSubmissionAssignedJobsOnly(true); setSubmissionJobsPage(1); setSubmissionJobFilterOpen(false); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-blue-50">Assigned Jobs</button></div>}</div></div><label className="flex items-center gap-1 text-[10px] text-slate-500">Show<select value={submissionJobsPageSize} onChange={(event) => { setSubmissionJobsPageSize(Number(event.target.value)); setSubmissionJobsPage(1); }} className="border border-slate-300 px-2 py-1"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select>entries</label></div>
                 <div className="mt-8 overflow-x-auto"><table className="w-full min-w-[750px] text-left text-xs"><thead><tr className="border-y border-slate-300 text-[10px] font-bold uppercase text-slate-600"><th className="w-10 px-1 py-2"><input aria-label="Select all available jobs" type="checkbox" checked={filteredSubmitJobs.length > 0 && filteredSubmitJobs.every((job) => selectedSubmissionJobIds.includes(job.id))} onChange={(event) => setSelectedSubmissionJobIds(event.target.checked ? [...new Set([...selectedSubmissionJobIds, ...filteredSubmitJobs.map((job) => job.id)])] : selectedSubmissionJobIds.filter((id) => !filteredSubmitJobs.some((job) => job.id === id)))} /></th><th className="px-2 py-2">Job Code ↕</th><th className="px-2 py-2">Job Title ↕</th><th className="px-2 py-2">Client Job ID ↕</th><th className="px-2 py-2">Client ↕</th><th className="px-2 py-2">City ↕</th><th className="px-2 py-2">Respond By ↕</th></tr></thead><tbody className="divide-y divide-slate-200">
-                  {filteredSubmitJobs.length ? filteredSubmitJobs.map((job) => {
+                  {filteredSubmitJobs.length ? visibleSubmitJobs.map((job) => {
                     const alreadySubmitted = applicantSubmissions.some((submission) => submission.jobId === job.id);
                     const checked = selectedSubmissionJobIds.includes(job.id);
                     return <tr key={job.id} className={`${checked ? 'bg-slate-50' : ''} ${alreadySubmitted ? 'opacity-50' : 'hover:bg-slate-50'}`}><td className="px-1 py-2"><input type="checkbox" aria-label={`Select ${job.title}`} disabled={alreadySubmitted} checked={checked} onChange={() => setSelectedSubmissionJobIds((ids) => checked ? ids.filter((id) => id !== job.id) : [...ids, job.id])} /></td><td className="px-2 py-2 text-blue-600">{job.code}</td><td className="px-2 py-2">{job.title}</td><td className="px-2 py-2">{job.clientJobId || 'N/A'}</td><td className="px-2 py-2">{job.client || 'N/A'}</td><td className="px-2 py-2">{job.location || 'N/A'}</td><td className="px-2 py-2">{job.respondBy || 'Open Until Filled'}{alreadySubmitted && <span className="ml-2 text-[10px] text-slate-400">Already submitted</span>}</td></tr>;
                   }) : <tr><td colSpan={7} className="px-3 py-8 text-center text-xs text-slate-500">No available jobs match these filters.</td></tr>}
                 </tbody></table></div>
-                <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500"><span>Showing {filteredSubmitJobs.length ? 1 : 0} to {filteredSubmitJobs.length} of {filteredSubmitJobs.length} entries</span><span>Selected: {selectedSubmissionJobIds.length}</span></div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500"><span>Showing {filteredSubmitJobs.length ? (submissionJobsPage - 1) * submissionJobsPageSize + 1 : 0} to {Math.min(submissionJobsPage * submissionJobsPageSize, filteredSubmitJobs.length)} of {filteredSubmitJobs.length} entries · Selected: {selectedSubmissionJobIds.length}</span><div className="flex items-center gap-1"><button type="button" aria-label="Previous jobs page" disabled={submissionJobsPage <= 1} onClick={() => setSubmissionJobsPage((page) => Math.max(1, page - 1))} className="rounded border px-2 py-1 disabled:opacity-40">‹</button><span className="px-2">{submissionJobsPage} / {submitJobsPageCount}</span><button type="button" aria-label="Next jobs page" disabled={submissionJobsPage >= submitJobsPageCount} onClick={() => setSubmissionJobsPage((page) => Math.min(submitJobsPageCount, page + 1))} className="rounded border px-2 py-1 disabled:opacity-40">›</button></div></div>
               </section>
               <aside className="rounded border border-slate-200 bg-white p-5 shadow-sm"><h2 className="mb-4 text-base font-semibold text-slate-800">Profile Details</h2>{[['Name', applicant.name], ['Email Address', applicant.email], ['Mobile Number', applicant.phone], ['City', applicant.location], ['Address', applicant.address || '']].map(([label, value]) => <div key={label} className="mb-4"><p className="text-[11px] text-slate-500">{label}</p><p className="mt-0.5 break-words text-xs text-slate-800">{value || 'N/A'}</p></div>)}</aside>
             </div>
@@ -2359,6 +2628,23 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <label className="text-slate-500">Candidate Id</label><input readOnly value={applicant.applicantId || applicant.id} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
               <label className="text-slate-500">Candidate Name</label><input readOnly value={applicant.name} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
               <label className="text-slate-500">Email Address</label><input readOnly value={applicant.email} className="border border-slate-300 bg-white px-2 py-2 text-xs text-slate-700 dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+              {jobActionSelectedJobId && <div className="col-span-2 mt-2 space-y-3 border-t border-slate-200 pt-4 dark:border-[#334155]">
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Standard Fields</h3>
+                <div className="grid grid-cols-[125px_minmax(0,1fr)] items-center gap-x-4 gap-y-3">
+                  <label htmlFor="tag-notice-period" className="text-slate-500">Notice Period</label><input id="tag-notice-period" value={submissionNoticePeriod} onChange={(event) => setSubmissionNoticePeriod(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+                  <label htmlFor="tag-bill-rate" className="text-slate-500">Bill Rate</label><div className="flex gap-1"><select aria-label="Currency" value={submissionCurrency} onChange={(event) => setSubmissionCurrency(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select><input id="tag-bill-rate" type="number" value={submissionBillRate} onChange={(event) => setSubmissionBillRate(event.target.value)} className="min-w-0 flex-1 border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" /><select aria-label="Bill rate period" value={submissionRateType} onChange={(event) => setSubmissionRateType(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>Yearly</option><option>Monthly</option><option>Hourly</option></select></div>
+                  <span className="text-slate-500">Relocation</span><div className="flex gap-5">{(['Yes', 'No'] as const).map((value) => <label key={value} className="flex items-center gap-1.5"><input type="radio" name="tag-relocation" checked={submissionRelocation === value} onChange={() => setSubmissionRelocation(value)} />{value}</label>)}</div>
+                  <label htmlFor="tag-resume" className="text-slate-500">Resume</label><select id="tag-resume" value={submissionResumeName} onChange={(event) => setSubmissionResumeName(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option>{(applicant.documents || []).map((document, index) => <option key={document.id || index} value={document.name}>{document.name}</option>)}</select>
+                  <label htmlFor="tag-video-link" className="text-slate-500">Video Link</label><input id="tag-video-link" value={submissionVideoLink} onChange={(event) => setSubmissionVideoLink(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+                  <label htmlFor="tag-additional-attachment" className="text-slate-500">Additional Attachment</label><input id="tag-additional-attachment" type="file" multiple onChange={(event) => setSubmissionAdditionalAttachments(Array.from(event.target.files || []))} className="block max-w-full text-[11px]" />
+                  <label htmlFor="tag-eforms" className="text-slate-500">eForms</label><select id="tag-eforms" value={submissionEForm} onChange={(event) => setSubmissionEForm(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option><option>Candidate Consent</option><option>Right to Represent</option><option>Employment Application</option></select>
+                  <label htmlFor="tag-recipients" className="text-slate-500">Recipients</label><input id="tag-recipients" value={submissionRecipients} onChange={(event) => setSubmissionRecipients(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+                  <label htmlFor="tag-notifiers" className="text-slate-500">Additional Notifiers</label><input id="tag-notifiers" value={submissionNotifiers} onChange={(event) => setSubmissionNotifiers(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+                  <label htmlFor="tag-other-emails" className="text-slate-500">Other Email IDs</label><input id="tag-other-emails" value={submissionOtherEmails} onChange={(event) => setSubmissionOtherEmails(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+                  <label htmlFor="tag-comments" className="self-start pt-2 text-slate-500">Comments</label><textarea id="tag-comments" rows={3} value={submissionComments} onChange={(event) => setSubmissionComments(event.target.value)} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white" />
+                  <label htmlFor="tag-employer-details" className="text-slate-500">Employer Details</label><select id="tag-employer-details" value={submissionEmployer.mode} onChange={(event) => setSubmissionEmployer({ ...submissionEmployer, mode: event.target.value })} className="border border-slate-300 bg-white px-2 py-2 text-xs dark:border-[#475569] dark:bg-[#0F172A] dark:text-white"><option>Select</option><option>Active Employer</option><option>Previous Employer</option><option>New Employer</option></select>
+                </div>
+              </div>}
               <span /><div className="flex gap-2 pt-1"><button type="button" onClick={() => void completeJobAction()} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">{dialog === 'tag-to-job' ? 'Tag' : 'Submit'}</button><button type="button" onClick={() => setDialog(null)} className="rounded bg-[#4387F5] px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600">Cancel</button></div>
             </div>
           </aside>
@@ -2413,11 +2699,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 setActiveSubTab(tab);
                 setMoreSubTabsOpen(false);
               }}
-              className={`whitespace-nowrap px-3 py-1.5 font-medium transition-colors ${
-                activeSubTab === tab
-                  ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
-                  : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
-              }`}
+              className={`whitespace-nowrap px-3 py-1.5 font-medium transition-colors ${activeSubTab === tab
+                ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
+                : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
+                }`}
             >
               {tab}
             </button>
@@ -2431,11 +2716,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               setDynamicTab(currentDynamicTab);
               setMoreSubTabsOpen(false);
             }}
-            className={`whitespace-nowrap px-3 py-1.5 font-medium transition-colors ${
-              activeSubTab === currentDynamicTab
-                ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
-                : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
-            }`}
+            className={`whitespace-nowrap px-3 py-1.5 font-medium transition-colors ${activeSubTab === currentDynamicTab
+              ? 'border-b-2 border-[#1877F2] font-semibold text-[#1877F2]'
+              : 'text-[#555] hover:text-[#1877F2] dark:text-[#BBB] dark:hover:text-white'
+              }`}
           >
             {currentDynamicTab}
           </button>
@@ -2493,9 +2777,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               title="Settings"
               aria-label="Applicant Settings"
               aria-expanded={settingsMenuOpen}
-              className={`rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-[#334155] ${
-                settingsMenuOpen ? 'bg-blue-50 text-[#1877F2] dark:bg-[#334155] dark:text-blue-400' : ''
-              }`}
+              className={`rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-[#334155] ${settingsMenuOpen ? 'bg-blue-50 text-[#1877F2] dark:bg-[#334155] dark:text-blue-400' : ''
+                }`}
               onClick={() => setSettingsMenuOpen((prev) => !prev)}
             >
               <Settings className="h-4 w-4" />
@@ -2632,10 +2915,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           </div>
           <button
             type="button"
-            title="Share via Email"
-            aria-label="Share via Email"
+            title="Share Profile"
             className="rounded p-1 hover:bg-gray-100 dark:hover:bg-[#334155]"
-            onClick={() => navigate('applicant-email-share', applicant.id)}
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href);
+                showToast('Applicant profile link copied to clipboard.');
+              }
+            }}
           >
             <Share2 className="h-4 w-4" />
           </button>
@@ -2668,6 +2955,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     setSubmissionJobSearch('');
                     setSubmissionBusinessUnit('Ampcus Tech Pvt Ltd.');
                     setSubmissionAssignedJobsOnly(false);
+                    setSubmissionJobsPage(1);
                     setDialog('submit-to-job');
                   }}
                   className="block w-full px-3 py-1.5 text-left text-xs text-[#333] hover:bg-gray-100 dark:text-white dark:hover:bg-[#334155]"
@@ -2742,15 +3030,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       </div>
 
       {/* Main 2-Column Body Content */}
-      <div className={`applicant-detail-main p-3 transition-all ${
-        isResumePanelOpen
-          ? resumeFullscreen
-            ? 'hidden'
-            : 'lg:pr-[49%] xl:pr-[46%]'
-          : sidebarCollapsed
-          ? 'sidebar-collapsed pr-4'
-          : 'sidebar-expanded lg:pr-[318px]'
-      }`}>
+      <div className={`p-3 transition-all ${isResumePanelOpen
+        ? resumeFullscreen
+          ? 'hidden'
+          : 'lg:pr-[49%] xl:pr-[46%]'
+        : sidebarCollapsed
+          ? 'pr-4'
+          : 'lg:pr-[318px]'
+        }`}>
         <div className="space-y-3.5">
           {/* 1. Candidate Header Card */}
           <div className="relative z-20 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
@@ -2911,7 +3198,6 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             'Timeline Activities',
                             'Create Task',
                             'Add Note',
-                            'Matching Jobs',
                             'Send Email'
                           ].map((item) => (
                             <button
@@ -2923,7 +3209,6 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                                 if (item === 'Timeline Activities') setIsTimelineDrawerOpen(true);
                                 else if (item === 'Create Task') setDialog('task');
                                 else if (item === 'Add Note') setDialog('note');
-                                else if (item === 'Matching Jobs') navigate('matching-jobs', applicant.id);
                                 else if (item === 'Send Email') openEmailComposer();
                                 else if (item === 'Print Dossier') setDialog('ampcus-print');
                                 else showToast(`${item} recorded.`);
@@ -2974,18 +3259,16 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={() => setHeaderViewMode('applicant')}
-                      className={`px-2 py-0.5 rounded-sm transition-colors ${
-                        headerViewMode === 'applicant' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]'
-                      }`}
+                      className={`px-2 py-0.5 rounded-sm transition-colors ${headerViewMode === 'applicant' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]'
+                        }`}
                     >
                       Applicant
                     </button>
                     <button
                       type="button"
                       onClick={() => setHeaderViewMode('submission')}
-                      className={`px-2 py-0.5 rounded-sm transition-colors ${
-                        headerViewMode === 'submission' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]'
-                      }`}
+                      className={`px-2 py-0.5 rounded-sm transition-colors ${headerViewMode === 'submission' ? 'bg-[#2F80ED] text-white' : 'text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]'
+                        }`}
                     >
                       Submission
                     </button>
@@ -3050,282 +3333,278 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           {activeSubTab === 'Snapshot' && (
             <>
               {/* 2. Notes Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#1F2937] dark:text-white">Notes</span>
-                <button
-                  type="button"
-                  onClick={() => setActiveNotesFilter('applicants')}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${
-                    activeNotesFilter === 'applicants' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
-                  }`}
-                >
-                  Applicants ({notesSourceCounts.applicants})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveNotesFilter('submissions')}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${
-                    activeNotesFilter === 'submissions' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
-                  }`}
-                >
-                  Submissions ({notesSourceCounts.submissions})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveNotesFilter('pipeline')}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${
-                    activeNotesFilter === 'pipeline' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
-                  }`}
-                >
-                  Pipeline ({notesSourceCounts.pipeline})
-                </button>
+              <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#1F2937] dark:text-white">Notes</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNotesFilter('applicants')}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${activeNotesFilter === 'applicants' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
+                        }`}
+                    >
+                      Applicants ({notesSourceCounts.applicants})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNotesFilter('submissions')}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${activeNotesFilter === 'submissions' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
+                        }`}
+                    >
+                      Submissions ({notesSourceCounts.submissions})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNotesFilter('pipeline')}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${activeNotesFilter === 'pipeline' ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666]'
+                        }`}
+                    >
+                      Pipeline ({notesSourceCounts.pipeline})
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      title="Filter Notes"
+                      aria-label="Filter notes"
+                      aria-expanded={notesFilterOpen}
+                      onClick={() => setNotesFilterOpen((open) => !open)}
+                      className="rounded p-1 text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]"
+                    >
+                      <Filter className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNoteSubject(`New Note Created for ${displayName} - ${displayId}.`);
+                        setDialog('note');
+                      }}
+                      className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+
+                {notesFilterOpen && <div className="grid grid-cols-1 gap-3 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 dark:border-[#334155] dark:bg-[#0F172A] sm:grid-cols-2 xl:grid-cols-5">
+                  <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Search notes<input type="search" value={notesSearch} onChange={(event) => setNotesSearch(event.target.value)} placeholder="Subject, text, job, client…" className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Added by<select value={notesAuthorFilter} onChange={(event) => setNotesAuthorFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Any author</option>{notesAuthorOptions.map((author) => <option key={author} value={author}>{author}</option>)}</select></label>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Priority<select value={notesPriorityFilter} onChange={(event) => setNotesPriorityFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Any priority</option><option>Urgent</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">From date<input type="date" value={notesDateFrom} onChange={(event) => setNotesDateFrom(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">To date<input type="date" value={notesDateTo} onChange={(event) => setNotesDateTo(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <div className="flex items-end justify-between gap-2 sm:col-span-2 xl:col-span-5"><span className="text-[11px] text-[#64748B]">Showing {filteredNotes.length} of {notesSourceCounts[activeNotesFilter]} notes</span><button type="button" onClick={() => { setNotesSearch(''); setNotesAuthorFilter(''); setNotesPriorityFilter(''); setNotesDateFrom(''); setNotesDateTo(''); }} className="text-[11px] font-semibold text-[#2F80ED] hover:underline">Clear filters</button></div>
+                </div>}
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
+                        <th className="px-4 py-2">Added By / On</th>
+                        <th className="px-4 py-2">Notes / Description</th>
+                        <th className="px-4 py-2 text-right">Action / Priority</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
+                      {filteredNotes.length > 0 ? (
+                        filteredNotes.map((n) => (
+                          <tr key={n.id} className="hover:bg-gray-50 dark:hover:bg-[#22334D]">
+                            <td className="whitespace-nowrap px-4 py-2.5 text-[#555] dark:text-[#AAA]">
+                              <span className="font-medium text-[#222] dark:text-slate-100">{n.author}</span>
+                              <span className="block text-[10px] text-[#888]">{n.date}</span>
+                            </td>
+                            <td className="px-4 py-2.5 text-[#333] dark:text-[#DDD]">
+                              {n.subject && (
+                                <div className="font-semibold text-xs text-[#1F2937] dark:text-white mb-0.5">
+                                  {n.subject}
+                                </div>
+                              )}
+                              <div className="whitespace-pre-wrap">{n.text}</div>
+                              <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-[#666] dark:text-[#AAA]">
+                                {n.job && <span className="text-[#2F80ED]">Job: {n.job}</span>}
+                                {n.client && <span>Client: {n.client}</span>}
+                                {n.action && <span className="rounded bg-gray-100 px-1.5 py-0.2 dark:bg-[#0F172A]">Action: {n.action}</span>}
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-medium">
+                              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${n.priority === 'Urgent' || n.priority === 'High'
+                                ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400'
+                                : 'bg-blue-50 text-[#2F80ED] dark:bg-blue-950/40 dark:text-blue-300'
+                                }`}>
+                                {n.priority || 'Medium'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-6 text-center text-xs text-[#888]">
+                            {noteEntries.some((note) => note.source === activeNotesFilter) ? 'No notes match the selected filters.' : 'No data available'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  title="Filter Notes"
-                  aria-label="Filter notes"
-                  aria-expanded={notesFilterOpen}
-                  onClick={() => setNotesFilterOpen((open) => !open)}
-                  className="rounded p-1 text-[#666] hover:bg-gray-100 dark:hover:bg-[#334155]"
-                >
-                  <Filter className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNoteSubject(`New Note Created for ${displayName} - ${displayId}.`);
-                    setDialog('note');
-                  }}
-                  className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8] transition-colors"
-                >
-                  + Add
-                </button>
+              {/* 3. Documents Section */}
+              <div data-section="documents" className="relative rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                  <span className="text-sm font-semibold text-[#1F2937] dark:text-white">Documents</span>
+                  <div className="flex items-center divide-x divide-[#CBD5E1] rounded border border-[#CBD5E1] text-[#687789] dark:divide-[#334155] dark:border-[#334155] dark:text-[#AAA]">
+                    <button type="button" title="Share selected documents" onClick={() => void runDocumentToolbarAction('share')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Share2 className="h-3.5 w-3.5" /></button>
+                    <button type="button" title="Copy selected documents" onClick={() => void runDocumentToolbarAction('copy')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Copy className="h-3.5 w-3.5" /></button>
+                    <button type="button" title="Download selected documents" onClick={() => void runDocumentToolbarAction('download')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Download className="h-3.5 w-3.5" /></button>
+                    <button type="button" title="Add Document" onClick={() => setDocumentFormOpen((open) => !open)} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Plus className="h-4 w-4" /></button>
+                  </div>
+                </div>
+
+                {documentFormOpen && <div className="border-b border-[#E2E8F0] px-4 py-4 dark:border-[#334155]">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <label className="block space-y-1 text-[11px] text-[#64748B]">Document Type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option>{['Driving License', 'EMI File', 'Employment Application Form', 'Interview Feedback', 'Passport', 'Resume', 'SSN', 'Transcripts'].map((type) => <option key={type}>{type}</option>)}</select></label>
+                    <label className="block space-y-1 text-[11px] text-[#64748B]">Document Title<input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Enter document title" className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+                    <label className="block space-y-1 text-[11px] text-[#64748B]">Upload Document<input type="file" onChange={(event) => setDocumentFile(event.target.files?.[0] || null)} className="block w-full text-[11px] text-[#334155] file:mr-2 file:border file:border-[#CBD5E1] file:bg-white file:px-2 file:py-1.5 dark:text-white" /></label>
+                  </div>
+                  <label className="mt-3 block space-y-1 text-[11px] text-[#64748B]">Description<textarea rows={2} value={documentDescription} onChange={(event) => setDocumentDescription(event.target.value)} className="w-full resize-y border border-[#CBD5E1] bg-[#F8F8F8] p-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
+                  <div className="mt-3 flex gap-2"><button type="button" onClick={() => void handleDocumentUpload()} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white hover:bg-[#1D6FD8]">Save</button><button type="button" onClick={() => { setDocumentFormOpen(false); setDocumentFile(null); setDocumentTitle(''); setDocumentDescription(''); }} className="rounded border border-[#CBD5E1] bg-white px-4 py-2 text-xs text-[#64748B] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white">Cancel</button></div>
+                </div>}
+
+                <div className="space-y-2 p-3">
+                  {applicantDocuments.map((doc) => <div key={doc.id} className={`group flex items-start justify-between gap-3 rounded-sm px-2 py-3 transition-colors ${selectedDocumentIds.includes(doc.id) ? 'bg-[#DDF1FB]' : 'hover:bg-[#DDF1FB] dark:hover:bg-[#303840]'}`}>
+                    <div className="flex min-w-0 items-start gap-3">
+                      <input type="checkbox" aria-label={`Select ${doc.name}`} checked={selectedDocumentIds.includes(doc.id)} onChange={(event) => setSelectedDocumentIds((ids) => event.target.checked ? [...new Set([...ids, doc.id])] : ids.filter((id) => id !== doc.id))} className={`mt-1 h-4 w-4 shrink-0 accent-[#2F80ED] ${selectedDocumentIds.includes(doc.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'}`} />
+                      <button type="button" title={`View ${doc.name}`} onClick={() => viewApplicantDocument(doc)} className="mt-0.5 shrink-0 text-[#F04452] hover:text-[#C92A3A]"><FileText className="h-5 w-5" /></button>
+                      <button type="button" onClick={() => viewApplicantDocument(doc)} className="min-w-0 text-left">
+                        <span className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#1F2937] hover:text-[#2F80ED] dark:text-white"><span className="break-all">{doc.title || doc.name}</span><Check className="h-3.5 w-3.5 rounded-full bg-[#68C17B] p-0.5 text-white" /></span>
+                        <span className="mt-1 block text-[11px] text-[#526174] dark:text-[#AAB2BF]">Created By {doc.createdBy || applicant.createdBy || currentUser?.name || 'User'} on {doc.date || applicant.createdDate || 'N/A'} <span className="text-[#2F80ED]">|</span> Modified By {doc.modifiedBy || doc.createdBy || applicant.createdBy || currentUser?.name || 'User'}</span>
+                        <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` · ${doc.size}` : ''}</span>
+                      </button>
+                    </div>
+                    <div ref={(node) => { if (documentMenuId === doc.id) documentMenuRef.current = node; }} className="relative shrink-0">
+                      <button type="button" aria-label={`Options for ${doc.name}`} aria-haspopup="menu" aria-expanded={documentMenuId === doc.id} onClick={(event) => handleDocumentMenuToggle(doc.id, event)} className="rounded p-1 text-[#718096] hover:bg-white hover:text-[#222]"><MoreVertical className="h-4 w-4" /></button>
+                      {documentMenuId === doc.id && <div role="menu" className={`absolute right-0 z-[60] w-36 rounded border border-[#CBD5E1] bg-white py-1 shadow-lg dark:border-[#334155] dark:bg-[#1E293B] ${documentMenuOpenUp ? 'bottom-full mb-1' : 'top-full mt-1'}`}>
+                        <button type="button" onClick={() => { viewApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">View</button>
+                        <button type="button" onClick={() => { downloadApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">Download</button>
+                        <button type="button" onClick={async () => { const name = window.prompt('Document title', doc.title || doc.name); if (name?.trim()) { await persistApplicantDocuments(applicantDocuments.map((item) => item.id === doc.id ? { ...item, name: name.trim(), title: name.trim(), modifiedBy: currentUser?.name || 'Current User', date: new Date().toLocaleString() } : item)); showToast('Document title updated.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">Rename</button>
+                        <button type="button" onClick={async () => { if (window.confirm(`Delete ${doc.name}?`)) { await persistApplicantDocuments(applicantDocuments.filter((item) => item.id !== doc.id)); setSelectedDocumentIds((ids) => ids.filter((id) => id !== doc.id)); showToast('Document deleted.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-[#334155]">Delete</button>
+                      </div>}
+                    </div>
+                  </div>)}
+                  {applicantDocuments.length === 0 && !documentFormOpen && <p className="px-2 py-6 text-center text-xs text-[#64748B]">No documents uploaded yet.</p>}
+                </div>
               </div>
-            </div>
 
-            {notesFilterOpen && <div className="grid grid-cols-1 gap-3 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 dark:border-[#334155] dark:bg-[#0F172A] sm:grid-cols-2 xl:grid-cols-5">
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Search notes<input type="search" value={notesSearch} onChange={(event) => setNotesSearch(event.target.value)} placeholder="Subject, text, job, client…" className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Added by<select value={notesAuthorFilter} onChange={(event) => setNotesAuthorFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Any author</option>{notesAuthorOptions.map((author) => <option key={author} value={author}>{author}</option>)}</select></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">Priority<select value={notesPriorityFilter} onChange={(event) => setNotesPriorityFilter(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Any priority</option><option>Urgent</option><option>High</option><option>Medium</option><option>Low</option></select></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">From date<input type="date" value={notesDateFrom} onChange={(event) => setNotesDateFrom(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
-              <label className="space-y-1 text-[10px] font-semibold text-[#64748B]">To date<input type="date" value={notesDateTo} onChange={(event) => setNotesDateTo(event.target.value)} className="block w-full rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs font-normal text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
-              <div className="flex items-end justify-between gap-2 sm:col-span-2 xl:col-span-5"><span className="text-[11px] text-[#64748B]">Showing {filteredNotes.length} of {notesSourceCounts[activeNotesFilter]} notes</span><button type="button" onClick={() => { setNotesSearch(''); setNotesAuthorFilter(''); setNotesPriorityFilter(''); setNotesDateFrom(''); setNotesDateTo(''); }} className="text-[11px] font-semibold text-[#2F80ED] hover:underline">Clear filters</button></div>
-            </div>}
+              {documentShareOpen && <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/50 p-4 pt-[15vh]" onClick={() => setDocumentShareOpen(false)}>
+                <div role="dialog" aria-modal="true" aria-labelledby="document-share-title" onClick={(event) => event.stopPropagation()} className="w-full max-w-md border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+                  <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#334155]"><h2 id="document-share-title" className="text-lg font-medium text-[#334155] dark:text-white">Documents Sharing</h2><button type="button" aria-label="Close sharing dialog" onClick={() => setDocumentShareOpen(false)}><X className="h-5 w-5 text-[#777]" /></button></div>
+                  <div className="px-5 py-8"><label className="mb-3 block text-xs text-[#64748B]">Choose the users below to share the selected documents</label><select value={documentShareRecipient} onChange={(event) => setDocumentShareRecipient(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2.5 py-2 text-xs dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Select a user</option>{Array.from(new Set([currentUser?.name || '', ...allApplicants.map((item) => item.assignedRecruiter).filter(Boolean), 'Recruiting Team'].filter(Boolean))).map((name) => <option key={name} value={name}>{name}</option>)}</select></div>
+                  <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#334155]"><button type="button" onClick={shareApplicantDocuments} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white">Share</button><button type="button" onClick={() => setDocumentShareOpen(false)} className="rounded border border-[#CBD5E1] px-4 py-2 text-xs text-[#555] dark:border-[#334155] dark:text-white">Cancel</button></div>
+                </div>
+              </div>}
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
-                    <th className="px-4 py-2">Added By / On</th>
-                    <th className="px-4 py-2">Notes / Description</th>
-                    <th className="px-4 py-2 text-right">Action / Priority</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
-                  {filteredNotes.length > 0 ? (
-                    filteredNotes.map((n) => (
-                      <tr key={n.id} className="hover:bg-gray-50 dark:hover:bg-[#22334D]">
-                        <td className="whitespace-nowrap px-4 py-2.5 text-[#555] dark:text-[#AAA]">
-                          <span className="font-medium text-[#222] dark:text-slate-100">{n.author}</span>
-                          <span className="block text-[10px] text-[#888]">{n.date}</span>
-                        </td>
-                        <td className="px-4 py-2.5 text-[#333] dark:text-[#DDD]">
-                          {n.subject && (
-                            <div className="font-semibold text-xs text-[#1F2937] dark:text-white mb-0.5">
-                              {n.subject}
-                            </div>
-                          )}
-                          <div className="whitespace-pre-wrap">{n.text}</div>
-                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-[#666] dark:text-[#AAA]">
-                            {n.job && <span className="text-[#2F80ED]">Job: {n.job}</span>}
-                            {n.client && <span>Client: {n.client}</span>}
-                            {n.action && <span className="rounded bg-gray-100 px-1.5 py-0.2 dark:bg-[#0F172A]">Action: {n.action}</span>}
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-2.5 text-right font-medium">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            n.priority === 'Urgent' || n.priority === 'High'
-                              ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400'
-                              : 'bg-blue-50 text-[#2F80ED] dark:bg-blue-950/40 dark:text-blue-300'
-                          }`}>
-                            {n.priority || 'Medium'}
-                          </span>
+              {/* 4. Submissions Section */}
+              <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                  <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions</span>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    {[
+                      { label: 'Pipeline', key: 'pipeline', count: submissionCounts.pipeline },
+                      { label: 'All', key: 'all', count: submissionCounts.all },
+                      { label: 'Client Submissions', key: 'client', count: submissionCounts.client },
+                      { label: 'Interviews', key: 'interview', count: submissionCounts.interview },
+                      { label: 'Confirmations', key: 'confirmation', count: submissionCounts.confirmation },
+                      { label: 'Placements', key: 'placement', count: submissionCounts.placement },
+                      { label: 'Not Joined', key: 'not-joined', count: submissionCounts['not-joined'] }
+                    ].map((item) => (
+                      <button key={item.key} type="button" onClick={() => setActiveSubmissionsFilter(item.key as typeof activeSubmissionsFilter)} className={`rounded-full px-2.5 py-0.5 font-semibold transition-colors ${activeSubmissionsFilter === item.key ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666] hover:bg-gray-50 dark:hover:bg-[#334155]'}`}>
+                        {item.label} ({item.count})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
+                      <th className="px-4 py-2">Job Details</th><th className="px-4 py-2">Submission Details</th><th className="px-4 py-2">Submitted By</th><th className="px-4 py-2">Client Bill Rate</th><th className="px-4 py-2">Pay Rate</th><th className="px-4 py-2 text-right">Actions</th>
+                    </tr></thead>
+                    <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
+                      {filteredApplicantSubmissions.length === 0 ? <tr><td colSpan={6} className="px-4 py-6 text-center text-xs text-[#888]">No data available</td></tr> : filteredApplicantSubmissions.map((submission) => {
+                        const currentStage = getSubmissionStageIndex(submission.status);
+                        const steps = ['Pipeline', 'Submission', 'Client Submission', 'Interview', 'Confirmation', 'Placement', 'Not Joined'];
+                        const history = submission.statusHistory || [{ status: submission.status, changedAt: submission.submittedDate }];
+                        return <React.Fragment key={submission.id}>
+                          <tr className="hover:bg-gray-50 dark:hover:bg-[#22334D]">
+                            <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#334155]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || '—'}</span></td>
+                            <td className="px-4 py-3"><span className="block font-medium text-[#18558A] dark:text-[#90CDF4]">Submission #{submission.submissionId}</span><span className="mt-1 block max-w-[300px] text-xs font-semibold text-emerald-700 dark:text-emerald-400">{submission.status}</span></td>
+                            <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-slate-100">{submission.recruiter || '—'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
+                            <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.billRate ? submission.billRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.payRate ? submission.payRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 text-right">{(submission.submissionDetails?.action === 'Tag to Job' || currentStage === 0) && <button type="button" title="Untag" aria-label={`Untag ${submission.jobTitle}`} onClick={() => void untagSubmission(submission)} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2F80ED] hover:text-[#1D5FB8]"><Tag className="h-3.5 w-3.5" />Untag</button>}</td>
+                          </tr>
+                          <tr><td colSpan={6} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#334155]"><div className="flex items-start">{steps.map((step, index) => {
+                            const state = index === 0 || index < currentStage ? 'completed' : index === currentStage ? 'active' : 'upcoming';
+                            const entry = history.filter((item) => getSubmissionStageIndex(item.status) === index).slice(-1)[0];
+                            const timestamp = index === 1 ? submission.submittedDate : entry?.changedAt;
+                            return <div key={step} className="flex min-w-0 flex-1 flex-col items-center text-center"><div className="relative flex w-full items-center">{index > 0 ? <div className={`h-0.5 flex-1 ${index <= currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} /> : <div aria-hidden="true" className="invisible h-0.5 flex-1" />}<div className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white ${state === 'completed' || state === 'active' ? 'bg-emerald-500' : 'border border-gray-400 bg-white dark:bg-[#0F172A]'}`}>{state === 'active' ? <Check className="h-2.5 w-2.5" /> : ''}</div>{index < steps.length - 1 ? <div className={`h-0.5 flex-1 ${index < currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} /> : <div aria-hidden="true" className="invisible h-0.5 flex-1" />}</div><span className="mt-1 text-[10px] font-medium text-[#333] dark:text-[#DDD]">{step}</span>{timestamp && <span className="mt-0.5 text-[9px] text-[#888]">{timestamp}</span>}</div>;
+                          })}</div></td></tr>
+                        </React.Fragment>;
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {quickViewJob && (() => {
+                const jobSubmissions = submissionRecords.filter((record) => record.jobId === quickViewJob.id);
+                const pipelineCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) <= 1 && !/disqualified|rejected/i.test(record.status)).length;
+                const clientCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) === 2).length;
+                const interviewCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) === 3).length;
+                const hireCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) >= 4).length;
+                const detailValue = (key: string): string => String(quickViewJob.customFields?.[key] || 'N/A');
+                return <div className="fixed inset-0 z-[80] flex justify-end bg-black/50" onClick={() => setQuickViewJob(null)}>
+                  <aside role="dialog" aria-modal="true" aria-label={`Job details quick view: ${quickViewJob.title}`} onClick={(event) => event.stopPropagation()} className="drawer-panel flex h-full w-full flex-col border-l border-[#D5D9DE] bg-white shadow-2xl sm:w-[min(56vw,900px)] dark:border-[#334155] dark:bg-[#1E293B]">
+                    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D7DCE2] px-4 py-3 dark:border-[#334155]">
+                      <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-[#1877F2]"><Briefcase className="h-4 w-4 shrink-0" /><span className="truncate">{quickViewJob.code} {quickViewJob.title}</span></div>
+                      <div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => navigate('job-detail', quickViewJob.id)} className="rounded border border-[#CBD5E1] px-2.5 py-1.5 text-[11px] text-[#475569] hover:bg-[#F1F5F9] dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">Open Job Details</button><button type="button" aria-label="Close job details quick view" onClick={() => setQuickViewJob(null)} className="rounded p-1 text-[#6B7280] hover:bg-[#F1F3F5] dark:hover:bg-[#334155]"><X className="h-5 w-5" /></button></div>
+                    </header>
+                    <div className="shrink-0 bg-[#EEF0F2] px-4 py-4 dark:bg-[#0F172A]">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] sm:grid-cols-2"><div><span className="block uppercase tracking-wide text-[#64748B]">Pay Rate / Salary</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.currency || 'INR'} {quickViewJob.payRate ? quickViewJob.payRate.toLocaleString() : 'N/A'} / {quickViewJob.rateType || 'Yearly'}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Client</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.client}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Country</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{detailValue('country')}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Job Status</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.status}</span></div><div className="col-span-2"><span className="block uppercase tracking-wide text-[#64748B]">Location</span><span className="mt-1 inline-block rounded bg-white px-2 py-1 text-[10px] font-medium text-[#334155] dark:bg-[#1E293B] dark:text-white">{quickViewJob.location || 'N/A'}</span></div></div>
+                      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">{[{ label: '# OF SUBMISSIONS', value: jobSubmissions.length, color: 'text-[#1F2937]' }, { label: '# OF PIPELINE', value: pipelineCount, color: 'text-[#1F2937]' }, { label: '# OF CLIENT SUBMISSIONS', value: clientCount, color: 'text-red-500' }, { label: '# OF INTERVIEWS', value: interviewCount, color: 'text-amber-500' }, { label: '# OF HIRES', value: hireCount, color: 'text-blue-500' }].map((item) => <div key={item.label} className="rounded-sm bg-white px-2 py-2 text-center shadow-sm dark:bg-[#1E293B]"><span className={`block text-lg font-semibold ${item.color}`}>{item.value}</span><span className="block text-[8px] font-semibold text-[#334155] dark:text-[#AAA]">{item.label}</span></div>)}</div>
+                    </div>
+                    <nav className="flex shrink-0 items-center gap-1 border-b border-[#E2E8F0] px-4 pt-3 dark:border-[#334155]">{[{ id: 'details', label: 'Job Details' }, { id: 'skills', label: 'Skills & Job Description' }, { id: 'notes', label: `Notes (${quickViewJob.notes?.length || 0})` }, { id: 'email', label: 'Email Merges' }].map((tab) => <button key={tab.id} type="button" onClick={() => setQuickViewTab(tab.id as typeof quickViewTab)} className={`border-b-2 px-2.5 py-2 text-[11px] ${quickViewTab === tab.id ? 'border-[#2F80ED] bg-[#2F80ED] font-semibold text-white' : 'border-transparent text-[#555] hover:bg-[#F1F5F9] dark:text-[#CCC] dark:hover:bg-[#334155]'}`}>{tab.label}</button>)}</nav>
+                    <div className="min-h-0 flex-1 overflow-y-auto p-4 text-xs">
+                      {quickViewTab === 'details' && <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">{[['Client Bill Rate / Salary', quickViewJob.billRate ? `${quickViewJob.currency || 'INR'} ${quickViewJob.billRate.toLocaleString()}` : 'N/A'], ['Required Documents for Submission', detailValue('requiredDocuments')], ['End Client', detailValue('endClient')], ['Duration', quickViewJob.duration || 'N/A'], ['Tax Terms', detailValue('taxTerms')], ['Work Authorization', detailValue('workAuthorization')], ['Interview Mode', detailValue('interviewMode')], ['Experience', quickViewJob.experienceRequired || 'N/A'], ['Assigned To', quickViewJob.assignedTo || quickViewJob.assignedRecruiter || 'N/A'], ['Job Type', quickViewJob.type]].map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3"><span className="text-[#7B8490]">{label}</span><span className="font-medium text-[#252525] dark:text-white">{value}</span></div>)}</div>}
+                      {quickViewTab === 'skills' && <div className="space-y-4"><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Skills</h3><div className="flex flex-wrap gap-1.5">{(quickViewJob.primarySkills?.length ? quickViewJob.primarySkills : quickViewJob.skills).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white">{skill}</span>)}</div></div><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Job Description</h3><p className="whitespace-pre-wrap leading-relaxed text-[#475569] dark:text-[#CCC]">{quickViewJob.description || 'No job description available.'}</p></div></div>}
+                      {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#334155]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
+                      {quickViewTab === 'email' && <p className="py-8 text-center text-[#64748B]">No email merges available.</p>}
+                    </div>
+                  </aside>
+                </div>;
+              })()}
+              {/* 5. eInterviews Section */}
+              <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                  <span className="text-xs font-bold text-[#1F2937] dark:text-white">eInterviews</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
+                        <th className="px-4 py-2">Initiated By / Initiated On</th>
+                        <th className="px-4 py-2">Job Title</th>
+                        <th className="px-4 py-2">Template Name</th>
+                        <th className="px-4 py-2">Status</th>
+                        <th className="px-4 py-2">Video Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan={5} className="px-4 py-5 text-center text-xs text-[#888]">
+                          No data available
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-6 text-center text-xs text-[#888]">
-                        {noteEntries.some((note) => note.source === activeNotesFilter) ? 'No notes match the selected filters.' : 'No data available'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* 3. Documents Section */}
-          <div className="relative z-40 rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
-              <span className="text-sm font-semibold text-[#1F2937] dark:text-white">Documents</span>
-              <div className="flex items-center divide-x divide-[#CBD5E1] rounded border border-[#CBD5E1] text-[#687789] dark:divide-[#334155] dark:border-[#334155] dark:text-[#AAA]">
-                <button type="button" title="Share selected documents" onClick={() => void runDocumentToolbarAction('share')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Share2 className="h-3.5 w-3.5" /></button>
-                <button type="button" title="Copy selected documents" onClick={() => void runDocumentToolbarAction('copy')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Copy className="h-3.5 w-3.5" /></button>
-                <button type="button" title="Download selected documents" onClick={() => void runDocumentToolbarAction('download')} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Download className="h-3.5 w-3.5" /></button>
-                <button type="button" title="Add Document" onClick={() => setDocumentFormOpen((open) => !open)} className="p-1.5 hover:bg-[#EFF6FF] hover:text-[#2F80ED]"><Plus className="h-4 w-4" /></button>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-
-            {documentFormOpen && <div className="border-b border-[#E2E8F0] px-4 py-4 dark:border-[#334155]">
-              <div className="grid gap-4 md:grid-cols-3">
-                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Select</option>{['Driving License', 'EMI File', 'Employment Application Form', 'Interview Feedback', 'Passport', 'Resume', 'SSN', 'Transcripts'].map((type) => <option key={type}>{type}</option>)}</select></label>
-                <label className="block space-y-1 text-[11px] text-[#64748B]">Document Title<input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Enter document title" className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
-                <label className="block space-y-1 text-[11px] text-[#64748B]">Upload Document<input type="file" onChange={(event) => setDocumentFile(event.target.files?.[0] || null)} className="block w-full text-[11px] text-[#334155] file:mr-2 file:border file:border-[#CBD5E1] file:bg-white file:px-2 file:py-1.5 dark:text-white" /></label>
-              </div>
-              <label className="mt-3 block space-y-1 text-[11px] text-[#64748B]">Description<textarea rows={2} value={documentDescription} onChange={(event) => setDocumentDescription(event.target.value)} className="w-full resize-y border border-[#CBD5E1] bg-[#F8F8F8] p-2 text-xs text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label>
-              <div className="mt-3 flex gap-2"><button type="button" onClick={() => void handleDocumentUpload()} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white hover:bg-[#1D6FD8]">Save</button><button type="button" onClick={() => { setDocumentFormOpen(false); setDocumentFile(null); setDocumentTitle(''); setDocumentDescription(''); }} className="rounded border border-[#CBD5E1] bg-white px-4 py-2 text-xs text-[#64748B] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white">Cancel</button></div>
-            </div>}
-
-            <div className="space-y-2 p-3">
-              {applicantDocuments.map((doc) => <div key={doc.id} className={`group flex items-start justify-between gap-3 rounded-sm px-2 py-3 transition-colors ${selectedDocumentIds.includes(doc.id) ? 'bg-[#DDF1FB]' : 'hover:bg-[#DDF1FB] dark:hover:bg-[#303840]'}`}>
-                <div className="flex min-w-0 items-start gap-3">
-                  <input type="checkbox" aria-label={`Select ${doc.name}`} checked={selectedDocumentIds.includes(doc.id)} onChange={(event) => setSelectedDocumentIds((ids) => event.target.checked ? [...new Set([...ids, doc.id])] : ids.filter((id) => id !== doc.id))} className={`mt-1 h-4 w-4 shrink-0 accent-[#2F80ED] ${selectedDocumentIds.includes(doc.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'}`} />
-                  <button type="button" title={`View ${doc.name}`} onClick={() => viewApplicantDocument(doc)} className="mt-0.5 shrink-0 text-[#F04452] hover:text-[#C92A3A]"><FileText className="h-5 w-5" /></button>
-                  <button type="button" onClick={() => viewApplicantDocument(doc)} className="min-w-0 text-left">
-                    <span className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-[#1F2937] hover:text-[#2F80ED] dark:text-white"><span className="break-all">{doc.title || doc.name}</span><Check className="h-3.5 w-3.5 rounded-full bg-[#68C17B] p-0.5 text-white" /></span>
-                    <span className="mt-1 block text-[11px] text-[#526174] dark:text-[#AAB2BF]">Created By {doc.createdBy || applicant.createdBy || currentUser?.name || 'User'} on {doc.date || applicant.createdDate || 'N/A'} <span className="text-[#2F80ED]">|</span> Modified By {doc.modifiedBy || doc.createdBy || applicant.createdBy || currentUser?.name || 'User'}</span>
-                    <span className="block text-[10px] text-[#64748B] dark:text-[#9CA3AF]">Comments {doc.comments || doc.description || 'N/A'}{doc.size ? ` · ${doc.size}` : ''}</span>
-                  </button>
-                </div>
-                <div className="relative shrink-0">
-                  <button type="button" aria-label={`Options for ${doc.name}`} aria-expanded={documentMenuId === doc.id} onClick={() => setDocumentMenuId((id) => id === doc.id ? null : doc.id)} className="rounded p-1 text-[#718096] hover:bg-white hover:text-[#222]"><MoreVertical className="h-4 w-4" /></button>
-                  {documentMenuId === doc.id && <div className="absolute right-0 top-full z-[60] mt-1 w-36 rounded border border-[#CBD5E1] bg-white py-1 shadow-lg dark:border-[#334155] dark:bg-[#1E293B]">
-                    <button type="button" onClick={() => { viewApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">View</button>
-                    <button type="button" onClick={() => { downloadApplicantDocument(doc); setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">Download</button>
-                    <button type="button" onClick={async () => { const name = window.prompt('Document title', doc.title || doc.name); if (name?.trim()) { await persistApplicantDocuments(applicantDocuments.map((item) => item.id === doc.id ? { ...item, name: name.trim(), title: name.trim(), modifiedBy: currentUser?.name || 'Current User', date: new Date().toLocaleString() } : item)); showToast('Document title updated.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-[#EFF6FF] dark:hover:bg-[#334155]">Rename</button>
-                    <button type="button" onClick={async () => { if (window.confirm(`Delete ${doc.name}?`)) { await persistApplicantDocuments(applicantDocuments.filter((item) => item.id !== doc.id)); setSelectedDocumentIds((ids) => ids.filter((id) => id !== doc.id)); showToast('Document deleted.'); } setDocumentMenuId(null); }} className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-[#334155]">Delete</button>
-                  </div>}
-                </div>
-              </div>)}
-              {applicantDocuments.length === 0 && !documentFormOpen && <p className="px-2 py-6 text-center text-xs text-[#64748B]">No documents uploaded yet.</p>}
-            </div>
-          </div>
-
-          {documentShareOpen && <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/50 p-4 pt-[15vh]" onClick={() => setDocumentShareOpen(false)}>
-            <div role="dialog" aria-modal="true" aria-labelledby="document-share-title" onClick={(event) => event.stopPropagation()} className="w-full max-w-md border border-[#CBD5E1] bg-white shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3 dark:border-[#334155]"><h2 id="document-share-title" className="text-lg font-medium text-[#334155] dark:text-white">Documents Sharing</h2><button type="button" aria-label="Close sharing dialog" onClick={() => setDocumentShareOpen(false)}><X className="h-5 w-5 text-[#777]" /></button></div>
-              <div className="px-5 py-8"><label className="mb-3 block text-xs text-[#64748B]">Choose the users below to share the selected documents</label><select value={documentShareRecipient} onChange={(event) => setDocumentShareRecipient(event.target.value)} className="w-full border border-[#CBD5E1] bg-[#F8F8F8] px-2.5 py-2 text-xs dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value="">Select a user</option>{Array.from(new Set([currentUser?.name || '', ...allApplicants.map((item) => item.assignedRecruiter).filter(Boolean), 'Recruiting Team'].filter(Boolean))).map((name) => <option key={name} value={name}>{name}</option>)}</select></div>
-              <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-5 py-3 dark:border-[#334155]"><button type="button" onClick={shareApplicantDocuments} className="rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white">Share</button><button type="button" onClick={() => setDocumentShareOpen(false)} className="rounded border border-[#CBD5E1] px-4 py-2 text-xs text-[#555] dark:border-[#334155] dark:text-white">Cancel</button></div>
-            </div>
-          </div>}
-
-          {/* 4. Submissions Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
-              <span className="text-xs font-bold text-[#1F2937] dark:text-white">Submissions</span>
-              <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-                {[
-                  { label: 'Pipeline', key: 'pipeline', count: submissionCounts.pipeline },
-                  { label: 'All', key: 'all', count: submissionCounts.all },
-                  { label: 'Client Submissions', key: 'client', count: submissionCounts.client },
-                  { label: 'Interviews', key: 'interview', count: submissionCounts.interview },
-                  { label: 'Confirmations', key: 'confirmation', count: submissionCounts.confirmation },
-                  { label: 'Placements', key: 'placement', count: submissionCounts.placement },
-                  { label: 'Not Joined', key: 'not-joined', count: submissionCounts['not-joined'] }
-                ].map((item) => (
-                  <button key={item.key} type="button" onClick={() => setActiveSubmissionsFilter(item.key as typeof activeSubmissionsFilter)} className={`rounded-full px-2.5 py-0.5 font-semibold transition-colors ${activeSubmissionsFilter === item.key ? 'bg-[#2F80ED] text-white' : 'border border-[#CBD5E1] text-[#666] hover:bg-gray-50 dark:hover:bg-[#334155]'}`}>
-                    {item.label} ({item.count})
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
-                  <th className="px-4 py-2">Job Details</th><th className="px-4 py-2">Submission Details</th><th className="px-4 py-2">Submitted By</th><th className="px-4 py-2">Client Bill Rate</th><th className="px-4 py-2">Pay Rate</th>
-                </tr></thead>
-                <tbody className="divide-y divide-[#F1F5F9] dark:divide-[#334155]">
-                  {filteredApplicantSubmissions.length === 0 ? <tr><td colSpan={5} className="px-4 py-6 text-center text-xs text-[#888]">No data available</td></tr> : filteredApplicantSubmissions.map((submission) => {
-                    const currentStage = getSubmissionStageIndex(submission.status);
-                    const steps = ['Pipeline', 'Submission', 'Client Submission', 'Interview', 'Confirmation', 'Placement', 'Not Joined'];
-                    const history = submission.statusHistory || [{ status: submission.status, changedAt: submission.submittedDate }];
-                    return <React.Fragment key={submission.id}>
-                      <tr className="hover:bg-gray-50 dark:hover:bg-[#22334D]">
-                        <td className="px-4 py-3"><div className="flex items-center gap-1.5"><button type="button" onClick={() => navigate('job-detail', submission.jobId)} className="flex items-center gap-1.5 text-left font-semibold text-[#18558A] hover:underline dark:text-[#90CDF4]">{submission.jobTitle}<Briefcase className="h-3 w-3 shrink-0 text-[#2F80ED]" /></button><button type="button" title="Job Details Quick View" aria-label={`Quick view ${submission.jobTitle}`} onClick={() => void openSubmissionJobQuickView(submission)} className="rounded p-0.5 text-[#2F80ED] hover:bg-blue-50 dark:hover:bg-[#334155]"><Eye className="h-3.5 w-3.5" /></button></div><span className="text-[11px] text-[#666] dark:text-[#AAA]">{submission.client || '—'}</span></td>
-                        <td className="px-4 py-3"><span className="block font-medium text-[#18558A] dark:text-[#90CDF4]">Submission #{submission.submissionId}</span><span className="mt-1 block max-w-[300px] text-xs font-semibold text-emerald-700 dark:text-emerald-400">{submission.status}</span></td>
-                        <td className="px-4 py-3 text-[#555] dark:text-[#AAA]"><span className="block font-medium text-[#222] dark:text-slate-100">{submission.recruiter || '—'}</span><span className="text-[10px] text-[#888]">{submission.submittedDate}</span></td>
-                        <td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.billRate ? submission.billRate.toLocaleString() : 'N/A'}</td><td className="px-4 py-3 font-mono text-[#555] dark:text-[#AAA]">{submission.payRate ? submission.payRate.toLocaleString() : 'N/A'}</td>
-                      </tr>
-                      <tr><td colSpan={5} className="border-t border-[#E2E8F0] px-4 py-4 dark:border-[#334155]"><div className="flex items-start">{steps.map((step, index) => {
-                        const state = index === 0 || index < currentStage ? 'completed' : index === currentStage ? 'active' : 'upcoming';
-                        const entry = history.filter((item) => getSubmissionStageIndex(item.status) === index).slice(-1)[0];
-                        const timestamp = index === 1 ? submission.submittedDate : entry?.changedAt;
-                        return <div key={step} className="flex min-w-0 flex-1 flex-col items-center text-center"><div className="relative flex w-full items-center">{index > 0 ? <div className={`h-0.5 flex-1 ${index <= currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} /> : <div aria-hidden="true" className="invisible h-0.5 flex-1" />}<div className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white ${state === 'completed' || state === 'active' ? 'bg-emerald-500' : 'border border-gray-400 bg-white dark:bg-[#0F172A]'}`}>{state === 'active' ? <Check className="h-2.5 w-2.5" /> : ''}</div>{index < steps.length - 1 ? <div className={`h-0.5 flex-1 ${index < currentStage ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`} /> : <div aria-hidden="true" className="invisible h-0.5 flex-1" />}</div><span className="mt-1 text-[10px] font-medium text-[#333] dark:text-[#DDD]">{step}</span>{timestamp && <span className="mt-0.5 text-[9px] text-[#888]">{timestamp}</span>}</div>;
-                      })}</div></td></tr>
-                    </React.Fragment>;
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          {quickViewJob && (() => {
-            const jobSubmissions = submissionRecords.filter((record) => record.jobId === quickViewJob.id);
-            const pipelineCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) <= 1 && !/disqualified|rejected/i.test(record.status)).length;
-            const clientCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) === 2).length;
-            const interviewCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) === 3).length;
-            const hireCount = jobSubmissions.filter((record) => getSubmissionStageIndex(record.status) >= 4).length;
-            const detailValue = (key: string): string => String(quickViewJob.customFields?.[key] || 'N/A');
-            return <div className="fixed inset-0 z-[80] flex justify-end bg-black/50" onClick={() => setQuickViewJob(null)}>
-              <aside role="dialog" aria-modal="true" aria-label={`Job details quick view: ${quickViewJob.title}`} onClick={(event) => event.stopPropagation()} className="drawer-panel flex h-full w-full flex-col border-l border-[#D5D9DE] bg-white shadow-2xl sm:w-[min(56vw,900px)] dark:border-[#334155] dark:bg-[#1E293B]">
-                <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D7DCE2] px-4 py-3 dark:border-[#334155]">
-                  <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-[#1877F2]"><Briefcase className="h-4 w-4 shrink-0" /><span className="truncate">{quickViewJob.code} {quickViewJob.title}</span></div>
-                  <div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => navigate('job-detail', quickViewJob.id)} className="rounded border border-[#CBD5E1] px-2.5 py-1.5 text-[11px] text-[#475569] hover:bg-[#F1F5F9] dark:border-[#334155] dark:text-white dark:hover:bg-[#334155]">Open Job Details</button><button type="button" aria-label="Close job details quick view" onClick={() => setQuickViewJob(null)} className="rounded p-1 text-[#6B7280] hover:bg-[#F1F3F5] dark:hover:bg-[#334155]"><X className="h-5 w-5" /></button></div>
-                </header>
-                <div className="shrink-0 bg-[#EEF0F2] px-4 py-4 dark:bg-[#0F172A]">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px] sm:grid-cols-2"><div><span className="block uppercase tracking-wide text-[#64748B]">Pay Rate / Salary</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.currency || 'INR'} {quickViewJob.payRate ? quickViewJob.payRate.toLocaleString() : 'N/A'} / {quickViewJob.rateType || 'Yearly'}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Client</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.client}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Country</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{detailValue('country')}</span></div><div><span className="block uppercase tracking-wide text-[#64748B]">Job Status</span><span className="mt-0.5 block font-semibold text-[#252525] dark:text-white">{quickViewJob.status}</span></div><div className="col-span-2"><span className="block uppercase tracking-wide text-[#64748B]">Location</span><span className="mt-1 inline-block rounded bg-white px-2 py-1 text-[10px] font-medium text-[#334155] dark:bg-[#1E293B] dark:text-white">{quickViewJob.location || 'N/A'}</span></div></div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">{[{ label: '# OF SUBMISSIONS', value: jobSubmissions.length, color: 'text-[#1F2937]' }, { label: '# OF PIPELINE', value: pipelineCount, color: 'text-[#1F2937]' }, { label: '# OF CLIENT SUBMISSIONS', value: clientCount, color: 'text-red-500' }, { label: '# OF INTERVIEWS', value: interviewCount, color: 'text-amber-500' }, { label: '# OF HIRES', value: hireCount, color: 'text-blue-500' }].map((item) => <div key={item.label} className="rounded-sm bg-white px-2 py-2 text-center shadow-sm dark:bg-[#1E293B]"><span className={`block text-lg font-semibold ${item.color}`}>{item.value}</span><span className="block text-[8px] font-semibold text-[#334155] dark:text-[#AAA]">{item.label}</span></div>)}</div>
-                </div>
-                <nav className="flex shrink-0 items-center gap-1 border-b border-[#E2E8F0] px-4 pt-3 dark:border-[#334155]">{[{ id: 'details', label: 'Job Details' }, { id: 'skills', label: 'Skills & Job Description' }, { id: 'notes', label: `Notes (${quickViewJob.notes?.length || 0})` }, { id: 'email', label: 'Email Merges' }].map((tab) => <button key={tab.id} type="button" onClick={() => setQuickViewTab(tab.id as typeof quickViewTab)} className={`border-b-2 px-2.5 py-2 text-[11px] ${quickViewTab === tab.id ? 'border-[#2F80ED] bg-[#2F80ED] font-semibold text-white' : 'border-transparent text-[#555] hover:bg-[#F1F5F9] dark:text-[#CCC] dark:hover:bg-[#334155]'}`}>{tab.label}</button>)}</nav>
-                <div className="min-h-0 flex-1 overflow-y-auto p-4 text-xs">
-                  {quickViewTab === 'details' && <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">{[['Client Bill Rate / Salary', quickViewJob.billRate ? `${quickViewJob.currency || 'INR'} ${quickViewJob.billRate.toLocaleString()}` : 'N/A'], ['Required Documents for Submission', detailValue('requiredDocuments')], ['End Client', detailValue('endClient')], ['Duration', quickViewJob.duration || 'N/A'], ['Tax Terms', detailValue('taxTerms')], ['Work Authorization', detailValue('workAuthorization')], ['Interview Mode', detailValue('interviewMode')], ['Experience', quickViewJob.experienceRequired || 'N/A'], ['Assigned To', quickViewJob.assignedTo || quickViewJob.assignedRecruiter || 'N/A'], ['Job Type', quickViewJob.type]].map(([label, value]) => <div key={label} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3"><span className="text-[#7B8490]">{label}</span><span className="font-medium text-[#252525] dark:text-white">{value}</span></div>)}</div>}
-                  {quickViewTab === 'skills' && <div className="space-y-4"><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Skills</h3><div className="flex flex-wrap gap-1.5">{(quickViewJob.primarySkills?.length ? quickViewJob.primarySkills : quickViewJob.skills).map((skill) => <span key={skill} className="rounded border border-[#D7E5F2] bg-[#EFF6FC] px-2 py-1 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white">{skill}</span>)}</div></div><div><h3 className="mb-2 font-semibold text-[#334155] dark:text-white">Job Description</h3><p className="whitespace-pre-wrap leading-relaxed text-[#475569] dark:text-[#CCC]">{quickViewJob.description || 'No job description available.'}</p></div></div>}
-                  {quickViewTab === 'notes' && (quickViewJob.notes?.length ? <div className="space-y-3">{quickViewJob.notes.map((note) => <article key={note.id} className="border-b border-[#E2E8F0] pb-3 dark:border-[#334155]"><p className="font-semibold text-[#334155] dark:text-white">{note.author} <span className="font-normal text-[#64748B]">· {note.date}</span></p><p className="mt-1 whitespace-pre-wrap text-[#475569] dark:text-[#CCC]">{note.text}</p></article>)}</div> : <p className="py-8 text-center text-[#64748B]">No job notes available.</p>)}
-                  {quickViewTab === 'email' && <p className="py-8 text-center text-[#64748B]">No email merges available.</p>}
-                </div>
-              </aside>
-            </div>;
-          })()}
-          {/* 5. eInterviews Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-            <div className="border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
-              <span className="text-xs font-bold text-[#1F2937] dark:text-white">eInterviews</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
-                    <th className="px-4 py-2">Initiated By / Initiated On</th>
-                    <th className="px-4 py-2">Job Title</th>
-                    <th className="px-4 py-2">Template Name</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Video Link</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colSpan={5} className="px-4 py-5 text-center text-xs text-[#888]">
-                      No data available
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
           {/* 6. eForms Section */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
@@ -3343,109 +3622,88 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
           <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
               <span className="text-xs font-bold text-[#1F2937] dark:text-white">Task Manager</span>
-              <button
-                type="button"
-                onClick={() => setDialog('task')}
-                className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
-              >
-                + Add
-              </button>
+              <button type="button" onClick={() => setDialog('task')} className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white">+ Add</button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
-                    <th className="px-4 py-2">Assigned By / Created On</th>
-                    <th className="px-4 py-2">Due Date / Time</th>
-                    <th className="px-4 py-2">Time Zone</th>
-                    <th className="px-4 py-2">Task Description</th>
-                    <th className="px-4 py-2">Assigned To</th>
-                    <th className="px-4 py-2">Modified On</th>
-                    <th className="px-4 py-2">Status Modified On</th>
-                    <th className="px-4 py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {applicantTasks.length ? applicantTasks.map((task, index) => <tr key={`${task.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{currentUser?.name || 'Me'}</td><td className="px-4 py-2">{task.due || '—'}</td><td className="px-4 py-2">Local</td><td className="px-4 py-2">{task.description || task.title}</td><td className="px-4 py-2">{task.assignee}</td><td className="px-4 py-2">—</td><td className="px-4 py-2">—</td><td className="px-4 py-2">{task.status}</td></tr>) : <tr><td colSpan={8} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
-                </tbody>
-              </table>
-            </div>
+            <div className="overflow-x-auto"><table className="w-full text-left text-xs">
+              <thead><tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase text-[#64748B]"><th className="px-4 py-2">Task For / Due Date</th><th className="px-4 py-2">Priority</th><th className="px-4 py-2">Description</th><th className="px-4 py-2">Assigned To</th><th className="px-4 py-2">Status</th></tr></thead>
+              <tbody>{applicantTasks.length ? applicantTasks.map((task, index) => <tr key={`${task.title}-${index}`} className="border-b border-[#E2E8F0]"><td className="px-4 py-2">{task.due || '?'}</td><td className="px-4 py-2">Normal</td><td className="px-4 py-2">{task.description || task.title}</td><td className="px-4 py-2">{task.assignee}</td><td className="px-4 py-2">{task.status}</td></tr>) : <tr><td colSpan={5} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}</tbody>
+            </table></div>
           </div>
 
-          {/* 9. Call Logs Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
-              <span className="text-xs font-bold text-[#1F2937] dark:text-white">Call Logs</span>
-              <button
-                type="button"
-                onClick={() => setDialog('call-log')}
-                className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
-              >
-                + Add
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
-                    <th className="px-4 py-2">Call Types</th>
-                    <th className="px-4 py-2">Comments</th>
-                    <th className="px-4 py-2">Call Taken</th>
-                    <th className="px-4 py-2">Follow Up</th>
-                    <th className="px-4 py-2">Log Date</th>
-                    <th className="px-4 py-2">Created By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {callLogs.length ? callLogs.map((call, index) => <tr key={`${call.date}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{call.type}</td><td className="px-4 py-2">{call.comments}</td><td className="px-4 py-2">{call.date || '—'}</td><td className="px-4 py-2">{call.followUp || '—'}</td><td className="px-4 py-2">{call.date || '—'}</td><td className="px-4 py-2">{call.by}</td></tr>) : <tr><td colSpan={6} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
-                </tbody>
-              </table>
-            </div>
-            <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#334155]">
-              Showing 0 to 0 of 0 entries
-            </div>
-          </div>
+              {/* 9. Call Logs Section */}
+              <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                  <span className="text-xs font-bold text-[#1F2937] dark:text-white">Call Logs</span>
+                  <button
+                    type="button"
+                    onClick={() => setDialog('call-log')}
+                    className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+                  >
+                    + Add
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
+                        <th className="px-4 py-2">Call Types</th>
+                        <th className="px-4 py-2">Comments</th>
+                        <th className="px-4 py-2">Call Taken</th>
+                        <th className="px-4 py-2">Follow Up</th>
+                        <th className="px-4 py-2">Log Date</th>
+                        <th className="px-4 py-2">Created By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {callLogs.length ? callLogs.map((call, index) => <tr key={`${call.date}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{call.type}</td><td className="px-4 py-2">{call.comments}</td><td className="px-4 py-2">{call.date || '—'}</td><td className="px-4 py-2">{call.followUp || '—'}</td><td className="px-4 py-2">{call.date || '—'}</td><td className="px-4 py-2">{call.by}</td></tr>) : <tr><td colSpan={6} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#334155]">
+                  Showing 0 to 0 of 0 entries
+                </div>
+              </div>
 
-          {/* 10. Meeting Schedules Section */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
-              <span className="text-xs font-bold text-[#1F2937] dark:text-white">Meeting Schedules</span>
-              <button
-                type="button"
-                onClick={() => setDialog('meeting')}
-                className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
-              >
-                + Add
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
-                    <th className="px-4 py-2">Meeting For</th>
-                    <th className="px-4 py-2">Description</th>
-                    <th className="px-4 py-2">Attendees</th>
-                    <th className="px-4 py-2">Guest Attendees</th>
-                    <th className="px-4 py-2">Start Time / Duration</th>
-                    <th className="px-4 py-2">Created By</th>
-                    <th className="px-4 py-2">Attachments</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {meetings.length ? meetings.map((meeting, index) => <tr key={`${meeting.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{meeting.title}</td><td className="px-4 py-2">{meeting.description || '—'}</td><td className="px-4 py-2">{meeting.attendees || '—'}</td><td className="px-4 py-2">{meeting.guests || '—'}</td><td className="px-4 py-2">{meeting.time}</td><td className="px-4 py-2">{meeting.by}</td><td className="px-4 py-2">—</td></tr>) : <tr><td colSpan={7} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
-                </tbody>
-              </table>
-            </div>
-            <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#334155]">
-              Showing 0 to 0 of 0 entries
-            </div>
-          </div>
+              {/* 10. Meeting Schedules Section */}
+              <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                  <span className="text-xs font-bold text-[#1F2937] dark:text-white">Meeting Schedules</span>
+                  <button
+                    type="button"
+                    onClick={() => setDialog('meeting')}
+                    className="rounded bg-[#2F80ED] px-2.5 py-1 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
+                  >
+                    + Add
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] font-semibold uppercase tracking-wider text-[#64748B] dark:border-[#334155] dark:bg-[#0F172A]">
+                        <th className="px-4 py-2">Meeting For</th>
+                        <th className="px-4 py-2">Description</th>
+                        <th className="px-4 py-2">Attendees</th>
+                        <th className="px-4 py-2">Guest Attendees</th>
+                        <th className="px-4 py-2">Start Time / Duration</th>
+                        <th className="px-4 py-2">Created By</th>
+                        <th className="px-4 py-2">Attachments</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {meetings.length ? meetings.map((meeting, index) => <tr key={`${meeting.title}-${index}`} className="border-b border-[#E2E8F0] dark:border-[#334155]"><td className="px-4 py-2">{meeting.title}</td><td className="px-4 py-2">{meeting.description || '—'}</td><td className="px-4 py-2">{meeting.attendees || '—'}</td><td className="px-4 py-2">{meeting.guests || '—'}</td><td className="px-4 py-2">{meeting.time}</td><td className="px-4 py-2">{meeting.by}</td><td className="px-4 py-2">—</td></tr>) : <tr><td colSpan={7} className="px-4 py-5 text-center text-xs text-[#888]">No data available</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="border-t border-[#E2E8F0] px-4 py-2 text-[10px] text-[#888] dark:border-[#334155]">
+                  Showing 0 to 0 of 0 entries
+                </div>
+              </div>
             </>
           )}
 
           {/* PERSONAL DETAILS TAB (Image 1 Replication & Editable Mode) */}
           {activeSubTab === 'Personal Details' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
+            <div ref={personalDetailsRef} className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
               {/* Card Header */}
               <div className="flex flex-wrap items-center justify-between border-b border-[#F1F5F9] pb-3 gap-2 dark:border-[#334155]">
                 <div className="flex items-center gap-2">
@@ -3461,7 +3719,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      <span>Save Changes</span>
+                      <span>Save</span>
                     </button>
                     <button
                       type="button"
@@ -3488,14 +3746,25 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <div className="grid grid-cols-1 gap-x-8 gap-y-4 pt-4 md:grid-cols-3">
                 {/* Row 1 */}
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">First Name as per Aadhaar</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">First Name as per Aadhaar <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.firstName ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, firstName: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex gap-1">
+                      <select
+                        aria-label="Name prefix"
+                        value={personalForm.namePrefix ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, namePrefix: e.target.value })}
+                        className="w-20 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        <option value="">Select</option>
+                                        {['Mr', 'Mrs', 'Ms'].map((prefix) => <option key={prefix}>{prefix}</option>)}
+                      </select>
+                      <input
+                        type="text"
+                        value={personalForm.firstName ?? ''}
+                        onChange={(e) => setPersonalForm({ ...personalForm, firstName: e.target.value })}
+                        className="min-w-0 flex-1 rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      />
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.firstName || applicant.name?.split(' ')[0] || 'SIVAKRISHNAN'}
@@ -3518,7 +3787,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Last Name as per Aadhaar</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Last Name as per Aadhaar <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
                     <input
                       type="text"
@@ -3568,7 +3837,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Email Address</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Email Address <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
                     <input
                       type="email"
@@ -3602,10 +3871,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Mobile Number</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Mobile Number <span className="text-red-500">*</span></p>
                   {isEditingPersonal ? (
                     <input
                       type="text"
+                      required
                       value={personalForm.phone ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
@@ -3651,7 +3921,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Date Of Birth</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
+                    Date Of Birth <span className="text-red-500">*</span>
+                    {applicantAge !== undefined && <span className="ml-1 text-[#6B7280]">(Age: {applicantAge} Yrs)</span>}
+                  </p>
                   {isEditingPersonal ? (
                     <input
                       type="text"
@@ -3733,12 +4006,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Work Authorization</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.workAuthorization ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, workAuthorization: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_WORK_AUTHORIZATION_OPTIONS.map((option) => <option key={option}>{option}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.workAuthorization || 'N/A'}
@@ -3780,12 +4055,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">State</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.state ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_STATE_OPTIONS, personalForm.state).map((state) => <option key={state}>{state}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.state || 'Tamil Nadu'}
@@ -3810,12 +4087,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Country</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.country ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_COUNTRY_OPTIONS, personalForm.country).map((country) => <option key={country}>{country}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.country || 'India'}
@@ -3827,12 +4106,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Source</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.source ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, source: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_SOURCE_OPTIONS.map((source) => <option key={source}>{source}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.source || 'Naukri'}
@@ -3842,16 +4123,36 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Experience</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      placeholder="e.g. 9 Years 2 Months"
-                      value={personalForm.experienceYears ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, experienceYears: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <select
+                        aria-label="Experience years"
+                        value={Math.floor(Number(personalForm.experienceYears) || 0)}
+                        onChange={(e) => {
+                          const months = Math.round(((Number(personalForm.experienceYears) || 0) % 1) * 12);
+                          setPersonalForm({ ...personalForm, experienceYears: Number(e.target.value) + months / 12 });
+                        }}
+                        className="w-16 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {Array.from({ length: 51 }, (_, year) => <option key={year} value={year}>{year}</option>)}
+                      </select>
+                      <span className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">Years</span>
+                      <select
+                        aria-label="Experience months"
+                        value={Math.round(((Number(personalForm.experienceYears) || 0) % 1) * 12)}
+                        onChange={(e) => {
+                          const years = Math.floor(Number(personalForm.experienceYears) || 0);
+                          setPersonalForm({ ...personalForm, experienceYears: years + Number(e.target.value) / 12 });
+                        }}
+                        className="w-16 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        <option value="">Select</option>
+                        {Array.from({ length: 12 }, (_, month) => <option key={month} value={month}>{month}</option>)}
+                      </select>
+                      <span className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">Months</span>
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
+                      {applicant.experienceYears ? formatExperience(applicant.experienceYears) : 'N/A'}
                     </p>
                   )}
                 </div>
@@ -3888,28 +4189,6 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Status</p>
-                  {isEditingPersonal ? (
-                    <select
-                      value={personalForm.status ?? 'New'}
-                      onChange={(e) => setPersonalForm({ ...personalForm, status: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    >
-                      <option value="New">New lead (Allowed to submit)</option>
-                      <option value="Screening">Screening</option>
-                      <option value="Submitted">Submitted</option>
-                      <option value="Interview">Interview</option>
-                      <option value="Offered">Offered</option>
-                      <option value="Hired">Hired</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  ) : (
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.status || 'New lead (Allowed to submit)'}
-                    </p>
-                  )}
-                </div>
-                <div>
                   <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
                     <span>Relevant experience</span>
                     <CircleHelp className="h-3 w-3 text-[#1877F2]" />
@@ -3932,12 +4211,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Ownership</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
+                      disabled
+                      aria-label="Ownership (read-only)"
                       value={personalForm.assignedRecruiter ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, assignedRecruiter: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                      className="mt-1 w-full cursor-not-allowed rounded border border-[#CBD5E1] bg-[#F3F4F6] px-2.5 py-1.5 text-xs text-[#1F2937] opacity-70 outline-none dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(
+                        Array.from(new Set([currentUser?.name || '', ...allApplicants.map((candidate) => candidate.assignedRecruiter)]))
+                          .filter(Boolean)
+                          .sort((left, right) => left.localeCompare(right))
+                          .slice(0, 100),
+                        personalForm.assignedRecruiter
+                      ).map((recruiter) => <option key={recruiter}>{recruiter}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.assignedRecruiter || applicant.ownership || 'Ganesh Kshirsagar'}
@@ -3947,12 +4235,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current Title/Designation</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.currentDesignation ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, currentDesignation: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_TITLE_OPTIONS, personalForm.currentDesignation)
+                        .map((title) => <option key={title}>{title}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.currentDesignation || 'technical support engineer (L2)'}
@@ -3979,12 +4270,33 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Current CTC</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.currentCTC ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, currentCTC: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex gap-1">
+                      <select
+                        aria-label="Current CTC currency"
+                        value={personalForm.currentCTCCurrency}
+                        onChange={(e) => setPersonalForm({ ...personalForm, currentCTCCurrency: e.target.value })}
+                        className="w-[4.5rem] rounded border border-[#CBD5E1] bg-white px-1.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CURRENCY_OPTIONS.map((currency) => <option key={currency}>{currency}</option>)}
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        aria-label="Current CTC amount"
+                        value={personalForm.currentCTCAmount}
+                        onChange={(e) => setPersonalForm({ ...personalForm, currentCTCAmount: e.target.value })}
+                        className="min-w-0 flex-1 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      />
+                      <select
+                        aria-label="Current CTC period"
+                        value={personalForm.currentCTCPeriod}
+                        onChange={(e) => setPersonalForm({ ...personalForm, currentCTCPeriod: e.target.value })}
+                        className="w-[5.5rem] rounded border border-[#CBD5E1] bg-white px-1 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CTC_PERIOD_OPTIONS.map((period) => <option key={period}>{period}</option>)}
+                      </select>
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.currentCTC || 'N/A'}
@@ -3994,12 +4306,33 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Expected CTC</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.expectedCTC ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, expectedCTC: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    <div className="mt-1 flex gap-1">
+                      <select
+                        aria-label="Expected CTC currency"
+                        value={personalForm.expectedCTCCurrency}
+                        onChange={(e) => setPersonalForm({ ...personalForm, expectedCTCCurrency: e.target.value })}
+                        className="w-[4.5rem] rounded border border-[#CBD5E1] bg-white px-1.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CURRENCY_OPTIONS.map((currency) => <option key={currency}>{currency}</option>)}
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        aria-label="Expected CTC amount"
+                        value={personalForm.expectedCTCAmount}
+                        onChange={(e) => setPersonalForm({ ...personalForm, expectedCTCAmount: e.target.value })}
+                        className="min-w-0 flex-1 rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      />
+                      <select
+                        aria-label="Expected CTC period"
+                        value={personalForm.expectedCTCPeriod}
+                        onChange={(e) => setPersonalForm({ ...personalForm, expectedCTCPeriod: e.target.value })}
+                        className="w-[5.5rem] rounded border border-[#CBD5E1] bg-white px-1 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      >
+                        {PERSONAL_CTC_PERIOD_OPTIONS.map((period) => <option key={period}>{period}</option>)}
+                      </select>
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.expectedCTC || applicant.expectedSalary || 'N/A'}
@@ -4056,12 +4389,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Notice Period</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.noticePeriod ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, noticePeriod: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_NOTICE_PERIOD_OPTIONS.map((period) => <option key={period}>{period}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.noticePeriod || 'N/A'}
@@ -4081,9 +4416,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       onChange={(e) => setPersonalForm({ ...personalForm, maritalStatus: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
-                      <option value="Single">Single</option>
-                      <option value="Married">Married</option>
-                      <option value="N/A">N/A</option>
+                      <option value="">Select</option>
+                      {['Married', 'Single'].map((status) => <option key={status}>{status}</option>)}
                     </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4102,10 +4436,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       onChange={(e) => setPersonalForm({ ...personalForm, preferredShift: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     >
-                      <option value="Day">Day Shift</option>
-                      <option value="Night">Night Shift</option>
-                      <option value="Flexible">Flexible / Rotational</option>
-                      <option value="N/A">N/A</option>
+                      <option value="">Select</option>
+                      {['Day', 'Night', 'Mid'].map((shift) => <option key={shift}>{shift}</option>)}
                     </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
@@ -4190,17 +4522,40 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Relocation</p>
                   {isEditingPersonal ? (
-                    <select
-                      value={personalForm.willingToRelocate ? 'Yes' : 'No'}
-                      onChange={(e) => setPersonalForm({ ...personalForm, willingToRelocate: e.target.value === 'Yes' })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
+                    <div className="mt-2 flex items-center gap-4 text-xs text-[#1F2937] dark:text-white">
+                      {['Yes', 'No'].map((value) => (
+                        <label key={value} className="inline-flex items-center gap-1">
+                          <input
+                            type="radio"
+                            name="personal-relocation"
+                            checked={personalForm.willingToRelocate === (value === 'Yes')}
+                            onChange={() => setPersonalForm({ ...personalForm, willingToRelocate: value === 'Yes' })}
+                            className="accent-[#2F80ED]"
+                          />
+                          {value}
+                        </label>
+                      ))}
+                    </div>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.willingToRelocate !== false ? 'Yes' : 'No'}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Nationality</p>
+                  {isEditingPersonal ? (
+                    <select
+                      value={personalForm.nationality ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, nationality: e.target.value })}
+                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_NATIONALITY_OPTIONS.map((nationality) => <option key={nationality}>{nationality}</option>)}
+                    </select>
+                  ) : (
+                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
+                      {applicant.nationality || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -4224,12 +4579,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Industry</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <select
                       value={personalForm.industry ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, industry: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {withCurrentOption(PERSONAL_INDUSTRY_OPTIONS, personalForm.industry)
+                        .map((industry) => <option key={industry}>{industry}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.industry || 'N/A'}
@@ -4237,20 +4595,19 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   )}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1 text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">
-                    <span>Nationality</span>
-                    <CircleHelp className="h-3 w-3 text-[#1877F2]" />
-                  </div>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Nationality</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.nationality ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, nationality: e.target.value })}
+                    <select
+                      value={personalForm.customNationality ?? ''}
+                      onChange={(e) => setPersonalForm({ ...personalForm, customNationality: e.target.value })}
                       className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
+                    >
+                      <option value="">Select</option>
+                      {PERSONAL_DEMOGRAPHIC_NATIONALITY_OPTIONS.map((nationality) => <option key={nationality}>{nationality}</option>)}
+                    </select>
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.nationality || 'N/A'}
+                      {applicant.customFields?.nationality || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -4274,30 +4631,15 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                 <div>
                   <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Applicant Remarks</p>
                   {isEditingPersonal ? (
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={personalForm.applicantRemarks ?? ''}
                       onChange={(e) => setPersonalForm({ ...personalForm, applicantRemarks: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                      className="mt-1 w-full resize-y rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
                     />
                   ) : (
                     <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
                       {applicant.applicantRemarks || 'N/A'}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Notice/Eligibility</p>
-                  {isEditingPersonal ? (
-                    <input
-                      type="text"
-                      value={personalForm.noticeEligibility ?? ''}
-                      onChange={(e) => setPersonalForm({ ...personalForm, noticeEligibility: e.target.value })}
-                      className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                    />
-                  ) : (
-                    <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">
-                      {applicant.noticeEligibility || 'N/A'}
                     </p>
                   )}
                 </div>
@@ -4310,12 +4652,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Gender</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.gender ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_GENDER_OPTIONS.map((gender) => <option key={gender}>{gender}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.gender || 'N/A'}</p>
                     )}
@@ -4323,12 +4667,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Race/Ethnicity</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.raceEthnicity ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, raceEthnicity: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_RACE_OPTIONS.map((race) => <option key={race}>{race}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.raceEthnicity || 'N/A'}</p>
                     )}
@@ -4336,12 +4682,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Veteran Status</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.veteranStatus ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, veteranStatus: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_VETERAN_OPTIONS.map((status) => <option key={status}>{status}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.veteranStatus || 'N/A'}</p>
                     )}
@@ -4349,12 +4697,14 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <div>
                     <p className="text-[11px] text-[#6B7280] dark:text-[#9CA3AF]">Disability</p>
                     {isEditingPersonal ? (
-                      <input
-                        type="text"
+                      <select
                         value={personalForm.disability ?? ''}
                         onChange={(e) => setPersonalForm({ ...personalForm, disability: e.target.value })}
                         className="mt-1 w-full rounded border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-xs text-[#1F2937] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                      />
+                      >
+                        <option value="">Select</option>
+                        {PERSONAL_DISABILITY_OPTIONS.map((status) => <option key={status}>{status}</option>)}
+                      </select>
                     ) : (
                       <p className="mt-0.5 text-xs font-semibold text-[#1F2937] dark:text-[#F3F4F6]">{applicant.disability || 'N/A'}</p>
                     )}
@@ -4369,21 +4719,21 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
               {/* Bottom Save / Cancel bar when editing */}
               {isEditingPersonal && (
-                <div className="mt-6 flex items-center justify-end gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingPersonal(false)}
-                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
-                  >
-                    Cancel
-                  </button>
+                <div className="mt-6 flex items-center justify-start gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[#334155]">
                   <button
                     type="button"
                     onClick={handleSavePersonal}
                     className="flex items-center gap-1.5 rounded bg-[#2F80ED] px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#1D6FD8]"
                   >
                     <Check className="h-4 w-4" />
-                    <span>Save Changes</span>
+                    <span>Save</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingPersonal(false)}
+                    className="rounded border border-[#CED4DA] bg-white px-4 py-2 text-xs font-medium text-[#444] hover:bg-gray-50 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+                  >
+                    Cancel
                   </button>
                 </div>
               )}
@@ -4704,11 +5054,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           <td className="px-4 py-3 text-[#555] dark:text-[#CCC]">{emp.mobile}</td>
                           <td className="px-4 py-3 text-[#1877F2]">{emp.email}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              emp.status === 'Active'
-                                ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300'
-                                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                            }`}>
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${emp.status === 'Active'
+                              ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                              }`}>
                               {emp.status}
                             </span>
                           </td>
@@ -4782,11 +5131,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                           key={filter.id}
                           type="button"
                           onClick={() => setActivityFilter(filter.id)}
-                          className={`flex-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition sm:flex-none ${
-                            activityFilter === filter.id
-                              ? 'bg-white text-[#2F80ED] shadow-sm dark:bg-[#4A4A4A] dark:text-white'
-                              : 'text-slate-500 hover:text-slate-800 dark:text-[#AAA] dark:hover:text-white'
-                          }`}
+                          className={`flex-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition sm:flex-none ${activityFilter === filter.id
+                            ? 'bg-white text-[#2F80ED] shadow-sm dark:bg-[#4A4A4A] dark:text-white'
+                            : 'text-slate-500 hover:text-slate-800 dark:text-[#AAA] dark:hover:text-white'
+                            }`}
                         >
                           {filter.label}
                         </button>
@@ -5028,14 +5376,13 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
         </div>
       </div>
 
-            {/* RIGHT-SIDE SLIDE-OUT RESUME PANEL (Matching Reference UI) */}
+      {/* RIGHT-SIDE SLIDE-OUT RESUME PANEL (Matching Reference UI) */}
       {isResumePanelOpen && (
         <div
-          className={`drawer-panel fixed bottom-0 right-0 top-[56px] z-40 flex flex-col border-l border-[#E2E8F0] bg-white shadow-2xl transition-all duration-300 dark:border-[#334155] dark:bg-[#1E293B] ${
-            resumeFullscreen
-              ? 'left-0 w-full'
-              : 'w-full sm:w-[500px] md:w-[550px] lg:w-[48%] xl:w-[45%]'
-          }`}
+          className={`drawer-panel fixed bottom-0 right-0 top-[56px] z-40 flex flex-col border-l border-[#E2E8F0] bg-white shadow-2xl transition-all duration-300 dark:border-[#334155] dark:bg-[#1E293B] ${resumeFullscreen
+            ? 'left-0 w-full'
+            : 'w-full sm:w-[500px] md:w-[550px] lg:w-[48%] xl:w-[45%]'
+            }`}
         >
           {/* Top Header */}
           <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white px-4 py-2.5 dark:border-[#334155] dark:bg-[#1E293B]">
@@ -5209,11 +5556,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
       {/* RIGHT SIDEBAR (Fixed / Sticky Right Panel matching Ceipal reference) */}
       <aside
         aria-label="Applicant Details Panel"
-        className={`applicant-details-sidebar drawer-panel fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#334155] dark:bg-[#1E293B] ${
-          isResumePanelOpen || sidebarCollapsed
-            ? 'sidebar-collapsed w-0 overflow-hidden border-none pointer-events-none'
-            : 'sidebar-expanded w-[305px] overflow-hidden'
-        }`}
+        className={`drawer-panel fixed bottom-0 right-0 top-[56px] z-20 flex flex-col border-l border-[#E2E8F0] bg-white transition-all dark:border-[#334155] dark:bg-[#1E293B] ${isResumePanelOpen || sidebarCollapsed
+          ? 'w-0 overflow-hidden border-none pointer-events-none'
+          : 'w-[305px] overflow-hidden'
+          }`}
       >
         <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 pb-3 pt-4 dark:border-[#334155] dark:bg-[#1E293B]">
           <h2 className="m-0 block text-sm font-semibold leading-5 text-[#1F2937] dark:text-white">Applicant Details</h2>
@@ -5292,7 +5638,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               <div>
                 <span className="block text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">Experience</span>
                 <span className="font-medium text-[#222] dark:text-slate-100">
-                  {applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months` : '9 Years 2 Months'}
+                  {applicant.experienceYears ? formatExperience(applicant.experienceYears) : 'N/A'}
                 </span>
               </div>
 
@@ -5327,7 +5673,18 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
 
           {/* Section 2: Personal Details */}
           <div>
-            <h2 className="mb-3 text-xs font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-xs font-bold text-[#1F2937] dark:text-white">Personal Details</h2>
+              <button
+                type="button"
+                onClick={startEditPersonal}
+                className="inline-flex h-5 w-5 items-center justify-center rounded text-[#2F80ED] hover:bg-blue-50 hover:text-[#18558A] dark:hover:bg-[#1E3A5F]"
+                title="Edit Personal Details"
+                aria-label="Edit Personal Details"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            </div>
             <div className="space-y-2.5">
               <div>
                 <span className="flex items-center gap-1 text-[10px] font-medium text-[#888] dark:text-[#94A3B8]">
@@ -5394,9 +5751,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
         type="button"
         onClick={() => setSidebarCollapsed((prev) => !prev)}
         style={{ top: '48%' }}
-        className={`applicant-sidebar-toggle fixed z-30 flex h-8 w-4 items-center justify-center rounded-l bg-[#2F80ED] text-white shadow-lg transition-all ${
-          sidebarCollapsed ? 'sidebar-collapsed right-0' : 'sidebar-expanded right-[305px]'
-        }`}
+        className={`fixed z-30 flex h-8 w-4 items-center justify-center rounded-l bg-[#2F80ED] text-white shadow-lg transition-all ${sidebarCollapsed ? 'right-0' : 'right-[305px]'
+          }`}
         title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
       >
         {sidebarCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -5527,7 +5883,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
               </div>
               <div>
                 <h4 className="font-bold text-[#444] uppercase dark:text-[#DDD]">Experience</h4>
-                <p className="text-[#555] dark:text-[#BBB]">{applicant.experienceYears ? `${applicant.experienceYears} Years 2 Months of industry experience.` : '9 Years 2 Months of industry experience.'}</p>
+                <p className="text-[#555] dark:text-[#BBB]">{applicant.experienceYears ? `${formatExperience(applicant.experienceYears)} of industry experience.` : 'N/A'}</p>
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-[#E2E8F0] pt-3 dark:border-[#334155]">
@@ -5929,11 +6285,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   key={st}
                   type="button"
                   onClick={() => handleUpdateStatus(st as PipelineStage)}
-                  className={`block w-full rounded px-3 py-2 text-left transition-colors ${
-                    applicant.status === st
-                      ? 'bg-[#2F80ED] font-semibold text-white'
-                      : 'hover:bg-gray-100 dark:hover:bg-[#334155]'
-                  }`}
+                  className={`block w-full rounded px-3 py-2 text-left transition-colors ${applicant.status === st
+                    ? 'bg-[#2F80ED] font-semibold text-white'
+                    : 'hover:bg-gray-100 dark:hover:bg-[#334155]'
+                    }`}
                 >
                   {st}
                 </button>
@@ -6211,11 +6566,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <button
                       type="button"
                       onClick={() => setVendorSearchOpen(!vendorSearchOpen)}
-                      className={`w-full flex items-center justify-between rounded border ${
-                        empModalError && !selectedVendorContact
-                          ? 'border-red-400 bg-red-50/20'
-                          : 'border-[#CED4DA] bg-white dark:border-[#334155] dark:bg-[#0F172A]'
-                      } px-3 py-2 text-xs text-left outline-none transition-colors hover:border-[#2F80ED] cursor-pointer`}
+                      className={`w-full flex items-center justify-between rounded border ${empModalError && !selectedVendorContact
+                        ? 'border-red-400 bg-red-50/20'
+                        : 'border-[#CED4DA] bg-white dark:border-[#334155] dark:bg-[#0F172A]'
+                        } px-3 py-2 text-xs text-left outline-none transition-colors hover:border-[#2F80ED] cursor-pointer`}
                     >
                       {selectedVendorContact ? (
                         <span className="truncate text-[#333] dark:text-white font-normal">
@@ -6260,11 +6614,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                                 <div
                                   key={v.id}
                                   onClick={() => handleSelectVendor(v)}
-                                  className={`cursor-pointer rounded px-2.5 py-2 text-xs transition-colors ${
-                                    selectedVendorContact === v.id
-                                      ? 'bg-blue-50 text-[#2F80ED] font-medium dark:bg-[#1E3A8A]/30'
-                                      : 'text-[#333] hover:bg-[#F3F4F6] dark:text-gray-200 dark:hover:bg-[#334155]'
-                                  }`}
+                                  className={`cursor-pointer rounded px-2.5 py-2 text-xs transition-colors ${selectedVendorContact === v.id
+                                    ? 'bg-blue-50 text-[#2F80ED] font-medium dark:bg-[#1E3A8A]/30'
+                                    : 'text-[#333] hover:bg-[#F3F4F6] dark:text-gray-200 dark:hover:bg-[#334155]'
+                                    }`}
                                 >
                                   {v.displayName}
                                 </div>
@@ -6315,11 +6668,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       setEmpEmployerName(e.target.value);
                       if (empModalError) setEmpModalError(null);
                     }}
-                    className={`w-full rounded border ${
-                      empModalError && !empEmployerName.trim()
-                        ? 'border-red-400 bg-red-50/20'
-                        : 'border-[#CED4DA] bg-white dark:border-[#334155] dark:bg-[#0F172A]'
-                    } px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:text-white`}
+                    className={`w-full rounded border ${empModalError && !empEmployerName.trim()
+                      ? 'border-red-400 bg-red-50/20'
+                      : 'border-[#CED4DA] bg-white dark:border-[#334155] dark:bg-[#0F172A]'
+                      } px-3 py-2 text-xs text-[#333] placeholder-[#888] outline-none focus:border-[#2F80ED] dark:text-white`}
                   />
                 </div>
                 <div className="flex gap-2">
@@ -6583,11 +6935,10 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                             setEmailMergeOptOutUntil(d.toISOString().split('T')[0]);
                           }
                         }}
-                        className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
-                          isSelected
-                            ? 'bg-[#2F80ED] text-white font-semibold shadow-xs ring-2 ring-[#2F80ED]/30'
-                            : 'border border-[#CBD5E1] bg-white text-[#475569] hover:bg-slate-50 dark:border-[#444] dark:bg-[#252525] dark:text-[#CBD5E1]'
-                        }`}
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${isSelected
+                          ? 'bg-[#2F80ED] text-white font-semibold shadow-xs ring-2 ring-[#2F80ED]/30'
+                          : 'border border-[#CBD5E1] bg-white text-[#475569] hover:bg-slate-50 dark:border-[#444] dark:bg-[#252525] dark:text-[#CBD5E1]'
+                          }`}
                       >
                         {preset.label}
                       </button>
@@ -6620,11 +6971,11 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                       {emailMergeOptOutUntil === '9999-12-31'
                         ? 'Candidate is opted out indefinitely until manually reactivated.'
                         : `Opt-out will remain in effect until: ${new Date(emailMergeOptOutUntil).toLocaleDateString(undefined, {
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}`}
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}`}
                     </span>
                   </p>
                 )}
@@ -7887,24 +8238,24 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
         const ampcusSkills = (applicant.skills && applicant.skills.length > 0
           ? applicant.skills
           : [
-              'Data Analysis',
-              'Predictive Data Analysis',
-              'Retail Commerce',
-              'CODE REVIEW',
-              'PostgreSQL',
-              'Dashboards',
-              'Deployment Automation',
-              'Vehicle Fleet Management',
-              'Application Programming Interfaces (APIs)',
-              'Package Tracking',
-              'Logistics Operations',
-              'Microservices',
-              'DATABASES',
-              'Computer Engineering',
-              'Data Cleansing',
-              'Python (Programming Language)',
-              'Software Systems'
-            ]
+            'Data Analysis',
+            'Predictive Data Analysis',
+            'Retail Commerce',
+            'CODE REVIEW',
+            'PostgreSQL',
+            'Dashboards',
+            'Deployment Automation',
+            'Vehicle Fleet Management',
+            'Application Programming Interfaces (APIs)',
+            'Package Tracking',
+            'Logistics Operations',
+            'Microservices',
+            'DATABASES',
+            'Computer Engineering',
+            'Data Cleansing',
+            'Python (Programming Language)',
+            'Software Systems'
+          ]
         ).join(', ');
         const ampcusPrintDate = '11/23/26, 5:01 PM';
         const ampcusPrintUrl = `https://talentreach2.ceipal.com/applicant_profiles/print_external_emp_info/${applicant.applicantId || applicant.id || 'app-demo'}`;
@@ -8010,7 +8361,7 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Source</td>
                     <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.source || 'Naukri'}</td>
                     <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Experience</td>
-                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.experienceYears ? `${applicant.experienceYears} Years 10 Months` : '5 Years 10 Months'}</td>
+                    <td className="border border-[#239cd3] px-2 py-1 text-black">{applicant.experienceYears ? formatExperience(applicant.experienceYears) : 'N/A'}</td>
                   </tr>
                   <tr>
                     <td className="border border-[#239cd3] bg-white px-2 py-1 font-bold text-black">Relevant experiece</td>

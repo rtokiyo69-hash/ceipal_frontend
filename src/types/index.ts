@@ -184,6 +184,7 @@ export interface Applicant {
     summary?: string;
   }[];
   // Optional recruiter profile fields collected by the frontend applicant form.
+  namePrefix?: string;
   middleName?: string;
   legalName?: string;
   nameAsPerAadhaar?: string;
@@ -240,6 +241,21 @@ export interface Client {
   tier: 'Enterprise Platinum' | 'Strategic Partner' | 'Standard';
   joinedDate: string;
   notes?: string;
+  website?: string;
+  country?: string;
+  city?: string;
+  zipCode?: string;
+  category?: string;
+  businessUnit?: string;
+  primaryBusinessUnit?: string;
+  primaryOwner?: string;
+  createdBy?: string;
+  createdOn?: string;
+  modifiedOn?: string;
+  modifiedBy?: string;
+  displayOnJobPosting?: boolean;
+  distanceMiles?: number;
+  contacts?: { id: string; name: string; email?: string; phone?: string; title?: string }[];
 }
 
 export interface Vendor {
@@ -387,6 +403,10 @@ export interface TaskItem {
   notifyViaEmail?: boolean;
   recurrenceTask?: boolean;
   showOnCalendar?: boolean;
+  taskCategory?: string;
+  clientId?: string;
+  clientName?: string;
+  contactName?: string;
 }
 
 export interface ActivityLog {

@@ -21,6 +21,7 @@ import { ClientSubmission } from './features/submissions/ClientSubmission';
 import { ApplicantList } from './features/applicants/ApplicantList';
 import { ApplicantCreate } from './features/applicants/ApplicantCreate';
 import { ApplicantDetail } from './features/applicants/ApplicantDetail';
+import { ApplicantPipelineDetail } from './features/applicants/ApplicantPipelineDetail';
 import { ApplicantMatchingJobs } from './features/applicants/ApplicantMatchingJobs';
 import { ApplicantEmailShare } from './features/applicants/ApplicantEmailShare';
 import { PipelineKanban } from './features/pipeline/PipelineKanban';
@@ -36,6 +37,7 @@ import { UserManagement } from './features/admin/UserManagement';
 import { PlatformSettings } from './features/settings/PlatformSettings';
 import { RequisitionAdministration } from './features/admin/RequisitionAdministration';
 import { IntegrationAdministration } from './features/integrations/IntegrationAdministration';
+import { OrganizationAdmin } from './features/admin/OrganizationAdmin';
 
 export default function App() {
   const { currentRoute, selectedId, isAuthenticated, isDark, currentUser } = useAppStore();
@@ -45,6 +47,7 @@ export default function App() {
     currentUser?.role === 'admin' &&
     (currentRoute === 'applicants' ||
     currentRoute === 'settings' ||
+    currentRoute === 'organization' ||
     currentRoute === 'dashboard' ||
     currentRoute === 'clients' ||
     currentRoute === 'job-new' ||
@@ -56,7 +59,7 @@ export default function App() {
     'integrations','resume-search','job-posting','background-check','sms','voip','candidate-management','interview','video','sso','email-integrations','integration-settings','marketplace','vms-integrations','vms-jobs-auto-publish','job-board-questions','passive-applicants','payroll','license-verification'
   ];
   const isIntegrationModuleView = currentUser?.role === 'admin' && integrationRoutes.includes(currentRoute);
-  const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs';
+  const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'applicant-pipeline-detail' || currentRoute === 'matching-jobs';
   const isFullWidth = isRecruiter || isFullBleed || isAdminModuleView || isIntegrationModuleView;
   const useBlueClayTheme = isAuthenticated;
 
@@ -105,6 +108,8 @@ export default function App() {
         return <ApplicantCreate />;
       case 'applicant-detail':
         return <ApplicantDetail />;
+      case 'applicant-pipeline-detail':
+        return <ApplicantPipelineDetail />;
       case 'applicant-matching-jobs':
         return <ApplicantMatchingJobs />;
       case 'applicant-email-share':
@@ -129,6 +134,8 @@ export default function App() {
         return <ReportsAnalytics />;
       case 'admin-users':
         return <UserManagement />;
+      case 'organization':
+        return <OrganizationAdmin />;
       case 'requisition-code':
       case 'requisition-lookups':
       case 'requisition-settings':

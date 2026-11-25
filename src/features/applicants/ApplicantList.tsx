@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
-import { Applicant, PipelineStage, Submission } from '../../types';
+import { Applicant, Job, PipelineStage, Submission } from '../../types';
 import {
   ApplicantClearanceTypesLookup,
   ApplicantDegreesLookup,
@@ -61,6 +61,7 @@ type FilterRule = { id: string; field: string; operator: string; value: string }
 type AdvancedTerm = FilterRule & { join: 'AND' | 'OR' };
 type TextToHireMessage = { id: number; contactId: string; text: string };
 type AdvancedCriteria = { keywords: string; jobTitle: string; country: string; state: string; city: string; exclude: string; excludeJobTitle: string; includeWithoutCountry: boolean; recentJobTitle: boolean; locationMode: 'selected' | 'radius'; radius: string; applicantStatus: string; source: string; recruiter: string; workAuthorization: string; minExperience: string; maxExperience: string; applicantId: string; email: string; phone: string; terms: AdvancedTerm[] };
+type PipelineDetailRow = { id: string; jobId: string; jobCode: string; jobTitle: string; pipelineRecord: string; score: string; client: string; source: string; status: string; clientBillRate: string; billRate: string; payRate: string; employerName: string; taggedBy: string; taggedOn: string };
 const emptyAdvancedCriteria: AdvancedCriteria = { keywords: '', jobTitle: '', country: '', state: '', city: '', exclude: '', excludeJobTitle: '', includeWithoutCountry: false, recentJobTitle: false, locationMode: 'selected', radius: '25', applicantStatus: '', source: '', recruiter: '', workAuthorization: '', minExperience: '', maxExperience: '', applicantId: '', email: '', phone: '', terms: [] };
 const filterOperators = ['Equals', 'Not Equals', 'Is Null', 'Is Not Null', 'Contains', 'Not Contains', 'Starts With', 'Ends With'];
 const applicantSubmodules = [
@@ -141,6 +142,7 @@ export const ApplicantList: React.FC = () => {
   const [activeLookupCategory, setActiveLookupCategory] = useState<(typeof applicantLookupCategories)[number]>(applicantLookupCategories[0]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [applicantSubmissions, setApplicantSubmissions] = useState<Submission[]>([]);
+  const [applicantJobs, setApplicantJobs] = useState<Job[]>([]);
   const [openMissingInfoId, setOpenMissingInfoId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [searchField, setSearchField] = useState('Search Any');
@@ -185,6 +187,13 @@ export const ApplicantList: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [expandedApplicantId, setExpandedApplicantId] = useState<string | null>(null);
+  const [pipelineDetailSearch, setPipelineDetailSearch] = useState('');
+  const [pipelineStatusFilter, setPipelineStatusFilter] = useState('All');
+  const [pipelineSourceFilter, setPipelineSourceFilter] = useState('All');
+  const [pipelineClientFilter, setPipelineClientFilter] = useState('All');
+  const [pipelineTaggedByFilter, setPipelineTaggedByFilter] = useState('All');
+  const [pipelineScoreFilter, setPipelineScoreFilter] = useState('All');
+  const [pipelineTaggedOnFilter, setPipelineTaggedOnFilter] = useState('All');
   const [ticketPanelOpen, setTicketPanelOpen] = useState(false);
   const [ticketView, setTicketView] = useState<'new' | 'reported' | 'dashboard'>('new');
   const [ticketDashboardTab, setTicketDashboardTab] = useState('Dashboard');
@@ -256,6 +265,7 @@ export const ApplicantList: React.FC = () => {
   useEffect(() => {
     ApiService.getApplicants().then(setApplicants);
     ApiService.getSubmissions().then(setApplicantSubmissions);
+    ApiService.getJobs().then(setApplicantJobs);
   }, []);
   useEffect(() => {
     if (!isAddNoteModalOpen) return;
@@ -726,6 +736,36 @@ export const ApplicantList: React.FC = () => {
       normalizeName(submission.applicantName) === normalizeName(applicant.name)
     );
   };
+  const getPipelineDetailsForApplicant = (applicant: Applicant): PipelineDetailRow[] => {
+    const rawRecords = [applicant.pipelineEntries, applicant.pipelineRecords, applicant.pipelineJobs]
+      .find(Array.isArray) as Record<string, unknown>[] | undefined;
+    const records = rawRecords?.length ? rawRecords : [applicant as unknown as Record<string, unknown>];
+    return records.map((record, index) => {
+      const getText = (...values: unknown[]) => {
+        const value = values.find((candidate) => candidate !== undefined && candidate !== null && String(candidate).trim() !== '');
+        return value === undefined ? '—' : String(value);
+      };
+      const jobId = getText(record.jobId, record.assignedJobId);
+      const job = applicantJobs.find((item) => item.id === jobId || item.code === record.jobCode);
+      return {
+        id: getText(record.id, record.pipelineId, `${applicant.id}-pipeline-${index + 1}`),
+        jobId: getText(record.jobId, record.assignedJobId, applicant.assignedJobId),
+        jobCode: getText(record.jobCode, job?.code, record.code),
+        jobTitle: getText(record.jobTitle, job?.title, record.title, applicant.assignedJobTitle),
+        pipelineRecord: getText(record.pipelineRecord, record.pipelineRecordLabel, 'Click Here'),
+        score: getText(record.submissionScore, record.score, record.matchScore),
+        client: getText(record.client, job?.client, applicant.customFields?.client),
+        source: getText(record.source, applicant.source),
+        status: getText(record.pipelineStatus, record.status, 'Tagged'),
+        clientBillRate: getText(record.clientBillRate, record.clientBillRateSalary, record.salary, job?.billRate),
+        billRate: getText(record.billRate, job?.billRate),
+        payRate: getText(record.payRate, job?.payRate),
+        employerName: getText(record.employerName, record.employer, applicant.currentCompany, job?.client),
+        taggedBy: getText(record.taggedBy, record.createdBy, applicant.assignedRecruiter),
+        taggedOn: getText(record.taggedOn, record.createdOn, applicant.createdOn, applicant.createdDate),
+      };
+    });
+  };
 
   const renderApplicantColumn = (column: string, applicant: Applicant): React.ReactNode => {
     switch (column) {
@@ -989,7 +1029,7 @@ export const ApplicantList: React.FC = () => {
                 {actionsMenuOpen && (
                   <>
                     <button aria-label="Close actions menu" className="fixed inset-0 z-40 cursor-default" onClick={() => setActionsMenuOpen(false)} />
-                    <div role="menu" className="absolute left-0 top-full z-50 mt-1 grid max-h-[min(70vh,620px)] w-[min(560px,calc(100vw-32px))] grid-flow-col grid-rows-11 overflow-y-auto rounded-md border border-[#D9DDE2] bg-white py-2 text-left normal-case tracking-normal shadow-2xl dark:border-[#334155] dark:bg-[#1E293B]">
+                    <div role="menu" className="absolute left-0 top-full z-50 mt-1 grid max-h-[min(60vh,420px)] w-[min(440px,calc(100vw-32px))] grid-flow-col grid-rows-11 overflow-y-auto rounded-md border border-[#D9DDE2] bg-white py-1 text-left normal-case tracking-normal shadow-xl dark:border-[#334155] dark:bg-[#1E293B]">
                       {applicantActions.flatMap((row, rowIndex) =>
                         row.map((action, columnIndex) => (
                           <button
@@ -997,7 +1037,7 @@ export const ApplicantList: React.FC = () => {
                             role="menuitem"
                             onClick={() => void runApplicantAction(action)}
                             style={{ gridColumnStart: columnIndex + 1, gridRowStart: rowIndex + 1 }}
-                            className="min-h-11 px-5 py-2.5 text-left text-sm font-normal text-[#777777] transition-colors hover:bg-[#F2F6FA] hover:text-[#333333] dark:text-[#E2E8F0] dark:hover:bg-[#334155]"
+                            className="min-h-8 px-3 py-1.5 text-left text-[13px] font-normal text-[#777777] transition-colors hover:bg-[#F2F6FA] hover:text-[#333333] dark:text-[#E2E8F0] dark:hover:bg-[#334155]"
                           >
                             {action}
                           </button>
@@ -1164,6 +1204,22 @@ export const ApplicantList: React.FC = () => {
             const indicatorType = hasSubmission ? 'submission' : 'pipeline';
             const indicatorLabel = indicatorType === 'submission' ? 'submission' : 'pipeline job';
             const isExpanded = expandedApplicantId === a.id;
+            const pipelineDetails = getPipelineDetailsForApplicant(a);
+            const pipelineSearch = pipelineDetailSearch.trim().toLocaleLowerCase();
+            const filteredPipelineDetails = pipelineDetails.filter((detail) => {
+              const matchesSearch = !pipelineSearch || `${detail.id} ${detail.jobCode} ${detail.jobTitle} ${detail.client}`.toLocaleLowerCase().includes(pipelineSearch);
+              const matchesScore = pipelineScoreFilter === 'All' || (pipelineScoreFilter === 'Has score' ? detail.score !== '—' : detail.score === '—');
+              const matchesTaggedOn = pipelineTaggedOnFilter === 'All' || (() => {
+                const taggedAt = Date.parse(detail.taggedOn);
+                return Number.isFinite(taggedAt) && Date.now() - taggedAt <= Number(pipelineTaggedOnFilter) * 24 * 60 * 60 * 1000;
+              })();
+              return matchesSearch && matchesScore && matchesTaggedOn &&
+                (pipelineStatusFilter === 'All' || detail.status === pipelineStatusFilter) &&
+                (pipelineSourceFilter === 'All' || detail.source === pipelineSourceFilter) &&
+                (pipelineClientFilter === 'All' || detail.client === pipelineClientFilter) &&
+                (pipelineTaggedByFilter === 'All' || detail.taggedBy === pipelineTaggedByFilter);
+            });
+            const pipelineOptions = (key: 'status' | 'source' | 'client' | 'taggedBy') => [...new Set(pipelineDetails.map((detail) => detail[key]).filter((value) => value && value !== '—'))];
             return (<React.Fragment key={a.id}><tr title={missingDetails.length ? `Missing Information\n${missingDetails.join('\n')}` : undefined} aria-label={missingDetails.length ? `${a.name}: missing ${missingDetails.join(', ')}` : a.name} className="transition-colors odd:bg-white even:bg-[#F5F7F8] hover:bg-[#EDF5FA] dark:odd:bg-[#2563EB] dark:even:bg-[#1D2D3B] dark:hover:bg-[#475569]">
             <td
               className="relative px-3 py-3 text-center"
@@ -1195,7 +1251,7 @@ export const ApplicantList: React.FC = () => {
             <td className="px-3 py-3"><div className="flex items-center justify-end gap-1"><button onClick={() => setQuickResumePreview(a)} title="Quick resume preview" className="rounded-md p-1.5 text-[#64748B] hover:bg-[#FFFFFF] hover:text-[#1E293B]"><Eye className="h-4 w-4" /></button><button onClick={() => navigate('applicant-detail', a.id)} className="rounded-md px-2 py-1.5 font-semibold text-[#1E293B] hover:bg-[#FFFFFF] dark:hover:bg-[#475569]">Open dossier</button></div></td>
           </tr>
           {isExpanded && <tr className="bg-white dark:bg-[#1E293B]"><td colSpan={4 + visibleColumns.length} className="px-5 py-3">
-            <div className="overflow-hidden rounded-md border border-[#D8E3F1] dark:border-[#334155]">
+            {hasSubmission ? <div className="overflow-hidden rounded-md border border-[#D8E3F1] dark:border-[#334155]">
               <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
                 <span className="rounded-full bg-[#3B82F6] px-3 py-1 text-xs font-semibold text-white">{hasSubmission ? 'Submissions' : 'Pipeline'} <span className="ml-1 rounded-full bg-white/20 px-1.5">{indicatorCount}</span></span>
                 {associatedJobTitle && <span className="text-xs text-[#475569] dark:text-slate-200">{associatedJobTitle}</span>}
@@ -1207,7 +1263,27 @@ export const ApplicantList: React.FC = () => {
                   <tbody>{rowSubmissions.length ? rowSubmissions.map((submission) => <tr key={submission.id} className="border-b border-[#E5E7EB] last:border-0 dark:border-slate-700"><td className="px-3 py-2.5 text-[#2563EB]">{submission.submissionId}</td><td className="px-3 py-2.5 text-[#2563EB]">{submission.jobTitle}</td><td className="px-3 py-2.5 text-[#2563EB]">View submission</td><td className="px-3 py-2.5">{submission.score ?? '—'}</td><td className="px-3 py-2.5">{submission.recruiter || '—'}</td><td className="px-3 py-2.5">{submission.status}</td><td className="px-3 py-2.5">{submission.client || '—'}</td><td className="px-3 py-2.5">{a.source || '—'}</td><td className="px-3 py-2.5">{submission.billRate || '—'}</td><td className="px-3 py-2.5">{submission.payRate || '—'}</td><td className="px-3 py-2.5">{submission.recruiter || '—'}</td><td className="whitespace-nowrap px-3 py-2.5">{submission.submittedDate || '—'}</td></tr>) : <tr><td colSpan={12} className="px-3 py-4 text-[#64748B] dark:text-slate-300">{hasSubmission ? 'Submission details are not available.' : 'This candidate is in the pipeline but has no submission record yet.'}</td></tr>}</tbody>
                 </table>
               </div>
-            </div>
+            </div> : <div className="overflow-hidden rounded-md border border-[#D8E3F1] dark:border-[#334155]">
+              <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-2.5 dark:border-[#334155]">
+                <span className="rounded-full bg-[#A855C7] px-3 py-1 text-xs font-semibold text-white">Pipeline <span className="ml-1 rounded-full bg-white/20 px-1.5">{indicatorCount}</span></span>
+                <input aria-label="Search pipeline details" value={pipelineDetailSearch} onChange={(event) => setPipelineDetailSearch(event.target.value)} placeholder="Job Title / Pipeline Id / Client" className="min-w-[210px] rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#334155] outline-none focus:border-[#3B82F6] dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+                <select aria-label="Filter pipeline submission score" value={pipelineScoreFilter} onChange={(event) => setPipelineScoreFilter(event.target.value)} className="rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#2563EB] dark:border-slate-600 dark:bg-slate-800"><option value="All">Submission Score</option><option>Has score</option><option>No score</option></select>
+                <select aria-label="Filter pipeline source" value={pipelineSourceFilter} onChange={(event) => setPipelineSourceFilter(event.target.value)} className="rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#2563EB] dark:border-slate-600 dark:bg-slate-800"><option value="All">Source</option>{pipelineOptions('source').map((value) => <option key={value}>{value}</option>)}</select>
+                <select aria-label="Filter pipeline status" value={pipelineStatusFilter} onChange={(event) => setPipelineStatusFilter(event.target.value)} className="rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#2563EB] dark:border-slate-600 dark:bg-slate-800"><option value="All">Pipeline Status</option>{pipelineOptions('status').map((value) => <option key={value}>{value}</option>)}</select>
+                <select aria-label="Filter pipeline tagged by" value={pipelineTaggedByFilter} onChange={(event) => setPipelineTaggedByFilter(event.target.value)} className="rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#2563EB] dark:border-slate-600 dark:bg-slate-800"><option value="All">Tagged By</option>{pipelineOptions('taggedBy').map((value) => <option key={value}>{value}</option>)}</select>
+                <select aria-label="Filter pipeline tagged date" value={pipelineTaggedOnFilter} onChange={(event) => setPipelineTaggedOnFilter(event.target.value)} className="rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#2563EB] dark:border-slate-600 dark:bg-slate-800"><option value="All">Tagged On</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>
+                <select aria-label="Filter pipeline client" value={pipelineClientFilter} onChange={(event) => setPipelineClientFilter(event.target.value)} className="rounded border border-[#CBD5E1] bg-white px-2 py-1.5 text-[11px] text-[#2563EB] dark:border-slate-600 dark:bg-slate-800"><option value="All">Client</option>{pipelineOptions('client').map((value) => <option key={value}>{value}</option>)}</select>
+              </div>
+              <div className="overflow-x-auto"><table className="w-full min-w-[1500px] border-collapse text-left text-[11px]">
+                <thead className="bg-[#E6F1F5] text-[#1E293B] dark:bg-slate-700 dark:text-white"><tr className="border-b border-[#D8E3F1] dark:border-slate-600">{['Job Code', 'Job Title', 'Pipeline Record', 'Submission Score', 'Client', 'Source', 'Pipeline Status', 'Client Bill Rate / Salary', 'Bill Rate', 'Pay Rate', 'Employer Name', 'Tagged By', 'Tagged On'].map((heading) => <th key={heading} className="whitespace-nowrap px-3 py-2 font-semibold">{heading}</th>)}</tr></thead>
+                <tbody>{filteredPipelineDetails.length ? filteredPipelineDetails.map((detail) => {
+                  const recordUrl = new URL(window.location.href);
+                  recordUrl.searchParams.set('route', 'applicant-pipeline-detail');
+                  recordUrl.searchParams.set('id', `${a.id}::${detail.jobId}`);
+                  return <tr key={detail.id} className="border-b border-[#E5E7EB] last:border-0 dark:border-slate-700"><td className="whitespace-nowrap px-3 py-2.5">{detail.jobCode}</td><td className="whitespace-nowrap px-3 py-2.5 text-[#2563EB]">{detail.jobTitle}</td><td className="whitespace-nowrap px-3 py-2.5"><a href={recordUrl.toString()} className="text-[#2563EB] hover:underline">{detail.pipelineRecord}</a></td><td className="px-3 py-2.5">{detail.score}</td><td className="px-3 py-2.5">{detail.client}</td><td className="px-3 py-2.5">{detail.source}</td><td className="px-3 py-2.5">{detail.status}</td><td className="px-3 py-2.5">{detail.clientBillRate}</td><td className="px-3 py-2.5">{detail.billRate}</td><td className="px-3 py-2.5">{detail.payRate}</td><td className="px-3 py-2.5">{detail.employerName}</td><td className="px-3 py-2.5">{detail.taggedBy}</td><td className="whitespace-nowrap px-3 py-2.5">{detail.taggedOn}</td></tr>;
+                }) : <tr><td colSpan={13} className="px-3 py-4 text-center text-[#64748B] dark:text-slate-300">No pipeline records match these filters.</td></tr>}</tbody>
+              </table></div>
+            </div>}
           </td></tr>}
           </React.Fragment>);
           })}
