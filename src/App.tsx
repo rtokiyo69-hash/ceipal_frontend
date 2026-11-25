@@ -35,6 +35,7 @@ import { ReportsAnalytics } from './features/reports/ReportsAnalytics';
 import { UserManagement } from './features/admin/UserManagement';
 import { PlatformSettings } from './features/settings/PlatformSettings';
 import { RequisitionAdministration } from './features/admin/RequisitionAdministration';
+import { IntegrationAdministration } from './features/integrations/IntegrationAdministration';
 
 export default function App() {
   const { currentRoute, selectedId, isAuthenticated, isDark, currentUser } = useAppStore();
@@ -51,8 +52,12 @@ export default function App() {
     currentRoute === 'requisition-lookups' ||
     currentRoute === 'requisition-settings' ||
     currentRoute === 'requisition-workflows');
+  const integrationRoutes = [
+    'integrations','resume-search','job-posting','background-check','sms','voip','candidate-management','interview','video','sso','email-integrations','integration-settings','marketplace','vms-integrations','vms-jobs-auto-publish','job-board-questions','passive-applicants','payroll','license-verification'
+  ];
+  const isIntegrationModuleView = currentUser?.role === 'admin' && integrationRoutes.includes(currentRoute);
   const isFullBleed = isRecruiterFullBleed || currentRoute === 'applicant-detail' || currentRoute === 'matching-jobs';
-  const isFullWidth = isRecruiter || isFullBleed || isAdminModuleView;
+  const isFullWidth = isRecruiter || isFullBleed || isAdminModuleView || isIntegrationModuleView;
   const useBlueClayTheme = isAuthenticated;
 
   useEffect(() => {
@@ -129,6 +134,26 @@ export default function App() {
       case 'requisition-settings':
       case 'requisition-workflows':
         return <RequisitionAdministration />;
+      case 'integrations':
+      case 'resume-search':
+      case 'job-posting':
+      case 'background-check':
+      case 'sms':
+      case 'voip':
+      case 'candidate-management':
+      case 'interview':
+      case 'video':
+      case 'sso':
+      case 'email-integrations':
+      case 'integration-settings':
+      case 'marketplace':
+      case 'vms-integrations':
+      case 'vms-jobs-auto-publish':
+      case 'job-board-questions':
+      case 'passive-applicants':
+      case 'payroll':
+      case 'license-verification':
+        return <IntegrationAdministration />;
       case 'settings':
         return <PlatformSettings />;
       default:

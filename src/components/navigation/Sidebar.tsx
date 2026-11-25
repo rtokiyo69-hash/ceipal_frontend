@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  UserCheck
+  UserCheck,
+  PlugZap
 } from 'lucide-react';
 import { useAppStore, AppRoute } from '../../store/appStore';
 import { Logo } from '../common/Logo';
@@ -55,6 +56,7 @@ export const Sidebar: React.FC = () => {
             { id: 'job-new', label: 'Job Posting', icon: Briefcase },
             { id: 'applicants', label: 'Applicants', icon: Users },
             { id: 'requisition-code', label: 'Requisitions', icon: Layers },
+            { id: 'integrations', label: 'Integration', icon: PlugZap },
             { id: 'clients', label: 'Client', icon: Building2 }
           ]
         }
@@ -164,6 +166,12 @@ export const Sidebar: React.FC = () => {
                 currentRoute === item.id ||
                 (role === 'admin' && item.id === 'settings' && (currentRoute === 'dashboard' || currentRoute === 'settings')) ||
                 (role === 'admin' && item.id === 'requisition-code' && ['requisition-code', 'requisition-lookups', 'requisition-settings', 'requisition-workflows'].includes(currentRoute)) ||
+                (role === 'admin' && item.id === 'integrations' && [
+                  'integrations', 'resume-search', 'job-posting', 'background-check', 'sms', 'voip',
+                  'candidate-management', 'interview', 'video', 'sso', 'email-integrations',
+                  'integration-settings', 'marketplace', 'vms-integrations', 'vms-jobs-auto-publish',
+                  'job-board-questions', 'passive-applicants', 'payroll', 'license-verification'
+                ].includes(currentRoute)) ||
                 (role !== 'admin' && item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-detail')) ||
                 (item.id === 'applicants' && currentRoute === 'applicant-detail');
                 (item.id === 'jobs' && (currentRoute === 'job-new' || currentRoute === 'job-edit' || currentRoute === 'job-detail')) ||

@@ -318,12 +318,107 @@ export const TopBar: React.FC = () => {
         return ['Requisitions', 'Requisition Workflows'];
       case 'settings':
         return ['Administration', 'Global Settings'];
+      case 'integrations':
+        return ['Integrations', 'All Integrations'];
+      case 'resume-search':
+        return ['Integrations', 'Resume Search Accounts'];
+      case 'job-posting':
+        return ['Integrations', 'Job Posting'];
+      case 'background-check':
+        return ['Integrations', 'Background Check'];
+      case 'sms':
+        return ['Integrations', 'SMS'];
+      case 'voip':
+        return ['Integrations', 'VOIP'];
+      case 'candidate-management':
+        return ['Integrations', 'Candidate Management'];
+      case 'interview':
+        return ['Integrations', 'Interview'];
+      case 'video':
+        return ['Integrations', 'Video'];
+      case 'sso':
+        return ['Integrations', 'SSO'];
+      case 'email-integrations':
+        return ['Integrations', 'Email Integrations'];
+      case 'integration-settings':
+        return ['Integrations', 'Integration Settings'];
+      case 'marketplace':
+        return ['Integrations', 'Marketplace'];
+      case 'vms-integrations':
+        return ['Integrations', 'VMS Accounts'];
+      case 'vms-jobs-auto-publish':
+        return ['Integrations', 'VMS Jobs Auto Publish'];
+      case 'job-board-questions':
+        return ['Integrations', 'Job Board / Career Portal Questions'];
+      case 'passive-applicants':
+        return ['Integrations', 'Passive Applicants'];
+      case 'payroll':
+        return ['Integrations', 'Payroll'];
+      case 'license-verification':
+        return ['Integrations', 'License Verification'];
       default:
         return ['Talent Operations'];
     }
   };
 
   const breadcrumbs = getBreadcrumbs();
+
+  const integrationModuleRoutes: AppRoute[] = [
+    'integrations', 'resume-search', 'job-posting', 'background-check', 'sms', 'voip',
+    'candidate-management', 'interview', 'video', 'sso', 'email-integrations',
+    'integration-settings', 'marketplace', 'vms-integrations', 'vms-jobs-auto-publish',
+    'job-board-questions', 'passive-applicants', 'payroll', 'license-verification'
+  ];
+
+  if (integrationModuleRoutes.includes(currentRoute)) {
+    const tabs: { label: string; route: AppRoute }[] = [
+      { label: 'All Integrations', route: 'integrations' },
+      { label: 'Resume Search', route: 'resume-search' },
+      { label: 'Job Posting', route: 'job-posting' },
+      { label: 'Background Check', route: 'background-check' },
+      { label: 'SMS', route: 'sms' },
+      { label: 'VOIP', route: 'voip' },
+      { label: 'Candidate Management', route: 'candidate-management' },
+      { label: 'Interview', route: 'interview' },
+      { label: 'Video', route: 'video' },
+      { label: 'SSO', route: 'sso' },
+      { label: 'Email Integrations', route: 'email-integrations' },
+      { label: 'Integration Settings', route: 'integration-settings' },
+      { label: 'Marketplace', route: 'marketplace' },
+      { label: 'VMS Integrations', route: 'vms-integrations' },
+      { label: 'VMS Jobs Auto Publish', route: 'vms-jobs-auto-publish' },
+      { label: 'Job Board / Career Portal Questions', route: 'job-board-questions' },
+      { label: 'Passive Applicants', route: 'passive-applicants' },
+      { label: 'Payroll', route: 'payroll' },
+      { label: 'License Verification', route: 'license-verification' }
+    ];
+    return (
+      <header className="h-16 px-6 bg-white dark:bg-[#1E293B] border-b border-[#D8E3F1] dark:border-[#334155] flex items-center gap-4 z-20 shrink-0">
+        <nav aria-label="Integration modules" className="flex min-w-0 items-center gap-1 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.route}
+              type="button"
+              onClick={() => navigate(tab.route)}
+              aria-current={currentRoute === tab.route ? 'page' : undefined}
+              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                currentRoute === tab.route
+                  ? 'bg-[#2563EB] text-white'
+                  : 'text-[#475569] hover:bg-[#FFFFFF] hover:text-[#2563EB] dark:text-[#BFDBFE] dark:hover:bg-[#475569]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <button type="button" onClick={() => setGlobalSearch(true)} className="rounded-lg p-2 text-[#64748B] hover:bg-[#FFFFFF]" aria-label="Search"><Search className="h-4 w-4" /></button>
+          <AccountMenu user={currentUser} variant="standard" onLogout={logout} onOpenPanel={setAccountPanel} />
+        </div>
+        <AccountDialog panel={accountPanel} user={currentUser} onClose={() => setAccountPanel(null)} onNavigate={(route) => { setAccountPanel(null); navigate(route); }} />
+      </header>
+    );
+  }
 
   if (currentUser?.role === 'recruiter') {
     const recruiterTabs = [

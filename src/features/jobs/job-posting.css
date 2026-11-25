@@ -181,6 +181,14 @@
 
 .job-select { position: relative; width: 100%; }
 .job-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 42px; padding: 6px 12px; border: 1px solid var(--posting-line); border-radius: 8px; background: var(--posting-surface); color: var(--posting-ink); text-align: left; font-size: 14px; }
+.job-create-assigned-to { --posting-surface: #fff; --posting-ink: #1e293b; --posting-muted: #64748b; --posting-line: #d8e3f1; }
+.dark .job-create-assigned-to { --posting-surface: #1e293b; --posting-ink: #1e293b; --posting-muted: #64748b; --posting-line: #334155; }
+.job-create-assigned-to .job-select-trigger { padding: 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.job-create-assigned-to .job-select-trigger[aria-expanded="true"] { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.job-create-assigned-to .job-select-value { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.job-create-assigned-to .job-select-menu { top: calc(100% - 1px); border-radius: 0 0 8px 8px; box-shadow: none; }
+.job-create-assigned-to .job-select-list { padding: 0; }
+.job-create-assigned-to .job-select-list label { min-height: 32px; padding: 6px 12px; border-radius: 0; font-size: 12px; }
 .job-select-trigger:hover:not(:disabled), .job-select-trigger[aria-expanded="true"] { border-color: #93b4f4; }
 .job-select-trigger > svg { flex-shrink: 0; color: var(--posting-muted); transition: transform .15s; }
 .job-select-trigger > svg.is-open { transform: rotate(180deg); }
