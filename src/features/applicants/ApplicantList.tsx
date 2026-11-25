@@ -65,7 +65,7 @@ type FilterRule = { id: string; field: string; operator: string; value: string }
 type AdvancedTerm = FilterRule & { join: 'AND' | 'OR' };
 type TextToHireMessage = { id: number; contactId: string; text: string };
 type AdvancedCriteria = { keywords: string; jobTitle: string; country: string; state: string; city: string; exclude: string; excludeJobTitle: string; includeWithoutCountry: boolean; recentJobTitle: boolean; locationMode: 'selected' | 'radius'; radius: string; applicantStatus: string; source: string; recruiter: string; workAuthorization: string; minExperience: string; maxExperience: string; applicantId: string; email: string; phone: string; terms: AdvancedTerm[] };
-type PipelineDetailRow = { id: string; jobCode: string; jobTitle: string; pipelineRecord: string; score: string; client: string; source: string; status: string; clientBillRate: string; billRate: string; payRate: string; employerName: string; taggedBy: string; taggedOn: string };
+type PipelineDetailRow = { id: string; jobId: string; jobCode: string; jobTitle: string; pipelineRecord: string; score: string; client: string; source: string; status: string; clientBillRate: string; billRate: string; payRate: string; employerName: string; taggedBy: string; taggedOn: string };
 const emptyAdvancedCriteria: AdvancedCriteria = { keywords: '', jobTitle: '', country: '', state: '', city: '', exclude: '', excludeJobTitle: '', includeWithoutCountry: false, recentJobTitle: false, locationMode: 'selected', radius: '25', applicantStatus: '', source: '', recruiter: '', workAuthorization: '', minExperience: '', maxExperience: '', applicantId: '', email: '', phone: '', terms: [] };
 const filterOperators = ['Equals', 'Not Equals', 'Is Null', 'Is Not Null', 'Contains', 'Not Contains', 'Starts With', 'Ends With'];
 const applicantSubmodules = [
@@ -753,6 +753,7 @@ export const ApplicantList: React.FC = () => {
       const job = applicantJobs.find((item) => item.id === jobId || item.code === record.jobCode);
       return {
         id: getText(record.id, record.pipelineId, `${applicant.id}-pipeline-${index + 1}`),
+        jobId: getText(record.jobId, record.assignedJobId, applicant.assignedJobId),
         jobCode: getText(record.jobCode, job?.code, record.code),
         jobTitle: getText(record.jobTitle, job?.title, record.title, applicant.assignedJobTitle),
         pipelineRecord: getText(record.pipelineRecord, record.pipelineRecordLabel, 'Click Here'),
@@ -1287,7 +1288,12 @@ export const ApplicantList: React.FC = () => {
               </div>
               <div className="overflow-x-auto"><table className="w-full min-w-[1500px] border-collapse text-left text-[11px]">
                 <thead className="bg-[#E6F1F5] text-[#1E293B] dark:bg-slate-700 dark:text-white"><tr className="border-b border-[#D8E3F1] dark:border-slate-600">{['Job Code', 'Job Title', 'Pipeline Record', 'Submission Score', 'Client', 'Source', 'Pipeline Status', 'Client Bill Rate / Salary', 'Bill Rate', 'Pay Rate', 'Employer Name', 'Tagged By', 'Tagged On'].map((heading) => <th key={heading} className="whitespace-nowrap px-3 py-2 font-semibold">{heading}</th>)}</tr></thead>
-                <tbody>{filteredPipelineDetails.length ? filteredPipelineDetails.map((detail) => <tr key={detail.id} className="border-b border-[#E5E7EB] last:border-0 dark:border-slate-700"><td className="whitespace-nowrap px-3 py-2.5">{detail.jobCode}</td><td className="whitespace-nowrap px-3 py-2.5 text-[#2563EB]">{detail.jobTitle}</td><td className="whitespace-nowrap px-3 py-2.5"><button type="button" className="text-[#2563EB] hover:underline">{detail.pipelineRecord}</button></td><td className="px-3 py-2.5">{detail.score}</td><td className="px-3 py-2.5">{detail.client}</td><td className="px-3 py-2.5">{detail.source}</td><td className="px-3 py-2.5">{detail.status}</td><td className="px-3 py-2.5">{detail.clientBillRate}</td><td className="px-3 py-2.5">{detail.billRate}</td><td className="px-3 py-2.5">{detail.payRate}</td><td className="px-3 py-2.5">{detail.employerName}</td><td className="px-3 py-2.5">{detail.taggedBy}</td><td className="whitespace-nowrap px-3 py-2.5">{detail.taggedOn}</td></tr>) : <tr><td colSpan={13} className="px-3 py-4 text-center text-[#64748B] dark:text-slate-300">No pipeline records match these filters.</td></tr>}</tbody>
+                <tbody>{filteredPipelineDetails.length ? filteredPipelineDetails.map((detail) => {
+                  const recordUrl = new URL(window.location.href);
+                  recordUrl.searchParams.set('route', 'applicant-pipeline-detail');
+                  recordUrl.searchParams.set('id', `${a.id}::${detail.jobId}`);
+                  return <tr key={detail.id} className="border-b border-[#E5E7EB] last:border-0 dark:border-slate-700"><td className="whitespace-nowrap px-3 py-2.5">{detail.jobCode}</td><td className="whitespace-nowrap px-3 py-2.5 text-[#2563EB]">{detail.jobTitle}</td><td className="whitespace-nowrap px-3 py-2.5"><a href={recordUrl.toString()} className="text-[#2563EB] hover:underline">{detail.pipelineRecord}</a></td><td className="px-3 py-2.5">{detail.score}</td><td className="px-3 py-2.5">{detail.client}</td><td className="px-3 py-2.5">{detail.source}</td><td className="px-3 py-2.5">{detail.status}</td><td className="px-3 py-2.5">{detail.clientBillRate}</td><td className="px-3 py-2.5">{detail.billRate}</td><td className="px-3 py-2.5">{detail.payRate}</td><td className="px-3 py-2.5">{detail.employerName}</td><td className="px-3 py-2.5">{detail.taggedBy}</td><td className="whitespace-nowrap px-3 py-2.5">{detail.taggedOn}</td></tr>;
+                }) : <tr><td colSpan={13} className="px-3 py-4 text-center text-[#64748B] dark:text-slate-300">No pipeline records match these filters.</td></tr>}</tbody>
               </table></div>
             </div>}
           </td></tr>}

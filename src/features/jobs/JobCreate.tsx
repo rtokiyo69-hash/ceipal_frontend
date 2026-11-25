@@ -12,6 +12,7 @@ import {
   Calendar,
   DollarSign,
   Clock,
+  ChevronDown,
   ChevronRight,
   Send,
   Layers,
@@ -350,9 +351,23 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
   const [accountManager, setAccountManager] = useState('David Chen');
   const [assignedRecruiter, setAssignedRecruiter] = useState('Priya Sharma');
   const [assignedTo, setAssignedTo] = useState('Priya Sharma');
+  const [isAssignedToOpen, setIsAssignedToOpen] = useState(false);
+  const assignedToMenuRef = useRef<HTMLDivElement>(null);
+  const assignedToTriggerRef = useRef<HTMLButtonElement>(null);
+  const assignedToOptions = ['Priya Sharma', 'Marcus Vance', 'Sagar Nehe'];
+  const assignedToNames = assignedTo.split(', ').filter(Boolean);
   const [comments, setComments] = useState('Priority role for Q4 hiring quota. Fast-track client interview.');
   const [additionalNotifications, setAdditionalNotifications] = useState('Email & Slack Alert');
   const [careerPortalPublishedDate, setCareerPortalPublishedDate] = useState(new Date().toISOString().split('T')[0]);
+
+  useEffect(() => {
+    if (!isAssignedToOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!assignedToMenuRef.current?.contains(event.target as Node)) setIsAssignedToOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
+  }, [isAssignedToOpen]);
 
   // Section 4: Description & Career Portal
   const [description, setDescription] = useState('');
@@ -2215,18 +2230,76 @@ export const JobCreate: React.FC<JobCreateProps> = ({ initialMode = 'select' }) 
 
                 <div>
                   <label className="block font-bold text-[#1E293B] dark:text-[#FFFFFF] mb-1">Assigned To *</label>
-                  <select
-                    value={assignedTo}
-                    onChange={(e) => {
-                      setAssignedTo(e.target.value);
-                      setAssignedRecruiter(e.target.value);
+                  <div
+                    ref={assignedToMenuRef}
+                    className="job-select job-create-assigned-to"
+                    onBlur={(event) => {
+                      if (!event.currentTarget.contains(event.relatedTarget)) setIsAssignedToOpen(false);
                     }}
-                    className="w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-bold text-[#1E293B]"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.preventDefault();
+                        setIsAssignedToOpen(false);
+                        assignedToTriggerRef.current?.focus();
+                      }
+                    }}
                   >
-                    <option value="Priya Sharma">Priya Sharma</option>
-                    <option value="Marcus Vance">Marcus Vance</option>
-                    <option value="Sagar Nehe">Sagar Nehe</option>
-                  </select>
+                    <button
+                      ref={assignedToTriggerRef}
+                      type="button"
+                      className="job-select-trigger w-full p-2.5 bg-white dark:bg-[#1E293B] border border-[#D8E3F1] dark:border-[#334155] rounded-xl font-medium text-[#1E293B]"
+                      aria-label="Assigned To"
+                      aria-expanded={isAssignedToOpen}
+                      aria-controls="assigned-to-options"
+                      onClick={() => setIsAssignedToOpen((open) => !open)}
+                    >
+                      <span className="job-select-value">
+                        {assignedToNames.length > 0 ? (
+                          assignedToNames.join(', ')
+                        ) : (
+                          <span className="job-select-placeholder">Select</span>
+                        )}
+                      </span>
+                      <ChevronDown size={16} className={isAssignedToOpen ? 'is-open' : ''} />
+                    </button>
+                    {isAssignedToOpen && (
+                      <div id="assigned-to-options" className="job-select-menu" role="group" aria-label="Assigned To options">
+                        <div className="job-select-list">
+                          {assignedToOptions.map((name) => {
+                            const isSelected = assignedToNames.includes(name);
+                            return (
+                              <label key={name} className={isSelected ? 'is-selected' : ''}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(event) => {
+                                    const nextNames = event.target.checked
+                                      ? [...assignedToNames, name]
+                                      : assignedToNames.filter((selectedName) => selectedName !== name);
+                                    setAssignedTo(nextNames.join(', '));
+                                    if (nextNames.length > 0) setAssignedRecruiter(nextNames[0]);
+                                  }}
+                                />
+                                <span>{name}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <div className="job-select-footer">
+                          <span>{assignedToNames.length} selected</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsAssignedToOpen(false);
+                              assignedToTriggerRef.current?.focus();
+                            }}
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>

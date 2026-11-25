@@ -210,11 +210,11 @@ export const ApplicantDetail: React.FC = () => {
     'Employer Details',
     'Employment Test Results'
   ];
-  const dynamicSubTabsPool = ['Email Merges', 'Activities', 'Email Activity', 'Hires', 'Surveys'];
+  const dynamicSubTabsPool = ['Email Merges', 'Activities', 'Hires', 'Surveys'];
   const currentDynamicTab = dynamicSubTabsPool.includes(activeSubTab) ? activeSubTab : dynamicTab;
   const [isTimelineDrawerOpen, setIsTimelineDrawerOpen] = useState(false);
   const [timelineDrawerTab, setTimelineDrawerTab] = useState<'all' | 'tasks' | 'notes' | 'email'>('all');
-  const [activityFilter, setActivityFilter] = useState<'all' | 'messages' | 'documents' | 'downloads'>('all');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'messages' | 'documents' | 'downloads' | 'emails'>('all');
   const [activityPeriod, setActivityPeriod] = useState<'last-6-months' | 'older'>('last-6-months');
   const [skillsExpandedPersonal, setSkillsExpandedPersonal] = useState(false);
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
@@ -2095,7 +2095,22 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
   } catch {
     storedApplicantEmails = [];
   }
-  const applicantEmailHistory = storedApplicantEmails.filter((email) => email.applicantId === applicant.id || email.applicantId === applicant.applicantId);
+  const sampleApplicantEmail = {
+    id: `sample-email-${applicant.id}`,
+    applicantId: applicant.id,
+    type: 'Email',
+    from: 'Avery Johnson <avery.johnson@ceipal.example>',
+    to: [applicant.email || 'alex.morgan@example.com'],
+    cc: [],
+    subject: '[TEST SAMPLE] Candidate follow-up email',
+    body: `Hello ${applicant.name.split(' ')[0]},\n\nThank you for taking the time to speak with us. Your interview feedback is under review, and our team expects to share an update by the end of the week.\n\nThis sample email is included for preview testing only.`,
+    attachments: [],
+    sentAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  };
+  const applicantEmailHistory = [
+    sampleApplicantEmail,
+    ...storedApplicantEmails.filter((email) => email.applicantId === applicant.id || email.applicantId === applicant.applicantId),
+  ];
   const emailActivityTypes = Array.from(new Set(applicantEmailHistory.map((email) => email.type || 'Email')));
   const emailActivityFiltered = applicantEmailHistory.filter((email) => {
     const emailType = email.type || 'Email';
@@ -2114,6 +2129,190 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
   });
   const emailActivityPageCount = Math.ceil(emailActivityFiltered.length / emailActivityPageSize);
   const visibleEmailActivity = emailActivityFiltered.slice(emailActivityPage * emailActivityPageSize, (emailActivityPage + 1) * emailActivityPageSize);
+  const emailActivityPanel = (
+    <div className="border-t border-[#E8EDF3] px-4 py-4 dark:border-[#383838] sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
+        <h3 className="text-sm font-semibold text-[#1F2937] dark:text-white">Email Activities</h3>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <label className="text-[#64748B]">Email Type</label>
+          <select
+            value={emailActivityTypeFilter}
+            onChange={(event) => {
+              setEmailActivityTypeFilter(event.target.value);
+              setEmailActivityPage(0);
+            }}
+            className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+          >
+            <option>All Types</option>
+            {Array.from(new Set(['Email', 'Job Share', ...emailActivityTypes])).map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Email activity period"
+            value={emailActivityPeriod}
+            onChange={(event) => {
+              setEmailActivityPeriod(event.target.value);
+              setEmailActivityPage(0);
+            }}
+            className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+          >
+            <option>Last 6 Months</option>
+            <option>Last 30 Days</option>
+            <option>Last Year</option>
+            <option>All Time</option>
+          </select>
+          <button
+            type="button"
+            onClick={openEmailComposer}
+            className="rounded bg-[#2F80ED] px-2.5 py-1.5 font-semibold text-white hover:bg-[#1D6FD8]"
+          >
+            <Send className="mr-1 inline h-3 w-3" />
+            Compose Email
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3 text-[11px] dark:border-[#334155]">
+        <label className="flex items-center gap-1.5 text-[#64748B]">
+          Search:
+          <input
+            type="search"
+            value={emailActivitySearch}
+            onChange={(event) => {
+              setEmailActivitySearch(event.target.value);
+              setEmailActivityPage(0);
+            }}
+            className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-xs text-[#334155] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+          />
+        </label>
+        <label className="flex items-center gap-1.5 text-[#64748B]">
+          Show
+          <select
+            value={emailActivityPageSize}
+            onChange={(event) => {
+              setEmailActivityPageSize(Number(event.target.value));
+              setEmailActivityPage(0);
+            }}
+            className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1 text-xs dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+          entries
+        </label>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left text-xs">
+          <thead>
+            <tr className="border-b border-[#D8D8D8] text-[10px] font-bold uppercase text-[#444]">
+              <th className="px-2 py-2">Date &amp; Time</th>
+              <th className="px-2 py-2">Email Type</th>
+              <th className="px-2 py-2">Sent By</th>
+              <th className="px-2 py-2">Sent To</th>
+              <th className="px-2 py-2">Email Details</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#E5E7EB] dark:divide-[#333]">
+            {visibleEmailActivity.length ? (
+              visibleEmailActivity.map((email, index) => {
+                const emailId = email.id || `${email.sentAt}-${index}`;
+                const isExpanded = emailActivityExpandedId === emailId;
+                return (
+                  <React.Fragment key={emailId}>
+                    <tr className="hover:bg-slate-50 dark:hover:bg-[#202020]">
+                      <td className="whitespace-nowrap px-2 py-2.5 text-[#555] dark:text-[#CCC]">
+                        {email.sentAt ? new Date(email.sentAt).toLocaleString() : '—'}
+                      </td>
+                      <td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.type || 'Email'}</td>
+                      <td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.from || '—'}</td>
+                      <td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">
+                        {(email.to || []).join(', ') || '—'}
+                        {email.cc?.length ? (
+                          <span className="block text-[10px] text-slate-400">CC: {email.cc.join(', ')}</span>
+                        ) : null}
+                      </td>
+                      <td className="px-2 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEmailActivityExpandedId(isExpanded ? null : emailId)}
+                            className="font-medium text-[#1877F2] hover:underline"
+                          >
+                            {email.subject || 'View email'} {isExpanded ? '-' : '+'}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${isExpanded ? 'Hide' : 'View'} email details${email.subject ? `: ${email.subject}` : ''}`}
+                            title="View email details"
+                            onClick={() => setEmailActivityExpandedId(isExpanded ? null : emailId)}
+                            className="rounded p-1 text-slate-500 hover:bg-blue-50 hover:text-[#1877F2] dark:text-slate-300 dark:hover:bg-[#1E3A5F]"
+                          >
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={5} className="bg-slate-50 px-4 py-3 dark:bg-[#0F172A]">
+                          <div className="grid gap-2 text-xs text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+                            <p><span className="font-semibold text-slate-700 dark:text-slate-200">Subject: </span>{email.subject || '(No subject)'}</p>
+                            <p><span className="font-semibold text-slate-700 dark:text-slate-200">Sent by: </span>{email.from || '—'}</p>
+                            <p><span className="font-semibold text-slate-700 dark:text-slate-200">Sent to: </span>{(email.to || []).join(', ') || '—'}</p>
+                            <p><span className="font-semibold text-slate-700 dark:text-slate-200">Date &amp; time: </span>{email.sentAt ? new Date(email.sentAt).toLocaleString() : '—'}</p>
+                            {email.cc?.length ? (
+                              <p><span className="font-semibold text-slate-700 dark:text-slate-200">CC: </span>{email.cc.join(', ')}</p>
+                            ) : null}
+                          </div>
+                          <p className="mt-3 text-xs font-semibold text-slate-700 dark:text-slate-200">Email body</p>
+                          <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-600 dark:text-slate-300">
+                            {(email.body || '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' ').trim() || '(No message body)'}
+                          </p>
+                          {email.attachments?.length ? <p className="mt-2 text-[10px] text-slate-500">Attachments: {email.attachments.join(', ')}</p> : null}
+                          <p className="mt-2 text-[10px] text-slate-400">Activity: Email composed and saved from this applicant profile.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={5} className="px-2 py-3 text-center text-xs text-[#666]">No data available in table</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-[10px] text-[#64748B]">
+        <span>
+          Showing {emailActivityFiltered.length ? emailActivityPage * emailActivityPageSize + 1 : 0} to{' '}
+          {Math.min((emailActivityPage + 1) * emailActivityPageSize, emailActivityFiltered.length)} of {emailActivityFiltered.length} entries
+        </span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            aria-label="Previous email activity page"
+            disabled={emailActivityPage === 0}
+            onClick={() => setEmailActivityPage((page) => Math.max(0, page - 1))}
+            className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#334155]"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Next email activity page"
+            disabled={emailActivityPage + 1 >= emailActivityPageCount}
+            onClick={() => setEmailActivityPage((page) => Math.min(emailActivityPageCount - 1, page + 1))}
+            className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#334155]"
+          >
+            ›
+          </button>
+        </div>
+      </div>
+    </div>
+  );
   const filteredSubmitJobs = submissionJobs.filter((job) => {
     const query = submissionJobSearch.trim().toLowerCase();
     const matchesSearch = !query || `${job.code} ${job.title} ${job.clientJobId || ''} ${job.client} ${job.location}`.toLowerCase().includes(query);
@@ -4920,12 +5119,13 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 dark:bg-[#0F172A] sm:w-auto" role="group" aria-label="Activity type filter">
+                    <div className="inline-flex w-full flex-wrap rounded-lg bg-slate-100 p-1 dark:bg-[#0F172A] sm:w-auto" role="group" aria-label="Activity type filter">
                       {[
                         { id: 'all' as const, label: 'Activities' },
                         { id: 'messages' as const, label: 'Msg Activities' },
                         { id: 'documents' as const, label: 'Document Activities' },
-                        { id: 'downloads' as const, label: 'Download Activities' }
+                        { id: 'downloads' as const, label: 'Download Activities' },
+                        { id: 'emails' as const, label: 'Email Activities' }
                       ].map((filter) => (
                         <button
                           key={filter.id}
@@ -4940,22 +5140,26 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                         </button>
                       ))}
                     </div>
-                    <label className="relative block">
-                      <span className="sr-only">Activity time period</span>
-                      <select
-                        value={activityPeriod}
-                        onChange={(event) => setActivityPeriod(event.target.value as 'last-6-months' | 'older')}
-                        className="h-9 w-full appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-3 pr-9 text-[11px] font-medium text-slate-700 outline-none transition focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:focus:ring-[#1E3A5F] sm:w-40"
-                      >
-                        <option value="last-6-months">Last 6 months</option>
-                        <option value="older">Older than 6 months</option>
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
-                    </label>
+                    {activityFilter !== 'emails' && (
+                      <label className="relative block">
+                        <span className="sr-only">Activity time period</span>
+                        <select
+                          value={activityPeriod}
+                          onChange={(event) => setActivityPeriod(event.target.value as 'last-6-months' | 'older')}
+                          className="h-9 w-full appearance-none rounded-lg border border-slate-300 bg-white py-1 pl-3 pr-9 text-[11px] font-medium text-slate-700 outline-none transition focus:border-[#2F80ED] focus:ring-4 focus:ring-blue-100 dark:border-[#334155] dark:bg-[#0F172A] dark:text-white dark:focus:ring-[#1E3A5F] sm:w-40"
+                        >
+                          <option value="last-6-months">Last 6 months</option>
+                          <option value="older">Older than 6 months</option>
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                      </label>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {activityFilter === 'emails' ? emailActivityPanel : (
+                <>
               <div className="px-4 py-3 sm:px-5">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] font-medium text-slate-500 dark:text-[#AAA]">
@@ -5008,6 +5212,8 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
                   <h4 className="mt-3 text-sm font-semibold text-slate-700 dark:text-white">No activities found</h4>
                   <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-[#AAA]">There are no matching activities for the selected category and time period.</p>
                 </div>
+              )}
+                </>
               )}
             </section>
           )}
@@ -5087,24 +5293,6 @@ ${workExperiences.map((w) => `- ${w.company}: ${w.designation} (${w.period})`).j
             </div>
           )}
 
-          {/* EMAIL ACTIVITY TAB (Three-Dot Option 2) */}
-          {activeSubTab === 'Email Activity' && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
-                <h3 className="text-sm font-semibold text-[#1F2937] dark:text-white">Email Activity</h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs"><label className="text-[#64748B]">Email Type</label><select value={emailActivityTypeFilter} onChange={(event) => { setEmailActivityTypeFilter(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option>All Types</option>{Array.from(new Set(['Email', 'Job Share', ...emailActivityTypes])).map((type) => <option key={type}>{type}</option>)}</select><select aria-label="Email activity period" value={emailActivityPeriod} onChange={(event) => { setEmailActivityPeriod(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-[#334155] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option>Last 6 Months</option><option>Last 30 Days</option><option>Last Year</option><option>All Time</option></select><button type="button" onClick={openEmailComposer} className="rounded bg-[#2F80ED] px-2.5 py-1.5 font-semibold text-white hover:bg-[#1D6FD8]"><Send className="mr-1 inline h-3 w-3" />Compose Email</button></div>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3 text-[11px] dark:border-[#334155]"><label className="flex items-center gap-1.5 text-[#64748B]">Search:<input type="search" value={emailActivitySearch} onChange={(event) => { setEmailActivitySearch(event.target.value); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1.5 text-xs text-[#334155] outline-none focus:border-[#2F80ED] dark:border-[#334155] dark:bg-[#0F172A] dark:text-white" /></label><label className="flex items-center gap-1.5 text-[#64748B]">Show<select value={emailActivityPageSize} onChange={(event) => { setEmailActivityPageSize(Number(event.target.value)); setEmailActivityPage(0); }} className="border border-[#CBD5E1] bg-[#F8F8F8] px-2 py-1 text-xs dark:border-[#334155] dark:bg-[#0F172A] dark:text-white"><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select>entries</label></div>
-              <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead><tr className="border-b border-[#D8D8D8] text-[10px] font-bold uppercase text-[#444]"><th className="px-2 py-2">Date &amp; Time</th><th className="px-2 py-2">Email Type</th><th className="px-2 py-2">Sent By</th><th className="px-2 py-2">Sent To</th><th className="px-2 py-2">Email Details</th></tr></thead><tbody className="divide-y divide-[#E5E7EB] dark:divide-[#333]">
-                {visibleEmailActivity.length ? visibleEmailActivity.map((email, index) => {
-                  const emailId = email.id || `${email.sentAt}-${index}`;
-                  const isExpanded = emailActivityExpandedId === emailId;
-                  return <React.Fragment key={emailId}><tr className="hover:bg-slate-50 dark:hover:bg-[#202020]"><td className="whitespace-nowrap px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.sentAt ? new Date(email.sentAt).toLocaleString() : '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.type || 'Email'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{email.from || '—'}</td><td className="px-2 py-2.5 text-[#555] dark:text-[#CCC]">{(email.to || []).join(', ') || '—'}{email.cc?.length ? <span className="block text-[10px] text-slate-400">CC: {email.cc.join(', ')}</span> : null}</td><td className="px-2 py-2.5"><button type="button" onClick={() => setEmailActivityExpandedId(isExpanded ? null : emailId)} className="font-medium text-[#1877F2] hover:underline">{email.subject || 'View email'} {isExpanded ? '-' : '+'}</button></td></tr>{isExpanded && <tr><td colSpan={5} className="bg-slate-50 px-4 py-3 dark:bg-[#0F172A]"><p className="font-semibold text-slate-700 dark:text-slate-200">{email.subject || '(No subject)'}</p><p className="mt-2 whitespace-pre-wrap text-slate-600 dark:text-slate-300">{(email.body || '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, ' ').trim() || '(No message body)'}</p>{email.attachments?.length ? <p className="mt-2 text-[10px] text-slate-500">Attachments: {email.attachments.join(', ')}</p> : null}<p className="mt-2 text-[10px] text-slate-400">Activity: Email composed and saved from this applicant profile.</p></td></tr>}</React.Fragment>;
-                }) : <tr><td colSpan={5} className="px-2 py-3 text-center text-xs text-[#666]">No data available in table</td></tr>}
-              </tbody></table></div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-[10px] text-[#64748B]"><span>Showing {emailActivityFiltered.length ? emailActivityPage * emailActivityPageSize + 1 : 0} to {Math.min((emailActivityPage + 1) * emailActivityPageSize, emailActivityFiltered.length)} of {emailActivityFiltered.length} entries</span><div className="flex gap-1"><button type="button" aria-label="Previous email activity page" disabled={emailActivityPage === 0} onClick={() => setEmailActivityPage((page) => Math.max(0, page - 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#334155]">‹</button><button type="button" aria-label="Next email activity page" disabled={emailActivityPage + 1 >= emailActivityPageCount} onClick={() => setEmailActivityPage((page) => Math.min(emailActivityPageCount - 1, page + 1))} className="rounded border border-[#CBD5E1] px-2 py-1 disabled:opacity-40 dark:border-[#334155]">›</button></div></div>
-            </div>
-          )}
           {/* HIRES TAB (Three-Dot Option 3) */}
           {activeSubTab === 'Hires' && (
             <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs dark:border-[#334155] dark:bg-[#1E293B]">
