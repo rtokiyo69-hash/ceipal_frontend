@@ -48,6 +48,10 @@ import {
 import { useAppStore } from '../../store/appStore';
 import { ApiService } from '../../services/api';
 import { Applicant, Job, PipelineStage, Submission } from '../../types';
+import { ApplicantSettings } from './ApplicantSettings';
+import { ApplicantSources } from './ApplicantSources';
+import { ApplicantStatuses } from './ApplicantStatuses';
+import { ApplicantConfiguration } from './ApplicantConfiguration';
 import {
   ApplicantClearanceTypesLookup,
   ApplicantDegreesLookup,
@@ -909,7 +913,15 @@ export const ApplicantList: React.FC = () => {
         )}
       </div>
     )}
-    {currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Applicant Functions' ? (
+    {currentUser?.role === 'admin' && activeSubmodule === 'Applicant Settings' ? (
+      <ApplicantSettings />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Sources' ? (
+      <ApplicantSources />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Statuses' ? (
+      <ApplicantStatuses />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Configuration' ? (
+      <ApplicantConfiguration />
+    ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Applicant Functions' ? (
       <ApplicantFunctionsLookup />
     ) : currentUser?.role === 'admin' && activeSubmodule === 'Applicant Lookups' && activeLookupCategory === 'Applicant Technologies' ? (
       <ApplicantTechnologiesLookup />
